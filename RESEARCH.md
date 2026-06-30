@@ -280,11 +280,17 @@ skeleton. Effective status of everything here is `math.axiomatised`.
   - `lemma_B_1` (ball-chain mass retention), a real induction over `lemma_B_2` and the flow algebra.
   - `prop_4_1` (match an ensemble), proved by induction on `M` over `prop_4_2` and the flow algebra
     (place one point per step; `6k + 6 = 6(k+1)` switch budget machine-checked via `switches_comp`).
+  - `prop_2_2` (cluster to a discrete measure), proved over the probability-measure layer: partition
+    the atomless `μ` into probability pieces of the prescribed weights in disjoint hemispheres
+    (`exists_atomless_partition`), cluster each to its target with one parked schedule
+    (`cluster_to_point` + `exists_parked_schedule`), then lift the per-piece bounds by the convexity
+    of `W₂` under mixtures (`W2_convexCombo_le`). `measureFlow` distributes over the convex
+    combination (`measureFlow_sum_smul`); the mixture bookkeeping is machine-checked.
   - `prop_3_1` (disentanglement), proved from `exists_disentangling_balls`: the disjointness +
     hemisphere packaging the paper states without proof (review finding F2) is machine-checked
     (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
     `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
-- **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`, `prop_2_2`,
+- **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
 ### Axiom surface (what every closed statement ultimately rests on)
@@ -292,7 +298,8 @@ skeleton. Effective status of everything here is `math.axiomatised`.
 Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
 
 - **Wasserstein layer** (`Axioms/Wasserstein.lean`): `W2`/`W1`, `W2_map_le_L2` (L7 coupling),
-  `W1_ge_of_lipschitz` (KR duality).
+  `W1_ge_of_lipschitz` (KR duality), `W2_convexCombo_le` (convexity of `W₂` under probability
+  mixtures).
 - **Continuity-equation layer** (`Axioms/ContinuityEquation.lean`): `Params`, `flowMap`,
   `measureFlow`, `switches`, `flowMap_lipschitz`, `flowMap_bijective`, `Parked` + `flowMap_id_on_parked`.
 - **Structural flow algebra** (`Axioms/Dynamics.lean`): `comp` (`+ flowMap_comp`, `measureFlow_comp`),
@@ -303,9 +310,11 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
   `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1). (`prop_4_1` is *proved*
   from `prop_4_2`.)
-- **Construction-level** (`Statements/MainResults.lean`): `exists_disentangling_balls` (the geometric
-  output of the Section 3.3 disentanglement; `prop_3_1` is *proved* from it), and
-  `exists_parked_schedule` (Appendix B parking / simultaneous action on a disjoint-support family).
+- **Construction-level** (`Statements/MidLevel.lean`, `Statements/MainResults.lean`):
+  `exists_disentangling_balls` (the geometric output of the Section 3.3 disentanglement; `prop_3_1`
+  is *proved* from it), `exists_parked_schedule` (Appendix B parking / simultaneous action on a
+  disjoint-support family), and `exists_atomless_partition` (atomless decomposition into disjoint
+  hemisphere pieces, the packing step of Prop 2.2).
 
 ### Fidelity corrections made while closing
 
@@ -320,3 +329,8 @@ Two type-correct stubs were loose transcriptions; axiomatizing them as written w
 - `prop_4_2`: added injective inputs/targets. The flow map is bijective, so steering the active point
   to its target while fixing the inactive ones is possible only if the points are distinct; without
   it the stub is false when targets collide.
+- `prop_2_2` / `prop_2_1` / `cluster_to_point`: now carry `[IsProbabilityMeasure]`, and `prop_2_2`
+  requires convex weights (`∑ αₖ = 1`). `W₂` between measures of different total mass is ill-posed;
+  the probability-measure layer makes the discrete-target statement well-posed and lets the pieces be
+  normalized so clustering and the mixture bound apply cleanly. `theorem_1_1` likewise now assumes
+  each input is a probability measure (consumed by `cluster_to_point` via `isProbabilityMeasure_measureFlow`).

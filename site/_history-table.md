@@ -52,3 +52,5 @@
 | 50 | 2026-06-30 | `formalize` | formalize(main): prove Proposition 3.1's disentanglement packaging | `MeasureToMeasure.Statements.prop_3_1` |
 | 51 | 2026-06-30 | `docs` | docs(ledger): record Proposition 3.1 proved; refresh ClaimGraph and site | `ledger` |
 | 52 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 4.1 by induction over Proposition 4.2 | `MeasureToMeasure.Statements.prop_4_1` |
+| 53 | 2026-07-01 | `docs` | docs(ledger): record Proposition 4.1 proved; refresh ClaimGraph and site | `ledger` |
+| 54 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 2.2 via a probability-measure refactor | `MeasureToMeasure.Statements.prop_2_2` |

@@ -47,7 +47,7 @@ created   = "2026-06-30"
 
 [claims.prop-2-2]
 kind      = "conjecture"
-statement = "Proposition 2.2: an ensemble of disjoint-support atomless measures can be clustered to M atoms each by one flow map (packing balls + Lemma B.1)."
+statement = "Proposition 2.2: an atomless probability measure can be driven W2-close to a prescribed M-atom discrete measure (convex weights). PROVED: partition into probability pieces of mass alpha_k in disjoint hemispheres (exists_atomless_partition), cluster each to its target point with one parked schedule (cluster_to_point + exists_parked_schedule), then lift per-piece bounds via the convexity of W2 under mixtures (W2_convexCombo_le); the convex-combination bookkeeping is machine-checked."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_2_2"
 paper     = "Prop 2.2, p.11"
@@ -301,11 +301,27 @@ created   = "2026-06-30"
 
 [claims.cluster-to-point]
 kind      = "conjecture"
-statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point, by clustering then steering the cluster. Lifted to a family by disentanglement and parking in Theorem 1.1."
+statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point, by clustering then steering the cluster. Lifted to a family by disentanglement and parking in Theorem 1.1."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.cluster_to_point"
 paper     = "Prop 2.1 + Prop 4.1"
 created   = "2026-06-30"
+
+[claims.axiom-w2-convexity]
+kind      = "conjecture"
+statement = "Convexity of W2 under mixtures: for probability measures with shared weights, W2(sum a_k P_k, sum a_k Q_k) is at most the uniform bound on the component distances (gluing of couplings, W2(mix)^2 <= sum a_k W2(P_k,Q_k)^2). Standard optimal-transport fact, absent from Mathlib."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Axioms.W2_convexCombo_le"
+paper     = "Prop 2.2 (OT mixture bound)"
+created   = "2026-07-01"
+
+[claims.axiom-atomless-partition]
+kind      = "conjecture"
+statement = "Atomless decomposition: an atomless probability measure splits into M probability pieces with prescribed convex weights, pairwise disjoint supports, each in an open hemisphere. The packing/partition step of Proposition 2.2 (Lyapunov/Sierpinski-type); absent from Mathlib."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.exists_atomless_partition"
+paper     = "Prop 2.2 (packing balls), p.11"
+created   = "2026-07-01"
 
 # ===========================================================================
 # Numerical validation campaign (science profile)
