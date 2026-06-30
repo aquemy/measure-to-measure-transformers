@@ -37,6 +37,7 @@ axioms). Everything in this file is kernel-checked.
 namespace MeasureToMeasure.Leaves
 
 open scoped RealInnerProductSpace
+open MeasureTheory
 
 variable {d : ℕ}
 
@@ -107,5 +108,65 @@ theorem barycenter_noncolinear_of_disjoint_hull {s₁ s₂ : Finset (Eucl d)} {w
     (barycenter_mem_conicalSpan hw₁) (barycenter_mem_conicalSpan hw₂) hb0 hc0 hsr
   rw [Set.mem_inter_iff] at hu
   exact Set.disjoint_left.mp hdisj hu.1 hu.2
+
+/-!
+## General measures (closing the F2 residual)
+
+The finite case above is elementary. For a general probability measure the only extra ingredient is
+the standard fact that the barycenter `∫ x dμ` lies in any closed convex set carrying full mass —
+Mathlib's `Convex.integral_mem`. With it the same `SameRay` contradiction goes through for arbitrary
+probability measures whose supports sit inside disjoint closed convex *cones*, with no new axioms.
+-/
+
+/-- The barycenter `ℰ_μ[x] = ∫ x dμ`, as a Bochner integral. -/
+noncomputable def barycenter (μ : Measure (Eucl d)) : Eucl d := ∫ x, x ∂μ
+
+/-- The barycenter of a probability measure lies in any closed convex set carrying full mass
+(`μ Sᶜ = 0`). This is the standard measure-theoretic fact the general case of finding F2 needs; it
+rests only on Mathlib's `Convex.integral_mem`, not on the optimal-transport axioms. -/
+theorem barycenter_mem_of_supportedIn {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hint : Integrable (fun x : Eucl d => x) μ) {s : Set (Eucl d)}
+    (hconv : Convex ℝ s) (hclosed : IsClosed s) (hsupp : μ sᶜ = 0) :
+    barycenter μ ∈ s := by
+  have hae : ∀ᵐ x ∂μ, x ∈ s := by
+    rw [ae_iff]; exact hsupp
+  rw [barycenter]
+  exact hconv.integral_mem hclosed hae hint
+
+/-- **Finding F2, general case.** Two probability measures whose supports lie in disjoint closed
+convex cones `s₁`, `s₂` (disjoint on the sphere) have non-colinear barycenters. Generalizes
+`barycenter_noncolinear_of_disjoint_hull` from empirical to arbitrary probability measures; kernel-
+clean, via `barycenter_mem_of_supportedIn`. -/
+theorem barycenter_noncolinear_of_disjoint_hull_general
+    {μ ν : Measure (Eucl d)} [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (hμi : Integrable (fun x : Eucl d => x) μ) (hνi : Integrable (fun x : Eucl d => x) ν)
+    {s₁ s₂ : Set (Eucl d)}
+    (hc₁ : Convex ℝ s₁) (hcl₁ : IsClosed s₁) (hcone₁ : ∀ x ∈ s₁, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₁)
+    (hc₂ : Convex ℝ s₂) (hcl₂ : IsClosed s₂) (hcone₂ : ∀ x ∈ s₂, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₂)
+    (hμs : μ s₁ᶜ = 0) (hνs : ν s₂ᶜ = 0)
+    (hb0 : barycenter μ ≠ 0) (hc0 : barycenter ν ≠ 0)
+    (hdisj : ∀ u : Eucl d, ‖u‖ = 1 → u ∈ s₁ → u ∉ s₂) :
+    ¬ SameRay ℝ (barycenter μ) (barycenter ν) := by
+  intro hsr
+  set b := barycenter μ with hbdef
+  set c := barycenter ν with hcdef
+  obtain ⟨r₁, r₂, hr₁, hr₂, hrel⟩ := hsr.exists_pos hb0 hc0
+  have hbs₁ : b ∈ s₁ := barycenter_mem_of_supportedIn hμi hc₁ hcl₁ hμs
+  have hcs₂ : c ∈ s₂ := barycenter_mem_of_supportedIn hνi hc₂ hcl₂ hνs
+  set k : ℝ := r₁⁻¹ * r₂ with hkdef
+  have hk : 0 < k := by positivity
+  have hbk : b = k • c := by
+    rw [hkdef, mul_smul, ← hrel, smul_smul, inv_mul_cancel₀ (ne_of_gt hr₁), one_smul]
+  have key : ‖b‖⁻¹ • b = ‖c‖⁻¹ • c := by
+    have hnc : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+    rw [hbk, norm_smul, Real.norm_eq_abs, abs_of_pos hk, smul_smul]
+    congr 1
+    field_simp
+  set u := ‖b‖⁻¹ • b with hu
+  have hunorm : ‖u‖ = 1 := by
+    rw [hu, norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ (norm_ne_zero_iff.mpr hb0)]
+  have hus₁ : u ∈ s₁ := by rw [hu]; exact hcone₁ b hbs₁ _ (by positivity)
+  have hus₂ : u ∈ s₂ := by rw [key]; exact hcone₂ c hcs₂ _ (by positivity)
+  exact hdisj u hunorm hus₁ hus₂
 
 end MeasureToMeasure.Leaves

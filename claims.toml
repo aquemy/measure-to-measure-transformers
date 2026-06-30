@@ -40,16 +40,16 @@ created   = "2026-06-30"
 [claims.prop-2-1]
 kind      = "conjecture"
 statement = "Proposition 2.1: attention with parameter B clusters a single-hemisphere measure to a point mass; diam(conv_g supp mu(t)) -> 0 with rate O(log 1/eps)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_2_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.prop_2_1"
 paper     = "Prop 2.1, p.11"
 created   = "2026-06-30"
 
 [claims.prop-2-2]
 kind      = "conjecture"
 statement = "Proposition 2.2: an ensemble of disjoint-support atomless measures can be clustered to M atoms each by one flow map (packing balls + Lemma B.1)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_2_2"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.prop_2_2"
 paper     = "Prop 2.2, p.11"
 created   = "2026-06-30"
 
@@ -64,48 +64,48 @@ created   = "2026-06-30"
 [claims.lem-3-2]
 kind      = "conjecture"
 statement = "Lemma 3.2: one switch of W transports measures not filling the sphere into the positive orthant cap Q_1^{d-1}."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_3_2"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_3_2"
 paper     = "Lem 3.2, p.15"
 created   = "2026-06-30"
 
 [claims.lem-3-3]
 kind      = "conjecture"
 statement = "Lemma 3.3: if barycenters are pairwise non-colinear, a piecewise-constant theta shrinks one measure's geodesic convex hull into a small ball around its barycenter direction."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_3_3"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_3_3"
 paper     = "Lem 3.3, p.16"
 created   = "2026-06-30"
 
 [claims.lem-3-4]
 kind      = "conjecture"
 statement = "Lemma 3.4: two measures can be made non-colinear in barycenter, via the perceptron (gamma1=1) or via attention (gamma1!=1)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_3_4"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
 created   = "2026-06-30"
 
 [claims.prop-4-1]
 kind      = "conjecture"
 statement = "Proposition 4.1: M points x_0^i can be steered exactly to y^i with a perceptron, using at most 6M switches and norm O(C M / (T min eps_i))."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_4_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.prop_4_1"
 paper     = "Prop 4.1, p.18"
 created   = "2026-06-30"
 
 [claims.prop-4-2]
 kind      = "conjecture"
 statement = "Proposition 4.2: the single active point x_0^M is steered to y^M while inactive points stay fixed, via gather/corridor/restore, with at most 6 switches."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_4_2"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.prop_4_2"
 paper     = "Prop 4.2, p.18"
 created   = "2026-06-30"
 
 [claims.lem-5-1]
 kind      = "conjecture"
 statement = "Lemma 5.1: transport maps T^i are preserved by the disentangling flow maps; there is a Lipschitz invertible psi with the stated pushforward identity."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_5_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_5_1"
 paper     = "Lem 5.1, p.24"
 created   = "2026-06-30"
 
@@ -120,24 +120,24 @@ created   = "2026-06-30"
 [claims.lem-5-4]
 kind      = "conjecture"
 statement = "Lemma 5.4: any psi in L2(S^{d-1}; S^{d-1}) is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_5_4"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_5_4"
 paper     = "Lem 5.4, p.24"
 created   = "2026-06-30"
 
 [claims.lem-b-1]
 kind      = "conjecture"
 statement = "Lemma B.1: through a chain of overlapping balls, mass mu(T, B_K) >= (1-eps)^K mu_0(union B_k), with a Lipschitz invertible flow map fixing points outside the balls."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_b_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_B_1"
 paper     = "Lem B.1, p.31"
 created   = "2026-06-30"
 
 [claims.lem-b-2]
 kind      = "conjecture"
 statement = "Lemma B.2: through a single overlapping ball pair, mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0), via the ReLU-gated drift toward an interior anchor."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_b_2"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.lemma_B_2"
 paper     = "Lem B.2, p.31"
 created   = "2026-06-30"
 
@@ -220,8 +220,8 @@ created   = "2026-06-30"
 [claims.leaf-markov-bound]
 kind      = "conjecture"
 statement = "L8: if W2(mu, delta_{x0}) <= eta2 then 1 - mu(B(x0, eta3)) <= C eta2 / eta3, via a Lipschitz bump and W1 duality (Claim 2)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.mass_outside_ball_le"
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Leaves.markov_bound"
 paper     = "Claim 2, p.39"
 created   = "2026-06-30"
 
@@ -247,6 +247,14 @@ statement = "L11: empirical measures in the orthant (geodesic hull modeled as co
 status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull"
 paper     = "Prop 3.1 induction, p.16-17 (finding F2)"
+created   = "2026-06-30"
+
+[claims.leaf-barycenter-noncolinear-general]
+kind      = "conjecture"
+statement = "L11': finding F2 for arbitrary probability measures. Two probability measures supported in disjoint closed convex cones have non-colinear (not SameRay) barycenters, via Mathlib's Convex.integral_mem (barycenter in any closed convex set carrying full mass). Closes the general-measure residual of F2 with no new axioms."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull_general"
+paper     = "Prop 3.1 induction, p.16-17 (finding F2, general case)"
 created   = "2026-06-30"
 
 # ===========================================================================
