@@ -28,13 +28,16 @@ __pycache__/
 .venv*/
 .ipynb_checkpoints/
 
-# Experiment outputs: track the CKC evidence (manifest = provenance, summary = verdict);
-# regenerate raw arrays from the seeded code.
+# Experiment outputs: track the CKC evidence (manifest = provenance, summary = verdict,
+# figures = visual evidence consumed by the report and website); regenerate raw arrays
+# from the seeded code.
 experiments/results/*
 !experiments/results/.gitkeep
 !experiments/results/*/
 !experiments/results/**/manifest*.json
 !experiments/results/**/summary*.json
+!experiments/results/**/*.png
+!experiments/results/**/*.svg
 *.npz
 *.pkl
 
