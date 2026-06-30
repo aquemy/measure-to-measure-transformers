@@ -241,6 +241,14 @@ lean      = "MeasureToMeasure.Leaves.exists_ne_in_ball"
 paper     = "Lem 3.4 Part 1, p.35"
 created   = "2026-06-30"
 
+[claims.leaf-barycenter-noncolinear]
+kind      = "conjecture"
+statement = "L11: empirical measures in the orthant (geodesic hull modeled as cone(s) cap sphere) with disjoint geodesic hulls have non-colinear barycenters (not SameRay). Discharges review finding F2: the implication Prop 3.1's induction asserts without proof, for the empirical regime of Thm 1.1 and restricted Thm 1.2. General-measure case adds only 'barycenter in closed convex hull of support'."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull"
+paper     = "Prop 3.1 induction, p.16-17 (finding F2)"
+created   = "2026-06-30"
+
 # ===========================================================================
 # Meta nodes (infrastructure, not mathematical claims)
 # ===========================================================================

@@ -65,6 +65,7 @@ Mathlib and becomes the kernel-checked leaf set L1-L10.
 | L8 | Markov bound (Claim 2) | (deferred) | proved-informal |
 | L9 | ball-chain retention (Lemma B.1) | `ball_chain_geom` | machine-checked |
 | L10 | pigeonhole (Lemma 3.4 Part 1) | `exists_ne_in_ball` | machine-checked |
+| L11 | disjoint hulls ⟹ non-colinear barycenters (F2) | `barycenter_noncolinear_of_disjoint_hull` | machine-checked |
 
 L8 is deferred: a faithful proof needs a Lipschitz-bump and a `μ(B) ≤ ∫ g dμ` measure-integral
 argument on top of the `W1` axiom, and its status would be `math.axiomatised` regardless. It is left
@@ -112,9 +113,19 @@ not supplied.
 
 Why it matters: the entire case split (colinear-with-at-most-one, relabel as `N-1`, apply Lemma 3.4)
 is well-defined only if `ℰ_{μ_N}` cannot be colinear with two distinct earlier barycenters.
-Question to resolve: is the implication true in general, or does it rely on a genericity/orthant
-property that should be stated? Likely true and patchable, but currently a "clearly" hiding real
-content. Recorded as `math.proved-informal` with this caveat; not promoted further.
+
+**Resolved (leaf L11, machine-checked).** The implication is true, with a clean proof. Within an open
+hemisphere, spherical geodesics are radial projections of chords, so `conv_g(s) = cone(s) ∩ 𝕊^{d-1}`.
+The barycenter `∫ x dμ` is a nonnegative average of support points, hence lies in `cone(supp μ)`;
+its normalization lies in `conv_g(supp μ)`. If two barycenters were colinear (same ray — both in the
+positive orthant, so "colinear" is a positive multiple, i.e. `SameRay`), their common normalized
+direction would lie in both hulls, contradicting disjointness. Leaf L11
+(`barycenter_noncolinear_of_disjoint_hull`) formalizes this for the empirical barycenter `∑ wₚ • p`
+(`wₚ ≥ 0`), kernel-clean — exactly the regime of Theorem 1.1 (Dirac targets) and restricted
+Theorem 1.2 (empirical targets). The only residual for the general-measure case is the standard fact
+"the barycenter of a probability measure lies in the closed convex hull of its support," which does
+not reintroduce the optimal-transport axioms. The Prop 3.1 headline stays `math.open` (it still rests
+on the flow / `conv_g`-nesting axioms), but the F2 gap itself is closed.
 
 ### F3 (MINOR, expected) Prop 2.1 rate and clustering rest on cited dynamical-systems machinery (p.11)
 
@@ -198,9 +209,11 @@ axioms and were not re-derived line-by-line.
   Steps 1-2, faithfully.
 - **Ready after fixes**: Lemma B.2 needs the F1 sign correction (`U = +z1ᵀ, b = -cos(R)1`); the
   statement is true once corrected. Our Lean L2 already uses the mathematically correct gate identity.
-- **Not yet fully rigorous**: Prop 3.1's "disjoint hulls ⟹ non-colinear barycenters" step (F2) needs a
-  supporting lemma before a faithful formalization; until then the disentanglement headline stays
-  `math.open` and its informal status carries the F2 caveat.
+- **F2 resolved**: Prop 3.1's "disjoint hulls ⟹ non-colinear barycenters" step is now the
+  machine-checked leaf L11 (`barycenter_noncolinear_of_disjoint_hull`) for the empirical regime; only
+  the standard "barycenter ∈ closed convex hull of support" remains for general measures. The Prop 3.1
+  headline stays `math.open` for the independent reason that it rests on the flow / `conv_g`-nesting
+  axioms.
 - No errors found that threaten the main theorems; the one real bug (F1) is a recoverable sign typo,
   and the formalization plus the numerical campaign caught it independently.
 

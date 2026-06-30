@@ -71,6 +71,13 @@ Per-step retention $(1-\varepsilon)$ gives $a_K \ge (1-\varepsilon)^K a_0$ (Lemm
 A nonempty open ball contains a point $\ne a$, so no map is constant on it (Lemma 3.4 Part 1). [machine-checked]
 \end{lemma}
 
+\begin{lemma}[Disjoint hulls give non-colinear barycenters, L11]\label{lem:noncol}\lean{MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull}\leanok
+Modeling $\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}$ (faithful in a
+hemisphere), empirical measures in the orthant with disjoint geodesic hulls have non-colinear
+barycenters (not $\mathrm{SameRay}$). Discharges the step Proposition 3.1's induction asserts without
+proof (finding F2); kernel-clean for the empirical regime of Thm 1.1 / restricted Thm 1.2. [machine-checked]
+\end{lemma}
+
 \begin{lemma}[Linearized OT bound, L7]\label{lem:l52}\lean{MeasureToMeasure.Leaves.lemma_5_2}\uses{ax:W2}
 $W_2(T^1_\#\mu, T^2_\#\mu) \le \|T^1-T^2\|_{L^2(\mu)}$ (Lemma 5.2). [axiomatised]
 \end{lemma}
@@ -106,11 +113,11 @@ Disjoint-support atomless measures cluster to $M$ atoms. [informal]
 \begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [informal]\end{lemma}
 \begin{lemma}[Make non-colinear, 3.4]\label{lem:34}\uses{lem:pigeon,lem:bary}Two measures made non-colinear. [informal]\end{lemma}
 
-\begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34}
+\begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34,lem:noncol}
 A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]
-Caveat (F2): the induction asserts "disjoint geodesic hulls in $\mathbb Q_1^{d-1}$ $\Rightarrow$
-pairwise non-colinear barycenters" without proof; the case split rests on it. Needs a supporting
-lemma before a faithful formalization (see \texttt{RESEARCH.md}).
+The "disjoint hulls $\Rightarrow$ non-colinear barycenters" step the induction asserted without proof
+(finding F2) is now the machine-checked leaf L11 (\ref{lem:noncol}) for the empirical regime; the
+headline stays open only because it rests on the flow / $\operatorname{conv}_g$-nesting axioms.
 \end{proposition}
 
 \section{Matching discrete measures}
