@@ -708,12 +708,76 @@
 
   </div>
 </div>
-<div class="lemma_thmwrapper theorem-style-plain" id="lem:l52">
+<div class="lemma_thmwrapper theorem-style-plain" id="lem:noncolgen">
   <div class="lemma_thmheading">
     <span class="lemma_thmcaption">
     Lemma
     </span>
     <span class="lemma_thmlabel">14</span>
+    <span class="lemma_thmtitle">F2, general probability measures, L11\('\)</span>
+    <div class="thm_header_extras">
+
+    
+    ✓
+        </div>
+    <div class="thm_header_hidden_extras">
+
+    <a class="icon proof" href="index.html#lem:noncolgen">#</a>
+    
+    
+    <button class="modal"><svg  class="icon icon-mindmap "><use xlink:href="symbol-defs.svg#icon-mindmap"></use></svg>
+</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Uses</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="index.html#lem:noncol">Lemma 13</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+    
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull_general" class="lean_decl">MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull_general</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
+        </div>
+  </div>
+  <div class="lemma_thmcontent">
+  <p>For arbitrary probability measures supported in disjoint closed convex cones the barycenters are non-colinear, via Mathlib’s <span class="ttfamily">Convex.integral_mem</span> (the barycenter lies in any closed convex set carrying full mass). Closes the general-measure residual of F2 with no new axioms. [machine-checked] </p>
+
+  </div>
+</div>
+<div class="lemma_thmwrapper theorem-style-plain" id="lem:l52">
+  <div class="lemma_thmheading">
+    <span class="lemma_thmcaption">
+    Lemma
+    </span>
+    <span class="lemma_thmlabel">15</span>
     <span class="lemma_thmtitle">Linearized OT bound, L7</span>
     <div class="thm_header_extras">
 
@@ -775,7 +839,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">15</span>
+    <span class="lemma_thmlabel">16</span>
     <span class="lemma_thmtitle">Markov bound, L8</span>
     <div class="thm_header_extras">
 
@@ -806,10 +870,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Leaves.markov_bound" class="lean_decl">MeasureToMeasure.Leaves.markov_bound</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p> \(W_2(\mu ,\delta _{x_0})\le \eta _2 \Rightarrow 1-\mu (B(x_0,\eta _3))\le C\eta _2/\eta _3\) (Claim 2). [informal] </p>
+  <p> \(W_2(\mu ,\delta _{x_0})\le \eta _2 \Rightarrow 1-\mu (B(x_0,\eta _3))\le C\eta _2/\eta _3\) (Claim 2). The truncated-distance bump is machine-checked \(1\)-Lipschitz; the Markov inequality is derived from it via \(W_1\) Kantorovich-Rubinstein duality. [axiomatised] </p>
 
   </div>
 </div>
@@ -819,7 +902,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">16</span>
+    <span class="lemma_thmlabel">17</span>
     <span class="lemma_thmtitle">Single ball pair, B.2</span>
     <div class="thm_header_extras">
 
@@ -850,10 +933,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_B_2" class="lean_decl">MeasureToMeasure.Statements.lemma_B_2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p> Mass \(\mu (T,\mathcal B_0\cap \mathcal B_1)\ge (1-\varepsilon )\mu _0(\mathcal B_0)\). [informal] Caveat (F1): the printed parameters \(U=-z\mathbf1^\top ,\  b=\cos (R)\mathbf1\) make the gate active on the complement of \(\mathcal B_0\), so the lemma transports nothing as written; the sign must be flipped to \(U=+z\mathbf1^\top ,\  b=-\cos (R)\mathbf1\). True once corrected. </p>
+  <p> Mass \(\mu (T,\mathcal B_0\cap \mathcal B_1)\ge (1-\varepsilon )\mu _0(\mathcal B_0)\). [open] Caveat (F1): the printed parameters \(U=-z\mathbf1^\top ,\  b=\cos (R)\mathbf1\) make the gate active on the complement of \(\mathcal B_0\), so the lemma transports nothing as written; the sign must be flipped to \(U=+z\mathbf1^\top ,\  b=-\cos (R)\mathbf1\). True once corrected. </p>
 
   </div>
 </div>
@@ -862,7 +964,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">17</span>
+    <span class="lemma_thmlabel">18</span>
     <span class="lemma_thmtitle">Ball chain, B.1</span>
     <div class="thm_header_extras">
 
@@ -884,7 +986,7 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#lem:b2">Lemma 16</a></li>
+          <li><a href="index.html#lem:b2">Lemma 17</a></li>
           
           <li><a href="index.html#lem:chain">Lemma 11</a></li>
           
@@ -895,10 +997,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_B_1" class="lean_decl">MeasureToMeasure.Statements.lemma_B_1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p> Mass through \(K\) overlapping balls \(\ge (1-\varepsilon )^K\). [informal] </p>
+  <p> Mass through \(K\) overlapping balls \(\ge (1-\varepsilon )^K\). [open] </p>
 
   </div>
 </div>
@@ -907,7 +1028,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">18</span>
+    <span class="proposition_thmlabel">19</span>
     <span class="proposition_thmtitle">Clustering to a point, 2.1</span>
     <div class="thm_header_extras">
 
@@ -940,10 +1061,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.prop_2_1" class="lean_decl">MeasureToMeasure.Statements.prop_2_1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="proposition_thmcontent">
-  <p> A single-hemisphere measure clusters to a point; \(\mathrm{diam}\to 0\) at rate \(O(\log 1/\varepsilon )\). [informal] </p>
+  <p> A single-hemisphere measure clusters to a point; \(\mathrm{diam}\to 0\) at rate \(O(\log 1/\varepsilon )\). [open] </p>
 
   </div>
 </div>
@@ -952,7 +1092,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">19</span>
+    <span class="proposition_thmlabel">20</span>
     <span class="proposition_thmtitle">Clustering to discrete, 2.2</span>
     <div class="thm_header_extras">
 
@@ -974,9 +1114,9 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#lem:b1">Lemma 17</a></li>
+          <li><a href="index.html#lem:b1">Lemma 18</a></li>
           
-          <li><a href="index.html#prop:21">Proposition 18</a></li>
+          <li><a href="index.html#prop:21">Proposition 19</a></li>
           
         </ul>
     
@@ -985,10 +1125,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.prop_2_2" class="lean_decl">MeasureToMeasure.Statements.prop_2_2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="proposition_thmcontent">
-  <p> Disjoint-support atomless measures cluster to \(M\) atoms. [informal] </p>
+  <p> Disjoint-support atomless measures cluster to \(M\) atoms. [open] </p>
 
   </div>
 </div>
@@ -998,7 +1157,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">20</span>
+    <span class="lemma_thmlabel">21</span>
     <span class="lemma_thmtitle">Transport to the orthant, 3.2</span>
     <div class="thm_header_extras">
 
@@ -1029,10 +1188,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_3_2" class="lean_decl">MeasureToMeasure.Statements.lemma_3_2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>One switch moves measures into \(\mathbb Q_1^{d-1}\). [informal]</p>
+  <p>One switch moves measures into \(\mathbb Q_1^{d-1}\). [open]</p>
 
   </div>
 </div>
@@ -1041,7 +1219,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">21</span>
+    <span class="lemma_thmlabel">22</span>
     <span class="lemma_thmtitle">Disentangle non-colinear, 3.3</span>
     <div class="thm_header_extras">
 
@@ -1072,10 +1250,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_3_3" class="lean_decl">MeasureToMeasure.Statements.lemma_3_3</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>Shrink a measure’s hull to its barycenter direction. [informal]</p>
+  <p>Shrink a measure’s hull to its barycenter direction. [open]</p>
 
   </div>
 </div>
@@ -1084,7 +1281,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">22</span>
+    <span class="lemma_thmlabel">23</span>
     <span class="lemma_thmtitle">Make non-colinear, 3.4</span>
     <div class="thm_header_extras">
 
@@ -1110,6 +1307,8 @@
           
           <li><a href="index.html#lem:bary">Lemma 7</a></li>
           
+          <li><a href="index.html#lem:noncol">Lemma 13</a></li>
+          
         </ul>
     
       </div>
@@ -1117,10 +1316,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_3_4_part1" class="lean_decl">MeasureToMeasure.Statements.lemma_3_4_part1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>Two measures made non-colinear. [informal]</p>
+  <p>Two measures made non-colinear. [open]</p>
 
   </div>
 </div>
@@ -1129,7 +1347,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">23</span>
+    <span class="proposition_thmlabel">24</span>
     <span class="proposition_thmtitle">Disentanglement, 3.1</span>
     <div class="thm_header_extras">
 
@@ -1151,11 +1369,11 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#lem:32">Lemma 20</a></li>
+          <li><a href="index.html#lem:32">Lemma 21</a></li>
           
-          <li><a href="index.html#lem:33">Lemma 21</a></li>
+          <li><a href="index.html#lem:33">Lemma 22</a></li>
           
-          <li><a href="index.html#lem:34">Lemma 22</a></li>
+          <li><a href="index.html#lem:34">Lemma 23</a></li>
           
           <li><a href="index.html#lem:noncol">Lemma 13</a></li>
           
@@ -1198,7 +1416,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">24</span>
+    <span class="proposition_thmlabel">25</span>
     <span class="proposition_thmtitle">Steer one point, 4.2</span>
     <div class="thm_header_extras">
 
@@ -1231,10 +1449,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.prop_4_2" class="lean_decl">MeasureToMeasure.Statements.prop_4_2</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="proposition_thmcontent">
-  <p> \(x_0^M\to y^M\) while inactive points stay fixed, \(\le 6\) switches. [informal] </p>
+  <p> \(x_0^M\to y^M\) while inactive points stay fixed, \(\le 6\) switches. [open] </p>
 
   </div>
 </div>
@@ -1243,7 +1480,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">25</span>
+    <span class="proposition_thmlabel">26</span>
     <span class="proposition_thmtitle">Match ensembles, 4.1</span>
     <div class="thm_header_extras">
 
@@ -1265,7 +1502,7 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:42">Proposition 24</a></li>
+          <li><a href="index.html#prop:42">Proposition 25</a></li>
           
         </ul>
     
@@ -1274,10 +1511,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.prop_4_1" class="lean_decl">MeasureToMeasure.Statements.prop_4_1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="proposition_thmcontent">
-  <p> \(M\) points \(x_0^i\to y^i\) exactly, \(\le 6M\) switches. [informal] </p>
+  <p> \(M\) points \(x_0^i\to y^i\) exactly, \(\le 6M\) switches. [open] </p>
 
   </div>
 </div>
@@ -1287,7 +1543,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">26</span>
+    <span class="lemma_thmlabel">27</span>
     <span class="lemma_thmtitle">Transport maps preserved, 5.1</span>
     <div class="thm_header_extras">
 
@@ -1309,7 +1565,7 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:31">Proposition 23</a></li>
+          <li><a href="index.html#prop:31">Proposition 24</a></li>
           
         </ul>
     
@@ -1318,10 +1574,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_5_1" class="lean_decl">MeasureToMeasure.Statements.lemma_5_1</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>Existence of \(\psi \). [informal]</p>
+  <p>Existence of \(\psi \). [open]</p>
 
   </div>
 </div>
@@ -1330,7 +1605,7 @@
     <span class="lemma_thmcaption">
     Lemma
     </span>
-    <span class="lemma_thmlabel">27</span>
+    <span class="lemma_thmlabel">28</span>
     <span class="lemma_thmtitle">\(L^2\) approximation, 5.4</span>
     <div class="thm_header_extras">
 
@@ -1352,9 +1627,9 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:22">Proposition 19</a></li>
+          <li><a href="index.html#prop:22">Proposition 20</a></li>
           
-          <li><a href="index.html#prop:41">Proposition 25</a></li>
+          <li><a href="index.html#prop:41">Proposition 26</a></li>
           
         </ul>
     
@@ -1363,10 +1638,29 @@
 
     
     
+    <button class="modal lean">L∃∀N</button>
+        <div class="modal-container">
+      <div class="modal-content">
+        <header>
+          <h1>Lean declarations</h1>
+          <button class="closebtn"><svg  class="icon icon-cross "><use xlink:href="symbol-defs.svg#icon-cross"></use></svg>
+</button>
+        </header>
+        
+        <ul class="uses">
+          
+          <li><a href="https://github.com/aquemy/measure-to-measure-transformers/find/#doc/MeasureToMeasure.Statements.lemma_5_4" class="lean_decl">MeasureToMeasure.Statements.lemma_5_4</a></li>
+          
+        </ul>
+    
+      </div>
+    </div>
+
+    
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>Approximate any \(\psi \) by a flow map. [informal]</p>
+  <p>Approximate any \(\psi \) by a flow map. [open]</p>
 
   </div>
 </div>
@@ -1375,7 +1669,7 @@
     <span class="theorem_thmcaption">
     Theorem
     </span>
-    <span class="theorem_thmlabel">28</span>
+    <span class="theorem_thmlabel">29</span>
     <span class="theorem_thmtitle">Theorem 1.2</span>
     <div class="thm_header_extras">
 
@@ -1397,13 +1691,13 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:31">Proposition 23</a></li>
+          <li><a href="index.html#prop:31">Proposition 24</a></li>
           
-          <li><a href="index.html#lem:51">Lemma 26</a></li>
+          <li><a href="index.html#lem:51">Lemma 27</a></li>
           
-          <li><a href="index.html#lem:l52">Lemma 14</a></li>
+          <li><a href="index.html#lem:l52">Lemma 15</a></li>
           
-          <li><a href="index.html#lem:54">Lemma 27</a></li>
+          <li><a href="index.html#lem:54">Lemma 28</a></li>
           
         </ul>
     
@@ -1443,7 +1737,7 @@
     <span class="theorem_thmcaption">
     Theorem
     </span>
-    <span class="theorem_thmlabel">29</span>
+    <span class="theorem_thmlabel">30</span>
     <span class="theorem_thmtitle">Theorem 1.1</span>
     <div class="thm_header_extras">
 
@@ -1465,11 +1759,11 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:31">Proposition 23</a></li>
+          <li><a href="index.html#prop:31">Proposition 24</a></li>
           
-          <li><a href="index.html#prop:21">Proposition 18</a></li>
+          <li><a href="index.html#prop:21">Proposition 19</a></li>
           
-          <li><a href="index.html#prop:41">Proposition 25</a></li>
+          <li><a href="index.html#prop:41">Proposition 26</a></li>
           
         </ul>
     
@@ -1509,7 +1803,7 @@
     <span class="proposition_thmcaption">
     Proposition
     </span>
-    <span class="proposition_thmlabel">30</span>
+    <span class="proposition_thmlabel">31</span>
     <span class="proposition_thmtitle">Generic O(1) switches, 6.2</span>
     <div class="thm_header_extras">
 
@@ -1531,7 +1825,7 @@
         
         <ul class="uses">
           
-          <li><a href="index.html#prop:21">Proposition 18</a></li>
+          <li><a href="index.html#prop:21">Proposition 19</a></li>
           
         </ul>
     

@@ -78,40 +78,48 @@ barycenters (not $\mathrm{SameRay}$). Discharges the step Proposition 3.1's indu
 proof (finding F2); kernel-clean for the empirical regime of Thm 1.1 / restricted Thm 1.2. [machine-checked]
 \end{lemma}
 
+\begin{lemma}[F2, general probability measures, L11$'$]\label{lem:noncolgen}\lean{MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull_general}\uses{lem:noncol}\leanok
+For arbitrary probability measures supported in disjoint closed convex cones the barycenters are
+non-colinear, via Mathlib's \texttt{Convex.integral\_mem} (the barycenter lies in any closed convex
+set carrying full mass). Closes the general-measure residual of F2 with no new axioms. [machine-checked]
+\end{lemma}
+
 \begin{lemma}[Linearized OT bound, L7]\label{lem:l52}\lean{MeasureToMeasure.Leaves.lemma_5_2}\uses{ax:W2}
 $W_2(T^1_\#\mu, T^2_\#\mu) \le \|T^1-T^2\|_{L^2(\mu)}$ (Lemma 5.2). [axiomatised]
 \end{lemma}
 
-\begin{lemma}[Markov bound, L8]\label{lem:markov}\uses{ax:W2}
-$W_2(\mu,\delta_{x_0})\le\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). [informal]
+\begin{lemma}[Markov bound, L8]\label{lem:markov}\lean{MeasureToMeasure.Leaves.markov_bound}\uses{ax:W2}
+$W_2(\mu,\delta_{x_0})\le\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). The
+truncated-distance bump is machine-checked $1$-Lipschitz; the Markov inequality is derived from it via
+$W_1$ Kantorovich-Rubinstein duality. [axiomatised]
 \end{lemma}
 
 \section{Mass transport and clustering}
 
-\begin{lemma}[Single ball pair, B.2]\label{lem:b2}\uses{lem:gate}
-Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. [informal]
+\begin{lemma}[Single ball pair, B.2]\label{lem:b2}\lean{MeasureToMeasure.Statements.lemma_B_2}\uses{lem:gate}
+Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. [open]
 Caveat (F1): the printed parameters $U=-z\mathbf 1^\top,\ b=\cos(R)\mathbf 1$ make the gate active on
 the complement of $\mathcal B_0$, so the lemma transports nothing as written; the sign must be flipped
 to $U=+z\mathbf 1^\top,\ b=-\cos(R)\mathbf 1$. True once corrected.
 \end{lemma}
 
-\begin{lemma}[Ball chain, B.1]\label{lem:b1}\uses{lem:b2,lem:chain}
-Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. [informal]
+\begin{lemma}[Ball chain, B.1]\label{lem:b1}\lean{MeasureToMeasure.Statements.lemma_B_1}\uses{lem:b2,lem:chain}
+Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. [open]
 \end{lemma}
 
-\begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\uses{def:projector,ax:flow}
-A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$. [informal]
+\begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\lean{MeasureToMeasure.Statements.prop_2_1}\uses{def:projector,ax:flow}
+A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$. [open]
 \end{proposition}
 
-\begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\uses{lem:b1,prop:21}
-Disjoint-support atomless measures cluster to $M$ atoms. [informal]
+\begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\lean{MeasureToMeasure.Statements.prop_2_2}\uses{lem:b1,prop:21}
+Disjoint-support atomless measures cluster to $M$ atoms. [open]
 \end{proposition}
 
 \section{Disentangling supports}
 
-\begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [informal]\end{lemma}
-\begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [informal]\end{lemma}
-\begin{lemma}[Make non-colinear, 3.4]\label{lem:34}\uses{lem:pigeon,lem:bary}Two measures made non-colinear. [informal]\end{lemma}
+\begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\lean{MeasureToMeasure.Statements.lemma_3_2}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [open]\end{lemma}
+\begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\lean{MeasureToMeasure.Statements.lemma_3_3}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [open]\end{lemma}
+\begin{lemma}[Make non-colinear, 3.4]\label{lem:34}\lean{MeasureToMeasure.Statements.lemma_3_4_part1}\uses{lem:pigeon,lem:bary,lem:noncol}Two measures made non-colinear. [open]\end{lemma}
 
 \begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34,lem:noncol}
 A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]
@@ -122,18 +130,18 @@ headline stays open only because it rests on the flow / $\operatorname{conv}_g$-
 
 \section{Matching discrete measures}
 
-\begin{proposition}[Steer one point, 4.2]\label{prop:42}\uses{lem:sep,lem:grad}
-$x_0^M\to y^M$ while inactive points stay fixed, $\le 6$ switches. [informal]
+\begin{proposition}[Steer one point, 4.2]\label{prop:42}\lean{MeasureToMeasure.Statements.prop_4_2}\uses{lem:sep,lem:grad}
+$x_0^M\to y^M$ while inactive points stay fixed, $\le 6$ switches. [open]
 \end{proposition}
 
-\begin{proposition}[Match ensembles, 4.1]\label{prop:41}\uses{prop:42}
-$M$ points $x_0^i\to y^i$ exactly, $\le 6M$ switches. [informal]
+\begin{proposition}[Match ensembles, 4.1]\label{prop:41}\lean{MeasureToMeasure.Statements.prop_4_1}\uses{prop:42}
+$M$ points $x_0^i\to y^i$ exactly, $\le 6M$ switches. [open]
 \end{proposition}
 
 \section{Main results}
 
-\begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\uses{prop:31}Existence of $\psi$. [informal]\end{lemma}
-\begin{lemma}[$L^2$ approximation, 5.4]\label{lem:54}\uses{prop:22,prop:41}Approximate any $\psi$ by a flow map. [informal]\end{lemma}
+\begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\lean{MeasureToMeasure.Statements.lemma_5_1}\uses{prop:31}Existence of $\psi$. [open]\end{lemma}
+\begin{lemma}[$L^2$ approximation, 5.4]\label{lem:54}\lean{MeasureToMeasure.Statements.lemma_5_4}\uses{prop:22,prop:41}Approximate any $\psi$ by a flow map. [open]\end{lemma}
 
 \begin{theorem}[Theorem 1.2]\label{thm:12}\lean{MeasureToMeasure.Statements.theorem_1_2}\uses{prop:31,lem:51,lem:l52,lem:54}
 A single Transformer matches $N$ arbitrary inputs to $N$ arbitrary (transport-matchable) targets in $W_2$. [open]

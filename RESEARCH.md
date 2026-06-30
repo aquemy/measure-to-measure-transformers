@@ -62,14 +62,26 @@ Mathlib and becomes the kernel-checked leaf set L1-L10.
 | L5 | Lyapunov `Ė=−α sin²θ ≤ 0` (Ex. 6.1) | `lyapunov_hasDerivAt` | machine-checked |
 | L6 | barycenter ODE + strict increase (B.9) | `barycenter_hasDerivAt_inner` | machine-checked |
 | L7 | linearized OT bound (Lemma 5.2) | `lemma_5_2` | axiomatised (over `W2`) |
-| L8 | Markov bound (Claim 2) | (deferred) | proved-informal |
+| L8 | Markov bound (Claim 2) | `markov_bound` | axiomatised (over `W1`) |
 | L9 | ball-chain retention (Lemma B.1) | `ball_chain_geom` | machine-checked |
 | L10 | pigeonhole (Lemma 3.4 Part 1) | `exists_ne_in_ball` | machine-checked |
 | L11 | disjoint hulls ⟹ non-colinear barycenters (F2) | `barycenter_noncolinear_of_disjoint_hull` | machine-checked |
+| L11′ | F2 general case (any probability measure) | `barycenter_noncolinear_of_disjoint_hull_general` | machine-checked |
 
-L8 is deferred: a faithful proof needs a Lipschitz-bump and a `μ(B) ≤ ∫ g dμ` measure-integral
-argument on top of the `W1` axiom, and its status would be `math.axiomatised` regardless. It is left
-`math.proved-informal` (reviewed, not formalized) until the bump construction is added.
+L8 is now formalized (`markov_bound`): the truncated-distance bump `min(η₃, d(·,x₀))` is machine-
+checked `1`-Lipschitz (`distBump_lipschitz`), and the Markov inequality `μ.real{d(·,x₀) ≥ η₃} ≤ Cη₂/η₃`
+is derived from it via integral monotonicity and the `W1` Kantorovich-Rubinstein axiom; it is therefore
+`math.axiomatised` (depends on `W1`, `W1_ge_of_lipschitz`, confirmed by `#print axioms`).
+
+The mid-level connective lemmas (Props 2.1, 2.2, 4.1, 4.2; Lemmas 3.2-3.4, 5.1, 5.4, B.1, B.2) are now
+present as type-correct Lean statements in `Statements/MidLevel.lean` (`sorry` stubs, `math.open`),
+stated against the existing axiom layer with **no new axioms** (`supportedIn μ S := μ Sᶜ = 0`,
+barycenter `:= ∫ x ∂μ`). With the leaves, the headlines, and these, every statement of the paper now
+appears in Lean.
+
+Finding F2 is fully discharged: the empirical case (`barycenter_noncolinear_of_disjoint_hull`) and the
+general probability-measure case (`barycenter_noncolinear_of_disjoint_hull_general`, via Mathlib's
+`Convex.integral_mem`) are both machine-checked.
 
 ## Adversarial proof review (Phase 1, deep pass)
 
