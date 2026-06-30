@@ -266,7 +266,7 @@ created   = "2026-06-30"
 [claims.exp-e1-mass-transport]
 kind      = "experiment"
 statement = "E1: integrate the ReLU-gated flow and verify mass fraction in B0 cap B1 >= 1-eps, and >= (1-eps)^K through a K-ball chain. Tests Lemma B.2 / B.1."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Lem B.1-B.2"
 created   = "2026-06-30"
 
@@ -294,7 +294,7 @@ created   = "2026-06-30"
 [claims.exp-e5-lyapunov]
 kind      = "experiment"
 statement = "E5: simulate the d=2 dynamics and verify E = 1 - cos theta decreases monotonically and x_i -> u_i. Tests Example 6.1."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Example 6.1"
 created   = "2026-06-30"
 
