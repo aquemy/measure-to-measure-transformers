@@ -16,6 +16,7 @@ development is the (multi-year) way to discharge them.
 namespace MeasureToMeasure.Axioms
 
 open MeasureTheory
+open scoped ENNReal
 
 variable {d : ℕ}
 
@@ -45,5 +46,16 @@ axiom W1 (μ ν : Measure (Eucl d)) : ℝ
 
 axiom W1_ge_of_lipschitz (μ ν : Measure (Eucl d)) (f : Eucl d → ℝ)
     (hf : LipschitzWith 1 f) : ∫ x, f x ∂μ - ∫ x, f x ∂ν ≤ W1 μ ν
+
+/-- AXIOM (convexity of `W₂` under mixtures). For probability measures, the `W₂` distance between two
+convex combinations sharing the same weights is at most the uniform bound on the component distances.
+This is the gluing-of-couplings estimate `W₂(∑ aₖ Pₖ, ∑ aₖ Qₖ)² ≤ ∑ aₖ W₂(Pₖ, Qₖ)²` (couple each pair
+optimally and sum the couplings), packaged in the form actually used: if every component is within
+`ε`, so is the mixture. A standard optimal-transport fact, absent from Mathlib `v4.31.0`. -/
+axiom W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) (P Q : Fin M → Measure (Eucl d))
+    (ha : ∑ k, a k = 1) (ε : ℝ) (hε : 0 ≤ ε)
+    (hP : ∀ k, IsProbabilityMeasure (P k)) (hQ : ∀ k, IsProbabilityMeasure (Q k))
+    (hbound : ∀ k, W2 (P k) (Q k) ≤ ε) :
+    W2 (∑ k, a k • P k) (∑ k, a k • Q k) ≤ ε
 
 end MeasureToMeasure.Axioms

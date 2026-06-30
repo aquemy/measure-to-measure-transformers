@@ -44,22 +44,6 @@ target rather than the zero measure. -/
 def Matchable {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d)) : Prop :=
   ∀ i, ∃ T : Eucl d → Eucl d, Measurable T ∧ (μ₀ i).map T = μ₁ i
 
-/-- The measures in the family have pairwise disjoint supports: a family of carrier sets `S i` (each
-holding the full mass of `ν i`) that are pairwise disjoint. -/
-def DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop :=
-  ∃ S : Fin N → Set (Eucl d), (∀ i, supportedIn (ν i) (S i)) ∧
-    Pairwise (fun i j => Disjoint (S i) (S j))
-
-/-- AXIOM (parking / simultaneous action, Appendix B). If a family of measures has pairwise disjoint
-supports and each member can be steered to within `ε` of its target by *some* schedule, then a
-*single* schedule steers all of them simultaneously to within `ε`: each member's schedule is gated to
-its (disjoint) support region and parks on the others (`flowMap_id_on_parked`). Mathlib has no
-continuity-equation theory to derive this, so it is a labeled structural axiom. -/
-axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
-    (hdisj : DisjointSupports ν)
-    (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
-    ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
-
 /-- AXIOM (geometric output of the disentanglement dynamics, Section 3.3). Under a shared missing
 direction, one schedule concentrates each measure of the family into a small ball
 `B(α i, r)` (`r < 1`) around a *unit* direction `α i`, with the directions pairwise separated by at
@@ -125,7 +109,8 @@ target point in its hemisphere (`cluster_to_point`), combine the per-member sche
 the parking construction (`exists_parked_schedule`), and pre-compose with the disentangler
 (`comp`, `measureFlow_comp`). Effective status `math.axiomatised`. -/
 theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
-    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀) :
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) :
     ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
   obtain ⟨θ₁, hdisj, hhemi⟩ := prop_3_1 hd μ₀ T hT hmiss
   -- Each disentangled measure can be clustered to its prescribed target point.
@@ -133,6 +118,8 @@ theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)
       W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (Measure.dirac (x i)) ≤ ε := by
     intro i
     obtain ⟨e, he, hsupp⟩ := hhemi i
+    haveI := hμ i
+    haveI := isProbabilityMeasure_measureFlow θ₁ T (μ₀ i)
     exact cluster_to_point (measureFlow θ₁ T (μ₀ i)) T ε hT hε (x i) e he hsupp
   -- Park the per-member schedules into a single schedule acting on the disjoint family.
   obtain ⟨Θ, hΘ⟩ :=

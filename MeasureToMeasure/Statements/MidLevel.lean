@@ -42,24 +42,19 @@ outside `S`). Avoids the (absent) packaged measure-support API while staying fai
 `ℰ_μ[x] = ∫ x dμ` is reused from the L11 leaf (`MeasureToMeasure.Leaves.barycenter`). -/
 def supportedIn (μ : Measure (Eucl d)) (S : Set (Eucl d)) : Prop := μ Sᶜ = 0
 
+/-- A family of measures has pairwise disjoint supports: a family of carrier sets `S i` (each holding
+the full mass of `ν i`) that are pairwise disjoint. -/
+def DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop :=
+  ∃ S : Fin N → Set (Eucl d), (∀ i, supportedIn (ν i) (S i)) ∧
+    Pairwise (fun i j => Disjoint (S i) (S j))
+
 /-- **Proposition 2.1** (clustering to a point). A measure supported in an open hemisphere can be
 driven arbitrarily `W₂`-close to a Dirac mass. AXIOM (`math.axiomatised`): the convergence rests on
 the LaSalle invariance principle and Hartman-Grobman linearization for the attention flow
 (Section 2.1), which Mathlib lacks. `Depends-On` the barycenter ODE leaf L6. -/
-axiom prop_2_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
     ∃ (θ : Params d) (z : Eucl d), W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
-
-/-- **Proposition 2.2** (clustering to a discrete measure). An atomless measure whose support lies in
-a region disjoint from the others can be driven `W₂`-close to a prescribed `M`-atom empirical
-measure. AXIOM (`math.axiomatised`): the construction partitions the support and clusters each piece
-via Proposition 2.1 with the parking mechanism of Appendix B; this rests on the same missing
-dynamics. `Depends-On prop_2_1`. -/
-axiom prop_2_2 (μ ν_target : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (hatomless : ∀ x : Eucl d, μ {x} = 0)
-    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞)
-    (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
-    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε
 
 /-- **Lemma 3.2** (transport into the orthant). One parameter switch moves the measure into
 `Q₁^{d-1}`. AXIOM (`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
@@ -152,7 +147,8 @@ it to a point (Proposition 2.1), then steer that point to `z` (Proposition 4.1, 
 active point). AXIOM (`math.axiomatised`): a combination of the two axiomatized propositions; it is
 the single-measure controllability fact that Theorem 1.1 lifts to a family by disentanglement and
 parking. `Depends-On prop_2_1`, `Depends-On prop_4_1`. -/
-axiom cluster_to_point (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ)
+    (hT : 0 < T) (hε : 0 < ε)
     (z e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
     ∃ θ : Params d, W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
@@ -217,5 +213,58 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < �
       _ ≤ c * (measureFlow θ T μ) (B k) := by gcongr
       _ ≤ (measureFlow ψ T (measureFlow θ T μ)) (B k ∩ B (k + 1)) := hψmass
       _ ≤ (measureFlow ψ T (measureFlow θ T μ)) (B (k + 1)) := measure_mono Set.inter_subset_right
+
+/-- AXIOM (parking / simultaneous action, Appendix B). If a family of measures has pairwise disjoint
+supports and each member can be steered to within `ε` of its target by *some* schedule, then a
+*single* schedule steers all of them simultaneously to within `ε`: each member's schedule is gated to
+its (disjoint) support region and parks on the others (`flowMap_id_on_parked`). Mathlib has no
+continuity-equation theory to derive this, so it is a labeled structural axiom. -/
+axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
+    (hdisj : DisjointSupports ν)
+    (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
+    ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
+
+/-- AXIOM (atomless decomposition). An atomless probability measure splits into `M` probability
+measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`), with pairwise disjoint supports
+each confined to an open hemisphere: `μ = ∑ α k • P k`. This is the standard packing/partition step
+of Proposition 2.2 (atomless measures admit any convex decomposition with disjoint supports, a
+Lyapunov/Sierpiński-type fact), placing the pieces into disjoint hemispheres so Proposition 2.1
+clustering applies to each. Absent from Mathlib `v4.31.0`. -/
+axiom exists_atomless_partition (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (hatomless : ∀ x : Eucl d, μ {x} = 0)
+    {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) :
+    ∃ P : Fin M → Measure (Eucl d), (∀ k, IsProbabilityMeasure (P k)) ∧
+      μ = ∑ k, α k • P k ∧ DisjointSupports P ∧
+      ∀ k, ∃ e : Eucl d, ‖e‖ = 1 ∧ supportedIn (P k) {x | 0 < ⟪e, x⟫}
+
+/-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure can be
+driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` (convex weights,
+`∑ α k = 1`).
+
+**Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass
+`α k` in disjoint hemispheres (`exists_atomless_partition`); cluster each piece to its target point
+`x k` with a single parked schedule `Θ` (`cluster_to_point` per piece, combined by
+`exists_parked_schedule`); the solution map distributes over the convex combination
+(`measureFlow_sum_smul`), and the convexity of `W₂` under mixtures (`W2_convexCombo_le`) lifts the
+per-piece bounds to the whole measure. The convex-combination bookkeeping is machine-checked. -/
+theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hatomless : ∀ x : Eucl d, μ {x} = 0)
+    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
+    (ν_target : Measure (Eucl d))
+    (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
+    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
+  obtain ⟨P, hPprob, hμeq, hdisj, hhemi⟩ := exists_atomless_partition μ hatomless α hα
+  have hper : ∀ k, ∃ θ : Params d, W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
+    intro k
+    obtain ⟨e, he, hsupp⟩ := hhemi k
+    haveI := hPprob k
+    exact cluster_to_point (P k) T ε hT hε (x k) e he hsupp
+  obtain ⟨Θ, hΘ⟩ := exists_parked_schedule P (fun k => Measure.dirac (x k)) T ε hdisj hper
+  refine ⟨Θ, ?_⟩
+  rw [htgt, hμeq, measureFlow_sum_smul]
+  refine W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
+    hα ε hε.le (fun k => ?_) (fun k => ?_) hΘ
+  · haveI := hPprob k; exact isProbabilityMeasure_measureFlow Θ T (P k)
+  · infer_instance
 
 end MeasureToMeasure.Statements

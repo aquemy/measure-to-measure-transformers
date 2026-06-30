@@ -19,6 +19,7 @@ verifies the paper's logical skeleton modulo this documented surface.
 namespace MeasureToMeasure.Axioms
 
 open MeasureTheory
+open scoped ENNReal
 
 variable {d : ℕ}
 
@@ -79,5 +80,29 @@ the pushforward identity (`measureFlow_map`) and `Measure.map_dirac` (needs meas
 theorem measureFlow_dirac (θ : Params d) (t : ℝ) (z : Eucl d) :
     measureFlow θ t (Measure.dirac z) = Measure.dirac (flowMap θ t z) := by
   simp [measureFlow_map, flowMap_measurable θ t]
+
+/-- The solution map preserves probability measures: it is the pushforward under a measurable map. -/
+theorem isProbabilityMeasure_measureFlow (θ : Params d) (t : ℝ) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] : IsProbabilityMeasure (measureFlow θ t μ) := by
+  rw [measureFlow_map]
+  exact ⟨by
+    rw [Measure.map_apply (flowMap_measurable θ t) MeasurableSet.univ, Set.preimage_univ]
+    exact measure_univ⟩
+
+/-- The pushforward of a finite weighted sum of measures is the weighted sum of the pushforwards. -/
+theorem map_finsetSum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι) (a : ι → ℝ≥0∞)
+    (P : ι → Measure (Eucl d)) {f : Eucl d → Eucl d} (hf : Measurable f) :
+    (∑ i ∈ s, a i • P i).map f = ∑ i ∈ s, a i • (P i).map f := by
+  induction s using Finset.induction with
+  | empty => simp
+  | @insert i s hi ih =>
+      rw [Finset.sum_insert hi, Finset.sum_insert hi, Measure.map_add _ _ hf, Measure.map_smul, ih]
+
+/-- The solution map distributes over a finite weighted sum of measures (it is a pushforward). -/
+theorem measureFlow_sum_smul {M : ℕ} (θ : Params d) (t : ℝ) (a : Fin M → ℝ≥0∞)
+    (P : Fin M → Measure (Eucl d)) :
+    measureFlow θ t (∑ k, a k • P k) = ∑ k, a k • measureFlow θ t (P k) := by
+  simp only [measureFlow_map]
+  exact map_finsetSum_smul Finset.univ a P (flowMap_measurable θ t)
 
 end MeasureToMeasure.Axioms
