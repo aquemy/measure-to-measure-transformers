@@ -40,6 +40,9 @@ parked-region-identity properties; the switch count. [axiomatised]
 \begin{lemma}[Gate algebra and gate ODE, L2]\label{lem:gate}\lean{MeasureToMeasure.Leaves.gate_hasDerivAt_inner}\uses{lem:projector}\leanok
 $\frac{d}{dt}\langle x(t),\omega\rangle = (\cos R - \langle z,x\rangle)_+\,(1-\langle x,\omega\rangle^2)$
 along the gated flow, with the gate active exactly on $\{d_g(z,x)>R\}$ (eq. B.4-B.5). [machine-checked]
+The kernel-checked equivalence $g(x)>0 \iff d_g(z,x)>R$ corrects the printed (B.4), which states the
+gate is active on $\mathcal B_0=B(z,R)$; consistency of Lemma B.2 requires the opposite sign
+(finding F1 in \texttt{RESEARCH.md}, confirmed independently by experiment E1).
 \end{lemma}
 
 \begin{lemma}[Barycenter ODE, L6]\label{lem:bary}\lean{MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner}\uses{lem:gate}\leanok
@@ -80,6 +83,9 @@ $W_2(\mu,\delta_{x_0})\le\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta
 
 \begin{lemma}[Single ball pair, B.2]\label{lem:b2}\uses{lem:gate}
 Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. [informal]
+Caveat (F1): the printed parameters $U=-z\mathbf 1^\top,\ b=\cos(R)\mathbf 1$ make the gate active on
+the complement of $\mathcal B_0$, so the lemma transports nothing as written; the sign must be flipped
+to $U=+z\mathbf 1^\top,\ b=-\cos(R)\mathbf 1$. True once corrected.
 \end{lemma}
 
 \begin{lemma}[Ball chain, B.1]\label{lem:b1}\uses{lem:b2,lem:chain}
@@ -102,6 +108,9 @@ Disjoint-support atomless measures cluster to $M$ atoms. [informal]
 
 \begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34}
 A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]
+Caveat (F2): the induction asserts "disjoint geodesic hulls in $\mathbb Q_1^{d-1}$ $\Rightarrow$
+pairwise non-colinear barycenters" without proof; the case split rests on it. Needs a supporting
+lemma before a faithful formalization (see \texttt{RESEARCH.md}).
 \end{proposition}
 
 \section{Matching discrete measures}

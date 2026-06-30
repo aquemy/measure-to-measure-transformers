@@ -334,7 +334,7 @@
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p>\(\frac{d}{dt}\langle x(t),\omega \rangle = (\cos R - \langle z,x\rangle )_+\, (1-\langle x,\omega \rangle ^2)\) along the gated flow, with the gate active exactly on \(\{ d_g(z,x){\gt}R\} \) (eq. B.4-B.5). [machine-checked] </p>
+  <p>\(\frac{d}{dt}\langle x(t),\omega \rangle = (\cos R - \langle z,x\rangle )_+\, (1-\langle x,\omega \rangle ^2)\) along the gated flow, with the gate active exactly on \(\{ d_g(z,x){\gt}R\} \) (eq. B.4-B.5). [machine-checked] The kernel-checked equivalence \(g(x){\gt}0 \iff d_g(z,x){\gt}R\) corrects the printed (B.4), which states the gate is active on \(\mathcal B_0=B(z,R)\); consistency of Lemma B.2 requires the opposite sign (finding F1 in <span class="ttfamily">RESEARCH.md</span>, confirmed independently by experiment E1). </p>
 
   </div>
 </div>
@@ -809,7 +809,7 @@
         </div>
   </div>
   <div class="lemma_thmcontent">
-  <p> Mass \(\mu (T,\mathcal B_0\cap \mathcal B_1)\ge (1-\varepsilon )\mu _0(\mathcal B_0)\). [informal] </p>
+  <p> Mass \(\mu (T,\mathcal B_0\cap \mathcal B_1)\ge (1-\varepsilon )\mu _0(\mathcal B_0)\). [informal] Caveat (F1): the printed parameters \(U=-z\mathbf1^\top ,\  b=\cos (R)\mathbf1\) make the gate active on the complement of \(\mathcal B_0\), so the lemma transports nothing as written; the sign must be flipped to \(U=+z\mathbf1^\top ,\  b=-\cos (R)\mathbf1\). True once corrected. </p>
 
   </div>
 </div>
@@ -1142,7 +1142,7 @@
         </div>
   </div>
   <div class="proposition_thmcontent">
-  <p> A piecewise-constant \(\theta \) renders the \(N\) supports pairwise disjoint, \(O(dN)\) switches. [open] </p>
+  <p> A piecewise-constant \(\theta \) renders the \(N\) supports pairwise disjoint, \(O(dN)\) switches. [open] Caveat (F2): the induction asserts "disjoint geodesic hulls in \(\mathbb Q_1^{d-1}\) \(\Rightarrow \) pairwise non-colinear barycenters" without proof; the case split rests on it. Needs a supporting lemma before a faithful formalization (see <span class="ttfamily">RESEARCH.md</span>). </p>
 
   </div>
 </div>
