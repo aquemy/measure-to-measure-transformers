@@ -1,0 +1,295 @@
+# claims.toml: the CKC claim registry for measure-to-measure-transformers.
+#
+# One entry per slugged claim. The slug (table key) is what commit footers reference as
+# `claim:<slug>` / `conjecture:<slug>`. `status` is a CACHE of the effective status computed from
+# the commit graph; regenerate it, do not treat it as the source of truth.
+#
+# Source paper: Geshkovski, Rigollet, Ruiz-Balet, "Measure-to-measure interpolation using
+# Transformers", arXiv:2411.04551v3 (references/paper.pdf).
+#
+# Status legend (axis 2, epistemic):
+#   math.proved-informal  the paper proves it; reviewed by us, no Lean proof yet
+#   math.axiomatised      stated in Lean, rests on a cited axiom (missing from Mathlib)
+#   math.machine-checked  clean Lean kernel proof (Axioms: only propext/Classical.choice/Quot.sound)
+#   sci.measured          a seeded numerical experiment ran and met its pass criterion
+
+# ===========================================================================
+# Main results
+# ===========================================================================
+
+[claims.thm-1-1]
+kind      = "conjecture"
+statement = "Theorem 1.1: for Dirac targets sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.theorem_1_1"
+paper     = "Thm 1.1, p.5"
+created   = "2026-06-30"
+
+[claims.thm-1-2]
+kind      = "conjecture"
+statement = "Theorem 1.2: for targets matchable by transport maps and a shared missing direction, a single Transformer steers N inputs to within eps in W2 with piecewise-constant parameters."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.theorem_1_2"
+paper     = "Thm 1.2, p.5"
+created   = "2026-06-30"
+
+# ===========================================================================
+# Backbone propositions and lemmas
+# ===========================================================================
+
+[claims.prop-2-1]
+kind      = "conjecture"
+statement = "Proposition 2.1: attention with parameter B clusters a single-hemisphere measure to a point mass; diam(conv_g supp mu(t)) -> 0 with rate O(log 1/eps)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_2_1"
+paper     = "Prop 2.1, p.11"
+created   = "2026-06-30"
+
+[claims.prop-2-2]
+kind      = "conjecture"
+statement = "Proposition 2.2: an ensemble of disjoint-support atomless measures can be clustered to M atoms each by one flow map (packing balls + Lemma B.1)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_2_2"
+paper     = "Prop 2.2, p.11"
+created   = "2026-06-30"
+
+[claims.prop-3-1]
+kind      = "conjecture"
+statement = "Proposition 3.1: there is a piecewise-constant theta with O(d N) switches that disentangles the supports of N measures on the positive orthant cap."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_3_1"
+paper     = "Prop 3.1, p.15"
+created   = "2026-06-30"
+
+[claims.lem-3-2]
+kind      = "conjecture"
+statement = "Lemma 3.2: one switch of W transports measures not filling the sphere into the positive orthant cap Q_1^{d-1}."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_3_2"
+paper     = "Lem 3.2, p.15"
+created   = "2026-06-30"
+
+[claims.lem-3-3]
+kind      = "conjecture"
+statement = "Lemma 3.3: if barycenters are pairwise non-colinear, a piecewise-constant theta shrinks one measure's geodesic convex hull into a small ball around its barycenter direction."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_3_3"
+paper     = "Lem 3.3, p.16"
+created   = "2026-06-30"
+
+[claims.lem-3-4]
+kind      = "conjecture"
+statement = "Lemma 3.4: two measures can be made non-colinear in barycenter, via the perceptron (gamma1=1) or via attention (gamma1!=1)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_3_4"
+paper     = "Lem 3.4, p.16"
+created   = "2026-06-30"
+
+[claims.prop-4-1]
+kind      = "conjecture"
+statement = "Proposition 4.1: M points x_0^i can be steered exactly to y^i with a perceptron, using at most 6M switches and norm O(C M / (T min eps_i))."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_4_1"
+paper     = "Prop 4.1, p.18"
+created   = "2026-06-30"
+
+[claims.prop-4-2]
+kind      = "conjecture"
+statement = "Proposition 4.2: the single active point x_0^M is steered to y^M while inactive points stay fixed, via gather/corridor/restore, with at most 6 switches."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_4_2"
+paper     = "Prop 4.2, p.18"
+created   = "2026-06-30"
+
+[claims.lem-5-1]
+kind      = "conjecture"
+statement = "Lemma 5.1: transport maps T^i are preserved by the disentangling flow maps; there is a Lipschitz invertible psi with the stated pushforward identity."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_5_1"
+paper     = "Lem 5.1, p.24"
+created   = "2026-06-30"
+
+[claims.lem-5-2]
+kind      = "conjecture"
+statement = "Lemma 5.2 (linearized OT bound): W2(T1_# mu, T2_# mu) <= ||T1 - T2||_{L2(mu)} for measurable T1, T2 with T1 bijective."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_5_2"
+paper     = "Lem 5.2, p.24"
+created   = "2026-06-30"
+
+[claims.lem-5-4]
+kind      = "conjecture"
+statement = "Lemma 5.4: any psi in L2(S^{d-1}; S^{d-1}) is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_5_4"
+paper     = "Lem 5.4, p.24"
+created   = "2026-06-30"
+
+[claims.lem-b-1]
+kind      = "conjecture"
+statement = "Lemma B.1: through a chain of overlapping balls, mass mu(T, B_K) >= (1-eps)^K mu_0(union B_k), with a Lipschitz invertible flow map fixing points outside the balls."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_b_1"
+paper     = "Lem B.1, p.31"
+created   = "2026-06-30"
+
+[claims.lem-b-2]
+kind      = "conjecture"
+statement = "Lemma B.2: through a single overlapping ball pair, mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0), via the ReLU-gated drift toward an interior anchor."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_b_2"
+paper     = "Lem B.2, p.31"
+created   = "2026-06-30"
+
+[claims.lem-a-1]
+kind      = "conjecture"
+statement = "Lemma A.1: the support condition (1.5) can be removed at O(eta) cost in W2 by a curated input perturbation."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.lemma_a_1"
+paper     = "Lem A.1, p.30"
+created   = "2026-06-30"
+
+[claims.prop-6-2]
+kind      = "conjecture"
+statement = "Proposition 6.2: for generic i.i.d. discrete inputs, a single constant parameter disentangles all measures almost surely (limit clusters are distinct)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.prop_6_2"
+paper     = "Prop 6.2, p.29"
+created   = "2026-06-30"
+
+# ===========================================================================
+# Self-contained leaf computations (targets for kernel-checked Lean proofs L1-L10)
+# ===========================================================================
+
+[claims.leaf-projector]
+kind      = "conjecture"
+statement = "L1: the tangential projector P_x^perp = I - x x^T is symmetric, idempotent, kills x, and satisfies <P_x^perp v, v> = ||v||^2 - <x,v>^2 for ||x||=1."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.projector_inner_sub_sq"
+paper     = "sec 1.2 / 1.5"
+created   = "2026-06-30"
+
+[claims.leaf-gate-ode]
+kind      = "conjecture"
+statement = "L2: with U=-1 z^T, b=cos(R) 1, W 1 = omega, the ReLU gate equals (cos R - <z,x>)_+ and d/dt <x,omega> = (1 - <x,omega>^2)(cos R - cos d_g(z,x))_+ (eq. B.4-B.5)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.gate_ode_identity"
+paper     = "eq. B.4-B.5, p.32"
+created   = "2026-06-30"
+
+[claims.leaf-sep-hyperplane]
+kind      = "conjecture"
+statement = "L3: monotonicity of cos gives <omega, x_0^M> - cos(pi/8 + tau) < 0 when d_g(omega, x_0^M) >= 3pi/8 and tau in (0, 3pi/8) (Prop 4.2 Step 1 separating hyperplane)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.separating_hyperplane"
+paper     = "Prop 4.2 Step 1, p.20"
+created   = "2026-06-30"
+
+[claims.leaf-geodesic-grad]
+kind      = "conjecture"
+statement = "L4: the Riemannian gradient of geodesic distance is grad_1 d_g(x, omega) = - P_x^perp omega / sqrt(1 - <x,omega>^2)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.grad_geodesic_dist"
+paper     = "eq. after 4.4, p.20"
+created   = "2026-06-30"
+
+[claims.leaf-lyapunov]
+kind      = "conjecture"
+statement = "L5: for E(theta) = 1 - cos theta along theta' = -alpha sin theta, the derivative is E' = -alpha sin^2 theta <= 0 (Example 6.1 Lyapunov function)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.lyapunov_decreasing"
+paper     = "Example 6.1, p.29"
+created   = "2026-06-30"
+
+[claims.leaf-barycenter-ode]
+kind      = "conjecture"
+statement = "L6: along d/dt <x,alpha> = c (1 - <alpha,x>^2) with c != 0 of fixed sign, the inner product is monotone and converges to +-1 (sign of c), i.e. x -> +-alpha (eq. B.9)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.barycenter_component_limit"
+paper     = "eq. B.9, p.33"
+created   = "2026-06-30"
+
+[claims.leaf-coupling-bound]
+kind      = "conjecture"
+statement = "L7: the map-induced coupling gives W2^2(T1_# mu, T2_# mu) <= integral ||T1 - T2||^2 d mu (the core of Lemma 5.2)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.w2_le_l2_of_maps"
+paper     = "Lem 5.2, p.24"
+created   = "2026-06-30"
+
+[claims.leaf-markov-bound]
+kind      = "conjecture"
+statement = "L8: if W2(mu, delta_{x0}) <= eta2 then 1 - mu(B(x0, eta3)) <= C eta2 / eta3, via a Lipschitz bump and W1 duality (Claim 2)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.mass_outside_ball_le"
+paper     = "Claim 2, p.39"
+created   = "2026-06-30"
+
+[claims.leaf-ball-chain-induction]
+kind      = "conjecture"
+statement = "L9: if each step multiplies retained mass by at least (1-eps), then after K steps mu(T, B_K) >= (1-eps)^K mu_0(union B_k) (Lemma B.1 induction, abstracted)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.ball_chain_geom"
+paper     = "Lem B.1 proof, p.33"
+created   = "2026-06-30"
+
+[claims.leaf-pigeonhole]
+kind      = "conjecture"
+statement = "L10: a function that is constant on an open ball forces the stated barycenter identity to fail, so some x* in B makes the two barycenters differ (Lemma 3.4 Part 1)."
+status    = "math.proved-informal"
+lean      = "MeasureToMeasure.Leaves.exists_point_barycenters_differ"
+paper     = "Lem 3.4 Part 1, p.35"
+created   = "2026-06-30"
+
+# ===========================================================================
+# Numerical validation campaign (science profile)
+# ===========================================================================
+
+[claims.exp-e1-mass-transport]
+kind      = "experiment"
+statement = "E1: integrate the ReLU-gated flow and verify mass fraction in B0 cap B1 >= 1-eps, and >= (1-eps)^K through a K-ball chain. Tests Lemma B.2 / B.1."
+status    = "sci.hypothesis"
+paper     = "Lem B.1-B.2"
+created   = "2026-06-30"
+
+[claims.exp-e2-clustering]
+kind      = "experiment"
+statement = "E2: simulate the attention-field flow and verify diam(conv_g supp mu(t)) -> 0 with rate ~ log(1/eps). Tests Proposition 2.1."
+status    = "sci.hypothesis"
+paper     = "Prop 2.1"
+created   = "2026-06-30"
+
+[claims.exp-e3-disentangle]
+kind      = "experiment"
+statement = "E3: run theta_1 on N overlapping-support measures and verify supports become pairwise disjoint; count switches ~ O(dN). Tests Proposition 3.1."
+status    = "sci.hypothesis"
+paper     = "Prop 3.1"
+created   = "2026-06-30"
+
+[claims.exp-e4-matching]
+kind      = "experiment"
+statement = "E4: run gather/corridor/restore and verify x_0^M -> y^M while inactive points stay fixed; switches <= 6M. Tests Proposition 4.2 / 4.1."
+status    = "sci.hypothesis"
+paper     = "Prop 4.2"
+created   = "2026-06-30"
+
+[claims.exp-e5-lyapunov]
+kind      = "experiment"
+statement = "E5: simulate the d=2 dynamics and verify E = 1 - cos theta decreases monotonically and x_i -> u_i. Tests Example 6.1."
+status    = "sci.hypothesis"
+paper     = "Example 6.1"
+created   = "2026-06-30"
+
+[claims.exp-e6-end-to-end]
+kind      = "experiment"
+statement = "E6: compose disentangle/match/un-disentangle on small N, M and verify W2(mu(T), target) <= eps with switch count O((d+M)N) / O(dN). Tests Theorems 1.1 / 1.2."
+status    = "sci.hypothesis"
+paper     = "Thm 1.1-1.2"
+created   = "2026-06-30"
+
+[claims.exp-e7-linear-impossible]
+kind      = "experiment"
+statement = "E7 (negative control): show a single linear continuity equation cannot match overlapping inputs to disjoint targets (eq. 1.7)."
+status    = "sci.hypothesis"
+paper     = "eq. 1.7, p.8"
+created   = "2026-06-30"
