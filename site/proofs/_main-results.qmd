@@ -1,0 +1,155 @@
+# Main results {#sec-main-results}
+
+The paper assembles its leaves and mid-level propositions into one solution map $\Phi^T_{\mathrm{fin}}$ by a three-stage recipe: **disentangle** the $N$ supports until they are pairwise disjoint (Proposition 3.1), **cluster** each measure — to a single point (Proposition 2.1) or to an $M$-atom empirical measure (Proposition 2.2) — and **match** each cluster to its prescribed target (Propositions 4.1/4.2). Theorem 1.1 is the Dirac-target case, steering each input to a point mass $\delta_{x^i}$ with $O(d\,N)$ switches and an explicit norm bound, while Theorem 1.2 is the general case, reaching any $L^2$ transport-matchable targets by interposing the map-transfer Lemma 5.1, the flow-approximation Lemma 5.4, and the coupling bound Lemma 5.2. Every node here is stated type-correctly in Lean against the axiom layer and left as a `sorry` (status open), except Proposition 6.2 — the generic $O(1)$-switch disentanglement heuristic — which we reviewed on paper only.
+
+## Lemma 5.1 — transport maps preserved by disentanglement {#node-lemma-5-1}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.1, p. 24).
+
+Suppose that for every $i$ there exists $\mathsf T^i \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ with $\mathsf T^i_\#\mu_0^i = \mu_1^i$. Consider the flow map $\Phi_1 : \mathscr P(\mathbb S^{d-1}) \to \mathscr P(\mathbb S^{d-1})$ (resp. $\Phi_3$) given by Proposition 3.1 with data $\mu_0^i \in \mathscr P(\mathbb S^{d-1})$ (resp. $\mu_1^i \in \mathscr P(\mathbb S^{d-1})$). Then there exists a Lipschitz-continuous and invertible map $\psi : \mathbb S^{d-1} \to \mathbb S^{d-1}$ such that
+$$\psi\big|_{\operatorname{supp}\Phi_1(\mu_0^i)} = \psi^i\big|_{\operatorname{supp}\Phi_1(\mu_0^i)} \tag{5.1}$$
+for any $i \in \{1,\dots,N\}$, where $\psi^i : \mathbb S^{d-1} \to \mathbb S^{d-1}$ is another Lipschitz-continuous and invertible map that satisfies
+$$(\psi^i \circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = (\psi \circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = (\mathsf T^i_{\Phi_3})_\#\mu_1^i = \Phi_3(\mu_1^i)$$
+for some Lipschitz-continuous and invertible maps $\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3} : \mathbb S^{d-1} \to \mathbb S^{d-1}$. The proof can be found in Appendix B.4.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow as Lipschitz-invertible maps $\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3}$, and the individual matchings $\psi^i$ can be glued into one global Lipschitz-continuous, invertible $\psi$ that agrees with each $\psi^i$ on the $i$-th (now disjoint) support and realizes $(\psi\circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = \Phi_3(\mu_1^i)$. We give a type-correct Lean **statement** as a `sorry` (open), abstracting the Lipschitz/geodesic bookkeeping into the matchability hypothesis: from a per-index family of transport maps we ask for a single `Bijective` $\psi$ pushing every $\mu_0^i$ to $\mu_1^i$. We do not claim a proof.
+
+```lean
+/-- **Lemma 5.1** (transport map after disentanglement). If each disentangled pair is matchable, a
+single bijective map matches them all. Stub (`sorry`): `math.open`. -/
+theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
+    ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Lemma 5.4 — L² approximation by a flow map {#node-lemma-5-4}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.4, p. 24).
+
+Suppose $\varepsilon > 0$ and $\mu \in \mathscr P(\mathbb S^{d-1})$. For every $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$, there exists a Lipschitz-continuous and invertible map $\psi_\varepsilon : \mathbb S^{d-1} \to \mathbb S^{d-1}$ induced by the solution map of (B.1), namely $\Phi^T_{\theta_\varepsilon}(\mu) = (\psi_\varepsilon)_\#\mu$ for some piecewise constant $\theta_\varepsilon : [0,T] \to \Theta$ with finitely many switches, such that
+$$\|\psi - \psi_\varepsilon\|_{L^2(\mu)} \leq \varepsilon.$$
+The proof of Lemma 5.4 is involved, so we postpone it to Appendix B.5.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p. 38) shows any $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ is approximated in $L^2(\mu)$, to any tolerance, by a flow map $\psi_\varepsilon$ of the continuity equation (B.1) with piecewise-constant control and finitely many switches; chained with the coupling bound $W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}$ (Lemma 5.2, leaf L7) this converts $L^2$ control of the map into $W_2$ control of the pushforward. We give a type-correct Lean **statement** as a `sorry` (open): for any $\psi$ and $\varepsilon$, a parameter $\theta$ and a map $\psi_\varepsilon$ with `measureFlow θ T μ = μ.map ψε` and $\sqrt{\int \|\psi-\psi_\varepsilon\|^2\,\mathrm d\mu} \le \varepsilon$. We do not claim a proof.
+
+```lean
+/-- **Lemma 5.4** (`L²` approximation by a flow map). Any transport map `ψ` is approximated in
+`L²(μ)` by a flow map of the dynamics, to any tolerance, with finitely many switches. Stub
+(`sorry`): `math.open`. Combined with the coupling bound (leaf L7) this controls `W₂`. -/
+theorem lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
+    ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
+      measureFlow θ T μ = μ.map ψε ∧ Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Theorem 1.2 — matching transport-matchable targets {#node-theorem-1-2}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Theorem 1.2, p. 5).
+
+Suppose $d \geq 3$. Consider data $(\mathscr D)$ such that
+
+(1) there exist $w_0, w_1 \in \mathbb S^{d-1}$ such that
+$$w_0 \notin \bigcup_i \operatorname{supp}(\mu_0^i) \quad\text{and}\quad w_1 \notin \bigcup_i \operatorname{supp}(\mu_1^i); \tag{1.5}$$
+
+(2) for any $i \in \{1,\dots,N\}$, there exists $\mathsf T^i \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ such that $\mathsf T^i_\#\mu_0^i = \mu_1^i$.
+
+Then for any $T > 0$ and $\varepsilon > 0$, there exists $\theta \in L^\infty((0,T);\Theta)$ such that for any $i \in \{1,\dots,N\}$, the unique solution $\mu^i \in \mathscr C^0([0,T];\mathscr P(\mathbb S^{d-1}))$ to (1.3) with data $\mu_0^i$ and parameters $\theta$ satisfies
+$$\mathsf W_2(\mu^i(T), \mu_1^i) \leq \varepsilon.$$
+Moreover, $\theta$ can be chosen piecewise constant.
+
+*Proof sketch (full proof §5.1, p. 25).* The construction $\Phi^T_{\mathrm{fin}} := (\Phi_{\theta_3}^{T/3})^{-1} \circ \Phi_{\theta_2}^{T/3} \circ \Phi_{\theta_1}^{T/3}$ proceeds in three steps. **(1) Disentanglement:** Proposition 3.1 renders the input supports $(\mu_0^i)$ pairwise disjoint via $\Phi_{\theta_1}$ on $[0,T/3]$ and the target supports $(\mu_1^i)$ via $\Phi_{\theta_3}$ on $[2T/3,T]$; well-posedness and time-reversibility give a constant $C$ with $\mathsf W_2((\Phi_{\theta_3}^T)^{-1}\mu,(\Phi_{\theta_3}^T)^{-1}\nu) \le C\,\mathsf W_2(\mu,\nu)$ (5.3). **(2) Matching:** Lemma 5.1 produces a single Lipschitz-invertible $\psi$ agreeing with each $\psi^i$ on the disentangled support, and Lemma 5.4 realizes $\psi$ up to $L^2$ error by a flow map $\psi_\varepsilon = \Phi_{\theta_2}$ on $[T/3,2T/3]$; the coupling bound (Lemma 5.2) turns the $L^2$ error into $\mathsf W_2\big((\Phi_{\theta_2}^{2T/3}\!\circ\Phi_{\theta_1}^{T/3})(\mu_0^i),\Phi_{\theta_3}^T(\mu_1^i)\big) \le \varepsilon/C$ (5.5–5.6). **(3) Composition:** applying $(\Phi_{\theta_3}^T)^{-1}$ and (5.3) yields $\mathsf W_2(\mu^i(T),\mu_1^i) \le \varepsilon$ for all $i$.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single $\psi$ by Lemma 5.1, approximate $\psi$ by a flow map by Lemma 5.4, and bound the resulting $W_2$ error by the coupling Lemma 5.2. We give a type-correct Lean **statement** as a `sorry` (open). The hypothesis (1.5) — a shared missing direction off every input support and off every target support — and the $L^2$-matchability of the pairs are recorded as the opaque predicates `SharedMissingDirection` and `Matchable`, so the statement stays faithful without re-deriving the absent support / optimal-transport API; the conclusion is the controllability core, a single piecewise-constant $\theta$ with `W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε` for every $i$. We do not claim a proof.
+
+```lean
+/-- **Theorem 1.2** (general targets). If every input/target pair is matchable by a transport map
+and the families share a missing direction, then for any horizon `T` and tolerance `ε` there is a
+piecewise-constant parameter `θ` whose solution map steers each input measure to within `ε` of its
+target in `W₂`. Stub (`sorry`): status `math.open`. -/
+theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hmiss₀ : SharedMissingDirection μ₀) (hmiss₁ : SharedMissingDirection μ₁)
+    (hmatch : Matchable μ₀ μ₁) :
+    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
+  sorry
+```
+
+[`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}
+:::
+
+## Theorem 1.1 — matching Dirac targets {#node-theorem-1-1}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Theorem 1.1, p. 5).
+
+Suppose $d \geq 3$. Consider data $(\mathscr D)$ such that
+
+(1) there exists $w_0 \in \mathbb S^{d-1}$ such that
+$$w_0 \notin \bigcup_i \operatorname{supp}(\mu_0^i); \tag{1.4}$$
+
+(2) for any $i \in \{1,\dots,N\}$, we have $\mu_1^i = \delta_{x^i}$.
+
+Then for any $T > 0$ and $\varepsilon > 0$, there exists $\theta \in L^\infty((0,T);\Theta)$ such that for any $i \in \{1,\dots,N\}$, the unique solution $\mu^i \in \mathscr C^0([0,T];\mathscr P(\mathbb S^{d-1}))$ to (1.3) with data $\mu_0^i$ and parameters $\theta$ satisfies
+$$\mathsf W_2(\mu^i(T), \mu_1^i) \leq \varepsilon.$$
+Moreover, $\theta$ can be chosen piecewise constant, with $O(d\cdot N)$ switches, and
+$$\|\theta\|_{L^\infty((0,T);\Theta)} = O\!\left(\frac{d\cdot N}{T} + \log\frac1\varepsilon\right).$$
+
+*Proof sketch (full proof §5.2, p. 29).* The proof follows the same ideas as Theorem 1.2 but is significantly simpler — some steps are omitted — using $\Phi^T_{\mathrm{fin}} := \Phi_{\theta_3}^{T} \circ \Phi_{\theta_2}^{2T/3} \circ \Phi_{\theta_1}^{T/3}$. **(1) Disentangle:** $\Phi_{\theta_1}$ on $[0,T/3]$ from Proposition 3.1, with $\|\theta_1\| \lesssim d\,N/T$. **(2) Cluster:** $\Phi_{\theta_2}$ on $[T/3,2T/3]$ from Proposition 2.1, applicable since the $\Phi^{T/3}(\mu_0^i)$ are now disjoint and single-hemisphere, driving each to within $\delta$ of a point $\delta_{x_0^i}$ with $T_\delta = O(\log 1/\delta)$, so $\|\theta_2\| \lesssim \log 1/\delta$. **(3) Match:** $\Phi_{\theta_3}$ on $[2T/3,T]$ from Proposition 4.1 steers the ensemble of atoms $x_0^i$ to the targets $y^i$, with $\|\theta_3\| \lesssim N/T$; since all measures are $\delta$-close to $\delta_{x_0^i}$ the error is $e^{O(N\cdot T)}\delta$. All in all $\mathsf W_2(\mu^i(T),\delta_{y^i}) \le \varepsilon$ with $\|\theta\|_{L^\infty((0,T);\Theta)} = O(d\cdot N/T + \log 1/\varepsilon)$.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 ($\|\theta_1\| \lesssim dN/T$), cluster each now-disjoint single-hemisphere measure to within $\delta$ of a point by Proposition 2.1 ($T_\delta = O(\log 1/\delta)$, $\|\theta_2\| \lesssim \log 1/\delta$), then match the ensemble of cluster atoms $x_0^i$ to the targets $y^i$ by Proposition 4.1 ($\|\theta_3\| \lesssim N/T$); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment **E6**, while the negative control **E7** shows that a single *linear* continuity equation cannot achieve it — motivating the measure-dependent vector field. We give a type-correct Lean **statement** as a `sorry` (open): a shared missing direction and Dirac targets $\delta_{x^i}$ yield a single piecewise-constant $\theta$ with `W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε` for every $i$. The $O(d\,N)$ switch count and the norm bound $O(dN/T + \log 1/\varepsilon)$ are documented in this blueprint prose, not encoded in the Lean type. We do not claim a proof.
+
+```lean
+/-- **Theorem 1.1** (Dirac targets). If the targets are point masses `δ_{x i}` and the inputs share
+a missing direction, then for any horizon and tolerance a single piecewise-constant `θ` steers each
+input to within `ε` of its target in `W₂`. Stub (`sorry`): status `math.open`. The proof also gives
+`O(d N)` switches and the stated norm bound (see the blueprint). -/
+theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀) :
+    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
+  sorry
+```
+
+[`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}
+:::
+
+## Proposition 6.2 — generic O(1) disentanglement {#node-prop-6-2}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 6.2, p. 30).
+
+Let $d \geq 3$, $\pi = \operatorname{Unif}((\mathbb S^{d-1})^n)$, and sample $\mu_0^1, \dots, \mu_0^N$ i.i.d. from
+$$\mathscr S_n := \left\{ \frac1n \sum_{k=1}^n \delta_{x_k} : x_k \in \mathbb S^{d-1} \right\} \simeq (\mathbb S^{d-1})^n.$$
+Consider (1.3)–(1.2) with $\mathbf B \equiv \beta I_d$ ($\beta \geq 0$), $\mathbf V \equiv I_d$, $\mathbf W \equiv 0$. Let $x_*^i$ be the (a.s. existing) limit cluster point of $\mu^i(t)$. Then $\mathbb P[x_*^i \neq x_*^j] = 1$ for $i \neq j$.
+:::
+
+::: {.our-work}
+**Our formalization.** [informal]{.badge .informal}
+
+**Reviewed on paper; not stated in Lean.** The paper's argument (sketch of proof, p. 30) is a symmetry/measure-theoretic one: for $\pi$-almost every empirical input the dynamics with $\mathbf B \equiv \beta I_d$, $\mathbf V \equiv I_d$, $\mathbf W \equiv 0$ converge to a Dirac $\delta_X$, defining a map $f : \mathscr S_n \to \mathbb S^{d-1}$. Because the flow and the law $\pi$ are $\mathbb O(d)$-equivariant, the law $\nu = f_\#\pi$ of the limit is rotation-invariant, hence non-atomic — an atom at $x_0$ of mass $p$ would force an atom of mass $p$ at every $\mathsf R x_0$, contradicting $\nu(\mathbb S^{d-1}) = 1$ once enough distinct rotations are chosen. Two independent inputs then give independent limits with this common non-atomic law, so $\mathbb P[x_*^i = x_*^j] = \int \nu(\{x\})\,\mathrm d\nu(x) = 0$. We do not state this in Lean: it would require Haar measure on $\mathbb O(d)$, the equivariant $\omega$-limit map $f$, and non-atomicity infrastructure outside our current axiom layer. The result is recorded as the heuristic that the generic switch complexity is $O(1)$ rather than the $O(d\,N)$ of Theorem 1.1.
+:::

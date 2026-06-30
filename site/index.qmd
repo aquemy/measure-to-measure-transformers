@@ -1,0 +1,49 @@
+---
+title: "Measure-to-measure interpolation using Transformers"
+subtitle: "A machine-checked formalization and numerical validation"
+toc: false
+---
+
+This site accompanies a Lean 4 formalization and numerical validation of
+
+> M. Geshkovski, P. Rigollet, Y. Ruiz-Balet, *[Measure-to-measure interpolation using Transformers](https://arxiv.org/abs/2411.04551)*, arXiv:2411.04551v3.
+
+::: {.callout-note appearance="simple"}
+**Who did what.** The paper, its theorems, and its proofs are the work of **Geshkovski, Rigollet, and
+Ruiz-Balet**. The **Lean 4 formalization, the numerical experiments, the prose informalizations, this
+website, and the blueprint** are the work of **Alexandre Quemy**. Throughout, the original authors'
+statements and proofs are reproduced verbatim in clearly marked, page-cited grey boxes, for scholarly
+comparison; everything in blue or green boxes is the present author's contribution.
+:::
+
+## The result, in one paragraph
+
+A Transformer can be viewed as the flow map of a continuity equation on the unit sphere
+$\mathbb S^{d-1}$: each token is a particle, and a single time-dependent parameter
+$\theta = (\mathbf V, \mathbf B, \mathbf W, \mathbf U, b)$ drives every particle through a
+self-attention plus perceptron velocity field, projected to the tangent space by layer normalization.
+The paper proves a **controllability** result: one such Transformer, with explicit
+piecewise-constant parameters and a bounded number of switches, can steer $N$ arbitrary input measures
+to $N$ arbitrary target measures, to within $\varepsilon$ in the Wasserstein distance $W_2$. The
+construction is a three-act composition:
+
+1. **Disentangle** (Prop 3.1) -- a piecewise-constant control separates the $N$ overlapping supports into pairwise-disjoint regions, using barycenter separation.
+2. **Cluster** (Prop 2.1 / 2.2) -- self-attention contracts each measure to a point (or to $M$ atoms).
+3. **Match** (Prop 4.1 / 4.2) -- a perceptron gate steers each cluster to its target while parking the others.
+
+Theorem 1.1 handles Dirac targets sharing a missing direction; Theorem 1.2 handles
+transport-matchable targets.
+
+## What this project adds
+
+- **Machine-checked leaves.** The self-contained computational cores of the proofs (the gate ODE, the barycenter ODE, the geodesic gradient, the separating hyperplane, the Lyapunov sign, the ball-chain retention, the pigeonhole step, and the disjoint-hulls/non-colinear-barycenters step) are isolated and given clean Lean 4 kernel proofs.
+- **A labeled axiom layer.** The optimal-transport ($W_1$, $W_2$) and continuity-equation-flow theory missing from Mathlib is isolated as a small, explicit set of named axioms, so every downstream result shows exactly what it rests on under `#print axioms`.
+- **Two corrections/strengthenings.** A load-bearing sign error in the gate of Lemma B.2 (**F1**, see [errata](about.qmd)), caught by the formalization and an experiment; and a rigor gap in Proposition 3.1's induction (**F2**) discharged by a machine-checked leaf.
+- **A seeded validation campaign.** Seven experiments integrate the actual dynamics and confirm the quantitative content of the claims, with figures and provenance manifests.
+
+## Explore
+
+- [**Blueprint**](proofs.qmd) -- every node: the original statement and proof, our Lean formalization, and what it strengthens. ([standalone PDF](blueprint.pdf))
+- [**Experiments**](experiments.qmd) -- the seven seeded validation experiments, with hypotheses, figures, and verdicts.
+- [**Claim graph**](claimgraph.qmd) -- the interactive dependency graph and its commit-by-commit history.
+- [**About**](about.qmd) -- citation, attribution, errata, and licensing.

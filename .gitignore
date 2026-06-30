@@ -48,6 +48,11 @@ experiments/results/*
 /report/*.tex
 /report/.quarto/
 
+# Quarto site: build artifacts and the vendored Lean-unicode font (fetched by site/fonts/fetch.sh).
+/site/_site/
+/site/.quarto/
+/site/fonts/*.ttf
+
 # OS
 .DS_Store
 

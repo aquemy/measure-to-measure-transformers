@@ -1,0 +1,72 @@
+# Foundations {#sec-foundations}
+
+The paper views a Transformer as the flow map of a continuity equation on the unit sphere
+$\mathbb S^{d-1}$. We reproduce the setting verbatim, then give the kernel-checked algebraic
+foundations our leaves rest on.
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, §1, pp. 2-3).
+
+Viewing each token as a particle, given an initial sequence $(x_1(0),\dots,x_n(0)) \in (\mathbb S^{d-1})^n$, one considers
+$$\dot x_i(t) = \mathsf v[\mu(t)](t, x_i(t)), \qquad t\in[0,T], \tag{1.1}$$
+where $\mu(t) = \frac1n\sum_{j=1}^n \delta_{x_j(t)}$ is the empirical measure. The vector field is
+$$\mathsf v[\mu](t,x) = \mathbf P_x^\perp\!\big(\mathbf V(t)\,\mathscr A_{\mathbf B}[\mu](t,x) + \mathbf W(t)(\mathbf U(t)x + b(t))_+\big), \tag{1.2}$$
+where the self-attention is
+$$\mathscr A_{\mathbf B}[\mu](t,x) := \int e^{\langle \mathbf B(t)x, x'\rangle} x'\,\mu(\mathrm dx') \;\Big/\; \int e^{\langle \mathbf B(t)x,\zeta\rangle}\mu(\mathrm d\zeta).$$
+The vector field is "ultimately projected onto $\mathsf T_x\mathbb S^{d-1}$ by virtue of the orthogonal projector $\mathbf P_x^\perp := I_d - xx^\top$, referred to as *layer normalization*." Since (1.1) depends only on $\mu(t)$, one passes to the **continuity equation**
+$$\partial_t\mu(t) + \mathrm{div}\big(\mu(t)\,\mathsf v[\mu(t)]\big) = 0 \ \text{ on } [0,T]\times\mathbb S^{d-1}, \qquad \mu(0)=\mu_0. \tag{1.3}$$
+For any control $\theta = (\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)$ the Cauchy problem (1.3) is well-posed and yields a continuous, invertible flow map $\Phi_\theta^t : \mathscr P(\mathbb S^{d-1})\to\mathscr P(\mathbb S^{d-1})$ with $\Phi_\theta^t(\mu_0)=\mu(t)$.
+:::
+
+## Tangential projector (layer normalization) {#node-projector}
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+We define the layer-normalization projector $\mathbf P_x^\perp v = v - \langle x,v\rangle x$ and prove
+the algebraic identities every leaf uses (ledger node **L1**): it is linear, symmetric, idempotent on
+the sphere, annihilates $x$, and satisfies the quadratic identity
+$$\langle \mathbf P_x^\perp v, v\rangle = \|v\|^2 - \langle x, v\rangle^2 \qquad (\|x\|=1),$$
+which is exactly the scalar driving the gate ODE (B.5) and the barycenter ODE (B.9). The proof is a
+direct computation: expanding $\langle v - \langle x,v\rangle x,\ v\rangle$ and using
+$\langle x,x\rangle = 1$ cancels the cross term to $\|v\|^2 - \langle x,v\rangle^2$.
+
+```lean
+/-- The tangential projector `P_x^⊥ v = v - ⟪x, v⟫ x`. -/
+noncomputable def tangentialProjector (x v : Eucl d) : Eucl d := v - (⟪x, v⟫) • x
+
+/-- The key quadratic identity (L1): for a unit vector `x`,
+`⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²`. -/
+theorem projector_inner_sub_sq {x : Eucl d} (hx : x ∈ sphere d) (v : Eucl d) :
+    ⟪tangentialProjector x v, v⟫ = ‖v‖ ^ 2 - ⟪x, v⟫ ^ 2 := by
+  have h : ⟪x, x⟫ = 1 := inner_self_eq_one_of_mem_sphere hx
+  simp only [tangentialProjector, inner_sub_left, inner_smul_left, RCLike.conj_to_real,
+    real_inner_self_eq_norm_sq]
+  ring
+```
+
+[`Foundations/Projector.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/Projector.lean){.lean-src}
+:::
+
+## Geodesic distance {#node-geodesic}
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The geodesic distance on the sphere is $d_g(x,y) = \arccos\langle x,y\rangle$. We prove the inversion
+$\cos d_g(x,y) = \langle x,y\rangle$ for unit vectors and that $d_g(x,y)\in[0,\pi]$. These let the gate
+sign (B.4) be read either as the inner-product inequality $\langle z,x\rangle < \cos R$ or as the
+geodesic statement $d_g(z,x) > R$ (via strict antitonicity of $\cos$ on $[0,\pi]$).
+
+```lean
+/-- Geodesic distance on the unit sphere: `d_g(x, y) = arccos⟪x, y⟫`. -/
+noncomputable def geodesicDist (x y : Eucl d) : ℝ := Real.arccos (⟪x, y⟫)
+
+/-- `cos (d_g x y) = ⟪x, y⟫`: the cosine of the geodesic distance is the inner product. -/
+theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
+    Real.cos (geodesicDist x y) = ⟪x, y⟫ :=
+  Real.cos_arccos (neg_one_le_inner hx hy) (inner_le_one hx hy)
+```
+
+[`Foundations/GeodesicDistance.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/GeodesicDistance.lean){.lean-src}
+:::

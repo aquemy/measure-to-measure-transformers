@@ -1,0 +1,243 @@
+# Mass transport and clustering {#sec-mass-transport}
+
+The ReLU-gated drift $\mathbf W(\mathbf U x + b)_+$ transports mass through a chain of overlapping
+balls, retaining a $(1-\varepsilon)^K$ fraction of it after $K$ parameter switches. Self-attention
+then clusters a measure supported in a single hemisphere to a point, and chaining the two steers an
+ensemble of disjoint-support atomless measures to prescribed discrete targets.
+
+## Single overlapping ball pair (Lemma B.2) {#node-ball-pair}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.2, p. 31).
+
+Consider two open balls $\mathcal B_0,\mathcal B_1\subset\mathbb S^{d-1}$ such that
+$\mathcal B_0\cap\mathcal B_1\ne\varnothing$. For any $\varepsilon>0$ and $T>0$, there exist
+$\mathbf W,\mathbf U\in\mathcal M_{d\times d}(\mathbb R)$ and $b\in\mathbb R^d$ such that for any
+$\mu_0\in\mathscr P(\mathbb S^{d-1})$, the unique solution $\mu$ to (B.1) satisfies
+$$\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\,\mu_0(\mathcal B_0).\tag{B.3}$$
+Moreover $\mu(T)=\phi^T_{\#}\mu_0$ where the Lipschitz-continuous and invertible flow map
+$\Phi^t:\mathbb S^{d-1}\to\mathbb S^{d-1}$ of (4.1) satisfies, for all $t\in[0,T]$,
+$$(\phi^t)_{|\mathbb S^{d-1}\setminus\mathcal B_0}\equiv\operatorname{Id}.$$
+Furthermore, for any fixed $\omega\in\operatorname{int}\mathcal B_0$ we can choose $\mathbf W,\mathbf U$
+and $b$ so that the solution to (B.1) satisfies $W_2(\mu(T),\alpha)\le\varepsilon$ where
+$\alpha(A)=\mu_0(\mathcal B_0)\,\delta_\omega(A)+\mu_0(A\setminus\mathcal B_0)$, for any Borel
+$A\subset\mathbb S^{d-1}$.
+
+*Proof sketch (full proof p. 32).* Let $z$ and $R$ be the center and radius of $\mathcal B_0$ and fix
+$\omega\in\operatorname{int}(\mathcal B_0\cap\mathcal B_1)$. The authors choose $\mathbf U,b$ and a
+$\mathbf W$ with $\mathbf W\mathbf 1=\omega$ so that the gated drift is
+$(-\cos d_g(z,x)+\cos R)_+\,\omega=(\cos R-\langle z,x\rangle)_+\,\omega$, and record (B.4)
+$(\cos R-\langle z,x\rangle)_+>0\iff x\in\mathcal B_0$ (see the strengthening below). Then (B.5)
+$$\tfrac{d}{dt}\langle x(t),\omega\rangle=(\cos R-\langle z,x(t)\rangle)_+\bigl(1-\langle x(t),\omega\rangle^2\bigr),$$
+which is positive whenever $x(t)\in\mathcal B_0\setminus\{\omega\}$. Hence for small $\delta>0$ there
+is a time $T_\delta$ with $\phi^{T_\delta}(x)\in\mathcal B_0\cap\mathcal B_1$ for
+$x\in B(z,R-\delta)$ (B.7); pushing forward,
+$\mu(T_\delta,\mathcal B_0\cap\mathcal B_1)=\mu_0\!\bigl((\phi^{T_\delta})^{-1}(\mathcal B_0\cap\mathcal B_1)\bigr)\ge\mu_0(B(z,R-\delta))$
+(B.8), and taking $\delta$ small enough that $\mu_0(B(z,R-\delta))\ge(1-\varepsilon)\mu_0(\mathcal B_0)$
+gives (B.3) after rescaling time. The gate vanishes off $\mathcal B_0$, so $\phi^t\equiv\operatorname{Id}$
+there. The bound to $\alpha$ follows by taking $\mathcal B_1=B(\omega,\eta)\subset\mathcal B_0$ and a
+$W_1$ Kantorovich-Rubinstein estimate, sending $\eta$ and the slack to zero.
+:::
+
+::: {.strengthen}
+**What we strengthen.** As printed the proof takes $\mathbf U=-\mathbf 1 z^\top$, $b=\cos(R)\mathbf 1$
+(with $\mathbf W\mathbf 1=\omega$), so $\mathbf U x=-\langle z,x\rangle\mathbf 1$, giving the gate
+coefficient $(\cos R-\langle z,x\rangle)_+$, and
+asserts in (B.4) that this is positive iff $x\in\mathcal B_0=B(z,R)$. But
+$$\cos R-\langle z,x\rangle>0\iff\langle z,x\rangle<\cos R\iff d_g(z,x)>R\iff x\notin\mathcal B_0,$$
+so as written the gate is active on the **complement** of $\mathcal B_0$: the interior mass it is meant
+to move sees a zero gate, and the lemma transports nothing. The fix is a one-sign typo — take
+$\mathbf U=+\mathbf 1 z^\top$, $b=-\cos(R)\mathbf 1$, giving the gate
+$(\langle z,x\rangle-\cos R)_+$, positive exactly on $\mathcal B_0$ — after which (B.3)-(B.5) and the
+rest of the argument go through and Lemma B.2 holds as stated. The corrected equivalence
+$g(x)>0\iff d_g(z,x)>R$ is the kernel-checked leaf **L2** (`gate_pos_iff_dist`,
+[machine-checked]{.badge .ok}); the same inversion is corroborated independently by Proposition 4.2,
+Step 3 (which states the identical construction with the correct activation side) and by experiment
+E1. This is finding **F1**; see [`ERRATA.md`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md).
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors' strategy is the gated-drift construction above: a single ReLU gate, active on
+$\mathcal B_0$ (after the F1 sign correction), pushes the interior mass of $\mathcal B_0$ along
+$+\omega$ into $\mathcal B_0\cap\mathcal B_1$ while leaving everything off $\mathcal B_0$ fixed, so a
+$(1-\varepsilon)$ fraction is retained in the overlap. We state this type-correctly in Lean against the
+labeled axiom layer — the solution map `measureFlow`, the switch count `switches`, and the Wasserstein
+distance `W2` — with "no mass outside $S$" read measure-theoretically. It is an open `sorry` stub: we
+do **not** claim a proof; discharging it rests on the continuity-equation flow axiom.
+
+```lean
+/-- **Lemma B.2** (single ball pair). Mass in `B₀` is pushed into `B₀ ∩ B₁`, retaining `(1-ε)`. Stub
+(`sorry`): `math.open`. (Review finding F1: the paper's printed gate parameters have the activation
+side reversed; the corrected sign is `U = +𝟙 zᵀ, b = -cos(R) 𝟙`. See `ERRATA.md`.) -/
+theorem lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (B₀ B₁ : Set (Eucl d)) (hcap : (B₀ ∩ B₁).Nonempty) :
+    ∃ θ : Params d, (1 - ENNReal.ofReal ε) * μ B₀ ≤ (measureFlow θ T μ) (B₀ ∩ B₁) := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Chain of overlapping balls (Lemma B.1) {#node-ball-chain}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.1, p. 31).
+
+Consider $K+1$ open balls $\mathcal B_K,\dots,\mathcal B_1,\mathcal B_0\subset\mathbb S^{d-1}$
+satisfying
+$$\mathcal B_k\cap\mathcal B_{k-1}\ne\varnothing\quad\text{for }k\in[\![1,K]\!],\qquad
+\mathcal B_k\cap\mathcal B_{k'}=\varnothing\quad\text{if }|k-k'|\ge2.$$
+Then for any $T>0$ and $\varepsilon>0$, there exist
+$(\mathbf W,\mathbf U,b):[0,T]\to\mathcal M_{d\times d}(\mathbb R)^2\times\mathbb R^d$, piecewise
+constant having at most $K$ switches, such that for any $\mu_0\in\mathscr P(\mathbb S^{d-1})$, the
+corresponding unique solution $\mu$ to
+$$\begin{cases}\partial_t\mu(t)+\operatorname{div}\bigl(\mathbf P_x^\perp\,\mathbf W(t)(\mathbf U(t)x+b(t))_+\,\mu(t)\bigr)=0 & \text{on }[0,T]\times\mathbb S^{d-1},\\[2pt]\mu(0)=\mu_0 & \text{on }\mathbb S^{d-1},\end{cases}\tag{B.1}$$
+satisfies
+$$\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\,\mu_0\Bigl(\bigcup_k\mathcal B_k\Bigr).$$
+Moreover, $\mu(T)=\phi^T_{\#}\mu_0$ for a Lipschitz-continuous, invertible map
+$\phi^t:\mathbb S^{d-1}\to\mathbb S^{d-1}$ which satisfies, for all $t\in[0,T]$,
+$$\phi^t(x)=x\quad\text{for }x\notin\bigcup_k\mathcal B_k.\tag{B.2}$$
+
+*Proof sketch (full proof p. 33).* Backward induction on the chain. Write
+$[0,T)=\bigcup_{k\in[\![1,K]\!]}[t_{k-1},t_k)$ with $t_k=kT/K$ and apply Lemma B.2 to the adjacent
+pair $(\mathcal B_{k-1},\mathcal B_k)$ on each subinterval. Then
+$$\mu(T,\mathcal B_K)=\mu(T,\mathcal B_K\setminus\mathcal B_{K-1})+\mu(T,\mathcal B_K\cap\mathcal B_{K-1})\ge\mu(t_{K-1},\mathcal B_K\setminus\mathcal B_{K-1})+(1-\varepsilon)\,\mu(t_{K-1},\mathcal B_{K-1}),$$
+the last step by Lemma B.2. The non-adjacency disjointness $\mathcal B_k\cap\mathcal B_{k'}=\varnothing$
+for $|k-k'|\ge2$ keeps the steps from interfering, and iterating gives
+$$\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\setminus\mathcal B_{k-1})+\mu_0(\mathcal B_0)\Bigr)=(1-\varepsilon)^K\,\mu_0\Bigl(\bigcup_{k\in[\![0,K]\!]}\mathcal B_k\Bigr).$$
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors' argument is a backward induction that applies the single-pair lemma (Lemma B.2) once per
+adjacent overlap, each step retaining a factor $(1-\varepsilon)$, the non-adjacency disjointness
+guaranteeing the steps do not interfere. We state the retention bound type-correctly in Lean against
+the axiom layer (`measureFlow`, `switches`); it is an open `sorry` stub. The purely arithmetic heart —
+that a per-step retention factor $(1-\varepsilon)$ compounds to $a_K\ge(1-\varepsilon)^K a_0$ — is
+already discharged kernel-clean by leaf **L9** (`ball_chain_geom`, [machine-checked]{.badge .ok}); what
+remains open is the geometric non-interference, which rests on the parking property of the flow axiom.
+
+```lean
+/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping balls, `K` switches retain
+`(1-ε)^K` of the mass into the last ball. Stub (`sorry`): `math.open`. The arithmetic core is leaf
+L9; the geometric non-interference is the parking axiom. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (K : ℕ) (B : ℕ → Set (Eucl d)) :
+    ∃ θ : Params d, switches θ ≤ K ∧
+      (1 - ENNReal.ofReal ε) ^ K * μ (⋃ k, B k) ≤ (measureFlow θ T μ) (B K) := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Clustering a single-hemisphere measure to a point (Proposition 2.1) {#node-cluster-point}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 2.1, p. 11).
+
+Suppose $\mathbf B\in\mathcal M_{d\times d}(\mathbb R)$ and $\operatorname{supp}\mu_0$ is contained in an
+open hemisphere. Then the solution $\mu$ to (1.3)-(1.2) with data $\mu_0$ and
+$(\mathbf V(\cdot),\mathbf B(\cdot),\mathbf W(\cdot))\equiv(I_d,\mathbf B,0)$ satisfies
+$\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(t))\to0$ as $t\to+\infty$. Moreover,
+for $\varepsilon>0$ there exist $z\in\operatorname{conv}_g\operatorname{supp}\mu_0$ and $T>0$ such that
+$$W_\infty(\mu(T),\delta_z)\le\varepsilon\quad\text{and}\quad\inf\{t\ge0:W_2(\mu(t),\delta_z)\le\varepsilon\}=O\Bigl(\log\tfrac1\varepsilon\Bigr).$$
+
+*Proof sketch (full proof p. 11; an adaptation of [GLPR25, Lemma 6.4]).* The characteristic flow is
+$\dot x(t)=\mathbf P_{x(t)}^\perp\mathscr A_{\mathbf B}[\mu(t)](x(t))$. Since $\operatorname{supp}\mu_0$
+lies in an open hemisphere, the normalized attention vector
+$\gamma(x):=\mathscr A_{\mathbf B}[\mu_0](x)/\|\mathscr A_{\mathbf B}[\mu_0](x)\|$ is well defined on
+$\operatorname{conv}_g\operatorname{supp}\mu_0$ and points strictly into its interior. A first-order
+expansion at a boundary point $x_0$ gives $\langle x(\tau)-x_0,\gamma(x_0)\rangle>0$ for small
+$\tau>0$, so boundary points move inward and the geodesic convex hulls are strictly nested in time,
+$\operatorname{conv}_g\operatorname{supp}\mu(t_2)\subset\operatorname{int}\operatorname{conv}_g\operatorname{supp}\mu(t_1)$
+for $t_1<t_2$. Hence $\phi(t):=\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(t))$
+decreases to some $\ell\ge0$; $\ell>0$ would, by compactness, produce boundary points that fail to move
+inward, contradicting the strict interior-pointing, so $\ell=0$. Nestedness and vanishing diameter
+yield a unique $z$ with $\mu\rightharpoonup\delta_z$. Picking $T$ with
+$\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(T))\le\varepsilon$ and the coupling
+$(\operatorname{Id},\mathsf T)_{\#}\mu(T)$, $\mathsf T\equiv z$, gives $W_p(\mu(T),\delta_z)\le\varepsilon$;
+the logarithmic rate follows from [CLPR25, Theorem 2.3].
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors' strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure
+self-attention drift ($\mathbf W=0$, $\mathbf V=I_d$) the hull's diameter is strictly decreasing while
+its mass stays inside it, so the measure contracts to a single Dirac, the exponential
+contraction giving the $O(\log\tfrac1\varepsilon)$ time. We state this type-correctly in Lean — the
+open hemisphere is `supportedIn μ {x | 0 < ⟪e, x⟫}` for a unit `e`, the target a `Measure.dirac z`,
+closeness measured in `W2` — as an open `sorry` stub. We do **not** claim a proof: the diameter
+monotonicity, the LaSalle/Hartman-Grobman convergence, and the rate live in the continuity-equation
+flow axiom. The conclusion is validated numerically by experiment **E2**.
+
+```lean
+/-- **Proposition 2.1** (clustering to a point). A measure supported in an open hemisphere can be
+driven arbitrarily `W₂`-close to a Dirac mass. Stub (`sorry`): `math.open`. The rate
+`O(log 1/ε)` and the LaSalle/Hartman-Grobman convergence are in the axiom layer. -/
+theorem prop_2_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
+    ∃ (θ : Params d) (z : Eucl d), W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Clustering disjoint-support measures to atoms (Proposition 2.2) {#node-cluster-discrete}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 2.2, pp. 11-12).
+
+Suppose $\mu_0^i$ has no atoms and
+$\operatorname{conv}_g\operatorname{supp}\mu_0^i\cap\operatorname{conv}_g\operatorname{supp}\mu_0^j=\varnothing$
+for $i\ne j$. Fix $M\ge1$, and for any $i\in[\![1,N]\!]$ consider
+$$\mu_1^i:=\sum_{k=1}^M\alpha_k^i\,\delta_{x_k^i}\in\mathscr P(\mathbb S^{d-1})$$
+where $x_k^i\in\operatorname{conv}_g\operatorname{supp}\mu_0^i$, with $x_k^i=x_{k'}^j$ if and only if
+$(k,i)=(k',j)$. Then for any $T>0$ and $\varepsilon>0$ there exist piecewise constant
+$(\mathbf W,\mathbf U,b):[0,T]\to\mathcal M_{d\times d}(\mathbb R)^2\times\mathbb R^d$ such that for any
+$i$, the corresponding solution $\mu^i$ to (1.3)-(1.2) with data $\mu_0^i$, $\mathbf V\equiv0$ and the
+above parameters, satisfies $W_2(\mu^i(T),\mu_1^i)\le\varepsilon$ as well as, for $i\ne j$,
+$$\operatorname{conv}_g\operatorname{supp}\mu^i(T)\cap\operatorname{conv}_g\operatorname{supp}\mu^j(T)=\varnothing.$$
+The number of switches in $(\mathbf W,\mathbf V,b)$ can also be accounted for — see Remark 2.3.
+
+*Proof sketch (full proof from p. 12).* Split $[0,T]=\bigcup_{i\in[\![1,N]\!]}[T_{i-1},T_i]$ and apply
+Lemma B.1 separately within each interval, acting on one measure at a time. Property (B.2) — the flow
+is the identity off the active balls — ensures that while the construction acts on the $i$-th measure
+the others are untouched, $\mu^i(T_{i-1})=\mu_0^i$. For a fixed $i$, partition the support
+$\mathcal C^i=\operatorname{supp}\mu_0^i$ into $M$ pairwise disjoint pieces $\mathcal C_k^i$ with
+connected interiors, $\mu_0^i(\mathcal C_k^i)=\alpha_k^i$ and $x_k^i\in\operatorname{int}\mathcal C_k^i$;
+then steer the mass of each piece, through a chain of overlapping balls, into a small ball around
+$x_k^i$, so $W_2(\mu^i(T),\mu_1^i)\le\varepsilon$ while the disjoint supports remain disjoint.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors' strategy chains the two preceding results: partition each atomless support into $M$
+prescribed-mass pieces, then use the ball-chain transport (Lemma B.1) to drive each piece into a small
+ball about its target atom $x_k^i$, handling the disjoint families one at a time so that — by the
+off-support identity (B.2) — the others stay fixed. We state the single-family conclusion
+type-correctly in Lean against the axiom layer: the target is a genuine $M$-atom combination
+`∑ k, α k • Measure.dirac (x k)`, atomlessness is `∀ x, μ {x} = 0`, and closeness is in `W2`. It is an
+open `sorry` stub — not a claimed proof — resting on the flow and optimal-transport axioms together
+with the (open) Lemma B.1 and Proposition 2.1.
+
+```lean
+/-- **Proposition 2.2** (clustering to a discrete measure). An atomless measure whose support lies in
+a region `S` disjoint from the others can be driven `W₂`-close to a prescribed `M`-atom empirical
+measure. Stub (`sorry`): `math.open`. -/
+theorem prop_2_2 (μ ν_target : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hatomless : ∀ x : Eucl d, μ {x} = 0)
+    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞)
+    (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
+    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::

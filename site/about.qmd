@@ -1,0 +1,74 @@
+---
+title: "About, attribution, and errata"
+toc: true
+---
+
+## The original paper
+
+> M. Geshkovski, P. Rigollet, Y. Ruiz-Balet. *Measure-to-measure interpolation using Transformers.*
+> arXiv:2411.04551v3.
+
+All theorems, propositions, lemmas, and their proofs are the work of the original authors. Please
+cite their paper for the mathematics.
+
+## This project
+
+The Lean 4 formalization, the labeled axiom layer, the numerical experiments, the prose
+informalizations, this website, and the blueprint are the work of **Alexandre Quemy**. The repository
+is [`aquemy/measure-to-measure-transformers`](https://github.com/aquemy/measure-to-measure-transformers).
+
+::: {.callout-important appearance="simple"}
+**Attribution and fair use.** Throughout the blueprint, the original authors' statements and proofs
+are reproduced **verbatim** in clearly marked, page-cited grey boxes (`From the original paper`),
+solely for scholarly comparison with the formalization. That material remains the authors'. Our
+contributions (Lean, prose informalizations, experiments) appear in the blue and green boxes.
+:::
+
+## What the formalization strengthens
+
+### F1 -- a sign error in the gate of Lemma B.2 {#f1}
+
+The proof of Lemma B.2 (Appendix B, p. 31, eq. (B.4)) takes parameters
+$U = -z\mathbf 1^\top$, $b = \cos(R)\mathbf 1$, giving the gate $(\cos R - \langle z,x\rangle)_+$, and
+asserts it is positive exactly on the ball $\mathcal B_0 = B(z,R)$. But
+$$\cos R - \langle z,x\rangle > 0 \iff \langle z,x\rangle < \cos R \iff d_g(z,x) > R \iff x \notin \mathcal B_0,$$
+so the printed gate is active on the **complement** of $\mathcal B_0$; as written, the interior mass
+sees a zero gate and the lemma transports nothing. The fix is a one-sign typo:
+$U = +z\mathbf 1^\top$, $b = -\cos(R)\mathbf 1$. The error is **typographical and recoverable** -- no
+theorem (Prop 2.2, Theorems 1.1, 1.2) is affected once the sign is flipped.
+
+It is corroborated three ways: (i) the paper's own Proposition 4.2, Step 3 (p. 22) uses the same gate
+and states it with the correct (opposite) side; (ii) the kernel-checked leaf
+`MeasureToMeasure.Leaves.gate_pos_iff_dist` (L2) proves the gate is active on $\{d_g(z,x)>R\}$; and
+(iii) experiment E1 failed (mass fraction $\approx 0.27$) when seeding mass inside $B(z,R)$ as the
+printed (B.4) suggests, and passed (fraction $1.0$) only on the gate-active region L2 identifies.
+
+The full erratum note (written so it can be sent to the authors as a courtesy) is in
+[`ERRATA.md`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md).
+
+### F2 -- a rigor gap in Proposition 3.1's induction {#f2}
+
+The induction proving Proposition 3.1 asserts the step "disjoint geodesic hulls $\Rightarrow$
+non-colinear barycenters" without proof. The formalization supplies it as the machine-checked leaf
+`barycenter_noncolinear_of_disjoint_hull` (L11) for the empirical regime, and
+`barycenter_noncolinear_of_disjoint_hull_general` (L11$'$, via Mathlib's `Convex.integral_mem`) for
+arbitrary probability measures, with no new axioms.
+
+## Honesty: what is proved, axiomatised, or open
+
+Every node carries a status badge driven by the Lean kernel (`#print axioms`, via `bin/axiom-report`):
+
+- [machine-checked]{.badge .ok} -- clean kernel proof (`propext`, `Classical.choice`, `Quot.sound` only);
+- [axiomatised]{.badge .axiom} -- rests on a labeled axiom standing in for optimal-transport / flow theory missing from Mathlib;
+- [open]{.badge .open} -- stated in Lean as a `sorry`;
+- [informal]{.badge .informal} -- reviewed on paper, not yet stated in Lean.
+
+A node is never badged above its true kernel status. The mid-level connective lemmas and the two
+headline theorems are stated in Lean against the axiom layer but are `open` (sorry stubs); the
+self-contained leaves carry the machine-checked load.
+
+## Licensing
+
+The original paper is the authors'. The formalization and experiment code in this repository are
+released under the repository's license; verbatim paper excerpts are included under fair use for
+scholarly comparison and remain the property of the original authors.

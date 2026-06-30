@@ -1,0 +1,27 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Measure-to-measure interpolation using Transformers"
+  reader-mode: true
+  page-footer:
+    left: "Lean formalization and experiments: Alexandre Quemy."
+    right: "Original paper: Geshkovski, Rigollet, Ruiz-Balet (arXiv:2411.04551v3)."
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Blueprint"
+        href: proofs.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: styles/provenance.css
+    toc: true
+    toc-depth: 3
+    code-overflow: wrap
+
+filters:
+  - filters/provenance.lua

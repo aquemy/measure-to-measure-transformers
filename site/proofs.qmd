@@ -1,0 +1,50 @@
+---
+title: "Blueprint"
+subtitle: "Original statements and proofs, our Lean formalization, and what it strengthens"
+toc: true
+toc-depth: 2
+---
+
+This blueprint pairs every node of Geshkovski, Rigollet, and Ruiz-Balet,
+*[Measure-to-measure interpolation using Transformers](https://arxiv.org/abs/2411.04551)*
+(arXiv:2411.04551v3), with its machine-checked Lean 4 formalization. For each node it reproduces the
+**original statement (and proof, where short) verbatim**, gives **our formalization** (a Lean
+statement, a prose proof, the real source listing, and an honest status badge), and, where relevant,
+**what our work strengthens**.
+
+::: {.callout-note appearance="simple"}
+**Authorship.** The mathematics, theorems, and proofs are the work of the original authors. The Lean
+formalization, the experiments, the prose informalizations, and this blueprint are the work of
+Alexandre Quemy. Original statements and proofs are reproduced verbatim, in clearly marked grey boxes
+with a page-cited attribution, for scholarly comparison (fair use).
+:::
+
+How to read the boxes:
+
+::: {.from-paper}
+**From the original paper.** Grey boxes reproduce the authors' statements and proofs verbatim, with a page-cited attribution.
+:::
+
+::: {.our-work}
+**Our formalization.** Blue boxes hold our Lean statement, a prose proof, the real source listing, and a status badge: [machine-checked]{.badge .ok} (clean Lean kernel proof), [axiomatised]{.badge .axiom} (rests on a labeled axiom for missing Mathlib theory), [open]{.badge .open} (a Lean `sorry`), or [informal]{.badge .informal} (reviewed on paper).
+:::
+
+::: {.strengthen}
+**What we strengthen.** Green boxes record a corrected sign error (F1), a rigor gap discharged by a kernel-checked leaf (F2), or what had to be axiomatised.
+:::
+
+A node is badged [machine-checked]{.badge .ok} only if its Lean kernel axiom set is clean
+(`propext`, `Classical.choice`, `Quot.sound` only), verified by `#print axioms` via `bin/axiom-report`.
+The standalone A-to-Z PDF of this blueprint is at [blueprint.pdf](blueprint.pdf).
+
+{{< include proofs/_foundations.qmd >}}
+
+{{< include proofs/_leaves.qmd >}}
+
+{{< include proofs/_mass-transport.qmd >}}
+
+{{< include proofs/_disentangle.qmd >}}
+
+{{< include proofs/_matching.qmd >}}
+
+{{< include proofs/_main-results.qmd >}}

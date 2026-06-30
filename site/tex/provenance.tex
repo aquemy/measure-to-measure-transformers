@@ -1,0 +1,43 @@
+% LaTeX preamble mirroring styles/provenance.css, so the PDF blueprint shows the same provenance
+% convention as the website. Mapped from the .from-paper / .our-work / .strengthen divs, the
+% .cols/.col two-column wrapper, and the .badge spans by filters/provenance.lua.
+
+\usepackage[most]{tcolorbox}
+\usepackage{paracol}
+\usepackage{xcolor}
+\usepackage{fontspec}
+\usepackage{fvextra}
+
+% JuliaMono as the monospace font so the Lean unicode (⟪ ⟫ ‖ ⊥ ₊ ² 𝕊 ...) renders in code listings.
+% The font ships in site/fonts/; Path is relative to the source directory xelatex compiles in.
+\setmonofont{JuliaMono}[
+  Path = fonts/ ,
+  Extension = .ttf ,
+  UprightFont = *-Regular ,
+  BoldFont = *-Bold ,
+  Scale = 0.85 ]
+
+% wrap long inline Lean listings instead of overflowing the page
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},breaklines,breakanywhere,fontsize=\small}
+
+% --- provenance boxes (mirror the CSS colours) ---------------------------------------------------
+\definecolor{provgrey}{HTML}{71717A}\definecolor{provgreybg}{HTML}{F4F4F5}
+\definecolor{provblue}{HTML}{3B82C4}\definecolor{provbluebg}{HTML}{EFF5FC}
+\definecolor{provgreen}{HTML}{3AA34A}\definecolor{provgreenbg}{HTML}{EEFAF0}
+
+\newtcolorbox{frompaper}{breakable, colback=provgreybg, colframe=provgrey, boxrule=0pt,
+  leftrule=2.5pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt}
+\newtcolorbox{ourwork}{breakable, colback=provbluebg, colframe=provblue, boxrule=0pt,
+  leftrule=2.5pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt}
+\newtcolorbox{strengthen}{breakable, colback=provgreenbg, colframe=provgreen, boxrule=0pt,
+  leftrule=2.5pt, arc=2pt, left=8pt, right=8pt, top=6pt, bottom=6pt}
+
+% --- status badges -------------------------------------------------------------------------------
+\definecolor{badgeokbg}{HTML}{D6F0D9}\definecolor{badgeokfg}{HTML}{1E7A32}
+\definecolor{badgeaxbg}{HTML}{FDECCD}\definecolor{badgeaxfg}{HTML}{92560A}
+\definecolor{badgeopbg}{HTML}{F3D6D6}\definecolor{badgeopfg}{HTML}{962020}
+\definecolor{badgeinbg}{HTML}{E6E6EA}\definecolor{badgeinfg}{HTML}{444444}
+\newcommand{\badgeok}[1]{\colorbox{badgeokbg}{\textcolor{badgeokfg}{\scriptsize\textbf{#1}}}}
+\newcommand{\badgeaxiom}[1]{\colorbox{badgeaxbg}{\textcolor{badgeaxfg}{\scriptsize\textbf{#1}}}}
+\newcommand{\badgeopen}[1]{\colorbox{badgeopbg}{\textcolor{badgeopfg}{\scriptsize\textbf{#1}}}}
+\newcommand{\badgeinformal}[1]{\colorbox{badgeinbg}{\textcolor{badgeinfg}{\scriptsize\textbf{#1}}}}
