@@ -33,6 +33,15 @@
       "weakest_dep": null
     },
     {
+      "id": "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull",
+      "kind": "formalize",
+      "statement": "disjoint hulls give non-colinear barycenters (L11, closes F2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
       "id": "MeasureToMeasure.Leaves.exists_ne_in_ball",
       "kind": "formalize",
       "statement": "pigeonhole step of Lemma 3.4 Part 1 (L10)",
@@ -72,6 +81,15 @@
       "id": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
       "kind": "formalize",
       "statement": "gradient of geodesic distance along a path (L4)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.geodesicHull_inter_nonempty_of_sameRay",
+      "kind": "formalize",
+      "statement": "disjoint hulls give non-colinear barycenters (L11, closes F2)",
       "status": "math.machine-checked",
       "effective_status": "math.machine-checked",
       "in_question": false,
@@ -129,7 +147,7 @@
       "status": "math.open",
       "effective_status": null,
       "in_question": false,
-      "weakest_dep": "MeasureToMeasure.Axioms.measureFlow"
+      "weakest_dep": "MeasureToMeasure.Axioms.W2"
     },
     {
       "id": "MeasureToMeasure.cos_geodesicDist",
@@ -315,6 +333,15 @@
       "id": "leaf-ball-chain-induction",
       "kind": "conjecture",
       "statement": "L9: if each step multiplies retained mass by at least (1-eps), then after K steps mu(T, B_K) >= (1-eps)^K mu_0(union B_k) (Lemma B.1 induction, abstracted).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-barycenter-noncolinear",
+      "kind": "conjecture",
+      "statement": "L11: empirical measures in the orthant (geodesic hull modeled as cone(s) cap sphere) with disjoint geodesic hulls have non-colinear barycenters (not SameRay). Discharges review finding F2: the implication Prop 3.1's induction asserts without proof, for the empirical regime of Thm 1.1 and restricted Thm 1.2. General-measure case adds only 'barycenter in closed convex hull of support'.",
       "status": "math.machine-checked",
       "effective_status": "math.machine-checked",
       "in_question": false,
@@ -555,6 +582,15 @@
       "weakest_dep": null
     },
     {
+      "id": "review",
+      "kind": "docs",
+      "statement": "adversarial proof-review of the mid-level lemmas",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
       "id": "thm-1-1",
       "kind": "conjecture",
       "statement": "Theorem 1.1: for Dirac targets sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps).",
@@ -594,14 +630,14 @@
     },
     {
       "source": "MeasureToMeasure.Leaves.separating_hyperplane",
-      "target": "leaf-sep-hyperplane",
-      "relation": "Closes",
+      "target": "MeasureToMeasure.cos_geodesicDist",
+      "relation": "Depends-On",
       "breaking": false
     },
     {
       "source": "MeasureToMeasure.Leaves.separating_hyperplane",
-      "target": "MeasureToMeasure.cos_geodesicDist",
-      "relation": "Depends-On",
+      "target": "leaf-sep-hyperplane",
+      "relation": "Closes",
       "breaking": false
     },
     {
@@ -618,19 +654,13 @@
     },
     {
       "source": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
-      "target": "leaf-gate-ode",
-      "relation": "Closes",
-      "breaking": false
-    },
-    {
-      "source": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
       "target": "MeasureToMeasure.projector_inner_sub_sq",
       "relation": "Depends-On",
       "breaking": false
     },
     {
-      "source": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
-      "target": "leaf-barycenter-ode",
+      "source": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "target": "leaf-gate-ode",
       "relation": "Closes",
       "breaking": false
     },
@@ -641,14 +671,14 @@
       "breaking": false
     },
     {
-      "source": "MeasureToMeasure.Leaves.exists_ne_in_ball",
-      "target": "leaf-pigeonhole",
+      "source": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
+      "target": "leaf-barycenter-ode",
       "relation": "Closes",
       "breaking": false
     },
     {
-      "source": "MeasureToMeasure.Leaves.lemma_5_2",
-      "target": "leaf-coupling-bound",
+      "source": "MeasureToMeasure.Leaves.exists_ne_in_ball",
+      "target": "leaf-pigeonhole",
       "relation": "Closes",
       "breaking": false
     },
@@ -659,8 +689,8 @@
       "breaking": false
     },
     {
-      "source": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
-      "target": "leaf-geodesic-grad",
+      "source": "MeasureToMeasure.Leaves.lemma_5_2",
+      "target": "leaf-coupling-bound",
       "relation": "Closes",
       "breaking": false
     },
@@ -671,8 +701,8 @@
       "breaking": false
     },
     {
-      "source": "e5",
-      "target": "exp-e5-lyapunov",
+      "source": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
+      "target": "leaf-geodesic-grad",
       "relation": "Closes",
       "breaking": false
     },
@@ -683,8 +713,8 @@
       "breaking": false
     },
     {
-      "source": "e1",
-      "target": "exp-e1-mass-transport",
+      "source": "e5",
+      "target": "exp-e5-lyapunov",
       "relation": "Closes",
       "breaking": false
     },
@@ -701,8 +731,8 @@
       "breaking": false
     },
     {
-      "source": "e2",
-      "target": "exp-e2-clustering",
+      "source": "e1",
+      "target": "exp-e1-mass-transport",
       "relation": "Closes",
       "breaking": false
     },
@@ -713,8 +743,8 @@
       "breaking": false
     },
     {
-      "source": "e3",
-      "target": "exp-e3-disentangle",
+      "source": "e2",
+      "target": "exp-e2-clustering",
       "relation": "Closes",
       "breaking": false
     },
@@ -731,8 +761,8 @@
       "breaking": false
     },
     {
-      "source": "e4",
-      "target": "exp-e4-matching",
+      "source": "e3",
+      "target": "exp-e3-disentangle",
       "relation": "Closes",
       "breaking": false
     },
@@ -749,8 +779,8 @@
       "breaking": false
     },
     {
-      "source": "e7",
-      "target": "exp-e7-linear-impossible",
+      "source": "e4",
+      "target": "exp-e4-matching",
       "relation": "Closes",
       "breaking": false
     },
@@ -761,8 +791,8 @@
       "breaking": false
     },
     {
-      "source": "e6",
-      "target": "exp-e6-end-to-end",
+      "source": "e7",
+      "target": "exp-e7-linear-impossible",
       "relation": "Closes",
       "breaking": false
     },
@@ -785,6 +815,12 @@
       "breaking": false
     },
     {
+      "source": "e6",
+      "target": "exp-e6-end-to-end",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
       "source": "MeasureToMeasure.Statements.theorem_1_2",
       "target": "MeasureToMeasure.Axioms.measureFlow",
       "relation": "Depends-On",
@@ -794,6 +830,12 @@
       "source": "MeasureToMeasure.Statements.theorem_1_2",
       "target": "MeasureToMeasure.Axioms.W2",
       "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull",
+      "target": "leaf-barycenter-noncolinear",
+      "relation": "Closes",
       "breaking": false
     }
   ]
