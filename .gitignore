@@ -15,6 +15,11 @@
 *.synctex.gz
 blueprint/*.pdf
 !references/paper.pdf
+# Blueprint build outputs (sources live in blueprint/src; the web output is
+# published under docs/ for classic GitHub Pages).
+/blueprint/print/
+/blueprint/web/
+/blueprint/lean_decls
 
 # Python / uv
 __pycache__/
@@ -39,3 +44,4 @@ experiments/results/*
 # The in-repo reference copy lives at references/paper.pdf; ignore the root working copy.
 /paper.pdf
 
+/blueprint/src/web.paux
