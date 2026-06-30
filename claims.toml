@@ -273,21 +273,21 @@ created   = "2026-06-30"
 [claims.exp-e2-clustering]
 kind      = "experiment"
 statement = "E2: simulate the attention-field flow and verify diam(conv_g supp mu(t)) -> 0 with rate ~ log(1/eps). Tests Proposition 2.1."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Prop 2.1"
 created   = "2026-06-30"
 
 [claims.exp-e3-disentangle]
 kind      = "experiment"
 statement = "E3: run theta_1 on N overlapping-support measures and verify supports become pairwise disjoint; count switches ~ O(dN). Tests Proposition 3.1."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Prop 3.1"
 created   = "2026-06-30"
 
 [claims.exp-e4-matching]
 kind      = "experiment"
 statement = "E4: run gather/corridor/restore and verify x_0^M -> y^M while inactive points stay fixed; switches <= 6M. Tests Proposition 4.2 / 4.1."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Prop 4.2"
 created   = "2026-06-30"
 
@@ -301,13 +301,13 @@ created   = "2026-06-30"
 [claims.exp-e6-end-to-end]
 kind      = "experiment"
 statement = "E6: compose disentangle/match/un-disentangle on small N, M and verify W2(mu(T), target) <= eps with switch count O((d+M)N) / O(dN). Tests Theorems 1.1 / 1.2."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "Thm 1.1-1.2"
 created   = "2026-06-30"
 
 [claims.exp-e7-linear-impossible]
 kind      = "experiment"
 statement = "E7 (negative control): show a single linear continuity equation cannot match overlapping inputs to disjoint targets (eq. 1.7)."
-status    = "sci.hypothesis"
+status    = "sci.measured"
 paper     = "eq. 1.7, p.8"
 created   = "2026-06-30"
