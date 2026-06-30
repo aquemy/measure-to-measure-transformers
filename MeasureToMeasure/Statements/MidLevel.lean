@@ -89,22 +89,62 @@ axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) (T : ℝ) (hT : 0 < T) :
     ∃ θ : Params d, switches θ ≤ 2 ∧
       ¬ SameRay ℝ (barycenter (measureFlow θ T μ)) (barycenter (measureFlow θ T ν))
 
-/-- **Proposition 4.2** (steer one active point). With `d ≥ 3` and the inactive points already at
-their targets, at most `6` switches move every input to its target, keeping the inactive ones fixed.
-AXIOM (`math.axiomatised`): the gather/corridor/restore construction is a geodesic gradient flow.
-Step 1 is leaf L3, the geodesic gradient is leaf L4. -/
+/-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, distinct inputs/targets, and the
+inactive points (the first `M-1`) already at their targets, at most `6` switches move every input to
+its target, keeping the inactive ones fixed. AXIOM (`math.axiomatised`): the gather/corridor/restore
+construction is a geodesic gradient flow. Step 1 is leaf L3, the geodesic gradient is leaf L4.
+
+The injectivity hypotheses are required for soundness: the flow map is bijective
+(`flowMap_bijective`), so steering `x₀ (M-1)` to `y (M-1)` while fixing the inactive points is
+possible only if the targets (and inputs) are distinct -- otherwise the map would need two preimages
+for one point. The original stub omitted them. -/
 axiom prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀ : Function.Injective x₀) (hy : Function.Injective y)
     (hfix : ∀ i : Fin M, (i : ℕ) < M - 1 → x₀ i = y i) :
     ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i
 
 /-- **Proposition 4.1** (match an ensemble). With `d ≥ 3` and distinct inputs/targets, at most `6M`
-switches steer every `x₀ i` to `y i`. AXIOM (`math.axiomatised`): follows from Proposition 4.2 by
-induction over the `M` points, each handled by a `≤ 6`-switch geodesic gradient flow with the
-inactive points parked. A faithful statement; its derivation from `prop_4_2` requires the
-permutation/parking bookkeeping of Section 4. `Depends-On prop_4_2`. -/
-axiom prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+switches steer every `x₀ i` to `y i`.
+
+**Proved** (effective `math.axiomatised`) by induction on `M` over Proposition 4.2 and the structural
+flow algebra. Base case `M = 0`: the identity schedule (`idParams`, `0` switches). Step `M = k+1`:
+place the first `k` points by the induction hypothesis on the subfamily `x₀ ∘ castSucc`,
+`y ∘ castSucc` (`≤ 6k` switches), giving a schedule `φ`; then one Proposition 4.2 step moves the last
+point to `y (last)` while the first `k` -- now at their targets via `φ`, so the `hfix` hypothesis
+holds -- stay fixed (`≤ 6` switches); compose with `comp`. The switch budget is `6k + 6 = 6(k+1)`
+(`switches_comp`), and `flowMap_comp` gives the conclusion for every index at once. The injectivity
+needed for the Proposition 4.2 step is exactly `flowMap φ T ∘ x₀` injective (bijective flow composed
+with injective `x₀`) and `y` injective. `Depends-On prop_4_2`. -/
+theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
     (hx₀ : Function.Injective x₀) (hy : Function.Injective y) :
-    ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i
+    ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
+  induction M with
+  | zero => exact ⟨idParams d, by simp [switches_id], fun i => i.elim0⟩
+  | succ k ih =>
+    -- Place the first k points by the induction hypothesis on the castSucc subfamily.
+    have hx₀' : Function.Injective (x₀ ∘ Fin.castSucc) := hx₀.comp (Fin.castSucc_injective k)
+    have hy' : Function.Injective (y ∘ Fin.castSucc) := hy.comp (Fin.castSucc_injective k)
+    obtain ⟨φ, hφsw, hφ⟩ := ih (x₀ ∘ Fin.castSucc) (y ∘ Fin.castSucc) hx₀' hy'
+    simp only [Function.comp_apply] at hφ
+    -- Current positions of all k+1 points after φ.
+    set p : Fin (k + 1) → Eucl d := fun i => flowMap φ T (x₀ i) with hp
+    have hpinj : Function.Injective p := (flowMap_bijective φ T).injective.comp hx₀
+    -- The first k points already sit at their targets, so prop_4_2's hypothesis holds.
+    have hfix : ∀ i : Fin (k + 1), (i : ℕ) < (k + 1) - 1 → p i = y i := by
+      intro i hi
+      have hlt : (i : ℕ) < k := by omega
+      calc p i = flowMap φ T (x₀ (Fin.castSucc (Fin.castLT i hlt))) := by
+                rw [Fin.castSucc_castLT]
+        _ = y (Fin.castSucc (Fin.castLT i hlt)) := hφ (Fin.castLT i hlt)
+        _ = y i := by rw [Fin.castSucc_castLT]
+    obtain ⟨ψ, hψsw, hψ⟩ := prop_4_2 hd (k + 1) p y T hT hpinj hy hfix
+    refine ⟨comp φ ψ, ?_, ?_⟩
+    · calc switches (comp φ ψ) ≤ switches φ + switches ψ := switches_comp φ ψ
+        _ ≤ 6 * k + 6 := Nat.add_le_add hφsw hψsw
+        _ = 6 * (k + 1) := by ring
+    · intro i
+      rw [flowMap_comp]
+      exact hψ i
 
 /-- **Clustering to a prescribed point** (Proposition 2.1 followed by Proposition 4.1). A measure in
 an open hemisphere can be driven `W₂`-close to the Dirac mass at *any chosen* point `z`: first cluster
