@@ -95,7 +95,7 @@ created   = "2026-06-30"
 
 [claims.prop-4-1]
 kind      = "conjecture"
-statement = "Proposition 4.1: M points x_0^i can be steered exactly to y^i with a perceptron, using at most 6M switches and norm O(C M / (T min eps_i))."
+statement = "Proposition 4.1: M distinct points x_0^i can be steered exactly to distinct y^i, using at most 6M switches. PROVED by induction on M over Proposition 4.2 and the structural flow algebra (idParams base case; comp/switches_comp step placing one more point; flowMap_comp); the 6M switch budget is machine-checked."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_4_1"
 paper     = "Prop 4.1, p.18"
@@ -103,7 +103,7 @@ created   = "2026-06-30"
 
 [claims.prop-4-2]
 kind      = "conjecture"
-statement = "Proposition 4.2: the single active point x_0^M is steered to y^M while inactive points stay fixed, via gather/corridor/restore, with at most 6 switches."
+statement = "Proposition 4.2: with distinct inputs/targets and the first M-1 points already at their targets, the single active point x_0^M is steered to y^M while the inactive points stay fixed, via gather/corridor/restore, with at most 6 switches. (Injectivity hypotheses added for soundness: the flow is bijective.)"
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_4_2"
 paper     = "Prop 4.2, p.18"

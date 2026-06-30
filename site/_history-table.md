@@ -50,3 +50,5 @@
 | 48 | 2026-06-30 | `docs` | docs(ledger): record Phase 7 closure, axiom surface, and refreshed ClaimGraph | `ledger` |
 | 49 | 2026-06-30 | `docs` | docs(site): republish with Phase 7 statuses (headlines now math.axiomatised) | `site` |
 | 50 | 2026-06-30 | `formalize` | formalize(main): prove Proposition 3.1's disentanglement packaging | `MeasureToMeasure.Statements.prop_3_1` |
+| 51 | 2026-06-30 | `docs` | docs(ledger): record Proposition 3.1 proved; refresh ClaimGraph and site | `ledger` |
+| 52 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 4.1 by induction over Proposition 4.2 | `MeasureToMeasure.Statements.prop_4_1` |

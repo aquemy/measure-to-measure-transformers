@@ -278,12 +278,14 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     `Φ_fin = (Φ_θ₁)⁻¹ ∘ Φ_θ₂ ∘ Φ_θ₁`. Theorem 1.2's `W₂` bookkeeping (transport map through the
     inverse flow, then `L²`-to-`W₂` via L7) is machine-checked.
   - `lemma_B_1` (ball-chain mass retention), a real induction over `lemma_B_2` and the flow algebra.
+  - `prop_4_1` (match an ensemble), proved by induction on `M` over `prop_4_2` and the flow algebra
+    (place one point per step; `6k + 6 = 6(k+1)` switch budget machine-checked via `switches_comp`).
   - `prop_3_1` (disentanglement), proved from `exists_disentangling_balls`: the disjointness +
     hemisphere packaging the paper states without proof (review finding F2) is machine-checked
     (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
     `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`, `prop_2_2`,
-  `lemma_3_2/3.3/3.4`, `prop_4_1`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
+  `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
 ### Axiom surface (what every closed statement ultimately rests on)
 
@@ -298,8 +300,9 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   `measureFlow_map` (pushforward identity). Standard semigroup / well-posedness facts; structural, not
   conclusions of the paper.
 - **Analytic mid-levels** (`Statements/MidLevel.lean`): `prop_2_1`, `prop_2_2`, `lemma_3_2`,
-  `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_1`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
-  `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1).
+  `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
+  `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1). (`prop_4_1` is *proved*
+  from `prop_4_2`.)
 - **Construction-level** (`Statements/MainResults.lean`): `exists_disentangling_balls` (the geometric
   output of the Section 3.3 disentanglement; `prop_3_1` is *proved* from it), and
   `exists_parked_schedule` (Appendix B parking / simultaneous action on a disjoint-support family).
@@ -314,3 +317,6 @@ Two type-correct stubs were loose transcriptions; axiomatizing them as written w
   Added the chain-overlap hypothesis.
 - `lemma_B_2`: added the `switches θ ≤ 1` bound (one switch per ball), required for `lemma_B_1`'s
   `≤ K` budget.
+- `prop_4_2`: added injective inputs/targets. The flow map is bijective, so steering the active point
+  to its target while fixing the inactive ones is possible only if the points are distinct; without
+  it the stub is false when targets collide.
