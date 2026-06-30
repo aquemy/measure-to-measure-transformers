@@ -172,8 +172,8 @@ created   = "2026-06-30"
 [claims.leaf-gate-ode]
 kind      = "conjecture"
 statement = "L2: with U=-1 z^T, b=cos(R) 1, W 1 = omega, the ReLU gate equals (cos R - <z,x>)_+ and d/dt <x,omega> = (1 - <x,omega>^2)(cos R - cos d_g(z,x))_+ (eq. B.4-B.5)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.gate_ode_identity"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.gate_hasDerivAt_inner"
 paper     = "eq. B.4-B.5, p.32"
 created   = "2026-06-30"
 
@@ -204,16 +204,16 @@ created   = "2026-06-30"
 [claims.leaf-barycenter-ode]
 kind      = "conjecture"
 statement = "L6: along d/dt <x,alpha> = c (1 - <alpha,x>^2) with c != 0 of fixed sign, the inner product is monotone and converges to +-1 (sign of c), i.e. x -> +-alpha (eq. B.9)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.barycenter_component_limit"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner"
 paper     = "eq. B.9, p.33"
 created   = "2026-06-30"
 
 [claims.leaf-coupling-bound]
 kind      = "conjecture"
 statement = "L7: the map-induced coupling gives W2^2(T1_# mu, T2_# mu) <= integral ||T1 - T2||^2 d mu (the core of Lemma 5.2)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.w2_le_l2_of_maps"
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Leaves.lemma_5_2"
 paper     = "Lem 5.2, p.24"
 created   = "2026-06-30"
 
@@ -236,8 +236,8 @@ created   = "2026-06-30"
 [claims.leaf-pigeonhole]
 kind      = "conjecture"
 statement = "L10: a function that is constant on an open ball forces the stated barycenter identity to fail, so some x* in B makes the two barycenters differ (Lemma 3.4 Part 1)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.exists_point_barycenters_differ"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.exists_ne_in_ball"
 paper     = "Lem 3.4 Part 1, p.35"
 created   = "2026-06-30"
 
