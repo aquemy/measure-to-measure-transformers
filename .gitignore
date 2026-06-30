@@ -41,6 +41,13 @@ experiments/results/*
 *.npz
 *.pkl
 
+# Quarto experiment report: track the source (build_report.py, experiments.qmd) and the citable
+# PDF; the HTML render and its support files regenerate (the docs/ site serves the web version).
+/report/experiments.html
+/report/experiments_files/
+/report/*.tex
+/report/.quarto/
+
 # OS
 .DS_Store
 
