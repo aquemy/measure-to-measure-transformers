@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Measure-to-measure interpolation using Transformers</title>
+<title>History – Measure-to-measure interpolation using Transformers</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -68,35 +68,6 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles/provenance.css">
 </head>
@@ -119,7 +90,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -135,7 +106,7 @@ window.Quarto = {
 <span class="menu-text">Claim graph</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./history.html"> 
+    <a class="nav-link active" href="./history.html" aria-current="page"> 
 <span class="menu-text">History</span></a>
   </li>  
   <li class="nav-item">
@@ -176,8 +147,8 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Measure-to-measure interpolation using Transformers</h1>
-<p class="subtitle lead">A machine-checked formalization and numerical validation</p>
+<h1 class="title">History</h1>
+<p class="subtitle lead">The knowledge-commit trail that built the graph</p>
 </div>
 
 
@@ -194,47 +165,333 @@ window.Quarto = {
 </header>
 
 
-<p>This site accompanies a Lean 4 formalization and numerical validation of</p>
-<blockquote class="blockquote">
-<p>M. Geshkovski, P. Rigollet, Y. Ruiz-Balet, <em><a href="https://arxiv.org/abs/2411.04551">Measure-to-measure interpolation using Transformers</a></em>, arXiv:2411.04551v3.</p>
-</blockquote>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><strong>Who did what.</strong> The paper, its theorems, and its proofs are the work of <strong>Geshkovski, Rigollet, and Ruiz-Balet</strong>. The <strong>Lean 4 formalization, the numerical experiments, the prose informalizations, this website, and the blueprint</strong> are the work of <strong>Alexandre Quemy</strong>. Throughout, the original authors’ statements and proofs are reproduced verbatim in clearly marked, page-cited grey boxes, for scholarly comparison; everything in blue or green boxes is the present author’s contribution.</p>
-</div>
-</div>
-</div>
-<section id="the-result-in-one-paragraph" class="level2">
-<h2 class="anchored" data-anchor-id="the-result-in-one-paragraph">The result, in one paragraph</h2>
-<p>A Transformer can be viewed as the flow map of a continuity equation on the unit sphere <span class="math inline">\(\mathbb S^{d-1}\)</span>: each token is a particle, and a single time-dependent parameter <span class="math inline">\(\theta = (\mathbf V, \mathbf B, \mathbf W, \mathbf U, b)\)</span> drives every particle through a self-attention plus perceptron velocity field, projected to the tangent space by layer normalization. The paper proves a <strong>controllability</strong> result: one such Transformer, with explicit piecewise-constant parameters and a bounded number of switches, can steer <span class="math inline">\(N\)</span> arbitrary input measures to <span class="math inline">\(N\)</span> arbitrary target measures, to within <span class="math inline">\(\varepsilon\)</span> in the Wasserstein distance <span class="math inline">\(W_2\)</span>. The construction is a three-act composition:</p>
-<ol type="1">
-<li><strong>Disentangle</strong> (Prop 3.1) – a piecewise-constant control separates the <span class="math inline">\(N\)</span> overlapping supports into pairwise-disjoint regions, using barycenter separation.</li>
-<li><strong>Cluster</strong> (Prop 2.1 / 2.2) – self-attention contracts each measure to a point (or to <span class="math inline">\(M\)</span> atoms).</li>
-<li><strong>Match</strong> (Prop 4.1 / 4.2) – a perceptron gate steers each cluster to its target while parking the others.</li>
-</ol>
-<p>Theorem 1.1 handles Dirac targets sharing a missing direction; Theorem 1.2 handles transport-matchable targets.</p>
-</section>
-<section id="what-this-project-adds" class="level2">
-<h2 class="anchored" data-anchor-id="what-this-project-adds">What this project adds</h2>
-<ul>
-<li><strong>Machine-checked leaves.</strong> The self-contained computational cores of the proofs (the gate ODE, the barycenter ODE, the geodesic gradient, the separating hyperplane, the Lyapunov sign, the ball-chain retention, the pigeonhole step, and the disjoint-hulls/non-colinear-barycenters step) are isolated and given clean Lean 4 kernel proofs.</li>
-<li><strong>A labeled axiom layer.</strong> The optimal-transport (<span class="math inline">\(W_1\)</span>, <span class="math inline">\(W_2\)</span>) and continuity-equation-flow theory missing from Mathlib is isolated as a small, explicit set of named axioms, so every downstream result shows exactly what it rests on under <code>#print axioms</code>.</li>
-<li><strong>Two corrections/strengthenings.</strong> A load-bearing sign error in the gate of Lemma B.2 (<strong>F1</strong>, see <a href="./about.html">errata</a>), caught by the formalization and an experiment; and a rigor gap in Proposition 3.1’s induction (<strong>F2</strong>) discharged by a machine-checked leaf.</li>
-<li><strong>A seeded validation campaign.</strong> Seven experiments integrate the actual dynamics and confirm the quantitative content of the claims, with figures and provenance manifests.</li>
-</ul>
-</section>
-<section id="explore" class="level2">
-<h2 class="anchored" data-anchor-id="explore">Explore</h2>
-<ul>
-<li><a href="./proofs.html"><strong>Blueprint</strong></a> – every node: the original statement and proof, our Lean formalization, and what it strengthens. (<a href="blueprint.pdf">standalone PDF</a>)</li>
-<li><a href="./experiments.html"><strong>Experiments</strong></a> – the seven seeded validation experiments, with hypotheses, figures, and verdicts.</li>
-<li><a href="./claimgraph.html"><strong>Claim graph</strong></a> – the interactive dependency graph and its commit-by-commit history.</li>
-<li><a href="./about.html"><strong>About</strong></a> – citation, attribution, errata, and licensing.</li>
-</ul>
+<p>The formalization was assembled as a sequence of <strong>Conventional Knowledge Commits</strong>: each commit that changes the mathematical state declares what it asserts, what it depends on, and what it closes or breaks. Replaying them in order reconstructs the <a href="./claimgraph.html">claim graph</a> one step at a time. The compact timeline below (a dependency-free SVG generated by <a href="https://github.com/hotherio/claimgraph"><code>claimgraph</code></a>) shows each commit’s effect on the nodes; drag the slider through the history.</p>
+<iframe src="history-timeline.html" title="ClaimGraph history timeline" loading="lazy" style="width:100%;height:560px;border:1px solid var(--bs-border-color,#dee2e6);border-radius:6px">
+</iframe>
+<section id="knowledge-commit-log" class="level2">
+<h2 class="anchored" data-anchor-id="knowledge-commit-log">Knowledge-commit log</h2>
+<p>The conventional commits that moved the mathematical state, oldest first. <em>Touches</em> lists the claims each commit asserted, closed, or broke (its replay focus); plain chores and merges that carry no knowledge footer do not appear.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">#</th>
+<th>date</th>
+<th>type</th>
+<th>subject</th>
+<th>touches</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td>2026-06-30</td>
+<td><code>chore</code></td>
+<td>chore: bootstrap CKC repo, Lean+Mathlib project, and experiment harness</td>
+<td>–</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td>2026-06-30</td>
+<td><code>review</code></td>
+<td>review(coverage): map Mathlib v4.31.0 support and fix the axiom boundary</td>
+<td><code>coverage</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(foundations): tangential projector and geodesic distance from Mathlib</td>
+<td><code>MeasureToMeasure.projector_inner_sub_sq</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td>2026-06-30</td>
+<td><code>axiomatize</code></td>
+<td>axiomatize~(axioms): introduce the labeled axiom layer for the missing Mathlib theory</td>
+<td><code>axioms</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): separating-hyperplane bound of Proposition 4.2 Step 1 (L3)</td>
+<td><code>MeasureToMeasure.Leaves.separating_hyperplane</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): ball-chain geometric retention of Lemma B.1 (L9)</td>
+<td><code>MeasureToMeasure.Leaves.ball_chain_geom</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): Lyapunov derivative and sign of Example 6.1 (L5)</td>
+<td><code>MeasureToMeasure.Leaves.lyapunov_hasDerivAt</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): refresh status cache for the four machine-checked leaves</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): gate algebra and gate ODE of Lemma B.2 (L2)</td>
+<td><code>MeasureToMeasure.Leaves.gate_hasDerivAt_inner</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): barycenter ODE and strict increase of eq. B.9 (L6)</td>
+<td><code>MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): pigeonhole step of Lemma 3.4 Part 1 (L10)</td>
+<td><code>MeasureToMeasure.Leaves.exists_ne_in_ball</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">12</td>
+<td>2026-06-30</td>
+<td><code>axiomatize</code></td>
+<td>axiomatize~(leaves): linearized optimal-transport bound of Lemma 5.2 (L7)</td>
+<td><code>MeasureToMeasure.Leaves.lemma_5_2</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">13</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): refresh status for leaves L2, L6, L7, L10</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">14</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): gradient of geodesic distance along a path (L4)</td>
+<td><code>MeasureToMeasure.Leaves.geodesicDist_hasDerivAt</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): mark L4 machine-checked and record the leaf scoreboard</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">16</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e5): Lyapunov function decreases and theta converges (Example 6.1)</td>
+<td><code>e5</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">17</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e1): gated flow transports mass through overlapping regions (Lemma B.2/B.1)</td>
+<td><code>e1</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">18</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): mark experiments E1 and E5 as sci.measured</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">19</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e2): self-attention clusters a hemisphere measure to a point (Proposition 2.1)</td>
+<td><code>e2</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e3): barycenter separation disentangles overlapping supports (Proposition 3.1)</td>
+<td><code>e3</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">21</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e4): gated steering moves the active point and parks the rest (Proposition 4.2)</td>
+<td><code>e4</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e7): a single linear continuity equation cannot separate supports (eq. 1.7)</td>
+<td><code>e7</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">23</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(e6): end-to-end disentangle-cluster-match reaches the targets (Theorems 1.1/1.2)</td>
+<td><code>e6</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">24</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): mark experiments E2, E3, E4, E6, E7 as sci.measured</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">25</td>
+<td>2026-06-30</td>
+<td><code>state</code></td>
+<td>state(statements): type-correct stubs for Theorems 1.1, 1.2 and Proposition 3.1</td>
+<td><code>MeasureToMeasure.Statements.theorem_1_2</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">26</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(blueprint): dependency graph of all ~18 results with Lean refs and status</td>
+<td><code>blueprint</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">27</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): build the ClaimGraph and mark the headline statements open</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">28</td>
+<td>2026-06-30</td>
+<td><code>chore</code></td>
+<td>chore: clear placeholder blueprint dir before leanblueprint scaffold</td>
+<td>–</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">29</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(blueprint): scaffold leanblueprint, build PDF and web, publish to /docs</td>
+<td><code>blueprint</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(blueprint): point web nav links at the canonical Pages URL</td>
+<td><code>blueprint</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">31</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(review): adversarial proof-review of the mid-level lemmas</td>
+<td><code>review</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">32</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): disjoint hulls give non-colinear barycenters (L11, closes F2)</td>
+<td><code>MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">33</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(claims): regenerate the ClaimGraph after the L11 leaf and proof review</td>
+<td><code>claims</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">34</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): general-measure barycenter non-colinearity (closes F2 residual)</td>
+<td><code>MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull_general</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">35</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(leaves): Markov mass bound via Kantorovich-Rubinstein duality (L8)</td>
+<td><code>MeasureToMeasure.Leaves.markov_bound</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">36</td>
+<td>2026-06-30</td>
+<td><code>formalize</code></td>
+<td>formalize(statements): type-correct Lean stubs for the mid-level lemmas</td>
+<td><code>MeasureToMeasure.Statements.prop_2_1</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">37</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs: erratum for the B.2 sign error, ledger/registry/blueprint updates, republish</td>
+<td>–</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">38</td>
+<td>2026-06-30</td>
+<td><code>feat</code></td>
+<td>feat(experiments): plotting, trajectory tracing, and provenance in the harness</td>
+<td><code>experiments</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">39</td>
+<td>2026-06-30</td>
+<td><code>experiment</code></td>
+<td>experiment(campaign): add verdict figures, hypotheses, and provenance to E1-E7</td>
+<td><code>campaign</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">40</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(workflow): codify the before/prove/after cycle and cross-link experiments to claims</td>
+<td><code>workflow</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">41</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(report): data-driven experiment validation report (HTML + PDF)</td>
+<td><code>report</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">42</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(errata): correct the transpose in the Lemma B.2 gate parameter (F1)</td>
+<td><code>errata</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">43</td>
+<td>2026-06-30</td>
+<td><code>docs</code></td>
+<td>docs(blueprint): rich Quarto blueprint with verbatim paper extracts, Lean, and provenance</td>
+<td><code>blueprint</code></td>
+</tr>
+</tbody>
+</table>
 
 
 </section>

@@ -49,9 +49,12 @@ experiments/results/*
 /report/.quarto/
 
 # Quarto site: build artifacts and the vendored Lean-unicode font (fetched by site/fonts/fetch.sh).
+# site/experiments-figures/ is a build-time copy of the tracked experiment figures (site/build.py
+# stages it so the website is self-contained); the originals live under experiments/results/.
 /site/_site/
 /site/.quarto/
 /site/fonts/*.ttf
+/site/experiments-figures/
 
 # OS
 .DS_Store

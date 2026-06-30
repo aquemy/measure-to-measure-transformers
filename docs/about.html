@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Measure-to-measure interpolation using Transformers</title>
+<title>About, attribution, and errata – Measure-to-measure interpolation using Transformers</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -101,7 +101,7 @@ window.Quarto = {
 <link rel="stylesheet" href="styles/provenance.css">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light">
+<body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -119,7 +119,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -139,7 +139,7 @@ window.Quarto = {
 <span class="menu-text">History</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link active" href="./about.html" aria-current="page"> 
 <span class="menu-text">About</span></a>
   </li>  
 </ul>
@@ -170,14 +170,29 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-original-paper" id="toc-the-original-paper" class="nav-link active" data-scroll-target="#the-original-paper">The original paper</a></li>
+  <li><a href="#this-project" id="toc-this-project" class="nav-link" data-scroll-target="#this-project">This project</a></li>
+  <li><a href="#what-the-formalization-strengthens" id="toc-what-the-formalization-strengthens" class="nav-link" data-scroll-target="#what-the-formalization-strengthens">What the formalization strengthens</a>
+  <ul class="collapse">
+  <li><a href="#f1" id="toc-f1" class="nav-link" data-scroll-target="#f1">F1 – a sign error in the gate of Lemma B.2</a></li>
+  <li><a href="#f2" id="toc-f2" class="nav-link" data-scroll-target="#f2">F2 – a rigor gap in Proposition 3.1’s induction</a></li>
+  </ul></li>
+  <li><a href="#honesty-what-is-proved-axiomatised-or-open" id="toc-honesty-what-is-proved-axiomatised-or-open" class="nav-link" data-scroll-target="#honesty-what-is-proved-axiomatised-or-open">Honesty: what is proved, axiomatised, or open</a></li>
+  <li><a href="#licensing" id="toc-licensing" class="nav-link" data-scroll-target="#licensing">Licensing</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Measure-to-measure interpolation using Transformers</h1>
-<p class="subtitle lead">A machine-checked formalization and numerical validation</p>
+<h1 class="title">About, attribution, and errata</h1>
 </div>
 
 
@@ -194,47 +209,54 @@ window.Quarto = {
 </header>
 
 
-<p>This site accompanies a Lean 4 formalization and numerical validation of</p>
+<section id="the-original-paper" class="level2">
+<h2 class="anchored" data-anchor-id="the-original-paper">The original paper</h2>
 <blockquote class="blockquote">
-<p>M. Geshkovski, P. Rigollet, Y. Ruiz-Balet, <em><a href="https://arxiv.org/abs/2411.04551">Measure-to-measure interpolation using Transformers</a></em>, arXiv:2411.04551v3.</p>
+<p>M. Geshkovski, P. Rigollet, Y. Ruiz-Balet. <em>Measure-to-measure interpolation using Transformers.</em> arXiv:2411.04551v3.</p>
 </blockquote>
-<div class="callout callout-style-simple callout-note">
+<p>All theorems, propositions, lemmas, and their proofs are the work of the original authors. Please cite their paper for the mathematics.</p>
+</section>
+<section id="this-project" class="level2">
+<h2 class="anchored" data-anchor-id="this-project">This project</h2>
+<p>The Lean 4 formalization, the labeled axiom layer, the numerical experiments, the prose informalizations, this website, and the blueprint are the work of <strong>Alexandre Quemy</strong>. The repository is <a href="https://github.com/aquemy/measure-to-measure-transformers"><code>aquemy/measure-to-measure-transformers</code></a>.</p>
+<div class="callout callout-style-simple callout-important">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Who did what.</strong> The paper, its theorems, and its proofs are the work of <strong>Geshkovski, Rigollet, and Ruiz-Balet</strong>. The <strong>Lean 4 formalization, the numerical experiments, the prose informalizations, this website, and the blueprint</strong> are the work of <strong>Alexandre Quemy</strong>. Throughout, the original authors’ statements and proofs are reproduced verbatim in clearly marked, page-cited grey boxes, for scholarly comparison; everything in blue or green boxes is the present author’s contribution.</p>
+<p><strong>Attribution and fair use.</strong> Throughout the blueprint, the original authors’ statements and proofs are reproduced <strong>verbatim</strong> in clearly marked, page-cited grey boxes (<code>From the original paper</code>), solely for scholarly comparison with the formalization. That material remains the authors’. Our contributions (Lean, prose informalizations, experiments) appear in the blue and green boxes.</p>
 </div>
 </div>
 </div>
-<section id="the-result-in-one-paragraph" class="level2">
-<h2 class="anchored" data-anchor-id="the-result-in-one-paragraph">The result, in one paragraph</h2>
-<p>A Transformer can be viewed as the flow map of a continuity equation on the unit sphere <span class="math inline">\(\mathbb S^{d-1}\)</span>: each token is a particle, and a single time-dependent parameter <span class="math inline">\(\theta = (\mathbf V, \mathbf B, \mathbf W, \mathbf U, b)\)</span> drives every particle through a self-attention plus perceptron velocity field, projected to the tangent space by layer normalization. The paper proves a <strong>controllability</strong> result: one such Transformer, with explicit piecewise-constant parameters and a bounded number of switches, can steer <span class="math inline">\(N\)</span> arbitrary input measures to <span class="math inline">\(N\)</span> arbitrary target measures, to within <span class="math inline">\(\varepsilon\)</span> in the Wasserstein distance <span class="math inline">\(W_2\)</span>. The construction is a three-act composition:</p>
-<ol type="1">
-<li><strong>Disentangle</strong> (Prop 3.1) – a piecewise-constant control separates the <span class="math inline">\(N\)</span> overlapping supports into pairwise-disjoint regions, using barycenter separation.</li>
-<li><strong>Cluster</strong> (Prop 2.1 / 2.2) – self-attention contracts each measure to a point (or to <span class="math inline">\(M\)</span> atoms).</li>
-<li><strong>Match</strong> (Prop 4.1 / 4.2) – a perceptron gate steers each cluster to its target while parking the others.</li>
-</ol>
-<p>Theorem 1.1 handles Dirac targets sharing a missing direction; Theorem 1.2 handles transport-matchable targets.</p>
 </section>
-<section id="what-this-project-adds" class="level2">
-<h2 class="anchored" data-anchor-id="what-this-project-adds">What this project adds</h2>
-<ul>
-<li><strong>Machine-checked leaves.</strong> The self-contained computational cores of the proofs (the gate ODE, the barycenter ODE, the geodesic gradient, the separating hyperplane, the Lyapunov sign, the ball-chain retention, the pigeonhole step, and the disjoint-hulls/non-colinear-barycenters step) are isolated and given clean Lean 4 kernel proofs.</li>
-<li><strong>A labeled axiom layer.</strong> The optimal-transport (<span class="math inline">\(W_1\)</span>, <span class="math inline">\(W_2\)</span>) and continuity-equation-flow theory missing from Mathlib is isolated as a small, explicit set of named axioms, so every downstream result shows exactly what it rests on under <code>#print axioms</code>.</li>
-<li><strong>Two corrections/strengthenings.</strong> A load-bearing sign error in the gate of Lemma B.2 (<strong>F1</strong>, see <a href="./about.html">errata</a>), caught by the formalization and an experiment; and a rigor gap in Proposition 3.1’s induction (<strong>F2</strong>) discharged by a machine-checked leaf.</li>
-<li><strong>A seeded validation campaign.</strong> Seven experiments integrate the actual dynamics and confirm the quantitative content of the claims, with figures and provenance manifests.</li>
-</ul>
+<section id="what-the-formalization-strengthens" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-formalization-strengthens">What the formalization strengthens</h2>
+<section id="f1" class="level3">
+<h3 class="anchored" data-anchor-id="f1">F1 – a sign error in the gate of Lemma B.2</h3>
+<p>The proof of Lemma B.2 (Appendix B, p.&nbsp;31, eq. (B.4)) takes parameters <span class="math inline">\(U = -z\mathbf 1^\top\)</span>, <span class="math inline">\(b = \cos(R)\mathbf 1\)</span>, giving the gate <span class="math inline">\((\cos R - \langle z,x\rangle)_+\)</span>, and asserts it is positive exactly on the ball <span class="math inline">\(\mathcal B_0 = B(z,R)\)</span>. But <span class="math display">\[\cos R - \langle z,x\rangle &gt; 0 \iff \langle z,x\rangle &lt; \cos R \iff d_g(z,x) &gt; R \iff x \notin \mathcal B_0,\]</span> so the printed gate is active on the <strong>complement</strong> of <span class="math inline">\(\mathcal B_0\)</span>; as written, the interior mass sees a zero gate and the lemma transports nothing. The fix is a one-sign typo: <span class="math inline">\(U = +z\mathbf 1^\top\)</span>, <span class="math inline">\(b = -\cos(R)\mathbf 1\)</span>. The error is <strong>typographical and recoverable</strong> – no theorem (Prop 2.2, Theorems 1.1, 1.2) is affected once the sign is flipped.</p>
+<p>It is corroborated three ways: (i) the paper’s own Proposition 4.2, Step 3 (p.&nbsp;22) uses the same gate and states it with the correct (opposite) side; (ii) the kernel-checked leaf <code>MeasureToMeasure.Leaves.gate_pos_iff_dist</code> (L2) proves the gate is active on <span class="math inline">\(\{d_g(z,x)&gt;R\}\)</span>; and (iii) experiment E1 failed (mass fraction <span class="math inline">\(\approx 0.27\)</span>) when seeding mass inside <span class="math inline">\(B(z,R)\)</span> as the printed (B.4) suggests, and passed (fraction <span class="math inline">\(1.0\)</span>) only on the gate-active region L2 identifies.</p>
+<p>The full erratum note (written so it can be sent to the authors as a courtesy) is in <a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md"><code>ERRATA.md</code></a>.</p>
 </section>
-<section id="explore" class="level2">
-<h2 class="anchored" data-anchor-id="explore">Explore</h2>
+<section id="f2" class="level3">
+<h3 class="anchored" data-anchor-id="f2">F2 – a rigor gap in Proposition 3.1’s induction</h3>
+<p>The induction proving Proposition 3.1 asserts the step “disjoint geodesic hulls <span class="math inline">\(\Rightarrow\)</span> non-colinear barycenters” without proof. The formalization supplies it as the machine-checked leaf <code>barycenter_noncolinear_of_disjoint_hull</code> (L11) for the empirical regime, and <code>barycenter_noncolinear_of_disjoint_hull_general</code> (L11<span class="math inline">\('\)</span>, via Mathlib’s <code>Convex.integral_mem</code>) for arbitrary probability measures, with no new axioms.</p>
+</section>
+</section>
+<section id="honesty-what-is-proved-axiomatised-or-open" class="level2">
+<h2 class="anchored" data-anchor-id="honesty-what-is-proved-axiomatised-or-open">Honesty: what is proved, axiomatised, or open</h2>
+<p>Every node carries a status badge driven by the Lean kernel (<code>#print axioms</code>, via <code>bin/axiom-report</code>):</p>
 <ul>
-<li><a href="./proofs.html"><strong>Blueprint</strong></a> – every node: the original statement and proof, our Lean formalization, and what it strengthens. (<a href="blueprint.pdf">standalone PDF</a>)</li>
-<li><a href="./experiments.html"><strong>Experiments</strong></a> – the seven seeded validation experiments, with hypotheses, figures, and verdicts.</li>
-<li><a href="./claimgraph.html"><strong>Claim graph</strong></a> – the interactive dependency graph and its commit-by-commit history.</li>
-<li><a href="./about.html"><strong>About</strong></a> – citation, attribution, errata, and licensing.</li>
+<li><span class="badge ok">machine-checked</span> – clean kernel proof (<code>propext</code>, <code>Classical.choice</code>, <code>Quot.sound</code> only);</li>
+<li><span class="badge axiom">axiomatised</span> – rests on a labeled axiom standing in for optimal-transport / flow theory missing from Mathlib;</li>
+<li><span class="badge open">open</span> – stated in Lean as a <code>sorry</code>;</li>
+<li><span class="badge informal">informal</span> – reviewed on paper, not yet stated in Lean.</li>
 </ul>
+<p>A node is never badged above its true kernel status. The mid-level connective lemmas and the two headline theorems are stated in Lean against the axiom layer but are <code>open</code> (sorry stubs); the self-contained leaves carry the machine-checked load.</p>
+</section>
+<section id="licensing" class="level2">
+<h2 class="anchored" data-anchor-id="licensing">Licensing</h2>
+<p>The original paper is the authors’. The formalization and experiment code in this repository are released under the repository’s license; verbatim paper excerpts are included under fair use for scholarly comparison and remain the property of the original authors.</p>
 
 
 </section>

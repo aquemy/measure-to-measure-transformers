@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Measure-to-measure interpolation using Transformers</title>
+<title>Claim graph – Measure-to-measure interpolation using Transformers</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -68,35 +68,6 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles/provenance.css">
 </head>
@@ -119,7 +90,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -131,7 +102,7 @@ window.Quarto = {
 <span class="menu-text">Experiments</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./claimgraph.html"> 
+    <a class="nav-link active" href="./claimgraph.html" aria-current="page"> 
 <span class="menu-text">Claim graph</span></a>
   </li>  
   <li class="nav-item">
@@ -176,8 +147,8 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Measure-to-measure interpolation using Transformers</h1>
-<p class="subtitle lead">A machine-checked formalization and numerical validation</p>
+<h1 class="title">Claim graph</h1>
+<p class="subtitle lead">The dependency graph and its commit-by-commit history</p>
 </div>
 
 
@@ -194,50 +165,22 @@ window.Quarto = {
 </header>
 
 
-<p>This site accompanies a Lean 4 formalization and numerical validation of</p>
-<blockquote class="blockquote">
-<p>M. Geshkovski, P. Rigollet, Y. Ruiz-Balet, <em><a href="https://arxiv.org/abs/2411.04551">Measure-to-measure interpolation using Transformers</a></em>, arXiv:2411.04551v3.</p>
-</blockquote>
+<p>Every result in this project is a <strong>claim</strong> in a <a href="https://conventional-knowledge-commits.org/">Conventional Knowledge Commits</a> graph: a node whose colour is its <strong>effective status</strong> (machine-checked, axiomatised, or open) and whose edges are the <code>Depends-On</code> / <code>Closes</code> relations recorded in the commit trail. A claim’s effective status is the <em>weakest</em> of its own status and everything it rests on, so a single open leaf colours every result above it – the graph cannot flatter the work.</p>
+<p>Click a node to trace what it depends on; press <strong>Play</strong> (or drag the slider) to replay the commits in order and watch each claim’s status resolve as the formalization advances. The view is generated from git by <a href="https://github.com/hotherio/claimgraph"><code>claimgraph</code></a> and embedded below; the same data drives the compact <a href="./history.html">history timeline</a>.</p>
+<iframe src="claimgraph-viewer.html" title="ClaimGraph interactive viewer" loading="lazy" style="width:100%;height:820px;border:1px solid var(--bs-border-color,#dee2e6);border-radius:6px">
+</iframe>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Who did what.</strong> The paper, its theorems, and its proofs are the work of <strong>Geshkovski, Rigollet, and Ruiz-Balet</strong>. The <strong>Lean 4 formalization, the numerical experiments, the prose informalizations, this website, and the blueprint</strong> are the work of <strong>Alexandre Quemy</strong>. Throughout, the original authors’ statements and proofs are reproduced verbatim in clearly marked, page-cited grey boxes, for scholarly comparison; everything in blue or green boxes is the present author’s contribution.</p>
+<p>The status colours are kernel-honest: they are derived from <code>#print axioms</code> over each node’s Lean name by <code>bin/axiom-report</code>, the same source that drives the <a href="./proofs.html">blueprint</a> badges. A node is green only if its Lean compiles with no <code>sorry</code> and no project axiom.</p>
 </div>
 </div>
 </div>
-<section id="the-result-in-one-paragraph" class="level2">
-<h2 class="anchored" data-anchor-id="the-result-in-one-paragraph">The result, in one paragraph</h2>
-<p>A Transformer can be viewed as the flow map of a continuity equation on the unit sphere <span class="math inline">\(\mathbb S^{d-1}\)</span>: each token is a particle, and a single time-dependent parameter <span class="math inline">\(\theta = (\mathbf V, \mathbf B, \mathbf W, \mathbf U, b)\)</span> drives every particle through a self-attention plus perceptron velocity field, projected to the tangent space by layer normalization. The paper proves a <strong>controllability</strong> result: one such Transformer, with explicit piecewise-constant parameters and a bounded number of switches, can steer <span class="math inline">\(N\)</span> arbitrary input measures to <span class="math inline">\(N\)</span> arbitrary target measures, to within <span class="math inline">\(\varepsilon\)</span> in the Wasserstein distance <span class="math inline">\(W_2\)</span>. The construction is a three-act composition:</p>
-<ol type="1">
-<li><strong>Disentangle</strong> (Prop 3.1) – a piecewise-constant control separates the <span class="math inline">\(N\)</span> overlapping supports into pairwise-disjoint regions, using barycenter separation.</li>
-<li><strong>Cluster</strong> (Prop 2.1 / 2.2) – self-attention contracts each measure to a point (or to <span class="math inline">\(M\)</span> atoms).</li>
-<li><strong>Match</strong> (Prop 4.1 / 4.2) – a perceptron gate steers each cluster to its target while parking the others.</li>
-</ol>
-<p>Theorem 1.1 handles Dirac targets sharing a missing direction; Theorem 1.2 handles transport-matchable targets.</p>
-</section>
-<section id="what-this-project-adds" class="level2">
-<h2 class="anchored" data-anchor-id="what-this-project-adds">What this project adds</h2>
-<ul>
-<li><strong>Machine-checked leaves.</strong> The self-contained computational cores of the proofs (the gate ODE, the barycenter ODE, the geodesic gradient, the separating hyperplane, the Lyapunov sign, the ball-chain retention, the pigeonhole step, and the disjoint-hulls/non-colinear-barycenters step) are isolated and given clean Lean 4 kernel proofs.</li>
-<li><strong>A labeled axiom layer.</strong> The optimal-transport (<span class="math inline">\(W_1\)</span>, <span class="math inline">\(W_2\)</span>) and continuity-equation-flow theory missing from Mathlib is isolated as a small, explicit set of named axioms, so every downstream result shows exactly what it rests on under <code>#print axioms</code>.</li>
-<li><strong>Two corrections/strengthenings.</strong> A load-bearing sign error in the gate of Lemma B.2 (<strong>F1</strong>, see <a href="./about.html">errata</a>), caught by the formalization and an experiment; and a rigor gap in Proposition 3.1’s induction (<strong>F2</strong>) discharged by a machine-checked leaf.</li>
-<li><strong>A seeded validation campaign.</strong> Seven experiments integrate the actual dynamics and confirm the quantitative content of the claims, with figures and provenance manifests.</li>
-</ul>
-</section>
-<section id="explore" class="level2">
-<h2 class="anchored" data-anchor-id="explore">Explore</h2>
-<ul>
-<li><a href="./proofs.html"><strong>Blueprint</strong></a> – every node: the original statement and proof, our Lean formalization, and what it strengthens. (<a href="blueprint.pdf">standalone PDF</a>)</li>
-<li><a href="./experiments.html"><strong>Experiments</strong></a> – the seven seeded validation experiments, with hypotheses, figures, and verdicts.</li>
-<li><a href="./claimgraph.html"><strong>Claim graph</strong></a> – the interactive dependency graph and its commit-by-commit history.</li>
-<li><a href="./about.html"><strong>About</strong></a> – citation, attribution, errata, and licensing.</li>
-</ul>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

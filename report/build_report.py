@@ -7,8 +7,12 @@ claims.toml, and the method code from each experiments/<exp>/run.py. It emits a 
 that renders to BOTH html and pdf (`format: [html, pdf]`), so one command yields the website page and
 the citable LaTeX-built PDF. Nothing in the report is hand-maintained; re-run this after the campaign.
 
+It writes two sources from the same body: report/experiments.qmd (the standalone, citable report,
+`format: [html, pdf]`) and site/experiments.qmd (the website page; the site supplies the html
+theme, and figures point at the copy site/build.py stages under the site project).
+
 Usage:
-    python report/build_report.py            # writes report/experiments.qmd
+    python report/build_report.py            # writes report/experiments.qmd + site/experiments.qmd
     quarto render report/experiments.qmd      # -> report/experiments.html + report/experiments.pdf
 """
 from __future__ import annotations
@@ -24,6 +28,7 @@ REPO = Path(__file__).resolve().parent.parent
 RESULTS = REPO / "experiments" / "results"
 RUNS = REPO / "experiments"
 OUT = REPO / "report" / "experiments.qmd"
+SITE_OUT = REPO / "site" / "experiments.qmd"
 CLAIMS = REPO / "claims.toml"
 
 PAPER_CITE = "Geshkovski, Rigollet, Ruiz-Balet, *Measure-to-measure interpolation using Transformers*, arXiv:2411.04551v3"
@@ -226,7 +231,9 @@ def summary_table(exps: list[dict[str, Any]]) -> str:
     return "\n".join(rows)
 
 
-def experiment_section(e: dict[str, Any], claims: dict[str, Any]) -> str:
+def experiment_section(
+    e: dict[str, Any], claims: dict[str, Any], fig_prefix: str = "../experiments/results/"
+) -> str:
     s, m = e["summary"], e["manifest"]
     name = s["experiment"]
     exp_slug = s["claim"].removeprefix("claim:")
@@ -235,11 +242,13 @@ def experiment_section(e: dict[str, Any], claims: dict[str, Any]) -> str:
     blob = f"{BLOB}experiments/{name}/run.py" if BLOB else ""
     src_link = f"[`experiments/{name}/run.py`]({blob})" if blob else f"`experiments/{name}/run.py`"
 
-    # figure: first png in the figures list, made relative to report/
+    # figure: first png in the figures list. The prefix differs by target: the standalone report
+    # reaches the live results tree (../experiments/results/); the website page references a copy
+    # staged inside the site project (experiments-figures/), the only path a Quarto website copies.
     png = next((f for f in s.get("figures", []) if f.endswith(".png")), None)
     fig_md = ""
     if png:
-        fig_md = f"![{name} verdict figure](../experiments/results/{png}){{width=100%}}\n"
+        fig_md = f"![{name} verdict figure]({fig_prefix}{png}){{width=100%}}\n"
 
     verdict = "**PASS**" if s.get("passed") else "**FAIL**"
     prov = (
@@ -317,10 +326,64 @@ def build() -> str:
     return "\n".join(parts)
 
 
+# --- website variant -------------------------------------------------------------------------
+# The same data-driven body, wrapped for the Quarto website (site/experiments.qmd): the site
+# supplies the html theme/css/filter from its _quarto.yml, so the page carries only a title; the
+# figures point at the staged copy under the site project; and a callout links the citable PDF.
+SITE_FIG_PREFIX = "experiments-figures/"
+
+
+def site_front_matter() -> str:
+    return """---
+title: "Numerical validation"
+subtitle: "Seven seeded experiments E1-E7"
+toc: true
+toc-depth: 2
+---
+"""
+
+
+def site_intro(exps: list[dict[str, Any]]) -> str:
+    n = len(exps)
+    npass = sum(1 for e in exps if e["summary"].get("passed"))
+    return f"""
+::: {{.callout-note appearance="simple"}}
+This page is generated from the campaign artifacts by `report/build_report.py`. A citable,
+self-contained version (with the full method listings) is available as a
+[**downloadable PDF report**](experiments-report.pdf).
+:::
+
+The proofs are validated **alongside** the formalization, not batched at the end: an optional
+exploratory probe shapes a hypothesis before a proof, and a seeded validation always follows it
+(the cycle is documented in `WORKFLOW.md`). All {n} experiments are deterministic (`SEED = 0`) and
+integrate the characteristic flow of the continuity equation (1.3),
+$\\dot x = P_x^\\perp v(t,x)$ with $P_x^\\perp = I - x x^\\top$, on the unit sphere. Each one is
+presented as **hypothesis**, **what is tested** (the cross-linked claim and pass criterion),
+**method**, **results** (a figure and the measured metrics), and **analysis** (the verdict with its
+provenance).
+
+**Campaign result: {npass} / {n} pass.**
+
+{summary_table(exps)}
+"""
+
+
+def build_site() -> str:
+    claims = load_claims()
+    exps = load_experiments()
+    parts = [site_front_matter(), site_intro(exps)]
+    parts += [experiment_section(e, claims, fig_prefix=SITE_FIG_PREFIX) for e in exps]
+    parts.append(reproducibility(exps))
+    return "\n".join(parts)
+
+
 def main() -> int:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(build(), encoding="utf-8")
     print(f"wrote {OUT.relative_to(REPO)}")
+    SITE_OUT.parent.mkdir(parents=True, exist_ok=True)
+    SITE_OUT.write_text(build_site(), encoding="utf-8")
+    print(f"wrote {SITE_OUT.relative_to(REPO)}")
     return 0
 
 
