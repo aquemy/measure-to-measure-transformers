@@ -1,0 +1,130 @@
+# Matching discrete measures {#sec-matching}
+
+Once the disentanglement of §3 has rendered the supports pairwise disjoint and the clustering of §2
+has collapsed each measure to a single point, matching reduces to steering finitely many points to
+their prescribed targets. A single perceptron gate — identically zero on a chosen parking cap and
+positive outside it — lets the flow drive one *active* point along a geodesic corridor to its target
+while every other point, parked inside the cap, stays fixed.
+
+## Proposition 4.2 — steer the active point {#node-prop-4-2}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, §4, Proposition 4.2, p. 18).
+
+Suppose $d \geqslant 3$. Consider
+$$(x_0^i, y^i) \in \mathbb S^{d-1} \times \mathbb S^{d-1} \qquad \text{for } i \in [\![1, M]\!], \tag{$\mathscr D$}$$
+with $x_0^i \neq x_0^j$ and $y^i \neq y^j$ for $i \neq j$, with $x_0^i = y^i$ for $i \in [\![1, M-1]\!]$,
+and suppose that there exist $\gamma \in \mathbb S^{d-1}$ and $\varepsilon > 0$ such that
+$\langle \gamma, x_0^M - y^M \rangle = 0$ and $x_0^i \notin H_\varepsilon^\gamma$ for all
+$i \in [\![1, M-1]\!]$, where $H_\varepsilon^\gamma := \{x \in \mathbb S^{d-1} : |\langle x, \gamma\rangle| \leqslant \varepsilon\}$.
+
+For any $T > 0$ there exist piecewise constant $\theta = (\mathbf W, \mathbf U, b) : [0, T] \to \mathcal M_{d\times d}(\mathbb R)^2 \times \mathbb R^d$,
+having at most $6$ switches, such that for any $i$, the solution $x^i(\cdot)$ to
+$$\begin{cases}\dot x^i(t) = \mathbf P_x^\perp\,\mathbf W(t)\big(\mathbf U(t)x^i(t) + b(t)\big)_+ & \text{in } [0,T]\\ x^i(0) = x_0^i,\end{cases} \tag{4.1}$$
+satisfies $x^i(T) = y^i$. Moreover, there exists $C > 0$, not depending on $\mathscr D$ and $T$, such that
+$$\|\theta\|_{L^\infty((0,T);\Theta)} \leqslant \frac{C}{T\cdot\varepsilon}.$$
+
+**Proof sketch** (proof sketch; full proof pp. 18-23). The control is a $6$-interval step function
+$(\mathbf W(t),\mathbf U(t),b(t)) = \sum_{j=1}^6 (\mathbf W_j,\mathbf U_j,b_j)\,\mathbf 1_{[(j-1)T/6,\,jT/6]}(t)$
+with $\mathbf U_5=\mathbf U_1,\ \mathbf U_6=\mathbf U_2,\ \mathbf U_3=\mathbf U_4,\ b_5=b_1,\ b_6=b_2,\ b_3=b_4,\ \mathbf W_5=-\mathbf W_1,\ \mathbf W_6=-\mathbf W_2$,
+i.e. the last two intervals time-reverse the first two — at most $6$ switches. *Anchors (Step 1).*
+Since $\langle\gamma,x_0^M-y^M\rangle=0$ one finds $\omega\in\mathbb S^{d-1}$ with $\langle\gamma,\omega\rangle=0$
+and $d_g(\omega,x_0^M),d_g(\omega,y^M)\geqslant\pi/2$; the points $\omega_\pm$ at geodesic distance
+$\pi/8$ from $\omega$ toward $\pm\gamma$ then satisfy $d_g(\omega_\pm,x_0^M),d_g(\omega_\pm,y^M)\geqslant 3\pi/8$,
+so $\{\langle\omega,x\rangle=\cos(\pi/8+\tau)\}$ separates the cap $B(\omega,\pi/8+\tau)$ from
+$x_0^M,y^M$. *Phase 1 — "gather" $\psi_1$ (Steps 1-2, $2$ switches).* Two opposite gates
+$(\langle\pm\gamma,x\rangle-\epsilon/2)_+$ with drift targets $\omega_\pm$ run the Riemannian
+gradient flow of $d_g(\cdot,\omega_\pm)$ (using $\nabla_1 d_g(x,\omega_+)=-\mathbf P_x^\perp\omega_+/\sqrt{1-\langle x,\omega_+\rangle^2}$);
+$\langle x,\omega_\pm\rangle$ increases monotonically (4.5) and the trajectory settles exponentially
+near $\omega_\pm$ by LaSalle / Hartman-Grobman (4.6), so after time $T/3$ every inactive point lies
+in the cap $B(\omega,3\pi/16)$ while points of $H_\varepsilon^\gamma$ stay fixed (4.7).
+*Phase 2 — "corridor" $\psi_2$ (Step 3, $2$ switches).* The gate $(\langle-\omega,x\rangle+\cos(3\pi/16))_+$
+is identically $0$ on $B(\omega,3\pi/16)$ and positive outside; driving $x_0^M$ first toward an
+intermediate $z_1$ then toward $z_2$ along a geodesic corridor that lies outside the cap and passes
+through $y^M$ lands the active point at $y^M$, while the inactive points do not move (gate off on the
+cap). *Phase 3 — "restore" $\psi_1^{-1}$ (Step 4, $2$ switches).* Re-running the gather action with
+flipped drifts time-reverses Phase 1, returning every inactive point to its start; the active point
+remains at $y^M$ since the corridor gate is off on the cap. The composition
+$(\psi_1)^{-1}\circ\psi_2\circ\psi_1$ sends $x_0^M\mapsto y^M$ and fixes all other $x_0^i$; choosing
+drift size $\|\mathbf W\|\asymp(T\varepsilon)^{-1}$ gives total time $T$ and $\|\theta\|_{L^\infty}\lesssim 1/(T\varepsilon)$.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors' construction (pp. 18-23) realises the matching of one point as the gather / corridor /
+restore composition $(\psi_1)^{-1}\circ\psi_2\circ\psi_1$, a $6$-interval piecewise-constant control
+whose middle phase steers the active $x_0^M$ to $y^M$ while a gate parked on the cap $B(\omega,3\pi/16)$
+freezes the inactive points. We record a type-correct Lean **statement** of this proposition as a
+`sorry` (open): with $d\geqslant 3$, the inactive points already at their targets (`hfix`), at most
+$6$ switches drive every input to its target while keeping the inactive ones fixed. We do **not**
+claim a proof. Two of the construction's cores are however discharged as kernel-checked leaves: the
+separating-hyperplane estimate of Step 1 is leaf **L3**
+([`Leaves/SeparatingHyperplane.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/SeparatingHyperplane.lean){.lean-src},
+`separating_hyperplane`), and the geodesic-gradient identity driving the gather and corridor flows is
+leaf **L4** ([`Leaves/GeodesicGradient.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GeodesicGradient.lean){.lean-src},
+`geodesicDist_hasDerivAt`). The selective-motion mechanism — active point reaches the target, parked
+points stay fixed — is validated numerically by experiment **E4**.
+
+```lean
+/-- **Proposition 4.2** (steer one active point). With `d ≥ 3` and the inactive points already at
+their targets, at most `6` switches move every input to its target, keeping the inactive ones fixed
+(`x₀ i = y i` is preserved by `flowMap θ T (x₀ i) = y i`). Stub (`sorry`): `math.open`. Step 1 is
+leaf L3, the geodesic gradient is leaf L4. -/
+theorem prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hfix : ∀ i : Fin M, (i : ℕ) < M - 1 → x₀ i = y i) :
+    ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::
+
+## Proposition 4.1 — match the ensemble {#node-prop-4-1}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, §4, Proposition 4.1, p. 18).
+
+Suppose $d \geqslant 3$. Consider
+$$(x_0^i, y^i) \in \mathbb S^{d-1} \times \mathbb S^{d-1} \qquad \text{for } i \in [\![1, M]\!], \tag{$\mathscr D$}$$
+with $x_0^i \neq x_0^j$ and $y^i \neq y^j$ for $i \neq j$, and suppose that for any $i$ there exist
+$\gamma_i \in \mathbb S^{d-1}$ and $\varepsilon_i > 0$ such that $\langle \gamma_i, x_0^i - y^i\rangle = 0$
+and $x_0^j \notin H_{\varepsilon_i}^{\gamma_i}$ for $j \neq i$, where
+$$H_{\varepsilon_i}^{\gamma_i} := \{x \in \mathbb S^{d-1} : |\langle x, \gamma_i\rangle| \leqslant \varepsilon_i\}.$$
+
+For any $T > 0$ there exist piecewise constant $\theta = (\mathbf W, \mathbf U, b) : [0, T] \to \mathcal M_{d\times d}(\mathbb R)^2 \times \mathbb R^d$,
+having at most $6M$ switches, such that for any $i$, the solution $x^i(\cdot) \in \mathscr C^0([0,T];\mathbb S^{d-1})$
+to (4.1) satisfies $x^i(T) = y^i$. Moreover, there exists $C > 0$, not depending on $\mathscr D$ nor
+$T$, such that
+$$\|\theta\|_{L^\infty((0,T);\Theta)} \leqslant \frac{C\cdot M}{T\,\min_i \varepsilon_i}.$$
+
+**Proof sketch** (proof sketch; full proof p. 18). "The proof of Proposition 4.1 follows directly
+from [Proposition 4.2], combined with a straightforward induction argument": activating one pair
+$(x_0^i,y^i)$ at a time, each application of Proposition 4.2 steers the $i$-th point to its target in
+at most $6$ switches while leaving the already-matched points fixed, so $M$ applications cost at most
+$6M$ switches and the norm bound accumulates to $C\cdot M / (T\min_i\varepsilon_i)$.
+:::
+
+::: {.our-work}
+**Our formalization.** [open]{.badge .open}
+
+The authors obtain Proposition 4.1 by induction over the $M$ pairs, each step being one application
+of Proposition 4.2 (the active point reaches its target; the previously matched points are inactive
+and stay fixed), giving the $\leqslant 6M$-switch budget and the $O\!\big(CM/(T\min_i\varepsilon_i)\big)$
+norm. We record a type-correct Lean **statement** as a `sorry` (open): with $d\geqslant 3$ and
+injective inputs/targets, at most $6M$ switches steer every $x_0^i$ to $y^i$. We do **not** claim a
+proof; the discharge would be the $M$-fold composition of `prop_4_2`. (Validated numerically by
+experiment **E4**, alongside Proposition 4.2.)
+
+```lean
+/-- **Proposition 4.1** (match an ensemble). With `d ≥ 3` and distinct inputs/targets, at most `6M`
+switches steer every `x₀ i` to `y i`. Stub (`sorry`): `math.open`. Follows from Proposition 4.2 by
+induction. -/
+theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀ : Function.Injective x₀) (hy : Function.Injective y) :
+    ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
+  sorry
+```
+
+[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+:::

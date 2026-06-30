@@ -1,0 +1,70 @@
+---
+title: "Measure-to-measure interpolation using Transformers"
+subtitle: "A machine-checked blueprint: the original statements and proofs, our Lean formalization, and what it strengthens"
+author: "Alexandre Quemy"
+date-format: iso
+format:
+  pdf:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    pdf-engine: xelatex
+    geometry: margin=1in
+    include-in-header:
+      - tex/provenance.tex
+filters:
+  - filters/provenance.lua
+---
+
+# About this blueprint {.unnumbered}
+
+This is a standalone, A-to-Z blueprint of the controllability results of
+
+> M. Geshkovski, P. Rigollet, Y. Ruiz-Balet, *Measure-to-measure interpolation using Transformers*, arXiv:2411.04551v3,
+
+together with their machine-checked Lean 4 formalization. It is meant to be read on its own: for each
+node it reproduces the **original statement (and proof, where short) verbatim**, then gives **our
+formalization** (a faithful statement in Lean, a prose proof, the real source listing, and an honest
+status badge), and, where relevant, **what our work strengthens** (a corrected sign error, a
+discharged rigor gap, or exactly what is axiomatised).
+
+**Authorship and attribution.** The mathematics, the theorems, and the proofs are the work of the
+original authors. The Lean formalization, the numerical experiments, the prose informalizations, and
+this blueprint are the work of Alexandre Quemy. Original statements and proofs are reproduced verbatim,
+in clearly marked grey boxes with a page-cited attribution, for scholarly comparison (fair use); all
+such material remains the authors'.
+
+**How to read the boxes.**
+
+::: {.from-paper}
+**From the original paper.** Grey boxes reproduce the authors' statements and proofs verbatim, with a
+page-cited attribution.
+:::
+
+::: {.our-work}
+**Our formalization.** Blue boxes hold our Lean statement, a prose proof, the real source listing, and
+a status badge: [machine-checked]{.badge .ok} (clean Lean kernel proof), [axiomatised]{.badge .axiom}
+(rests on a labeled axiom standing in for missing Mathlib theory), [open]{.badge .open} (stated in
+Lean as a `sorry`), or [informal]{.badge .informal} (reviewed on paper).
+:::
+
+::: {.strengthen}
+**What we strengthen.** Green boxes record where the formalization corrects or completes the paper: a
+sign error (F1), a rigor gap discharged by a kernel-checked leaf (F2), or what had to be axiomatised.
+:::
+
+The status badge of every machine-checked node is verified against the Lean kernel by `#print axioms`
+(`bin/axiom-report`): a node is badged machine-checked only if its axiom set is clean
+(`propext`, `Classical.choice`, `Quot.sound` only).
+
+{{< include proofs/_foundations.qmd >}}
+
+{{< include proofs/_leaves.qmd >}}
+
+{{< include proofs/_mass-transport.qmd >}}
+
+{{< include proofs/_disentangle.qmd >}}
+
+{{< include proofs/_matching.qmd >}}
+
+{{< include proofs/_main-results.qmd >}}

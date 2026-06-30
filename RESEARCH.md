@@ -83,6 +83,32 @@ Finding F2 is fully discharged: the empirical case (`barycenter_noncolinear_of_d
 general probability-measure case (`barycenter_noncolinear_of_disjoint_hull_general`, via Mathlib's
 `Convex.integral_mem`) are both machine-checked.
 
+## Validation campaign (Phase 4)
+
+Seven seeded experiments (`experiments/E*`) validate the quantitative content of the claims, each
+cross-linked to the claim(s) it tests (the `tests = [...]` field on the `[claims.exp-*]` entries, and
+a `Depends-On:` footer on the recording commit). Experiments are run **alongside** the proofs, not
+batched at the end: a *before* probe shapes the hypothesis when needed (this is how F1's gate sign was
+caught), and an *after* run always validates. Each run writes a verdict (`summary.json`), a provenance
+manifest (`manifest.json`: git sha, time, host, versions), and at least one figure (`*.png` / `*.svg`)
+that shows the verdict. The full cycle is documented in `WORKFLOW.md`.
+
+| Exp | Tests | Verdict (seed 0) | Figure |
+| --- | --- | --- | --- |
+| E1 mass transport | L2, L9, B.2, B.1 | single-ball + 4-ball-chain retention = 1.0, beats `(1-eps)^K` | per-stage retention vs floor |
+| E2 clustering | Prop 2.1 | diameter -> 0, `T(eps) ~ log(1/eps)` fit slope 1.00 | contraction + rate |
+| E3 disentangle | Prop 3.1, Lem 3.3, L6, L11 | min cross-distance 0.08 -> pi (antipodal) | separation over time |
+| E4 matching | Prop 4.2/4.1, L3 | active point -> target < eps, parked points fixed | selective motion |
+| E5 Lyapunov | L5 (Ex. 6.1) | `E` nonincreasing, `theta(T) -> 0` over 200 trials | `E(t)` ensemble |
+| E6 end-to-end | Thm 1.1/1.2 | three phases distinct, W2 proxy 0.0 for both measures | three-phase transport |
+| E7 linear impossible | Thm 1.1 (necessity) | linear image gap 0, attention velocity gap 0.38 | obstruction vs escape |
+
+All seven pass. E6 was strengthened during this phase: the original parameterization disentangled to
+convergence, which also collapsed each cloud to a point and left the cluster phase a no-op (visible as
+an empty middle panel); shortening the disentangle horizon (`t_span = 3`) keeps the supports disjoint
+(cross-distance 2.62) while leaving each cloud with diameter ~0.18 for the cluster phase to contract,
+so all three phases of `Phi_fin` are genuinely exercised.
+
 ## Adversarial proof review (Phase 1, deep pass)
 
 Skeptical referee pass over the mid-level lemmas (`[informal]` blueprint nodes), reading the proofs

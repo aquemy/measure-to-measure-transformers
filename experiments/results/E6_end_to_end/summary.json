@@ -2,8 +2,14 @@
   "claim": "claim:exp-e6-end-to-end",
   "criterion": "supports disjoint after disentangle (cross-distance > 1.0) and each transported measure is within eps=0.05 of its target (W2 proxy = max atom-to-target distance)",
   "experiment": "E6_end_to_end",
+  "explanation": "We run the three phases in sequence and record one scalar per phase over time: the minimum cross-measure distance (phase 1, must exceed 1.0 so matching is single-valued), each measure's diameter (phase 2, contracts to a point), and the W2 proxy max-atom-to-target distance (phase 3, falls below eps). The three-panel figure shows the full pipeline; the verdict checks the phase-1 separation and both final W2 proxies.",
+  "figures": [
+    "E6_end_to_end/three_phase.png",
+    "E6_end_to_end/three_phase.svg"
+  ],
+  "hypothesis": "The composed map Phi_fin = match o cluster o disentangle (Theorems 1.1 / 1.2) sends two measures with overlapping supports to two distinct Dirac targets: disentangle makes the supports disjoint, cluster collapses each to a point, and match steers each point to its target.",
   "metrics": {
-    "separation_after_disentangle": 3.141592653589793,
+    "separation_after_disentangle": 2.6233722477511066,
     "w2_proxy_measure_1": 0.0,
     "w2_proxy_measure_2": 0.0
   },

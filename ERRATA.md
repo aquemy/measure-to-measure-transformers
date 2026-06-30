@@ -11,11 +11,12 @@ Lemma B.2 (Appendix B, p.31), equation (B.4), and the parameter choice just abov
 
 ## The statement as printed
 
-The proof of Lemma B.2 takes, for the ball `ℬ₀ = B(z, R)` and `ω ∈ int(ℬ₀ ∩ ℬ₁)`,
+The proof of Lemma B.2 takes, for the ball `ℬ₀ = B(z, R)` and `ω ∈ int(ℬ₀ ∩ ℬ₁)`, with `𝟙` the
+all-ones vector,
 
-  `U = -z 1ᵀ`,  `b = cos(R) 1`,  `W 1 = ω`,
+  `U = -𝟙 zᵀ`,  `b = cos(R) 𝟙`,  `W 𝟙 = ω`,
 
-so that
+so that `U x = -𝟙 (zᵀx) = -⟨z, x⟩ 𝟙` and
 
   `W (U x + b)₊ = (-cos d_g(z, x) + cos R)₊ · ω = (cos R - ⟨z, x⟩)₊ · ω`,
 
@@ -37,11 +38,12 @@ mass sees a zero gate and never moves, so the lemma transports nothing as writte
 
 Flip the sign of the parameters:
 
-  `U = +z 1ᵀ`,  `b = -cos(R) 1`,
+  `U = +𝟙 zᵀ`,  `b = -cos(R) 𝟙`,
 
-which gives the gate `(⟨z, x⟩ - cos R)₊`, positive exactly when `⟨z, x⟩ > cos R`, i.e. `d_g(z, x) < R`,
-i.e. `x ∈ ℬ₀`. With this sign, (B.4), (B.5) and the rest of the proof are correct and the lemma holds
-as stated. It is a one-sign typo in the definition of `(U, b)`; no downstream result changes.
+which gives `U x = ⟨z, x⟩ 𝟙` and the gate `(⟨z, x⟩ - cos R)₊`, positive exactly when `⟨z, x⟩ > cos R`,
+i.e. `d_g(z, x) < R`, i.e. `x ∈ ℬ₀`. With this sign, (B.4), (B.5) and the rest of the proof are correct
+and the lemma holds as stated. It is a one-sign typo in the definition of `(U, b)`; no downstream
+result changes.
 
 ## Independent corroboration
 

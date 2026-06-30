@@ -1,0 +1,53 @@
+project:
+  type: website
+  output-dir: ../docs
+  # Explicit render list: the partials (proofs/_*.qmd) are includes, not pages, and blueprint.qmd
+  # is the pdf-only standalone. Listing the inputs keeps the build deterministic and avoids
+  # rendering stray files left in the project tree.
+  render:
+    - index.qmd
+    - proofs.qmd
+    - experiments.qmd
+    - claimgraph.qmd
+    - history.qmd
+    - about.qmd
+    - blueprint.qmd
+
+website:
+  title: "Measure-to-measure interpolation using Transformers"
+  reader-mode: true
+  page-footer:
+    left: "Lean formalization and experiments: Alexandre Quemy."
+    right: "Original paper: Geshkovski, Rigollet, Ruiz-Balet (arXiv:2411.04551v3)."
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Blueprint"
+        href: proofs.qmd
+      - text: "Experiments"
+        href: experiments.qmd
+      - text: "Claim graph"
+        href: claimgraph.qmd
+      - text: "History"
+        href: history.qmd
+      - text: "About"
+        href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/aquemy/measure-to-measure-transformers
+        aria-label: "GitHub repository"
+      - icon: file-pdf
+        href: blueprint.pdf
+        aria-label: "Standalone blueprint PDF"
+
+format:
+  html:
+    theme: cosmo
+    css: styles/provenance.css
+    toc: true
+    toc-depth: 3
+    code-overflow: wrap
+
+filters:
+  - filters/provenance.lua

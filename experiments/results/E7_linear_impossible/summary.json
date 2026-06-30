@@ -2,6 +2,12 @@
   "claim": "claim:exp-e7-linear-impossible",
   "criterion": "linear field sends shared x* to a single image (gap ~ 0, so disjoint targets are unreachable); attention assigns x* different velocities under the two measures (gap > 0)",
   "experiment": "E7_linear_impossible",
+  "explanation": "Under a fixed drift, x* flows to a single image regardless of which measure it belongs to, so the two images coincide (gap ~ 0). Under self-attention, the velocity at x* depends on the surrounding measure, so the two velocities differ (gap > 0). The bar chart contrasts the two gaps on a log scale against the pass tolerances.",
+  "figures": [
+    "E7_linear_impossible/obstruction_vs_escape.png",
+    "E7_linear_impossible/obstruction_vs_escape.svg"
+  ],
+  "hypothesis": "A single measure-independent (linear) continuity equation cannot separate overlapping supports (eq. 1.7): a point x* shared by two inputs is sent to ONE image, so disjoint targets are unreachable. The measure-dependent attention field escapes this obstruction by assigning x* different velocities under the two measures.",
   "metrics": {
     "attention_velocity_gap": 0.38069795276821833,
     "linear_image_gap": 0.0

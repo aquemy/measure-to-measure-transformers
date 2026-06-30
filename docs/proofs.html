@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Blueprint – Measure-to-measure interpolation using Transformers</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-30950e57ca2d683c179b59b95dd53cbb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/provenance.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Measure-to-measure interpolation using Transformers</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./proofs.html" aria-current="page"> 
+<span class="menu-text">Blueprint</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./experiments.html"> 
+<span class="menu-text">Experiments</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./claimgraph.html"> 
+<span class="menu-text">Claim graph</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./history.html"> 
+<span class="menu-text">History</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/aquemy/measure-to-measure-transformers"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="./blueprint.pdf"> <i class="bi bi-file-pdf" role="img" aria-label="Standalone blueprint PDF">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul class="collapse">
+  <li><a href="#sec-foundations" id="toc-sec-foundations" class="nav-link active" data-scroll-target="#sec-foundations">Foundations</a>
+  <ul class="collapse">
+  <li><a href="#node-projector" id="toc-node-projector" class="nav-link" data-scroll-target="#node-projector">Tangential projector (layer normalization)</a></li>
+  <li><a href="#node-geodesic" id="toc-node-geodesic" class="nav-link" data-scroll-target="#node-geodesic">Geodesic distance</a></li>
+  </ul></li>
+  <li><a href="#sec-leaves" id="toc-sec-leaves" class="nav-link" data-scroll-target="#sec-leaves">Self-contained leaves</a>
+  <ul class="collapse">
+  <li><a href="#node-gate" id="toc-node-gate" class="nav-link" data-scroll-target="#node-gate">Gate algebra and gate ODE</a></li>
+  <li><a href="#node-barycenter" id="toc-node-barycenter" class="nav-link" data-scroll-target="#node-barycenter">Barycenter ODE</a></li>
+  <li><a href="#node-geodesic-gradient" id="toc-node-geodesic-gradient" class="nav-link" data-scroll-target="#node-geodesic-gradient">Geodesic-distance gradient</a></li>
+  <li><a href="#node-separating-hyperplane" id="toc-node-separating-hyperplane" class="nav-link" data-scroll-target="#node-separating-hyperplane">Separating hyperplane</a></li>
+  <li><a href="#node-lyapunov" id="toc-node-lyapunov" class="nav-link" data-scroll-target="#node-lyapunov">Lyapunov sign</a></li>
+  <li><a href="#node-ball-chain-retention" id="toc-node-ball-chain-retention" class="nav-link" data-scroll-target="#node-ball-chain-retention">Ball-chain retention</a></li>
+  <li><a href="#node-pigeonhole" id="toc-node-pigeonhole" class="nav-link" data-scroll-target="#node-pigeonhole">Pigeonhole</a></li>
+  <li><a href="#node-noncolinear" id="toc-node-noncolinear" class="nav-link" data-scroll-target="#node-noncolinear">Disjoint hulls give non-colinear barycenters</a></li>
+  <li><a href="#node-noncolinear-general" id="toc-node-noncolinear-general" class="nav-link" data-scroll-target="#node-noncolinear-general">F2, general probability measures</a></li>
+  <li><a href="#node-linearized-ot" id="toc-node-linearized-ot" class="nav-link" data-scroll-target="#node-linearized-ot">Linearized OT bound</a></li>
+  <li><a href="#node-markov" id="toc-node-markov" class="nav-link" data-scroll-target="#node-markov">Markov bound</a></li>
+  </ul></li>
+  <li><a href="#sec-mass-transport" id="toc-sec-mass-transport" class="nav-link" data-scroll-target="#sec-mass-transport">Mass transport and clustering</a>
+  <ul class="collapse">
+  <li><a href="#node-ball-pair" id="toc-node-ball-pair" class="nav-link" data-scroll-target="#node-ball-pair">Single overlapping ball pair (Lemma B.2)</a></li>
+  <li><a href="#node-ball-chain" id="toc-node-ball-chain" class="nav-link" data-scroll-target="#node-ball-chain">Chain of overlapping balls (Lemma B.1)</a></li>
+  <li><a href="#node-cluster-point" id="toc-node-cluster-point" class="nav-link" data-scroll-target="#node-cluster-point">Clustering a single-hemisphere measure to a point (Proposition 2.1)</a></li>
+  <li><a href="#node-cluster-discrete" id="toc-node-cluster-discrete" class="nav-link" data-scroll-target="#node-cluster-discrete">Clustering disjoint-support measures to atoms (Proposition 2.2)</a></li>
+  </ul></li>
+  <li><a href="#sec-disentangle" id="toc-sec-disentangle" class="nav-link" data-scroll-target="#sec-disentangle">Disentangling supports</a>
+  <ul class="collapse">
+  <li><a href="#node-orthant" id="toc-node-orthant" class="nav-link" data-scroll-target="#node-orthant">Transport to the orthant</a></li>
+  <li><a href="#node-shrink" id="toc-node-shrink" class="nav-link" data-scroll-target="#node-shrink">Shrinking a hull to its barycenter direction</a></li>
+  <li><a href="#node-make-noncolinear" id="toc-node-make-noncolinear" class="nav-link" data-scroll-target="#node-make-noncolinear">Making barycenters non-colinear</a></li>
+  <li><a href="#node-disentanglement" id="toc-node-disentanglement" class="nav-link" data-scroll-target="#node-disentanglement">Disentanglement</a></li>
+  </ul></li>
+  <li><a href="#sec-matching" id="toc-sec-matching" class="nav-link" data-scroll-target="#sec-matching">Matching discrete measures</a>
+  <ul class="collapse">
+  <li><a href="#node-prop-4-2" id="toc-node-prop-4-2" class="nav-link" data-scroll-target="#node-prop-4-2">Proposition 4.2 — steer the active point</a></li>
+  <li><a href="#node-prop-4-1" id="toc-node-prop-4-1" class="nav-link" data-scroll-target="#node-prop-4-1">Proposition 4.1 — match the ensemble</a></li>
+  </ul></li>
+  <li><a href="#sec-main-results" id="toc-sec-main-results" class="nav-link" data-scroll-target="#sec-main-results">Main results</a>
+  <ul class="collapse">
+  <li><a href="#node-lemma-5-1" id="toc-node-lemma-5-1" class="nav-link" data-scroll-target="#node-lemma-5-1">Lemma 5.1 — transport maps preserved by disentanglement</a></li>
+  <li><a href="#node-lemma-5-4" id="toc-node-lemma-5-4" class="nav-link" data-scroll-target="#node-lemma-5-4">Lemma 5.4 — L² approximation by a flow map</a></li>
+  <li><a href="#node-theorem-1-2" id="toc-node-theorem-1-2" class="nav-link" data-scroll-target="#node-theorem-1-2">Theorem 1.2 — matching transport-matchable targets</a></li>
+  <li><a href="#node-theorem-1-1" id="toc-node-theorem-1-1" class="nav-link" data-scroll-target="#node-theorem-1-1">Theorem 1.1 — matching Dirac targets</a></li>
+  <li><a href="#node-prop-6-2" id="toc-node-prop-6-2" class="nav-link" data-scroll-target="#node-prop-6-2">Proposition 6.2 — generic O(1) disentanglement</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Blueprint</h1>
+<p class="subtitle lead">Original statements and proofs, our Lean formalization, and what it strengthens</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>This blueprint pairs every node of Geshkovski, Rigollet, and Ruiz-Balet, <em><a href="https://arxiv.org/abs/2411.04551">Measure-to-measure interpolation using Transformers</a></em> (arXiv:2411.04551v3), with its machine-checked Lean 4 formalization. For each node it reproduces the <strong>original statement (and proof, where short) verbatim</strong>, gives <strong>our formalization</strong> (a Lean statement, a prose proof, the real source listing, and an honest status badge), and, where relevant, <strong>what our work strengthens</strong>.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Authorship.</strong> The mathematics, theorems, and proofs are the work of the original authors. The Lean formalization, the experiments, the prose informalizations, and this blueprint are the work of Alexandre Quemy. Original statements and proofs are reproduced verbatim, in clearly marked grey boxes with a page-cited attribution, for scholarly comparison (fair use).</p>
+</div>
+</div>
+</div>
+<p>How to read the boxes:</p>
+<div class="from-paper">
+<p><strong>From the original paper.</strong> Grey boxes reproduce the authors’ statements and proofs verbatim, with a page-cited attribution.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> Blue boxes hold our Lean statement, a prose proof, the real source listing, and a status badge: <span class="badge ok">machine-checked</span> (clean Lean kernel proof), <span class="badge axiom">axiomatised</span> (rests on a labeled axiom for missing Mathlib theory), <span class="badge open">open</span> (a Lean <code>sorry</code>), or <span class="badge informal">informal</span> (reviewed on paper).</p>
+</div>
+<div class="strengthen">
+<p><strong>What we strengthen.</strong> Green boxes record a corrected sign error (F1), a rigor gap discharged by a kernel-checked leaf (F2), or what had to be axiomatised.</p>
+</div>
+<p>A node is badged <span class="badge ok">machine-checked</span> only if its Lean kernel axiom set is clean (<code>propext</code>, <code>Classical.choice</code>, <code>Quot.sound</code> only), verified by <code>#print axioms</code> via <code>bin/axiom-report</code>. The standalone A-to-Z PDF of this blueprint is at <a href="blueprint.pdf">blueprint.pdf</a>.</p>
+<section id="sec-foundations" class="level1">
+<h1>Foundations</h1>
+<p>The paper views a Transformer as the flow map of a continuity equation on the unit sphere <span class="math inline">\(\mathbb S^{d-1}\)</span>. We reproduce the setting verbatim, then give the kernel-checked algebraic foundations our leaves rest on.</p>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, §1, pp.&nbsp;2-3).</p>
+<p>Viewing each token as a particle, given an initial sequence <span class="math inline">\((x_1(0),\dots,x_n(0)) \in (\mathbb S^{d-1})^n\)</span>, one considers <span class="math display">\[\dot x_i(t) = \mathsf v[\mu(t)](t, x_i(t)), \qquad t\in[0,T], \tag{1.1}\]</span> where <span class="math inline">\(\mu(t) = \frac1n\sum_{j=1}^n \delta_{x_j(t)}\)</span> is the empirical measure. The vector field is <span class="math display">\[\mathsf v[\mu](t,x) = \mathbf P_x^\perp\!\big(\mathbf V(t)\,\mathscr A_{\mathbf B}[\mu](t,x) + \mathbf W(t)(\mathbf U(t)x + b(t))_+\big), \tag{1.2}\]</span> where the self-attention is <span class="math display">\[\mathscr A_{\mathbf B}[\mu](t,x) := \int e^{\langle \mathbf B(t)x, x'\rangle} x'\,\mu(\mathrm dx') \;\Big/\; \int e^{\langle \mathbf B(t)x,\zeta\rangle}\mu(\mathrm d\zeta).\]</span> The vector field is “ultimately projected onto <span class="math inline">\(\mathsf T_x\mathbb S^{d-1}\)</span> by virtue of the orthogonal projector <span class="math inline">\(\mathbf P_x^\perp := I_d - xx^\top\)</span>, referred to as <em>layer normalization</em>.” Since (1.1) depends only on <span class="math inline">\(\mu(t)\)</span>, one passes to the <strong>continuity equation</strong> <span class="math display">\[\partial_t\mu(t) + \mathrm{div}\big(\mu(t)\,\mathsf v[\mu(t)]\big) = 0 \ \text{ on } [0,T]\times\mathbb S^{d-1}, \qquad \mu(0)=\mu_0. \tag{1.3}\]</span> For any control <span class="math inline">\(\theta = (\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)\)</span> the Cauchy problem (1.3) is well-posed and yields a continuous, invertible flow map <span class="math inline">\(\Phi_\theta^t : \mathscr P(\mathbb S^{d-1})\to\mathscr P(\mathbb S^{d-1})\)</span> with <span class="math inline">\(\Phi_\theta^t(\mu_0)=\mu(t)\)</span>.</p>
+</div>
+<section id="node-projector" class="level2">
+<h2 class="anchored" data-anchor-id="node-projector">Tangential projector (layer normalization)</h2>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>We define the layer-normalization projector <span class="math inline">\(\mathbf P_x^\perp v = v - \langle x,v\rangle x\)</span> and prove the algebraic identities every leaf uses (ledger node <strong>L1</strong>): it is linear, symmetric, idempotent on the sphere, annihilates <span class="math inline">\(x\)</span>, and satisfies the quadratic identity <span class="math display">\[\langle \mathbf P_x^\perp v, v\rangle = \|v\|^2 - \langle x, v\rangle^2 \qquad (\|x\|=1),\]</span> which is exactly the scalar driving the gate ODE (B.5) and the barycenter ODE (B.9). The proof is a direct computation: expanding <span class="math inline">\(\langle v - \langle x,v\rangle x,\ v\rangle\)</span> and using <span class="math inline">\(\langle x,x\rangle = 1\)</span> cancels the cross term to <span class="math inline">\(\|v\|^2 - \langle x,v\rangle^2\)</span>.</p>
+<pre class="lean"><code>/-- The tangential projector `P_x^⊥ v = v - ⟪x, v⟫ x`. -/
+noncomputable def tangentialProjector (x v : Eucl d) : Eucl d := v - (⟪x, v⟫) • x
+
+/-- The key quadratic identity (L1): for a unit vector `x`,
+`⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²`. -/
+theorem projector_inner_sub_sq {x : Eucl d} (hx : x ∈ sphere d) (v : Eucl d) :
+    ⟪tangentialProjector x v, v⟫ = ‖v‖ ^ 2 - ⟪x, v⟫ ^ 2 := by
+  have h : ⟪x, x⟫ = 1 := inner_self_eq_one_of_mem_sphere hx
+  simp only [tangentialProjector, inner_sub_left, inner_smul_left, RCLike.conj_to_real,
+    real_inner_self_eq_norm_sq]
+  ring</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/Projector.lean" class="lean-src"><code>Foundations/Projector.lean</code></a></p>
+</div>
+</section>
+<section id="node-geodesic" class="level2">
+<h2 class="anchored" data-anchor-id="node-geodesic">Geodesic distance</h2>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The geodesic distance on the sphere is <span class="math inline">\(d_g(x,y) = \arccos\langle x,y\rangle\)</span>. We prove the inversion <span class="math inline">\(\cos d_g(x,y) = \langle x,y\rangle\)</span> for unit vectors and that <span class="math inline">\(d_g(x,y)\in[0,\pi]\)</span>. These let the gate sign (B.4) be read either as the inner-product inequality <span class="math inline">\(\langle z,x\rangle &lt; \cos R\)</span> or as the geodesic statement <span class="math inline">\(d_g(z,x) &gt; R\)</span> (via strict antitonicity of <span class="math inline">\(\cos\)</span> on <span class="math inline">\([0,\pi]\)</span>).</p>
+<pre class="lean"><code>/-- Geodesic distance on the unit sphere: `d_g(x, y) = arccos⟪x, y⟫`. -/
+noncomputable def geodesicDist (x y : Eucl d) : ℝ := Real.arccos (⟪x, y⟫)
+
+/-- `cos (d_g x y) = ⟪x, y⟫`: the cosine of the geodesic distance is the inner product. -/
+theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
+    Real.cos (geodesicDist x y) = ⟪x, y⟫ :=
+  Real.cos_arccos (neg_one_le_inner hx hy) (inner_le_one hx hy)</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/GeodesicDistance.lean" class="lean-src"><code>Foundations/GeodesicDistance.lean</code></a></p>
+</div>
+</section>
+</section>
+<section id="sec-leaves" class="level1">
+<h1>Self-contained leaves</h1>
+<p>These are the self-contained computational cores the paper’s proofs rest on, each isolated from its measure-theoretic and flow-map scaffolding and given a clean Lean kernel proof. Two of them (L7, L8) reduce instead to a single labeled Wasserstein axiom and are flagged as such; the gate leaf (L2) and the non-colinearity leaves (L11, L11<span class="math inline">\('\)</span>) additionally repair or discharge a gap in the original text.</p>
+<section id="node-gate" class="level2">
+<h2 class="anchored" data-anchor-id="node-gate">Gate algebra and gate ODE</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.2 and eq. (B.4)-(B.5), pp.&nbsp;31-32).</p>
+<p>Lemma B.2 transports mass between two overlapping balls <span class="math inline">\(\mathcal B_0,\mathcal B_1\subset\mathbb S^{d-1}\)</span> (<span class="math inline">\(\mathcal B_0\cap\mathcal B_1\neq\varnothing\)</span>): for any <span class="math inline">\(\varepsilon&gt;0\)</span>, <span class="math inline">\(T&gt;0\)</span> there exist <span class="math inline">\(W,U\in\mathscr M_{d\times d}(\mathbb R)\)</span> and <span class="math inline">\(b\in\mathbb R^d\)</span> so that the solution <span class="math inline">\(\mu\)</span> satisfies <span class="math inline">\(\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)\)</span>. In the proof:</p>
+<p>“Let <span class="math inline">\(z\in\mathbb S^{d-1}\)</span> denote the center and <span class="math inline">\(R&gt;0\)</span> the radius of <span class="math inline">\(\mathcal B_0\)</span>. Take an arbitrary <span class="math inline">\(\omega\in\operatorname{int}(\mathcal B_0\cap\mathcal B_1)\)</span>. We consider <span class="math inline">\(U=-\mathbf 1 z^\top\)</span> and <span class="math inline">\(b=\cos(R)\mathbf 1\)</span>, as well as any <span class="math inline">\(W\in\mathscr M_{d\times d}(\mathbb R)\)</span> such that <span class="math inline">\(W\mathbf 1=\omega\)</span>. Then <span class="math inline">\(W(Ux+b)_+=(-\cos d_g(z,x)+\cos(R))_+\,\omega\)</span>, and note that” <span class="math display">\[(-\cos d_g(z,x)+\cos(R))_+&gt;0 \quad\Longleftrightarrow\quad x\in\mathcal B_0. \tag{B.4}\]</span> “Now observe that” <span class="math display">\[\frac{\mathrm d}{\mathrm dt}\langle x(t),\omega\rangle=(-\cos d_g(z,x(t))+\cos(R))_+\bigl(1-\langle x(t),\omega\rangle^2\bigr), \tag{B.5}\]</span> “which is positive whenever <span class="math inline">\(x(t)\in\mathcal B_0\setminus\{\omega\}\)</span>.”</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The gated drift is <span class="math inline">\(W(Ux+b)_+ = g\cdot\omega\)</span> with scalar gate <span class="math inline">\(g=(\cos R-\langle z,x\rangle)_+\)</span>. Projecting onto the tangent space and pairing with the unit vector <span class="math inline">\(\omega\)</span>, the projector identity L1 collapses the tangential part to a scalar: <span class="math inline">\(\langle \mathbf P_x^\perp(g\,\omega),\omega\rangle = g\,\langle\mathbf P_x^\perp\omega,\omega\rangle
+= g(\|\omega\|^2-\langle x,\omega\rangle^2) = g(1-\langle x,\omega\rangle^2)\)</span> since <span class="math inline">\(\|\omega\|=1\)</span> — this is <code>gate_inner_identity</code>. The ODE (B.5) is then the chain rule: <span class="math inline">\(\frac{\mathrm d}{\mathrm dt}\langle x(t),\omega\rangle
+= \langle x'(t),\omega\rangle\)</span> (<span class="math inline">\(\omega\)</span> constant), and substituting the projected drift <span class="math inline">\(x'(t)=\mathbf P_{x(t)}^\perp(g\,\omega)\)</span> reproduces the logistic factor. For the sign (B.4), <span class="math inline">\(0&lt;\cos R-\langle z,x\rangle\iff\langle z,x\rangle&lt;\cos R\)</span>, and rewriting <span class="math inline">\(\langle z,x\rangle=\cos d_g(z,x)\)</span> with strict antitonicity of <span class="math inline">\(\cos\)</span> on <span class="math inline">\([0,\pi]\)</span> gives the geodesic form. The key step is the quadratic projector identity, which turns the ambient projection into the scalar <span class="math inline">\(1-\langle x,\omega\rangle^2\)</span>.</p>
+<pre class="lean"><code>/-- L2 (algebra of B.5): for unit `x` and unit `ω`, projecting the scaled drift `g•ω` and pairing
+with `ω` gives the logistic factor `g(1 - ⟪x,ω⟫²)`. -/
+theorem gate_inner_identity {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ) :
+    ⟪tangentialProjector x (g • ω), ω⟫ = g * (1 - ⟪x, ω⟫ ^ 2) := by
+  rw [tangentialProjector_smul, real_inner_smul_left, projector_inner_sub_sq hx ω,
+    norm_eq_one_of_mem_sphere hω, one_pow]
+
+/-- L2 (the gate ODE B.5): along a path `x(t)` on the sphere whose velocity is the projected gated
+drift `x'(t) = P_{x(t)}^⊥ (g • ω)`, the inner product `⟪x(t), ω⟫` evolves as
+`g(1 - ⟪x(t), ω⟫²)`. -/
+theorem gate_hasDerivAt_inner {x : ℝ → Eucl d} {ω : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (hxs : x t ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ)
+    (hode : x' = tangentialProjector (x t) (g • ω)) :
+    HasDerivAt (fun s =&gt; (⟪x s, ω⟫ : ℝ)) (g * (1 - ⟪x t, ω⟫ ^ 2)) t := by
+  have hconst : HasDerivAt (fun _ : ℝ =&gt; ω) (0 : Eucl d) t := hasDerivAt_const t ω
+  have h := hx.inner ℝ hconst
+  rw [hode, gate_inner_identity hxs hω g] at h
+  simpa using h
+
+/-- L2 (gate sign, B.4, geodesic form): the gate is active exactly outside the closed cap of radius
+`R` around `z`, i.e. on `{x : d_g(z, x) &gt; R}`. -/
+theorem gate_pos_iff_dist {z x : Eucl d} (hz : z ∈ sphere d) (hx : x ∈ sphere d)
+    {R : ℝ} (hR : R ∈ Set.Icc (0 : ℝ) Real.pi) :
+    (⟪z, x⟫ : ℝ) &lt; Real.cos R ↔ R &lt; geodesicDist z x := by
+  rw [← cos_geodesicDist hz hx]
+  exact Real.strictAntiOn_cos.lt_iff_gt (geodesicDist_mem_Icc z x) hR</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GateODE.lean" class="lean-src"><code>Leaves/GateODE.lean</code></a></p>
+</div>
+<div class="strengthen">
+<p><strong>Strengthening (finding F1).</strong> The printed (B.4) asserts the gate is active iff <span class="math inline">\(x\in\mathcal B_0=B(z,R)\)</span>. Our kernel-checked <code>gate_pos_iff_dist</code> proves instead <span class="math inline">\((\cos R-\langle z,x\rangle)_+&gt;0 \iff d_g(z,x)&gt;R\)</span> — the gate is active on the <strong>complement</strong> of the cap. The opposite sign is the consistent one: (B.5) needs the gate active <em>inside</em> <span class="math inline">\(\mathcal B_0\setminus\{\omega\}\)</span> to push interior mass toward <span class="math inline">\(\omega\)</span>, whereas the printed parameters <span class="math inline">\(U=-\mathbf 1 z^\top,\ b=\cos(R)\mathbf 1\)</span> leave the interior mass on a zero gate, so the lemma as written transports nothing; the fix is <span class="math inline">\(U=+\mathbf 1 z^\top,\ b=-\cos(R)\mathbf 1\)</span>. This is corroborated independently by experiment E1 (the gated-transport mass fraction rises from <span class="math inline">\(\approx 0.27\)</span> to <span class="math inline">\(1.0\)</span> once the seed is placed on <span class="math inline">\(\{d_g(z,x)&gt;R\}\)</span>) and by the paper’s own §4 Step 3, which states the identical construction with the correct side. See <code>ERRATA.md</code>.</p>
+</div>
+</section>
+<section id="node-barycenter" class="level2">
+<h2 class="anchored" data-anchor-id="node-barycenter">Barycenter ODE</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, eq. (B.9), p.&nbsp;33).</p>
+<p>In Step 1 of the proof of Lemma 3.3, the solution to <span class="math display">\[\begin{cases}\partial_t\mu(t)+\operatorname{div}\!\bigl(\mathbf P_x^\perp\langle\alpha_1,\mathbb E_{\mu(t)}[x]\rangle\,\alpha_1\,\mu(t)\bigr)=0 &amp; \text{on }\mathbb R_{\ge0}\times\mathbb S^{d-1},\\[2pt] \mu(0)=\mu_0 &amp; \text{on }\mathbb S^{d-1}\end{cases} \tag{B.9}\]</span> for <span class="math inline">\(\mu_0\in\mathscr P(\mathbb Q_1^{d-1})\)</span> satisfies <span class="math display">\[\frac{\mathrm d}{\mathrm dt}\langle\mathbb E_{\mu(t)}[x],\alpha_1\rangle=\langle\mathbb E_{\mu(t)}[x],\alpha_1\rangle\Bigl(1-\int\langle x',\alpha_1\rangle^2\mu(t,\mathrm dx')\Bigr).\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The disentangling field is <span class="math inline">\(\mathbf P_x^\perp(c\,\alpha)\)</span> with <span class="math inline">\(c=\langle\mathbb E_\mu[x],\alpha\rangle\)</span>, so the per-particle characteristic <span class="math inline">\(\langle x(t),\alpha\rangle\)</span> obeys exactly the gate identity of L2 with <span class="math inline">\(c\)</span> in place of the gate scalar: <span class="math inline">\(\frac{\mathrm d}{\mathrm dt}\langle x(t),\alpha\rangle = c\,(1-\langle x(t),\alpha\rangle^2)\)</span>. The Lean derivative is therefore literally <code>gate_hasDerivAt_inner</code> instantiated at <span class="math inline">\(g=c\)</span>. The sign lemma <code>barycenter_deriv_pos</code> records that when <span class="math inline">\(c&gt;0\)</span> and the component lies strictly inside <span class="math inline">\((-1,1)\)</span> the right-hand side is positive, the dissipation that drives <span class="math inline">\(\langle x,\alpha\rangle\to 1\)</span>, i.e.&nbsp;<span class="math inline">\(x\to\alpha\)</span>. The key point is that the paper shows <span class="math inline">\(c\)</span> is sign-preserved along the flow, so the logistic ODE is monotone.</p>
+<pre class="lean"><code>/-- L6 (derivative, eq. B.9): along `x'(t) = P_{x(t)}^⊥ (c • α)` with `α` a unit vector, the
+component `⟪x(t), α⟫` evolves as `c(1 - ⟪x(t), α⟫²)`. -/
+theorem barycenter_hasDerivAt_inner {x : ℝ → Eucl d} {α : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (hxs : x t ∈ sphere d) (hα : α ∈ sphere d) (c : ℝ)
+    (hode : x' = tangentialProjector (x t) (c • α)) :
+    HasDerivAt (fun s =&gt; (⟪x s, α⟫ : ℝ)) (c * (1 - ⟪x t, α⟫ ^ 2)) t :=
+  gate_hasDerivAt_inner hx hxs hα c hode
+
+/-- L6 (sign / strict increase): when the barycenter coefficient `c` is positive and the component
+is strictly inside `(-1, 1)`, the component strictly increases. This is the dissipation that pushes
+`⟪x, α⟫` toward `1`. -/
+theorem barycenter_deriv_pos {c y : ℝ} (hc : 0 &lt; c) (hy : y ∈ Set.Ioo (-1 : ℝ) 1) :
+    0 &lt; c * (1 - y ^ 2) := by
+  obtain ⟨h1, h2⟩ := hy
+  have hy2 : y ^ 2 &lt; 1 := by nlinarith
+  have : 0 &lt; 1 - y ^ 2 := by linarith
+  positivity</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterODE.lean" class="lean-src"><code>Leaves/BarycenterODE.lean</code></a></p>
+</div>
+</section>
+<section id="node-geodesic-gradient" class="level2">
+<h2 class="anchored" data-anchor-id="node-geodesic-gradient">Geodesic-distance gradient</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, eq. after (4.4), p.&nbsp;20).</p>
+<p>“Observe that the trajectories of the ODE” <span class="math display">\[\dot x(t)=(\langle\gamma,x(t)\rangle-\epsilon/2)_+\,\mathbf P_{x(t)}^\perp\omega_+ \qquad\text{for }t\ge0, \tag{4.4}\]</span> “follow the Riemannian gradient flow of the distance between <span class="math inline">\(\omega_+\)</span> and <span class="math inline">\(x\)</span> in <span class="math inline">\(\mathcal S_+\)</span>. Indeed,” <span class="math display">\[\nabla_1 d_g(x,\omega_+)=-\frac{\mathbf P_x^\perp(\omega_+)}{\sqrt{1-\langle x,\omega_+\rangle^2}}.\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>Two facts pin down the gradient. First, the chain rule for <span class="math inline">\(\arccos\circ\langle\cdot,\omega\rangle\)</span>: since <span class="math inline">\((\arccos)'(u)=-1/\sqrt{1-u^2}\)</span> (Mathlib’s <code>Real.hasDerivAt_arccos</code>), <span class="math inline">\(\frac{\mathrm d}{\mathrm dt}d_g(x(t),\omega)=-(1-\langle x,\omega\rangle^2)^{-1/2}\langle x',\omega\rangle\)</span>. Second, for a tangent velocity (<span class="math inline">\(\langle x',x\rangle=0\)</span>) the ambient <span class="math inline">\(\omega\)</span> may be replaced by its tangential projection: <span class="math inline">\(\langle x',\mathbf P_x^\perp\omega\rangle=\langle x',\omega\rangle-\langle x,\omega\rangle\langle x',x\rangle=\langle x',\omega\rangle\)</span>. Hence the derivative is <span class="math inline">\(\bigl\langle x',\,-(1-\langle x,\omega\rangle^2)^{-1/2}\,\mathbf P_x^\perp\omega\bigr\rangle\)</span>, exhibiting <span class="math inline">\(-\mathbf P_x^\perp\omega/\sqrt{1-\langle x,\omega\rangle^2}\)</span> as the Riemannian (tangential) gradient. The key step is that tangency annihilates the cross term, letting the Euclidean inner product against <span class="math inline">\(\omega\)</span> be read as the inner product against the gradient direction.</p>
+<pre class="lean"><code>/-- L4 (derivative of geodesic distance along a path): the chain rule for `arccos∘⟪·, ω⟫`. -/
+theorem geodesicDist_hasDerivAt {x : ℝ → Eucl d} {ω : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (h1 : (⟪x t, ω⟫ : ℝ) ≠ -1) (h2 : (⟪x t, ω⟫ : ℝ) ≠ 1) :
+    HasDerivAt (fun s =&gt; geodesicDist (x s) ω)
+      (-(1 / Real.sqrt (1 - (⟪x t, ω⟫ : ℝ) ^ 2)) * ⟪x', ω⟫) t := by
+  have hinner : HasDerivAt (fun s =&gt; (⟪x s, ω⟫ : ℝ)) (⟪x', ω⟫) t := by
+    have h := hx.inner ℝ (hasDerivAt_const t ω)
+    simpa using h
+  have h := (Real.hasDerivAt_arccos h1 h2).comp t hinner
+  simpa only [geodesicDist, Function.comp_def] using h
+
+/-- L4 (gradient direction): on the sphere, for a tangent velocity the inner product with `ω` equals
+the inner product with the tangential projection `P_x^⊥ ω`. Hence the geodesic-distance derivative
+is `⟪x', -(1/√(1-⟪x,ω⟫²)) • P_x^⊥ ω⟫`, exhibiting `-P_x^⊥ ω / √(1-⟪x,ω⟫²)` as the Riemannian
+gradient. -/
+theorem inner_eq_inner_tangentialProjector {x ω x' : Eucl d}
+    (htangent : (⟪x', x⟫ : ℝ) = 0) :
+    (⟪x', ω⟫ : ℝ) = ⟪x', tangentialProjector x ω⟫ := by
+  rw [tangentialProjector, inner_sub_right, real_inner_smul_right, htangent]
+  ring</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GeodesicGradient.lean" class="lean-src"><code>Leaves/GeodesicGradient.lean</code></a></p>
+</div>
+</section>
+<section id="node-separating-hyperplane" class="level2">
+<h2 class="anchored" data-anchor-id="node-separating-hyperplane">Separating hyperplane</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 4.2 Step 1, p.&nbsp;20).</p>
+<p>With <span class="math inline">\(\omega_+\)</span> on the minimizing geodesic between <span class="math inline">\(\omega\)</span> and <span class="math inline">\(\gamma\)</span> at distance <span class="math inline">\(\pi/8\)</span> from <span class="math inline">\(\omega\)</span>, one has <span class="math inline">\(d_g(\omega_+,x_0^M)\ge d_g(\omega,x_0^M)-d_g(\omega,\omega_+)\ge\tfrac{3\pi}{8}\)</span>.</p>
+<p>“As a consequence, the hyperplane <span class="math inline">\(\{x\in\mathbb S^{d-1}:\langle\omega,x\rangle=\cos(\pi/8+\tau)\}\)</span> is a separating hyperplane for the ball <span class="math inline">\(B(\omega,\pi/8+\tau)\)</span> and the points <span class="math inline">\(x_0^M\)</span> and <span class="math inline">\(y^M\)</span> for every <span class="math inline">\(\tau\in(0,3\pi/8)\)</span>; namely” <span class="math display">\[\langle\omega,x_0^M\rangle-\cos\Bigl(\frac{\pi}{8}+\tau\Bigr)=\cos d_g(\omega,x_0^M)-\cos\Bigl(\frac{\pi}{8}+\tau\Bigr)&lt;0,\]</span> “where the inequality is by virtue of (4.3)” (the choice <span class="math inline">\(d_g(\omega,x_0^M)\ge\pi/2\)</span>).</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The whole content is the strict antitonicity of cosine on <span class="math inline">\([0,\pi]\)</span>. From <span class="math inline">\(\tau&lt;3\pi/8\)</span> we get the cap angle <span class="math inline">\(\pi/8+\tau&lt;\pi/2\le d_g(\omega,x)\)</span>, and both angles lie in <span class="math inline">\([0,\pi]\)</span>, so Mathlib’s <code>Real.strictAntiOn_cos</code> gives <span class="math inline">\(\cos d_g(\omega,x)&lt;\cos(\pi/8+\tau)\)</span>. Rewriting <span class="math inline">\(\cos d_g(\omega,x)=\langle\omega,x\rangle\)</span> lands the separating inequality <span class="math inline">\(\langle\omega,x\rangle&lt;\cos(\pi/8+\tau)\)</span>. The key step is that monotonicity of cosine converts the angle gap <span class="math inline">\(\pi/8+\tau&lt;d_g(\omega,x)\)</span> into the inner-product gap that places <span class="math inline">\(x\)</span> strictly on the far side of the hyperplane.</p>
+<pre class="lean"><code>/-- L3 (separating side): if `x` is far from the anchor `ω` (`d_g(ω, x) ≥ π/2`) and
+`τ ∈ (0, 3π/8)`, then `⟪ω, x⟫ &lt; cos(π/8 + τ)`, so `x` lies strictly on the far side of the
+separating hyperplane. -/
+theorem separating_hyperplane {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d)
+    {τ : ℝ} (hτ : τ ∈ Set.Ioo 0 (3 * Real.pi / 8))
+    (hfar : Real.pi / 2 ≤ geodesicDist ω x) :
+    ⟪ω, x⟫ &lt; Real.cos (Real.pi / 8 + τ) := by
+  obtain ⟨hτ0, hτ8⟩ := hτ
+  have hpi := Real.pi_pos
+  -- both angles lie in [0, π]
+  have ha : Real.pi / 8 + τ ∈ Set.Icc (0 : ℝ) Real.pi := by
+    constructor &lt;;&gt; nlinarith [Real.pi_pos]
+  have hb : geodesicDist ω x ∈ Set.Icc (0 : ℝ) Real.pi := geodesicDist_mem_Icc ω x
+  -- the far angle exceeds the cap angle
+  have hab : Real.pi / 8 + τ &lt; geodesicDist ω x := by nlinarith [hfar]
+  -- cosine is strictly decreasing on [0, π]
+  have hcos : Real.cos (geodesicDist ω x) &lt; Real.cos (Real.pi / 8 + τ) :=
+    Real.strictAntiOn_cos ha hb hab
+  rwa [cos_geodesicDist hω hx] at hcos</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/SeparatingHyperplane.lean" class="lean-src"><code>Leaves/SeparatingHyperplane.lean</code></a></p>
+</div>
+</section>
+<section id="node-lyapunov" class="level2">
+<h2 class="anchored" data-anchor-id="node-lyapunov">Lyapunov sign</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Example 6.1, pp.&nbsp;29-30).</p>
+<p>On the circle (<span class="math inline">\(d=2\)</span>), for a particle following a characteristic of <span class="math inline">\(\mu^i(t)\)</span> one has <span class="math inline">\(\dot x(t)=\mathbf P_{x(t)}^\perp(m_i(t))=\alpha_i(t)\mathbf P_{x(t)}^\perp(u_i)\)</span> and, in the angle variable <span class="math inline">\(\vartheta:=\theta-\theta_i\)</span>, <span class="math display">\[\dot\vartheta(t)=-\alpha_i(t)\sin\vartheta(t).\]</span> “The Lyapunov function <span class="math inline">\(\mathsf E(\vartheta):=1-\cos\vartheta\)</span> satisfies” <span class="math display">\[\dot{\mathsf E}=\sin\vartheta\,\dot\vartheta=-\alpha_i(t)\sin^2\vartheta\le0,\]</span> “with equality only at <span class="math inline">\(\vartheta=0\)</span> (since <span class="math inline">\(\alpha_i(t)&gt;0\)</span> …). Thus <span class="math inline">\(\vartheta(t)\to0\)</span> and each trajectory converges to <span class="math inline">\(u_i\)</span>.”</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>Both halves are kernel-checked. The derivative is the chain rule: <span class="math inline">\(\frac{\mathrm d}{\mathrm dt}(1-\cos\theta(s))=\sin\theta(t)\,\theta'(t)\)</span>, and substituting the ODE <span class="math inline">\(\theta'=-\alpha\sin\theta\)</span> gives <span class="math inline">\(-\alpha\sin^2\theta\)</span>. The sign lemma <code>lyapunov_deriv_nonpos</code> then notes <span class="math inline">\(-\alpha\sin^2\theta\le0\)</span> for <span class="math inline">\(\alpha\ge0\)</span> because <span class="math inline">\(\alpha\sin^2\theta\ge0\)</span>. So <span class="math inline">\(\mathsf E=1-\cos\theta\)</span> is nonincreasing along the angle flow, forcing <span class="math inline">\(\theta\to0\)</span>. The key step is that the <span class="math inline">\(\sin\theta\)</span> produced by the ODE cancels with the <span class="math inline">\(\sin\theta\)</span> from differentiating <span class="math inline">\(1-\cos\theta\)</span>, leaving a perfect square of definite sign.</p>
+<pre class="lean"><code>/-- L5 (derivative of the Lyapunov function along the flow): if `θ` solves `θ' = -α sin θ` at `t`,
+then `E(s) = 1 - cos θ(s)` has derivative `-α sin²(θ t)` at `t`. -/
+theorem lyapunov_hasDerivAt (α : ℝ) (θ : ℝ → ℝ) (t θ' : ℝ)
+    (hθ : HasDerivAt θ θ' t) (hode : θ' = -α * Real.sin (θ t)) :
+    HasDerivAt (fun s =&gt; 1 - Real.cos (θ s)) (-α * Real.sin (θ t) ^ 2) t := by
+  have hcos : HasDerivAt (fun s =&gt; Real.cos (θ s)) (-Real.sin (θ t) * θ') t :=
+    (Real.hasDerivAt_cos (θ t)).comp t hθ
+  have h : HasDerivAt (fun s =&gt; 1 - Real.cos (θ s)) (0 - (-Real.sin (θ t) * θ')) t :=
+    (hasDerivAt_const t 1).sub hcos
+  convert h using 1
+  rw [hode]; ring
+
+/-- L5 (sign): the Lyapunov derivative is nonpositive when `α ≥ 0`. -/
+theorem lyapunov_deriv_nonpos {α : ℝ} (hα : 0 ≤ α) (s : ℝ) :
+    -α * Real.sin s ^ 2 ≤ 0 := by
+  have : 0 ≤ α * Real.sin s ^ 2 := mul_nonneg hα (sq_nonneg _)
+  linarith</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Lyapunov.lean" class="lean-src"><code>Leaves/Lyapunov.lean</code></a></p>
+</div>
+</section>
+<section id="node-ball-chain-retention" class="level2">
+<h2 class="anchored" data-anchor-id="node-ball-chain-retention">Ball-chain retention</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.1 and its proof, pp.&nbsp;31, 33).</p>
+<p>Lemma B.1 transports mass through <span class="math inline">\(K+1\)</span> overlapping balls and concludes <span class="math inline">\(\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\mu_0\bigl(\bigcup_k\mathcal B_k\bigr)\)</span>. Its proof:</p>
+<p>“Write <span class="math inline">\([0,T]=\bigcup_{k\in[1,M]}[t_{k-1},t_k]\)</span> where <span class="math inline">\(t_k=kT/K\)</span>, and proceed by backward induction:” <span class="math display">\[\mu(T,\mathcal B_K)=\mu(T,\mathcal B_K\setminus\mathcal B_{K-1})+\mu(T,\mathcal B_K\cap\mathcal B_{K-1})\ge\mu(t_{K-1},\mathcal B_K\setminus\mathcal B_{K-1})+(1-\varepsilon)\mu(t_{K-1},\mathcal B_{K-1}),\]</span> “where the last inequality follows from Lemma B.2. Using <span class="math inline">\(\mathcal B_k\cap\mathcal B_{k'}=\varnothing\)</span> whenever <span class="math inline">\(|k-k'|\ge2\)</span>, we arrive to” <span class="math display">\[\mu(T,\mathcal B_k)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\setminus\mathcal B_{k-1})+\mu_0(\mathcal B_0)\Bigr)=(1-\varepsilon)^K\mu_0\Bigl(\bigcup_{k\in[0,K]}\mathcal B_k\Bigr).\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>Stripped of the measure-theoretic bookkeeping, the backward induction is a clean arithmetic fact about a nonnegative sequence with per-step retention. We prove by induction on <span class="math inline">\(K\)</span> that if <span class="math inline">\(m\le a_0\)</span> and <span class="math inline">\((1-\varepsilon)\,a_k\le a_{k+1}\)</span> for all <span class="math inline">\(k\)</span>, then <span class="math inline">\((1-\varepsilon)^K m\le a_K\)</span>. The base case is <span class="math inline">\(m\le a_0\)</span>; the step chains <span class="math inline">\((1-\varepsilon)^{n+1}m=(1-\varepsilon)\bigl((1-\varepsilon)^n m\bigr)\le(1-\varepsilon)\,a_n\le a_{n+1}\)</span>. The key step is <span class="math inline">\(0\le1-\varepsilon\)</span>, which lets the induction hypothesis be scaled by <span class="math inline">\((1-\varepsilon)\)</span> without reversing the inequality before applying the retention hypothesis.</p>
+<pre class="lean"><code>/-- L9: geometric retention through a chain. With retention factor `1 - ε ∈ [0, 1]` per step and
+initial mass at least `m ≥ 0`, after `K` steps at least `(1 - ε)^K · m` remains. -/
+theorem ball_chain_geom {ε : ℝ} (hε1 : ε ≤ 1) (a : ℕ → ℝ) {m : ℝ}
+    (h0 : m ≤ a 0) (hstep : ∀ k, (1 - ε) * a k ≤ a (k + 1)) :
+    ∀ K : ℕ, (1 - ε) ^ K * m ≤ a K := by
+  have h1ε : (0 : ℝ) ≤ 1 - ε := by linarith
+  intro K
+  induction K with
+  | zero =&gt; simpa using h0
+  | succ n ih =&gt;
+    calc (1 - ε) ^ (n + 1) * m
+        = (1 - ε) * ((1 - ε) ^ n * m) := by ring
+      _ ≤ (1 - ε) * a n := by exact mul_le_mul_of_nonneg_left ih h1ε
+      _ ≤ a (n + 1) := hstep n</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BallChain.lean" class="lean-src"><code>Leaves/BallChain.lean</code></a></p>
+</div>
+</section>
+<section id="node-pigeonhole" class="level2">
+<h2 class="anchored" data-anchor-id="node-pigeonhole">Pigeonhole</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 3.4 Part 1, App. B.3, p.&nbsp;35).</p>
+<p>“Part 1. There exists an open ball <span class="math inline">\(\mathcal B\subset\operatorname{supp}\mu_0\cup\operatorname{supp}\nu_0\)</span> such that <span class="math inline">\(\mu_0(\mathcal B)\neq\nu_0(\mathcal B)\)</span>. We now claim that there exists some <span class="math inline">\(x^*\in\mathcal B\)</span> such that” <span class="math display">\[\mu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\mu_0(\mathrm dx)\neq\nu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\nu_0(\mathrm dx).\]</span> “Indeed if this were to be false, then we’d have” <span class="math display">\[x^*=\frac{1}{\mu_0(\mathcal B)-\nu_0(\mathcal B)}\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,(\nu_0(\mathrm dx)-\mu_0(\mathrm dx))\]</span> “for all <span class="math inline">\(x^*\in\mathcal B\)</span>, which cannot hold.”</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The displayed contradiction is “<span class="math inline">\(x^*\)</span> equals a fixed vector for all <span class="math inline">\(x^*\in\mathcal B\)</span>” — i.e.&nbsp;the identity would be constant on the open ball <span class="math inline">\(\mathcal B\)</span>, impossible. We isolate exactly that general fact: in a nontrivial real normed space, an open ball of positive radius contains a point distinct from any prescribed <span class="math inline">\(a\)</span>. Pick <span class="math inline">\(u\neq0\)</span> and set <span class="math inline">\(v=(r/2\|u\|)\,u\)</span>, so <span class="math inline">\(\|v\|=r/2&lt;r\)</span> and <span class="math inline">\(v\neq0\)</span>; then <span class="math inline">\(c\)</span> and <span class="math inline">\(c+v\)</span> both lie in <span class="math inline">\(B(c,r)\)</span> (at distances <span class="math inline">\(0\)</span> and <span class="math inline">\(r/2\)</span>) and are distinct. If <span class="math inline">\(c=a\)</span>, return <span class="math inline">\(c+v\)</span> (which differs from <span class="math inline">\(c=a\)</span> because <span class="math inline">\(v\neq0\)</span>); otherwise return <span class="math inline">\(c\)</span>. The key step is that a positive-radius ball is never a single point, so it cannot be forced to one value — the contradiction the pigeonhole argument exploits.</p>
+<pre class="lean"><code>/-- L10: an open ball of positive radius in a nontrivial real normed space contains a point distinct
+from any prescribed `a`. Hence no map can be forced to a single value on the ball, which is the
+contradiction the pigeonhole step exploits. -/
+theorem exists_ne_in_ball (c a : E) {r : ℝ} (hr : 0 &lt; r) :
+    ∃ x ∈ Metric.ball c r, x ≠ a := by
+  obtain ⟨u, hu⟩ := exists_ne (0 : E)
+  have hunorm : 0 &lt; ‖u‖ := norm_pos_iff.mpr hu
+  set v : E := (r / (2 * ‖u‖)) • u with hv
+  have hvnorm : ‖v‖ = r / 2 := by
+    rw [hv, norm_smul, Real.norm_of_nonneg (by positivity)]
+    field_simp
+  have hvne : v ≠ 0 := by
+    rw [← norm_pos_iff, hvnorm]; linarith
+  -- `c` and `c + v` both lie in the ball and are distinct
+  have hc_mem : c ∈ Metric.ball c r := Metric.mem_ball_self hr
+  have hcv_mem : c + v ∈ Metric.ball c r := by
+    rw [Metric.mem_ball, dist_eq_norm]
+    have h1 : c + v - c = v := by abel
+    rw [h1, hvnorm]; linarith
+  -- at least one of the two distinct points differs from `a`
+  rcases eq_or_ne c a with hca | hca
+  · refine ⟨c + v, hcv_mem, fun h =&gt; hvne ?_⟩
+    have h2 : c + v = c + 0 := by rw [add_zero, h, hca]
+    exact add_left_cancel h2
+  · exact ⟨c, hc_mem, hca⟩</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Pigeonhole.lean" class="lean-src"><code>Leaves/Pigeonhole.lean</code></a></p>
+</div>
+</section>
+<section id="node-noncolinear" class="level2">
+<h2 class="anchored" data-anchor-id="node-noncolinear">Disjoint hulls give non-colinear barycenters</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 3.1 induction step, pp.&nbsp;16-17).</p>
+<p>The induction hypothesis (3.3) is <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\mu_0^i\cap\operatorname{conv}_g\operatorname{supp}\mu_0^j=\varnothing\qquad\text{for }i\neq j\in[\![1,N-1]\!]. \tag{3.3}\]</span> The induction step then asserts, without proof:</p>
+<p>“Since <span class="math inline">\(\operatorname{supp}\mu_0^i\subset\mathbb Q_1^{d-1}\)</span>, (3.3) implies that” <span class="math display">\[\mathbb E_{\mu_0^i}[x]\text{ is not colinear with }\mathbb E_{\mu_0^j}[x]\qquad\text{for }i\neq j\in[\![1,N-1]\!].\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>Within an open hemisphere spherical geodesics are radial projections of Euclidean chords, so we model the geodesic hull as <span class="math inline">\(\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}\)</span> — the unit vectors that are nonnegative combinations of <span class="math inline">\(s\)</span> (<code>geodesicHull</code>). The empirical barycenter <span class="math inline">\(\sum_p w_p\,p\)</span> with <span class="math inline">\(w_p\ge0\)</span> is a manifest conical combination of <span class="math inline">\(s\)</span>, and the cone is closed under nonnegative scaling, so the normalization <span class="math inline">\(\|b\|^{-1}b\)</span> of any nonzero conical point lies in <span class="math inline">\(\operatorname{conv}_g(s)\)</span>. If the two barycenters were colinear — for vectors in the positive orthant “colinear” means a <em>positive</em> multiple, i.e.&nbsp;<code>SameRay</code> — then <span class="math inline">\(b=k\,c\)</span> with <span class="math inline">\(k&gt;0\)</span>, so their normalizations coincide, <span class="math inline">\(\|b\|^{-1}b=\|c\|^{-1}c\)</span>. That common unit direction would then sit in <em>both</em> geodesic hulls, contradicting their disjointness. The key step is that positive colinearity forces a shared normalized direction, which disjoint hulls forbid.</p>
+<pre class="lean"><code>/-- The geodesic-convex hull of `s`, modeled within a hemisphere as `cone(s) ∩ 𝕊^{d-1}`: the unit
+vectors that are nonnegative combinations of `s`. Faithful to `conv_g` when `s` lies in an open
+hemisphere (e.g. the orthant `Q₁^{d-1}`), since spherical geodesics are radial projections of chords. -/
+def geodesicHull (s : Finset (Eucl d)) : Set (Eucl d) :=
+  {x | ‖x‖ = 1 ∧ inConicalSpan s x}
+
+/-- **Core of finding F2.** If two nonzero conical points `b`, `c` (the unnormalized barycenters) are
+colinear — `SameRay ℝ b c`, i.e. positive multiples, which is what "colinear" means for vectors in the
+positive orthant — then their common normalized direction lies in *both* geodesic hulls. -/
+theorem geodesicHull_inter_nonempty_of_sameRay {s₁ s₂ : Finset (Eucl d)} {b c : Eucl d}
+    (hb : inConicalSpan s₁ b) (hc : inConicalSpan s₂ c) (hb0 : b ≠ 0) (hc0 : c ≠ 0)
+    (hsr : SameRay ℝ b c) : (geodesicHull s₁ ∩ geodesicHull s₂).Nonempty := by
+  obtain ⟨r₁, r₂, hr₁, hr₂, hrel⟩ := hsr.exists_pos hb0 hc0
+  -- `b = k • c` with `k = r₁⁻¹ r₂ &gt; 0`
+  set k : ℝ := r₁⁻¹ * r₂ with hkdef
+  have hk : 0 &lt; k := by positivity
+  have hbk : b = k • c := by
+    rw [hkdef, mul_smul, ← hrel, smul_smul, inv_mul_cancel₀ (ne_of_gt hr₁), one_smul]
+  -- the normalized vectors coincide
+  have key : ‖b‖⁻¹ • b = ‖c‖⁻¹ • c := by
+    have hnc : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+    rw [hbk, norm_smul, Real.norm_eq_abs, abs_of_pos hk, smul_smul]
+    congr 1
+    field_simp
+  refine ⟨‖b‖⁻¹ • b, ?_⟩
+  rw [Set.mem_inter_iff]
+  exact ⟨mem_geodesicHull_normalize hb hb0, key ▸ mem_geodesicHull_normalize hc hc0⟩
+
+/-- **Finding F2, discharged.** Empirical measures (with nonnegative weights) in the orthant whose
+geodesic hulls are disjoint have non-colinear barycenters. This is the step Proposition 3.1's
+induction asserts without proof. -/
+theorem barycenter_noncolinear_of_disjoint_hull {s₁ s₂ : Finset (Eucl d)} {w₁ w₂ : Eucl d → ℝ}
+    (hw₁ : ∀ p ∈ s₁, 0 ≤ w₁ p) (hw₂ : ∀ p ∈ s₂, 0 ≤ w₂ p)
+    (hb0 : (∑ p ∈ s₁, w₁ p • p) ≠ 0) (hc0 : (∑ p ∈ s₂, w₂ p • p) ≠ 0)
+    (hdisj : Disjoint (geodesicHull s₁) (geodesicHull s₂)) :
+    ¬ SameRay ℝ (∑ p ∈ s₁, w₁ p • p) (∑ p ∈ s₂, w₂ p • p) := by
+  intro hsr
+  obtain ⟨u, hu⟩ := geodesicHull_inter_nonempty_of_sameRay
+    (barycenter_mem_conicalSpan hw₁) (barycenter_mem_conicalSpan hw₂) hb0 hc0 hsr
+  rw [Set.mem_inter_iff] at hu
+  exact Set.disjoint_left.mp hdisj hu.1 hu.2</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean" class="lean-src"><code>Leaves/BarycenterNonColinear.lean</code></a></p>
+</div>
+<div class="strengthen">
+<p><strong>Strengthening (finding F2).</strong> Proposition 3.1’s induction <em>asserts</em> “(3.3) [disjoint geodesic hulls] <span class="math inline">\(\Rightarrow\)</span> <span class="math inline">\(\mathbb E_{\mu_0^i}[x]\)</span> not colinear with <span class="math inline">\(\mathbb E_{\mu_0^j}[x]\)</span>” with no justification — the one genuine rigor gap the adversarial review flagged. This leaf supplies the kernel-checked proof for the empirical regime (the Dirac targets of Theorem 1.1 and the empirical targets of the restricted Theorem 1.2), under the faithful hemisphere model <span class="math inline">\(\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}\)</span>.</p>
+</div>
+</section>
+<section id="node-noncolinear-general" class="level2">
+<h2 class="anchored" data-anchor-id="node-noncolinear-general">F2, general probability measures</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 3.1 induction step, pp.&nbsp;16-17).</p>
+<p>The same unproved assertion as above, now read for arbitrary <span class="math inline">\(\mu_0,\nu_0\in\mathscr P(\mathbb Q_1^{d-1})\)</span> with barycenter <span class="math inline">\(\mathbb E_{\mu_0}[x]=\int x\,\mu_0(\mathrm dx)\)</span>: <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\mu_0\cap\operatorname{conv}_g\operatorname{supp}\nu_0=\varnothing\ \Longrightarrow\ \mathbb E_{\mu_0}[x]\text{ not colinear with }\mathbb E_{\nu_0}[x].\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The finite case above is elementary; for a general probability measure the only extra ingredient is the standard fact that the barycenter <span class="math inline">\(\int x\,\mathrm d\mu\)</span> lies in any closed convex set carrying full mass — Mathlib’s <code>Convex.integral_mem</code>. Wrapping it as <code>barycenter_mem_of_supportedIn</code> (from <span class="math inline">\(\mu(s^c)=0\)</span> to <span class="math inline">\(\int x\,\mathrm d\mu\in s\)</span>), the same <code>SameRay</code> argument runs verbatim: both normalized barycenters land in their respective closed convex <em>cones</em> <span class="math inline">\(s_1,s_2\)</span>, the shared unit direction sits in both, and disjointness on the sphere is contradicted. The key step is that <code>Convex.integral_mem</code> is the measure-theoretic analogue of “the barycenter lies in the convex hull of the support,” so no optimal-transport axiom is reintroduced.</p>
+<pre class="lean"><code>/-- The barycenter of a probability measure lies in any closed convex set carrying full mass
+(`μ Sᶜ = 0`). This is the standard measure-theoretic fact the general case of finding F2 needs; it
+rests only on Mathlib's `Convex.integral_mem`, not on the optimal-transport axioms. -/
+theorem barycenter_mem_of_supportedIn {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hint : Integrable (fun x : Eucl d =&gt; x) μ) {s : Set (Eucl d)}
+    (hconv : Convex ℝ s) (hclosed : IsClosed s) (hsupp : μ sᶜ = 0) :
+    barycenter μ ∈ s := by
+  have hae : ∀ᵐ x ∂μ, x ∈ s := by
+    rw [ae_iff]; exact hsupp
+  rw [barycenter]
+  exact hconv.integral_mem hclosed hae hint
+
+/-- **Finding F2, general case.** Two probability measures whose supports lie in disjoint closed
+convex cones `s₁`, `s₂` (disjoint on the sphere) have non-colinear barycenters. Generalizes
+`barycenter_noncolinear_of_disjoint_hull` from empirical to arbitrary probability measures; kernel-
+clean, via `barycenter_mem_of_supportedIn`. -/
+theorem barycenter_noncolinear_of_disjoint_hull_general
+    {μ ν : Measure (Eucl d)} [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (hμi : Integrable (fun x : Eucl d =&gt; x) μ) (hνi : Integrable (fun x : Eucl d =&gt; x) ν)
+    {s₁ s₂ : Set (Eucl d)}
+    (hc₁ : Convex ℝ s₁) (hcl₁ : IsClosed s₁) (hcone₁ : ∀ x ∈ s₁, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₁)
+    (hc₂ : Convex ℝ s₂) (hcl₂ : IsClosed s₂) (hcone₂ : ∀ x ∈ s₂, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₂)
+    (hμs : μ s₁ᶜ = 0) (hνs : ν s₂ᶜ = 0)
+    (hb0 : barycenter μ ≠ 0) (hc0 : barycenter ν ≠ 0)
+    (hdisj : ∀ u : Eucl d, ‖u‖ = 1 → u ∈ s₁ → u ∉ s₂) :
+    ¬ SameRay ℝ (barycenter μ) (barycenter ν) := by
+  intro hsr
+  set b := barycenter μ with hbdef
+  set c := barycenter ν with hcdef
+  obtain ⟨r₁, r₂, hr₁, hr₂, hrel⟩ := hsr.exists_pos hb0 hc0
+  have hbs₁ : b ∈ s₁ := barycenter_mem_of_supportedIn hμi hc₁ hcl₁ hμs
+  have hcs₂ : c ∈ s₂ := barycenter_mem_of_supportedIn hνi hc₂ hcl₂ hνs
+  set k : ℝ := r₁⁻¹ * r₂ with hkdef
+  have hk : 0 &lt; k := by positivity
+  have hbk : b = k • c := by
+    rw [hkdef, mul_smul, ← hrel, smul_smul, inv_mul_cancel₀ (ne_of_gt hr₁), one_smul]
+  have key : ‖b‖⁻¹ • b = ‖c‖⁻¹ • c := by
+    have hnc : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+    rw [hbk, norm_smul, Real.norm_eq_abs, abs_of_pos hk, smul_smul]
+    congr 1
+    field_simp
+  set u := ‖b‖⁻¹ • b with hu
+  have hunorm : ‖u‖ = 1 := by
+    rw [hu, norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ (norm_ne_zero_iff.mpr hb0)]
+  have hus₁ : u ∈ s₁ := by rw [hu]; exact hcone₁ b hbs₁ _ (by positivity)
+  have hus₂ : u ∈ s₂ := by rw [key]; exact hcone₂ c hcs₂ _ (by positivity)
+  exact hdisj u hunorm hus₁ hus₂</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean" class="lean-src"><code>Leaves/BarycenterNonColinear.lean</code></a></p>
+</div>
+<div class="strengthen">
+<p><strong>Strengthening (finding F2, residual).</strong> The finite leaf above closes F2 for the empirical regime; this companion closes the remaining general-measure case, extending the non-colinearity to arbitrary probability measures supported in disjoint closed convex cones. It rests only on Mathlib’s <code>Convex.integral_mem</code> and introduces <strong>no new axioms</strong> — in particular it does not reach for the optimal-transport (<span class="math inline">\(W_2\)</span>) axiom.</p>
+</div>
+</section>
+<section id="node-linearized-ot" class="level2">
+<h2 class="anchored" data-anchor-id="node-linearized-ot">Linearized OT bound</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.2, p.&nbsp;24).</p>
+<p>“Lemma 5.2. Suppose <span class="math inline">\(\mu\in\mathscr P(\mathbb S^{d-1})\)</span> and <span class="math inline">\(T^1,T^2:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> measurable, with <span class="math inline">\(T^1\)</span> bijective. Then” <span class="math display">\[\mathsf W_2\bigl(T^1_\#\mu,\,T^2_\#\mu\bigr)\lesssim\|T^1-T^2\|_{L^2(\mu)}. \tag{5.2}\]</span> “Proof of Lemma 5.2. Since <span class="math inline">\(T^1\)</span> is bijective, there is a measurable <span class="math inline">\(\psi:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> such that <span class="math inline">\(\psi(T^1(x))=T^2(x)\)</span> for all <span class="math inline">\(x\in\mathbb S^{d-1}\)</span>. Then” <span class="math display">\[\mathsf W_2^2\bigl(T^1_\#\mu,\,T^2_\#\mu\bigr)\lesssim\int\|x-\psi(x)\|^2(T^1_\#\mu)(\mathrm dx)=\|T^1-T^2\|_{L^2(\mu)}^2.\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
+<p>This is the map-induced coupling bound. Since <span class="math inline">\(T^1\)</span> is bijective there is <span class="math inline">\(\psi\)</span> with <span class="math inline">\(\psi\circ T^1=T^2\)</span>, and the deterministic coupling <span class="math inline">\((\mathrm{id},\psi)_\#(T^1_\#\mu)\)</span> between the two pushforwards realizes transport cost <span class="math inline">\(\int\|x-\psi(x)\|^2\,\mathrm d(T^1_\#\mu)=\|T^1-T^2\|_{L^2(\mu)}^2\)</span>, bounding <span class="math inline">\(\mathsf W_2^2\)</span>. Mathlib <code>v4.31.0</code> has no <span class="math inline">\(W_2\)</span>, so the Lean statement is asserted over the labeled optimal-transport axiom <code>W2_map_le_L2</code>; the node is therefore <strong>axiomatised</strong>, not a kernel proof. Its effective status is the minimum over its dependency closure, which contains the <span class="math inline">\(W_2\)</span> axiom.</p>
+<pre class="lean"><code>/-- L7 (Lemma 5.2): the `W₂` distance between two pushforwards of `μ` is bounded by the `L²(μ)`
+distance of the maps. Rests on the optimal-transport axiom `W2_map_le_L2`. -/
+theorem lemma_5_2 (μ : Measure (Eucl d)) (T₁ T₂ : Eucl d → Eucl d) :
+    W2 (μ.map T₁) (μ.map T₂) ≤ Real.sqrt (∫ x, ‖T₁ x - T₂ x‖ ^ 2 ∂μ) :=
+  W2_map_le_L2 μ T₁ T₂</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Coupling.lean" class="lean-src"><code>Leaves/Coupling.lean</code></a></p>
+</div>
+</section>
+<section id="node-markov" class="level2">
+<h2 class="anchored" data-anchor-id="node-markov">Markov bound</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Claim 2, App. B.5, p.&nbsp;39).</p>
+<p>“Claim 2. Suppose <span class="math inline">\(\mu\in\mathscr P(\mathbb S^{d-1})\)</span> and <span class="math inline">\(x_0\in\mathbb S^{d-1}\)</span> satisfy <span class="math inline">\(\mathsf W_2(\mu,\delta_{x_0})\le\eta_2\)</span>. There exists a universal constant <span class="math inline">\(C&gt;0\)</span> such that <span class="math inline">\(1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3\)</span> for all <span class="math inline">\(\eta_3&gt;0\)</span>.”</p>
+<p>“Proof of Claim 2. By compactness of <span class="math inline">\(\mathbb S^{d-1}\)</span> and Kantorovich-Rubinstein duality,” <span class="math display">\[\mathsf W_1(\mu,\delta_{x_0})=\sup_{\mathrm{Lip}(g)\le1}\int g\,(\mu-\delta_{x_0})\le C\cdot\eta_2\]</span> “for some numerical constant <span class="math inline">\(C&gt;0\)</span>. Hence, for <span class="math inline">\(g:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> defined as” <span class="math display">\[g(x)=\begin{cases}1 &amp; x\in B(x,\eta_3)\\[2pt] 1-\dfrac{1-\eta_3}{\eta_3} &amp; x\in B(x,\eta_3)\cap B(x,2\eta_3)\\[4pt] 0 &amp; x\notin B(x,2\eta_3),\end{cases}\]</span> “we obtain <span class="math inline">\(1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3\)</span>.”</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
+<p>We take the cleaner truncated-distance bump <span class="math inline">\(f(x)=\min(\eta_3,\ d(x,x_0))\)</span> in place of the paper’s hat. It is <strong>machine-checked <span class="math inline">\(1\)</span>-Lipschitz</strong> — <code>distBump_lipschitz</code>, obtained by truncating the <span class="math inline">\(1\)</span>-Lipschitz distance through the map <span class="math inline">\(t\mapsto\min(\eta_3,t)\)</span> and routed through the <code>dist</code>-characterization to dodge the <code>EuclideanSpace</code>/<code>PiLp</code> extended-metric instance diamond — vanishes at <span class="math inline">\(x_0\)</span>, and dominates <span class="math inline">\(\eta_3\cdot\mathbf 1_{\{d(\cdot,x_0)\ge\eta_3\}}\)</span>. Hence <span class="math inline">\(\eta_3\,\mu\{d(\cdot,x_0)\ge\eta_3\}\le\int f\,\mathrm d\mu=\int f\,\mathrm d\mu-f(x_0)\le\mathsf W_1(\mu,\delta_{x_0})\le C\eta_2\)</span>, and since <span class="math inline">\(\{\eta_3\le d(\cdot,x_0)\}=B(x_0,\eta_3)^c\)</span> this is <span class="math inline">\(1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3\)</span> for a probability measure. The Lipschitz bound is kernel-checked, but the middle inequality is Kantorovich-Rubinstein duality, supplied here by the labeled <span class="math inline">\(W_1\)</span> axiom <code>W1_ge_of_lipschitz</code>; so the node as a whole is <strong>axiomatised</strong>.</p>
+<pre class="lean"><code>/-- The truncated-distance bump `f(x) = min(η₃, d(x, x₀))`. -/
+noncomputable def distBump (x₀ : Eucl d) (η₃ : ℝ) (x : Eucl d) : ℝ := min η₃ (dist x x₀)
+
+/-- The bump is `1`-Lipschitz (a truncation of the `1`-Lipschitz distance). Proved through the
+`dist`-characterization to avoid the `EuclideanSpace`/`PiLp` extended-metric instance diamond. -/
+theorem distBump_lipschitz (x₀ : Eucl d) (η₃ : ℝ) : LipschitzWith 1 (distBump x₀ η₃) := by
+  rw [lipschitzWith_iff_dist_le_mul]
+  intro x y
+  -- `t ↦ min η₃ t` is 1-Lipschitz on ℝ (no PiLp instance diamond on the codomain)
+  have hL : LipschitzWith 1 (fun t : ℝ =&gt; min η₃ t) := LipschitzWith.const_min LipschitzWith.id η₃
+  have hmin := hL.dist_le_mul (dist x x₀) (dist y x₀)
+  simp only [distBump, Real.dist_eq, NNReal.coe_one, one_mul] at hmin ⊢
+  exact hmin.trans (abs_dist_sub_le x y x₀)
+
+/-- **Lemma L8 / Claim 2 (Markov bound).** For a probability measure with
+`W₁(μ, δ_{x₀}) ≤ C η₂`, the mass at geodesic/Euclidean distance `≥ η₃` from `x₀` is at most
+`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Rests on the `W₁` axiom (KR duality):
+status `math.axiomatised`. -/
+theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 &lt; η₃)
+    (hW1 : W1 μ (Measure.dirac x₀) ≤ C * η₂) :
+    μ.real {x | η₃ ≤ dist x x₀} ≤ C * η₂ / η₃ := by
+  set s : Set (Eucl d) := {x | η₃ ≤ dist x x₀} with hs
+  have hcont : Continuous (fun x : Eucl d =&gt; dist x x₀) := by fun_prop
+  have hsmeas : MeasurableSet s := measurableSet_le measurable_const hcont.measurable
+  -- the bump is integrable (bounded by η₃ on a finite measure)
+  have hbump_int : Integrable (distBump x₀ η₃) μ := by
+    refine Integrable.mono' (integrable_const η₃)
+      (distBump_lipschitz x₀ η₃).continuous.aestronglyMeasurable ?_
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_of_nonneg (distBump_nonneg hη₃.le x)]
+    exact min_le_left _ _
+  have hind_int : Integrable (s.indicator (fun _ =&gt; η₃)) μ :=
+    (integrable_const η₃).indicator hsmeas
+  -- η₃ · 𝟙_s ≤ bump pointwise
+  have hdom : s.indicator (fun _ =&gt; η₃) ≤ distBump x₀ η₃ := by
+    intro x
+    by_cases hx : x ∈ s
+    · rw [Set.indicator_apply, if_pos hx]; exact (distBump_eq_outside hx).ge
+    · rw [Set.indicator_apply, if_neg hx]; exact distBump_nonneg hη₃.le x
+  -- ∫ η₃·𝟙_s dμ = η₃ · μ(s)
+  have hint_ind : ∫ x, s.indicator (fun _ =&gt; η₃) x ∂μ = μ.real s * η₃ := by
+    rw [integral_indicator_const η₃ hsmeas, smul_eq_mul]
+  -- ∫ bump dδ_{x₀} = f(x₀) = 0
+  have hdirac : ∫ x, distBump x₀ η₃ x ∂(Measure.dirac x₀) = 0 := by
+    rw [integral_dirac]
+    simp [distBump, min_eq_right hη₃.le]
+  -- KR duality (axiom): ∫ bump dμ - ∫ bump dδ ≤ W₁
+  have hdual := W1_ge_of_lipschitz μ (Measure.dirac x₀) (distBump x₀ η₃) (distBump_lipschitz x₀ η₃)
+  rw [hdirac, sub_zero] at hdual
+  -- assemble: η₃ · μ(s) ≤ ∫ bump dμ ≤ W₁ ≤ C η₂
+  have hmono : μ.real s * η₃ ≤ ∫ x, distBump x₀ η₃ x ∂μ := by
+    rw [← hint_ind]; exact integral_mono hind_int hbump_int hdom
+  have key : μ.real s * η₃ ≤ C * η₂ := le_trans hmono (le_trans hdual hW1)
+  rw [le_div_iff₀ hη₃]
+  exact key</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/MarkovBound.lean" class="lean-src"><code>Leaves/MarkovBound.lean</code></a></p>
+</div>
+</section>
+</section>
+<section id="sec-mass-transport" class="level1">
+<h1>Mass transport and clustering</h1>
+<p>The ReLU-gated drift <span class="math inline">\(\mathbf W(\mathbf U x + b)_+\)</span> transports mass through a chain of overlapping balls, retaining a <span class="math inline">\((1-\varepsilon)^K\)</span> fraction of it after <span class="math inline">\(K\)</span> parameter switches. Self-attention then clusters a measure supported in a single hemisphere to a point, and chaining the two steers an ensemble of disjoint-support atomless measures to prescribed discrete targets.</p>
+<section id="node-ball-pair" class="level2">
+<h2 class="anchored" data-anchor-id="node-ball-pair">Single overlapping ball pair (Lemma B.2)</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.2, p.&nbsp;31).</p>
+<p>Consider two open balls <span class="math inline">\(\mathcal B_0,\mathcal B_1\subset\mathbb S^{d-1}\)</span> such that <span class="math inline">\(\mathcal B_0\cap\mathcal B_1\ne\varnothing\)</span>. For any <span class="math inline">\(\varepsilon&gt;0\)</span> and <span class="math inline">\(T&gt;0\)</span>, there exist <span class="math inline">\(\mathbf W,\mathbf U\in\mathcal M_{d\times d}(\mathbb R)\)</span> and <span class="math inline">\(b\in\mathbb R^d\)</span> such that for any <span class="math inline">\(\mu_0\in\mathscr P(\mathbb S^{d-1})\)</span>, the unique solution <span class="math inline">\(\mu\)</span> to (B.1) satisfies <span class="math display">\[\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\,\mu_0(\mathcal B_0).\tag{B.3}\]</span> Moreover <span class="math inline">\(\mu(T)=\phi^T_{\#}\mu_0\)</span> where the Lipschitz-continuous and invertible flow map <span class="math inline">\(\Phi^t:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> of (4.1) satisfies, for all <span class="math inline">\(t\in[0,T]\)</span>, <span class="math display">\[(\phi^t)_{|\mathbb S^{d-1}\setminus\mathcal B_0}\equiv\operatorname{Id}.\]</span> Furthermore, for any fixed <span class="math inline">\(\omega\in\operatorname{int}\mathcal B_0\)</span> we can choose <span class="math inline">\(\mathbf W,\mathbf U\)</span> and <span class="math inline">\(b\)</span> so that the solution to (B.1) satisfies <span class="math inline">\(W_2(\mu(T),\alpha)\le\varepsilon\)</span> where <span class="math inline">\(\alpha(A)=\mu_0(\mathcal B_0)\,\delta_\omega(A)+\mu_0(A\setminus\mathcal B_0)\)</span>, for any Borel <span class="math inline">\(A\subset\mathbb S^{d-1}\)</span>.</p>
+<p><em>Proof sketch (full proof p.&nbsp;32).</em> Let <span class="math inline">\(z\)</span> and <span class="math inline">\(R\)</span> be the center and radius of <span class="math inline">\(\mathcal B_0\)</span> and fix <span class="math inline">\(\omega\in\operatorname{int}(\mathcal B_0\cap\mathcal B_1)\)</span>. The authors choose <span class="math inline">\(\mathbf U,b\)</span> and a <span class="math inline">\(\mathbf W\)</span> with <span class="math inline">\(\mathbf W\mathbf 1=\omega\)</span> so that the gated drift is <span class="math inline">\((-\cos d_g(z,x)+\cos R)_+\,\omega=(\cos R-\langle z,x\rangle)_+\,\omega\)</span>, and record (B.4) <span class="math inline">\((\cos R-\langle z,x\rangle)_+&gt;0\iff x\in\mathcal B_0\)</span> (see the strengthening below). Then (B.5) <span class="math display">\[\tfrac{d}{dt}\langle x(t),\omega\rangle=(\cos R-\langle z,x(t)\rangle)_+\bigl(1-\langle x(t),\omega\rangle^2\bigr),\]</span> which is positive whenever <span class="math inline">\(x(t)\in\mathcal B_0\setminus\{\omega\}\)</span>. Hence for small <span class="math inline">\(\delta&gt;0\)</span> there is a time <span class="math inline">\(T_\delta\)</span> with <span class="math inline">\(\phi^{T_\delta}(x)\in\mathcal B_0\cap\mathcal B_1\)</span> for <span class="math inline">\(x\in B(z,R-\delta)\)</span> (B.7); pushing forward, <span class="math inline">\(\mu(T_\delta,\mathcal B_0\cap\mathcal B_1)=\mu_0\!\bigl((\phi^{T_\delta})^{-1}(\mathcal B_0\cap\mathcal B_1)\bigr)\ge\mu_0(B(z,R-\delta))\)</span> (B.8), and taking <span class="math inline">\(\delta\)</span> small enough that <span class="math inline">\(\mu_0(B(z,R-\delta))\ge(1-\varepsilon)\mu_0(\mathcal B_0)\)</span> gives (B.3) after rescaling time. The gate vanishes off <span class="math inline">\(\mathcal B_0\)</span>, so <span class="math inline">\(\phi^t\equiv\operatorname{Id}\)</span> there. The bound to <span class="math inline">\(\alpha\)</span> follows by taking <span class="math inline">\(\mathcal B_1=B(\omega,\eta)\subset\mathcal B_0\)</span> and a <span class="math inline">\(W_1\)</span> Kantorovich-Rubinstein estimate, sending <span class="math inline">\(\eta\)</span> and the slack to zero.</p>
+</div>
+<div class="strengthen">
+<p><strong>What we strengthen.</strong> As printed the proof takes <span class="math inline">\(\mathbf U=-\mathbf 1 z^\top\)</span>, <span class="math inline">\(b=\cos(R)\mathbf 1\)</span> (with <span class="math inline">\(\mathbf W\mathbf 1=\omega\)</span>), so <span class="math inline">\(\mathbf U x=-\langle z,x\rangle\mathbf 1\)</span>, giving the gate coefficient <span class="math inline">\((\cos R-\langle z,x\rangle)_+\)</span>, and asserts in (B.4) that this is positive iff <span class="math inline">\(x\in\mathcal B_0=B(z,R)\)</span>. But <span class="math display">\[\cos R-\langle z,x\rangle&gt;0\iff\langle z,x\rangle&lt;\cos R\iff d_g(z,x)&gt;R\iff x\notin\mathcal B_0,\]</span> so as written the gate is active on the <strong>complement</strong> of <span class="math inline">\(\mathcal B_0\)</span>: the interior mass it is meant to move sees a zero gate, and the lemma transports nothing. The fix is a one-sign typo — take <span class="math inline">\(\mathbf U=+\mathbf 1 z^\top\)</span>, <span class="math inline">\(b=-\cos(R)\mathbf 1\)</span>, giving the gate <span class="math inline">\((\langle z,x\rangle-\cos R)_+\)</span>, positive exactly on <span class="math inline">\(\mathcal B_0\)</span> — after which (B.3)-(B.5) and the rest of the argument go through and Lemma B.2 holds as stated. The corrected equivalence <span class="math inline">\(g(x)&gt;0\iff d_g(z,x)&gt;R\)</span> is the kernel-checked leaf <strong>L2</strong> (<code>gate_pos_iff_dist</code>, <span class="badge ok">machine-checked</span>); the same inversion is corroborated independently by Proposition 4.2, Step 3 (which states the identical construction with the correct activation side) and by experiment E1. This is finding <strong>F1</strong>; see <a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md"><code>ERRATA.md</code></a>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ strategy is the gated-drift construction above: a single ReLU gate, active on <span class="math inline">\(\mathcal B_0\)</span> (after the F1 sign correction), pushes the interior mass of <span class="math inline">\(\mathcal B_0\)</span> along <span class="math inline">\(+\omega\)</span> into <span class="math inline">\(\mathcal B_0\cap\mathcal B_1\)</span> while leaving everything off <span class="math inline">\(\mathcal B_0\)</span> fixed, so a <span class="math inline">\((1-\varepsilon)\)</span> fraction is retained in the overlap. We state this type-correctly in Lean against the labeled axiom layer — the solution map <code>measureFlow</code>, the switch count <code>switches</code>, and the Wasserstein distance <code>W2</code> — with “no mass outside <span class="math inline">\(S\)</span>” read measure-theoretically. It is an open <code>sorry</code> stub: we do <strong>not</strong> claim a proof; discharging it rests on the continuity-equation flow axiom.</p>
+<pre class="lean"><code>/-- **Lemma B.2** (single ball pair). Mass in `B₀` is pushed into `B₀ ∩ B₁`, retaining `(1-ε)`. Stub
+(`sorry`): `math.open`. (Review finding F1: the paper's printed gate parameters have the activation
+side reversed; the corrected sign is `U = +𝟙 zᵀ, b = -cos(R) 𝟙`. See `ERRATA.md`.) -/
+theorem lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (B₀ B₁ : Set (Eucl d)) (hcap : (B₀ ∩ B₁).Nonempty) :
+    ∃ θ : Params d, (1 - ENNReal.ofReal ε) * μ B₀ ≤ (measureFlow θ T μ) (B₀ ∩ B₁) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-ball-chain" class="level2">
+<h2 class="anchored" data-anchor-id="node-ball-chain">Chain of overlapping balls (Lemma B.1)</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.1, p.&nbsp;31).</p>
+<p>Consider <span class="math inline">\(K+1\)</span> open balls <span class="math inline">\(\mathcal B_K,\dots,\mathcal B_1,\mathcal B_0\subset\mathbb S^{d-1}\)</span> satisfying <span class="math display">\[\mathcal B_k\cap\mathcal B_{k-1}\ne\varnothing\quad\text{for }k\in[\![1,K]\!],\qquad
+\mathcal B_k\cap\mathcal B_{k'}=\varnothing\quad\text{if }|k-k'|\ge2.\]</span> Then for any <span class="math inline">\(T&gt;0\)</span> and <span class="math inline">\(\varepsilon&gt;0\)</span>, there exist <span class="math inline">\((\mathbf W,\mathbf U,b):[0,T]\to\mathcal M_{d\times d}(\mathbb R)^2\times\mathbb R^d\)</span>, piecewise constant having at most <span class="math inline">\(K\)</span> switches, such that for any <span class="math inline">\(\mu_0\in\mathscr P(\mathbb S^{d-1})\)</span>, the corresponding unique solution <span class="math inline">\(\mu\)</span> to <span class="math display">\[\begin{cases}\partial_t\mu(t)+\operatorname{div}\bigl(\mathbf P_x^\perp\,\mathbf W(t)(\mathbf U(t)x+b(t))_+\,\mu(t)\bigr)=0 &amp; \text{on }[0,T]\times\mathbb S^{d-1},\\[2pt]\mu(0)=\mu_0 &amp; \text{on }\mathbb S^{d-1},\end{cases}\tag{B.1}\]</span> satisfies <span class="math display">\[\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\,\mu_0\Bigl(\bigcup_k\mathcal B_k\Bigr).\]</span> Moreover, <span class="math inline">\(\mu(T)=\phi^T_{\#}\mu_0\)</span> for a Lipschitz-continuous, invertible map <span class="math inline">\(\phi^t:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> which satisfies, for all <span class="math inline">\(t\in[0,T]\)</span>, <span class="math display">\[\phi^t(x)=x\quad\text{for }x\notin\bigcup_k\mathcal B_k.\tag{B.2}\]</span></p>
+<p><em>Proof sketch (full proof p.&nbsp;33).</em> Backward induction on the chain. Write <span class="math inline">\([0,T)=\bigcup_{k\in[\![1,K]\!]}[t_{k-1},t_k)\)</span> with <span class="math inline">\(t_k=kT/K\)</span> and apply Lemma B.2 to the adjacent pair <span class="math inline">\((\mathcal B_{k-1},\mathcal B_k)\)</span> on each subinterval. Then <span class="math display">\[\mu(T,\mathcal B_K)=\mu(T,\mathcal B_K\setminus\mathcal B_{K-1})+\mu(T,\mathcal B_K\cap\mathcal B_{K-1})\ge\mu(t_{K-1},\mathcal B_K\setminus\mathcal B_{K-1})+(1-\varepsilon)\,\mu(t_{K-1},\mathcal B_{K-1}),\]</span> the last step by Lemma B.2. The non-adjacency disjointness <span class="math inline">\(\mathcal B_k\cap\mathcal B_{k'}=\varnothing\)</span> for <span class="math inline">\(|k-k'|\ge2\)</span> keeps the steps from interfering, and iterating gives <span class="math display">\[\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\setminus\mathcal B_{k-1})+\mu_0(\mathcal B_0)\Bigr)=(1-\varepsilon)^K\,\mu_0\Bigl(\bigcup_{k\in[\![0,K]\!]}\mathcal B_k\Bigr).\]</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ argument is a backward induction that applies the single-pair lemma (Lemma B.2) once per adjacent overlap, each step retaining a factor <span class="math inline">\((1-\varepsilon)\)</span>, the non-adjacency disjointness guaranteeing the steps do not interfere. We state the retention bound type-correctly in Lean against the axiom layer (<code>measureFlow</code>, <code>switches</code>); it is an open <code>sorry</code> stub. The purely arithmetic heart — that a per-step retention factor <span class="math inline">\((1-\varepsilon)\)</span> compounds to <span class="math inline">\(a_K\ge(1-\varepsilon)^K a_0\)</span> — is already discharged kernel-clean by leaf <strong>L9</strong> (<code>ball_chain_geom</code>, <span class="badge ok">machine-checked</span>); what remains open is the geometric non-interference, which rests on the parking property of the flow axiom.</p>
+<pre class="lean"><code>/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping balls, `K` switches retain
+`(1-ε)^K` of the mass into the last ball. Stub (`sorry`): `math.open`. The arithmetic core is leaf
+L9; the geometric non-interference is the parking axiom. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (K : ℕ) (B : ℕ → Set (Eucl d)) :
+    ∃ θ : Params d, switches θ ≤ K ∧
+      (1 - ENNReal.ofReal ε) ^ K * μ (⋃ k, B k) ≤ (measureFlow θ T μ) (B K) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-cluster-point" class="level2">
+<h2 class="anchored" data-anchor-id="node-cluster-point">Clustering a single-hemisphere measure to a point (Proposition 2.1)</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 2.1, p.&nbsp;11).</p>
+<p>Suppose <span class="math inline">\(\mathbf B\in\mathcal M_{d\times d}(\mathbb R)\)</span> and <span class="math inline">\(\operatorname{supp}\mu_0\)</span> is contained in an open hemisphere. Then the solution <span class="math inline">\(\mu\)</span> to (1.3)-(1.2) with data <span class="math inline">\(\mu_0\)</span> and <span class="math inline">\((\mathbf V(\cdot),\mathbf B(\cdot),\mathbf W(\cdot))\equiv(I_d,\mathbf B,0)\)</span> satisfies <span class="math inline">\(\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(t))\to0\)</span> as <span class="math inline">\(t\to+\infty\)</span>. Moreover, for <span class="math inline">\(\varepsilon&gt;0\)</span> there exist <span class="math inline">\(z\in\operatorname{conv}_g\operatorname{supp}\mu_0\)</span> and <span class="math inline">\(T&gt;0\)</span> such that <span class="math display">\[W_\infty(\mu(T),\delta_z)\le\varepsilon\quad\text{and}\quad\inf\{t\ge0:W_2(\mu(t),\delta_z)\le\varepsilon\}=O\Bigl(\log\tfrac1\varepsilon\Bigr).\]</span></p>
+<p><em>Proof sketch (full proof p.&nbsp;11; an adaptation of [GLPR25, Lemma 6.4]).</em> The characteristic flow is <span class="math inline">\(\dot x(t)=\mathbf P_{x(t)}^\perp\mathscr A_{\mathbf B}[\mu(t)](x(t))\)</span>. Since <span class="math inline">\(\operatorname{supp}\mu_0\)</span> lies in an open hemisphere, the normalized attention vector <span class="math inline">\(\gamma(x):=\mathscr A_{\mathbf B}[\mu_0](x)/\|\mathscr A_{\mathbf B}[\mu_0](x)\|\)</span> is well defined on <span class="math inline">\(\operatorname{conv}_g\operatorname{supp}\mu_0\)</span> and points strictly into its interior. A first-order expansion at a boundary point <span class="math inline">\(x_0\)</span> gives <span class="math inline">\(\langle x(\tau)-x_0,\gamma(x_0)\rangle&gt;0\)</span> for small <span class="math inline">\(\tau&gt;0\)</span>, so boundary points move inward and the geodesic convex hulls are strictly nested in time, <span class="math inline">\(\operatorname{conv}_g\operatorname{supp}\mu(t_2)\subset\operatorname{int}\operatorname{conv}_g\operatorname{supp}\mu(t_1)\)</span> for <span class="math inline">\(t_1&lt;t_2\)</span>. Hence <span class="math inline">\(\phi(t):=\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(t))\)</span> decreases to some <span class="math inline">\(\ell\ge0\)</span>; <span class="math inline">\(\ell&gt;0\)</span> would, by compactness, produce boundary points that fail to move inward, contradicting the strict interior-pointing, so <span class="math inline">\(\ell=0\)</span>. Nestedness and vanishing diameter yield a unique <span class="math inline">\(z\)</span> with <span class="math inline">\(\mu\rightharpoonup\delta_z\)</span>. Picking <span class="math inline">\(T\)</span> with <span class="math inline">\(\operatorname{diam}(\operatorname{conv}_g\operatorname{supp}\mu(T))\le\varepsilon\)</span> and the coupling <span class="math inline">\((\operatorname{Id},\mathsf T)_{\#}\mu(T)\)</span>, <span class="math inline">\(\mathsf T\equiv z\)</span>, gives <span class="math inline">\(W_p(\mu(T),\delta_z)\le\varepsilon\)</span>; the logarithmic rate follows from [CLPR25, Theorem 2.3].</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure self-attention drift (<span class="math inline">\(\mathbf W=0\)</span>, <span class="math inline">\(\mathbf V=I_d\)</span>) the hull’s diameter is strictly decreasing while its mass stays inside it, so the measure contracts to a single Dirac, the exponential contraction giving the <span class="math inline">\(O(\log\tfrac1\varepsilon)\)</span> time. We state this type-correctly in Lean — the open hemisphere is <code>supportedIn μ {x | 0 &lt; ⟪e, x⟫}</code> for a unit <code>e</code>, the target a <code>Measure.dirac z</code>, closeness measured in <code>W2</code> — as an open <code>sorry</code> stub. We do <strong>not</strong> claim a proof: the diameter monotonicity, the LaSalle/Hartman-Grobman convergence, and the rate live in the continuity-equation flow axiom. The conclusion is validated numerically by experiment <strong>E2</strong>.</p>
+<pre class="lean"><code>/-- **Proposition 2.1** (clustering to a point). A measure supported in an open hemisphere can be
+driven arbitrarily `W₂`-close to a Dirac mass. Stub (`sorry`): `math.open`. The rate
+`O(log 1/ε)` and the LaSalle/Hartman-Grobman convergence are in the axiom layer. -/
+theorem prop_2_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 &lt; ⟪e, x⟫}) :
+    ∃ (θ : Params d) (z : Eucl d), W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-cluster-discrete" class="level2">
+<h2 class="anchored" data-anchor-id="node-cluster-discrete">Clustering disjoint-support measures to atoms (Proposition 2.2)</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 2.2, pp.&nbsp;11-12).</p>
+<p>Suppose <span class="math inline">\(\mu_0^i\)</span> has no atoms and <span class="math inline">\(\operatorname{conv}_g\operatorname{supp}\mu_0^i\cap\operatorname{conv}_g\operatorname{supp}\mu_0^j=\varnothing\)</span> for <span class="math inline">\(i\ne j\)</span>. Fix <span class="math inline">\(M\ge1\)</span>, and for any <span class="math inline">\(i\in[\![1,N]\!]\)</span> consider <span class="math display">\[\mu_1^i:=\sum_{k=1}^M\alpha_k^i\,\delta_{x_k^i}\in\mathscr P(\mathbb S^{d-1})\]</span> where <span class="math inline">\(x_k^i\in\operatorname{conv}_g\operatorname{supp}\mu_0^i\)</span>, with <span class="math inline">\(x_k^i=x_{k'}^j\)</span> if and only if <span class="math inline">\((k,i)=(k',j)\)</span>. Then for any <span class="math inline">\(T&gt;0\)</span> and <span class="math inline">\(\varepsilon&gt;0\)</span> there exist piecewise constant <span class="math inline">\((\mathbf W,\mathbf U,b):[0,T]\to\mathcal M_{d\times d}(\mathbb R)^2\times\mathbb R^d\)</span> such that for any <span class="math inline">\(i\)</span>, the corresponding solution <span class="math inline">\(\mu^i\)</span> to (1.3)-(1.2) with data <span class="math inline">\(\mu_0^i\)</span>, <span class="math inline">\(\mathbf V\equiv0\)</span> and the above parameters, satisfies <span class="math inline">\(W_2(\mu^i(T),\mu_1^i)\le\varepsilon\)</span> as well as, for <span class="math inline">\(i\ne j\)</span>, <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\mu^i(T)\cap\operatorname{conv}_g\operatorname{supp}\mu^j(T)=\varnothing.\]</span> The number of switches in <span class="math inline">\((\mathbf W,\mathbf V,b)\)</span> can also be accounted for — see Remark 2.3.</p>
+<p><em>Proof sketch (full proof from p.&nbsp;12).</em> Split <span class="math inline">\([0,T]=\bigcup_{i\in[\![1,N]\!]}[T_{i-1},T_i]\)</span> and apply Lemma B.1 separately within each interval, acting on one measure at a time. Property (B.2) — the flow is the identity off the active balls — ensures that while the construction acts on the <span class="math inline">\(i\)</span>-th measure the others are untouched, <span class="math inline">\(\mu^i(T_{i-1})=\mu_0^i\)</span>. For a fixed <span class="math inline">\(i\)</span>, partition the support <span class="math inline">\(\mathcal C^i=\operatorname{supp}\mu_0^i\)</span> into <span class="math inline">\(M\)</span> pairwise disjoint pieces <span class="math inline">\(\mathcal C_k^i\)</span> with connected interiors, <span class="math inline">\(\mu_0^i(\mathcal C_k^i)=\alpha_k^i\)</span> and <span class="math inline">\(x_k^i\in\operatorname{int}\mathcal C_k^i\)</span>; then steer the mass of each piece, through a chain of overlapping balls, into a small ball around <span class="math inline">\(x_k^i\)</span>, so <span class="math inline">\(W_2(\mu^i(T),\mu_1^i)\le\varepsilon\)</span> while the disjoint supports remain disjoint.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ strategy chains the two preceding results: partition each atomless support into <span class="math inline">\(M\)</span> prescribed-mass pieces, then use the ball-chain transport (Lemma B.1) to drive each piece into a small ball about its target atom <span class="math inline">\(x_k^i\)</span>, handling the disjoint families one at a time so that — by the off-support identity (B.2) — the others stay fixed. We state the single-family conclusion type-correctly in Lean against the axiom layer: the target is a genuine <span class="math inline">\(M\)</span>-atom combination <code>∑ k, α k • Measure.dirac (x k)</code>, atomlessness is <code>∀ x, μ {x} = 0</code>, and closeness is in <code>W2</code>. It is an open <code>sorry</code> stub — not a claimed proof — resting on the flow and optimal-transport axioms together with the (open) Lemma B.1 and Proposition 2.1.</p>
+<pre class="lean"><code>/-- **Proposition 2.2** (clustering to a discrete measure). An atomless measure whose support lies in
+a region `S` disjoint from the others can be driven `W₂`-close to a prescribed `M`-atom empirical
+measure. Stub (`sorry`): `math.open`. -/
+theorem prop_2_2 (μ ν_target : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (hatomless : ∀ x : Eucl d, μ {x} = 0)
+    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞)
+    (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
+    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+</section>
+<section id="sec-disentangle" class="level1">
+<h1>Disentangling supports</h1>
+<p>A piecewise-constant control separates the <span class="math inline">\(N\)</span> overlapping input supports into pairwise-disjoint regions of the sphere, by steering each measure’s <em>barycenter</em> into its own direction and then shrinking its geodesic hull around it. This disentanglement is the heart of the construction behind Theorems 1.1 and 1.2: once the supports are disjoint, each measure can be clustered and matched independently.</p>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, §3, p.&nbsp;14).</p>
+<p>“We show that flows generated by self-attention can disentangle measures with overlapping supports—it actually suffices to consider <span class="math inline">\(\mathbf B\equiv 0\)</span>.” Set <span class="math inline">\(\mathbb Q_1^{d-1} := \mathbb S^{d-1}\cap(\mathbb R_{&gt;0})^d\)</span> and <span class="math display">\[\mathsf v[\mu](t,x) = \mathbf P_x^\perp\!\big(\mathbf V(t)\,\mathbb E_{\mu(t)}[z] + \mathbf W(t)(\mathbf U(t)x + b(t))_+\big). \tag{3.1}\]</span> The whole section uses this reduced field (3.1): a perceptron term <span class="math inline">\(\mathbf W(\mathbf Ux+b)_+\)</span> and a barycentric attention term <span class="math inline">\(\mathbf V\,\mathbb E_{\mu}[z]\)</span>, both projected onto the tangent space.</p>
+</div>
+<section id="node-orthant" class="level2">
+<h2 class="anchored" data-anchor-id="node-orthant">Transport to the orthant</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 3.2, p.&nbsp;15).</p>
+<p>Suppose <span class="math inline">\(T&gt;0\)</span> and <span class="math inline">\(\mu_0^i\in\mathscr P(\mathbb S^{d-1})\)</span> with <span class="math inline">\(\bigcup_i\operatorname{supp}\mu_0^i\subsetneq\mathbb S^{d-1}\)</span>. There exists a piecewise constant <span class="math inline">\(\mathbf W:[0,T]\to\mathscr M_{d\times d}(\mathbb R)\)</span>, having at most one switch and satisfying <span class="math display">\[\|\mathbf W\|_{L^\infty((0,T);\mathscr M_{d\times d}(\mathbb R))}\le C/T\]</span> for some <span class="math inline">\(C=C(N)&gt;0\)</span>, such that for any <span class="math inline">\(i\in[\![1,N]\!]\)</span> the solution <span class="math inline">\(\mu^i\)</span> to (1.3)–(1.2) with data <span class="math inline">\(\mu_0^i\)</span> and <span class="math inline">\(\mathbf V\equiv\mathbf B\equiv\mathbf U\equiv 0\)</span>, <span class="math inline">\(b\equiv\mathbf 1\)</span>, satisfies <span class="math inline">\(\operatorname{supp}\mu^i(T)\subset\mathbb Q_1^{d-1}\)</span>.</p>
+<p><strong>Proof.</strong> <em>(proof sketch; full proof p.&nbsp;15.)</em> Pick a direction <span class="math inline">\(\omega\in\mathbb S^{d-1}\setminus\bigcup_i\operatorname{supp}\mu_0^i\)</span> not filling the sphere and set <span class="math inline">\(\mathbf W_1\mathbf 1=-\omega\)</span>. The characteristics solve <span class="math inline">\(\dot x=-\mathbf P_x^\perp\omega\)</span>, so <span class="math inline">\(\frac{d}{dt}\langle x,\omega\rangle=-1+\langle x,\omega\rangle^2&lt;0\)</span> off <span class="math inline">\(\{\pm\omega\}\)</span>, hence by some <span class="math inline">\(T_0\)</span> all supports lie in <span class="math inline">\(B(-\omega,\pi/8)\)</span>. Pick <span class="math inline">\(\alpha\in\mathbb Q_1^{d-1}\)</span> with <span class="math inline">\(d_g(-\omega,-\alpha)&gt;\pi/8\)</span> (so <span class="math inline">\(-\alpha\)</span> is off every support) and on <span class="math inline">\([T_0,T]\)</span> take <span class="math inline">\(\mathbf W_2\mathbf 1=\alpha\)</span>: now <span class="math inline">\(\frac{d}{dt}\langle x,\alpha\rangle=1-\langle x,\alpha\rangle^2\ge0\)</span> drives every point into a prescribed small cap around <span class="math inline">\(\alpha\in\mathbb Q_1^{d-1}\)</span>. One switch; the norm bound follows by time-rescaling the two phases. <span class="math inline">\(\square\)</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ construction (attributed to them) is the one switch above: a first phase <span class="math inline">\(\mathbf W_1\mathbf 1=-\omega\)</span> contracts every support toward <span class="math inline">\(-\omega\)</span> through the gate-free dynamics <span class="math inline">\(\frac{d}{dt}\langle x,\omega\rangle=-(1-\langle x,\omega\rangle^2)\)</span> — the projector identity of leaf <strong>L1</strong> — and a second phase <span class="math inline">\(\mathbf W_2\mathbf 1=\alpha\in\mathbb Q_1^{d-1}\)</span> drives them into a small cap inside the orthant. We give a <strong>type-correct Lean statement against the axiom layer</strong> (<code>measureFlow</code>, <code>switches</code>), expressing “support inside <span class="math inline">\(\mathbb Q_1^{d-1}\)</span>” measure-theoretically as <code>μ (orthant d)ᶜ = 0</code>. It is a <code>sorry</code> stub: we state it, we do <strong>not</strong> claim a proof; its discharge rests on the continuity-equation flow axiom.</p>
+<pre class="lean"><code>/-- The open positive orthant `Q₁^{d-1} = 𝕊^{d-1} ∩ (ℝ_{&gt;0})^d`, as a subset of `ℝ^d`. -/
+def orthant (d : ℕ) : Set (Eucl d) := {x | ∀ i, 0 &lt; x i}
+
+/-- "The support of `μ` is contained in `S`", expressed measure-theoretically as `μ(Sᶜ) = 0`. -/
+def supportedIn (μ : Measure (Eucl d)) (S : Set (Eucl d)) : Prop := μ Sᶜ = 0
+
+/-- **Lemma 3.2** (transport into the orthant). One parameter switch moves the measure into
+`Q₁^{d-1}`. Stub (`sorry`): `math.open`. -/
+theorem lemma_3_2 (μ : Measure (Eucl d)) (T : ℝ) (hT : 0 &lt; T) :
+    ∃ θ : Params d, switches θ ≤ 1 ∧ supportedIn (measureFlow θ T μ) (orthant d) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-shrink" class="level2">
+<h2 class="anchored" data-anchor-id="node-shrink">Shrinking a hull to its barycenter direction</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 3.3, p.&nbsp;16; proof App. B.2, p.&nbsp;33).</p>
+<p>Let <span class="math inline">\(\mu_0^i\in\mathscr P(\mathbb Q_1^{d-1})\)</span> be such that <span class="math inline">\(\mathbb E_{\mu_0^i}[x]\)</span> is not colinear with <span class="math inline">\(\mathbb E_{\mu_0^j}[x]\)</span> for <span class="math inline">\(i\ne j\)</span>. Then for any <span class="math inline">\(T&gt;0\)</span>, <span class="math inline">\(\varepsilon&gt;0\)</span>, and <span class="math inline">\(\nu_0\in\mathscr P(\mathbb Q_1^{d-1})\)</span> such that <span class="math inline">\(\mathbb E_{\nu_0}[x]\)</span> is colinear with <span class="math inline">\(\mathbb E_{\mu_0^i}[x]\)</span>, there exists a piecewise constant <span class="math inline">\(\theta:[0,T]\to\Theta\)</span> having at most <span class="math inline">\(O(d\cdot N)\)</span> switches such that <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\nu(T)\cup\operatorname{conv}_g\operatorname{supp}\mu^N(T)\subset B\!\left(\mathbb E_{\mu_0^j}[z]\,\Big/\,\big\|\mathbb E_{\mu_0^j}[z]\big\|,\ \varepsilon\right)\]</span> and <span class="math inline">\(\mu^i(T)=\mu_0^i\)</span> for <span class="math inline">\(i\ne j\)</span>, where <span class="math inline">\(\mu^i,\nu\)</span> denote the unique solutions to (1.3)–(3.1) corresponding to data <span class="math inline">\(\mu_0^i,\nu_0\)</span>, and parameters <span class="math inline">\(\theta\)</span>.</p>
+<p><strong>Proof.</strong> <em>(proof sketch; full proof App. B.2, p.&nbsp;33.)</em> Three steps. <strong>(1) Isolating</strong> <span class="math inline">\(\mu_0^N,\nu_0\)</span>: with <span class="math inline">\(\mathbf W\equiv 0\)</span> and <span class="math inline">\(\mathbf V(t)=\sum_k\alpha_k\alpha_k^\top\mathbf 1_{[T_{k-1},T_k]}\)</span>, where <span class="math inline">\(\{\alpha_k\}\)</span> is an orthonormal basis of <span class="math inline">\(\operatorname{span}(\mathbb E_{\mu_0^N}[z])^\perp\)</span>, the barycenter ODE (B.9) <span class="math inline">\(\frac{d}{dt}\langle x,\alpha_1\rangle=\langle\mathbb E_{\mu(t)}[x],\alpha_1\rangle(1-\langle\alpha_1,x\rangle^2)\)</span> sends <span class="math inline">\(x(t)\to\pm\alpha_k\)</span>, concentrating <span class="math inline">\(\operatorname{supp}\mu(T_{d-1})\)</span> near <span class="math inline">\(\bigcup_k B(\pm\alpha_k,C_k\varepsilon_k)\subset\mathbb S^{d-1}\setminus\mathbb Q_1^{d-1}\)</span> (flow <span class="math inline">\(\Psi_1\)</span>, fixing <span class="math inline">\(\mu_0^j\)</span> for <span class="math inline">\(j\le N-1\)</span>). <strong>(2) Clustering:</strong> a separating half-space <span class="math inline">\(\langle a,x\rangle+\underline b\)</span> with <span class="math inline">\(\mathbf U=\mathbf 1a^\top\)</span>, <span class="math inline">\(\mathbf W_2\mathbf 1=\mathbb E_{\mu_0^N}[x]\)</span> drives both supports into <span class="math inline">\(B(\mathbb E_{\mu_0^N}[x]/\|\mathbb E_{\mu_0^N}[x]\|,\delta)\)</span> (flow <span class="math inline">\(\Psi_2\)</span>). <strong>(3) Flow reversal:</strong> <span class="math inline">\(\Phi_{\mathrm{fin}}:=\Psi_1^{-1}\circ\Psi_2\circ\Psi_1\)</span> returns <span class="math inline">\(\mu_0^i\)</span> to itself for <span class="math inline">\(i\le N-1\)</span> and clusters <span class="math inline">\(\nu,\mu^N\)</span> within <span class="math inline">\(B(\,\cdot\,,C_T\delta)\)</span>; pick <span class="math inline">\(\delta\)</span> small. <span class="math inline">\(\square\)</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ three-step argument (App. B.2) hinges on the <strong>barycenter ODE (B.9)</strong>, which is exactly our machine-checked leaf <strong>L6</strong> (<code>barycenter_hasDerivAt_inner</code>): along the attention field, <span class="math inline">\(\frac{d}{dt}\langle x,\alpha\rangle = c\,(1-\langle x,\alpha\rangle^2)\)</span> with strict increase for <span class="math inline">\(c&gt;0\)</span>, which is what drives each point to <span class="math inline">\(\pm\alpha\)</span> and lets the support be concentrated into an <span class="math inline">\(\varepsilon\)</span>-ball around the barycenter direction. We state the conclusion type-correctly against the axiom layer: some <span class="math inline">\(\theta\)</span> concentrates the flow into <code>Metric.ball α ε</code>. It is a <code>sorry</code> stub stated against <code>measureFlow</code>; the analytic content (the three flows <span class="math inline">\(\Psi_1,\Psi_2,\Psi_1^{-1}\)</span>) lives in the flow axiom.</p>
+<pre class="lean"><code>/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). For any tolerance the
+measure can be concentrated into a small ball around some direction `α`, with `O(dN)` switches.
+Stub (`sorry`): `math.open`. -/
+theorem lemma_3_3 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε) :
+    ∃ (θ : Params d) (α : Eucl d), supportedIn (measureFlow θ T μ) (Metric.ball α ε) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-make-noncolinear" class="level2">
+<h2 class="anchored" data-anchor-id="node-make-noncolinear">Making barycenters non-colinear</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 3.4, p.&nbsp;16; proof App. B.3, p.&nbsp;35).</p>
+<p>Let <span class="math inline">\(T&gt;0\)</span> and let <span class="math inline">\(\mu_0,\nu_0\in\mathscr P(\mathbb Q_1^{d-1})\)</span> be two different measures such that <span class="math inline">\(\mathbb E_{\mu_0}[x]=\gamma_1\mathbb E_{\nu_0}[x]\)</span> for some <span class="math inline">\(\gamma_1\in(0,1]\)</span>.</p>
+<ol type="1">
+<li><p>If <span class="math inline">\(\gamma_1=1\)</span>, then, setting <span class="math inline">\(\mathbf V\equiv 0\)</span>, there exist <span class="math inline">\(\mathbf W,\mathbf U\in\mathscr M_{d\times d}(\mathbb R)\)</span> and <span class="math inline">\(b\in\mathbb R^d\)</span> such that the solutions <span class="math inline">\(\mu,\nu\)</span> to (1.3)–(3.1) corresponding to <span class="math inline">\(\mu_0,\nu_0\)</span> and these parameters, satisfy <span class="math inline">\(\mathbb E_{\mu(T)}[x]\ne\mathbb E_{\nu(T)}[x]\)</span>. Moreover the Lipschitz-continuous and invertible flow map <span class="math inline">\(\Phi^T:\mathbb S^{d-1}\to\mathbb S^{d-1}\)</span> induced by the characteristics satisfies <span class="math inline">\(\Phi^T(x)=x\)</span> for <span class="math inline">\(x\in\mathbb S^{d-1}\setminus(\operatorname{conv}_g\operatorname{supp}\mu_0\cup\operatorname{conv}_g\operatorname{supp}\nu_0)\)</span>. (3.2)</p></li>
+<li><p>If <span class="math inline">\(\gamma_1\ne1\)</span>, then, setting <span class="math inline">\(\mathbf B\equiv 0\)</span>, there exist piecewise-constant <span class="math inline">\((\mathbf V,\mathbf W,\mathbf U)\)</span> and <span class="math inline">\(b\)</span> with at most <span class="math inline">\(2\)</span> switches such that <span class="math inline">\(\mathbb E_{\mu(T)}[x]\ne\gamma_2\,\mathbb E_{\nu(T)}[x]\)</span> for all <span class="math inline">\(\gamma_2\in\mathbb R\)</span> (non-colinear).</p></li>
+</ol>
+<p><strong>Proof (Part 1).</strong> <em>(proof sketch; full proof App. B.3, p.&nbsp;35.)</em> Since <span class="math inline">\(\mu_0\ne\nu_0\)</span>, there is an open ball <span class="math inline">\(\mathcal B\subset\operatorname{supp}\mu_0\cup\operatorname{supp}\nu_0\)</span> with <span class="math inline">\(\mu_0(\mathcal B)\ne\nu_0(\mathcal B)\)</span>. There exists <span class="math inline">\(x^*\in\mathcal B\)</span> with <span class="math display">\[\mu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\mu_0(\mathrm dx)\ \ne\ \nu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\nu_0(\mathrm dx),\]</span> for otherwise <span class="math inline">\(x^*=\frac1{\mu_0(\mathcal B)-\nu_0(\mathcal B)}\int_{\mathbb S^{d-1}\setminus\mathcal B}x(\nu_0-\mu_0)(\mathrm dx)\)</span> would be forced constant over all of <span class="math inline">\(\mathcal B\)</span> — impossible. Taking such <span class="math inline">\(x^*\)</span>, a perceptron block <span class="math inline">\(\mathbf U=-\mathbf 1a^\top\)</span>, <span class="math inline">\(b=R\mathbf 1\)</span> (<span class="math inline">\(a,R\)</span> the center and radius of <span class="math inline">\(\mathcal B\)</span>), and <span class="math inline">\(\mathbf W\mathbf 1=x^*\)</span>, by Lemma B.2 pushes <span class="math inline">\(\mu(T)\)</span> to <span class="math inline">\(\mu_0(\mathcal B)\delta_{x^*}+\mu_0(\cdot\setminus\mathcal B)\)</span>; continuity of the expectation in <span class="math inline">\(\mathsf W_2\)</span> yields <span class="math inline">\(\mathbb E_{\Phi_\#\mu_0}[x]\ne\mathbb E_{\Phi_\#\nu_0}[x]\)</span>, with <span class="math inline">\(\Phi(x)=x\)</span> off <span class="math inline">\(\mathcal B\)</span>. <span class="math inline">\(\square\)</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>In the <span class="math inline">\(\gamma_1=1\)</span> (perceptron) case the authors locate a ball <span class="math inline">\(\mathcal B\)</span> on which <span class="math inline">\(\mu_0,\nu_0\)</span> differ in mass, then argue that <strong>some <span class="math inline">\(x^*\in\mathcal B\)</span> makes the barycenters differ</strong> — for if every <span class="math inline">\(x^*\)</span> gave equality, <span class="math inline">\(x^*\)</span> would be pinned to one value on the whole ball, which no map can be. That “no map is constant on a nonempty open ball” core is our machine-checked leaf <strong>L10</strong> (<code>exists_ne_in_ball</code>). We state the <span class="math inline">\(\gamma_1=1\)</span> conclusion type-correctly: equal input barycenters force the existence of a <span class="math inline">\(\theta\)</span> whose output barycenters differ. <code>sorry</code> stub against the axiom layer. (The attention case <span class="math inline">\(\gamma_1\ne1\)</span>, at most two switches, is the companion stub <code>lemma_3_4_part2</code>.)</p>
+<pre class="lean"><code>/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). If two measures have equal barycenters, a constant
+parameter makes the barycenters differ. Stub (`sorry`): `math.open`. The self-contained pigeonhole
+core is leaf L10. -/
+theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) (T : ℝ) (hT : 0 &lt; T)
+    (hbar : barycenter μ = barycenter ν) :
+    ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-disentanglement" class="level2">
+<h2 class="anchored" data-anchor-id="node-disentanglement">Disentanglement</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 3.1, pp.&nbsp;15-17).</p>
+<p>Let <span class="math inline">\(T&gt;0\)</span> and <span class="math inline">\(\mu_0^i\in\mathscr P(\mathbb Q_1^{d-1})\)</span>. There exists a piecewise constant <span class="math inline">\(\theta:[0,T]\to\Theta\)</span>, having at most <span class="math inline">\(O(d\cdot N)\)</span> switches, such that for all <span class="math inline">\(i\in[\![1,N]\!]\)</span>, the solution <span class="math inline">\(\mu^i\)</span> to (1.3)–(3.1) with data <span class="math inline">\(\mu_0^i\)</span> and <span class="math inline">\(\theta\)</span> satisfies <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\mu^i(T)\cap\operatorname{conv}_g\operatorname{supp}\mu^j(T)=\varnothing\quad\text{if } i\ne j.\]</span></p>
+<p><strong>Proof.</strong> <em>(proof sketch; full proof pp.&nbsp;16-17.)</em> Induction on <span class="math inline">\(N\)</span>; the base case <span class="math inline">\(N=1\)</span> is trivial. Assume the first <span class="math inline">\(N-1\)</span> measures already have pairwise-disjoint geodesic hulls (3.3) and let <span class="math inline">\(\mu_0^N\)</span> be arbitrary. Since <span class="math inline">\(\operatorname{supp}\mu_0^i\subset\mathbb Q_1^{d-1}\)</span>, (3.3) implies <span class="math inline">\(\mathbb E_{\mu_0^i}[x]\)</span> is not colinear with <span class="math inline">\(\mathbb E_{\mu_0^j}[x]\)</span> for <span class="math inline">\(i\ne j\le N-1\)</span>. If <span class="math inline">\(\mathbb E_{\mu_0^N}[x]\)</span> is non-colinear with all of them, one application of Lemma 3.3 (small <span class="math inline">\(\varepsilon\)</span>) shrinks <span class="math inline">\(\mu^N\)</span>’s hull until it separates. Otherwise <span class="math inline">\(\mathbb E_{\mu_0^N}[x]\)</span> is colinear with <span class="math inline">\(\mathbb E_{\mu_0^i}[x]\)</span> for at most one <span class="math inline">\(i\)</span> (WLOG <span class="math inline">\(i=N-1\)</span>), and four phases of <span class="math inline">\([0,T]\)</span> finish it: (1) <span class="math inline">\([0,T/4]\)</span> Lemma 3.3 peels <span class="math inline">\(\mu^N,\mu^{N-1}\)</span> off the rest; (2) <span class="math inline">\([T/4,T/2]\)</span> Lemma 3.4 Part 1 makes <span class="math inline">\(\mathbb E_{\mu^{N-1}}[x]\ne\mathbb E_{\mu^N}[x]\)</span> while (3.2) keeps the others fixed; (3) <span class="math inline">\([T/2,3T/4]\)</span> Lemma 3.4 Part 2 makes the two barycenters non-colinear; (4) <span class="math inline">\([3T/4,T]\)</span> Lemma 3.3, now applicable to all <span class="math inline">\(N\)</span> measures, separates them. Total <span class="math inline">\(O(d\cdot N)\)</span> switches. <span class="math inline">\(\square\)</span></p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>We state the headline controllability conclusion of the authors’ induction type-correctly against the axiom layer: there is a <span class="math inline">\(\theta\)</span> whose solution map renders the family’s supports pairwise disjoint, recorded by the opaque predicate <code>DisjointSupports</code>. It is a <code>sorry</code> stub — the four-phase induction, the <span class="math inline">\(O(dN)\)</span> switch count, and the geodesic-hull nesting all rest on the flow / <span class="math inline">\(\operatorname{conv}_g\)</span> axioms, so we do not claim a proof.</p>
+<pre class="lean"><code>/-- The measures in the family have pairwise disjoint (geodesic-convex-hull) supports. -/
+axiom DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop
+
+/-- **Proposition 3.1** (disentanglement). There is a piecewise-constant `θ` whose solution map
+renders the supports of the family pairwise disjoint. Stub (`sorry`): status `math.open`. -/
+theorem prop_3_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 &lt; T) :
+    ∃ θ : Params d, DisjointSupports (fun i =&gt; measureFlow θ T (μ₀ i)) := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean" class="lean-src"><code>Statements/MainResults.lean</code></a></p>
+</div>
+<div class="strengthen">
+<p><strong>What we strengthen.</strong> <em>(finding F2.)</em> The induction above opens by asserting that <strong>disjoint geodesic hulls imply non-colinear barycenters</strong> — <span class="math display">\[\operatorname{conv}_g\operatorname{supp}\mu_0^i\cap\operatorname{conv}_g\operatorname{supp}\mu_0^j=\varnothing\ \Longrightarrow\ \mathbb E_{\mu_0^i}[x]\ \text{not colinear with}\ \mathbb E_{\mu_0^j}[x]\]</span> — <strong>without proof</strong>. Our adversarial review flagged this as the one genuine rigor gap (finding F2). It is now the machine-checked leaf <strong>L11</strong> (<code>barycenter_noncolinear_of_disjoint_hull</code>, see the <a href="#sec-leaves">Self-contained leaves</a> section) for the empirical regime of Theorem 1.1 / restricted Theorem 1.2, and <strong>L11<span class="math inline">\('\)</span></strong> (<code>barycenter_noncolinear_of_disjoint_hull_general</code>) for arbitrary probability measures via Mathlib’s <code>Convex.integral_mem</code>. The barycenter, a nonnegative average of support points, lies in <span class="math inline">\(\operatorname{cone}(\operatorname{supp})\)</span>; colinearity would put a common normalized direction in <em>both</em> hulls, contradicting disjointness. The headline <code>prop_3_1</code> stays <code>[open]{.badge .open}</code> only because it still rests on the flow / <span class="math inline">\(\operatorname{conv}_g\)</span>-nesting axioms — not on this step. (Validated numerically by experiment E3.)</p>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean" class="lean-src"><code>Leaves/BarycenterNonColinear.lean</code></a></p>
+</div>
+</section>
+</section>
+<section id="sec-matching" class="level1">
+<h1>Matching discrete measures</h1>
+<p>Once the disentanglement of §3 has rendered the supports pairwise disjoint and the clustering of §2 has collapsed each measure to a single point, matching reduces to steering finitely many points to their prescribed targets. A single perceptron gate — identically zero on a chosen parking cap and positive outside it — lets the flow drive one <em>active</em> point along a geodesic corridor to its target while every other point, parked inside the cap, stays fixed.</p>
+<section id="node-prop-4-2" class="level2">
+<h2 class="anchored" data-anchor-id="node-prop-4-2">Proposition 4.2 — steer the active point</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, §4, Proposition 4.2, p.&nbsp;18).</p>
+<p>Suppose <span class="math inline">\(d \geqslant 3\)</span>. Consider <span class="math display">\[(x_0^i, y^i) \in \mathbb S^{d-1} \times \mathbb S^{d-1} \qquad \text{for } i \in [\![1, M]\!], \tag{$\mathscr D$}\]</span> with <span class="math inline">\(x_0^i \neq x_0^j\)</span> and <span class="math inline">\(y^i \neq y^j\)</span> for <span class="math inline">\(i \neq j\)</span>, with <span class="math inline">\(x_0^i = y^i\)</span> for <span class="math inline">\(i \in [\![1, M-1]\!]\)</span>, and suppose that there exist <span class="math inline">\(\gamma \in \mathbb S^{d-1}\)</span> and <span class="math inline">\(\varepsilon &gt; 0\)</span> such that <span class="math inline">\(\langle \gamma, x_0^M - y^M \rangle = 0\)</span> and <span class="math inline">\(x_0^i \notin H_\varepsilon^\gamma\)</span> for all <span class="math inline">\(i \in [\![1, M-1]\!]\)</span>, where <span class="math inline">\(H_\varepsilon^\gamma := \{x \in \mathbb S^{d-1} : |\langle x, \gamma\rangle| \leqslant \varepsilon\}\)</span>.</p>
+<p>For any <span class="math inline">\(T &gt; 0\)</span> there exist piecewise constant <span class="math inline">\(\theta = (\mathbf W, \mathbf U, b) : [0, T] \to \mathcal M_{d\times d}(\mathbb R)^2 \times \mathbb R^d\)</span>, having at most <span class="math inline">\(6\)</span> switches, such that for any <span class="math inline">\(i\)</span>, the solution <span class="math inline">\(x^i(\cdot)\)</span> to <span class="math display">\[\begin{cases}\dot x^i(t) = \mathbf P_x^\perp\,\mathbf W(t)\big(\mathbf U(t)x^i(t) + b(t)\big)_+ &amp; \text{in } [0,T]\\ x^i(0) = x_0^i,\end{cases} \tag{4.1}\]</span> satisfies <span class="math inline">\(x^i(T) = y^i\)</span>. Moreover, there exists <span class="math inline">\(C &gt; 0\)</span>, not depending on <span class="math inline">\(\mathscr D\)</span> and <span class="math inline">\(T\)</span>, such that <span class="math display">\[\|\theta\|_{L^\infty((0,T);\Theta)} \leqslant \frac{C}{T\cdot\varepsilon}.\]</span></p>
+<p><strong>Proof sketch</strong> (proof sketch; full proof pp.&nbsp;18-23). The control is a <span class="math inline">\(6\)</span>-interval step function <span class="math inline">\((\mathbf W(t),\mathbf U(t),b(t)) = \sum_{j=1}^6 (\mathbf W_j,\mathbf U_j,b_j)\,\mathbf 1_{[(j-1)T/6,\,jT/6]}(t)\)</span> with <span class="math inline">\(\mathbf U_5=\mathbf U_1,\ \mathbf U_6=\mathbf U_2,\ \mathbf U_3=\mathbf U_4,\ b_5=b_1,\ b_6=b_2,\ b_3=b_4,\ \mathbf W_5=-\mathbf W_1,\ \mathbf W_6=-\mathbf W_2\)</span>, i.e.&nbsp;the last two intervals time-reverse the first two — at most <span class="math inline">\(6\)</span> switches. <em>Anchors (Step 1).</em> Since <span class="math inline">\(\langle\gamma,x_0^M-y^M\rangle=0\)</span> one finds <span class="math inline">\(\omega\in\mathbb S^{d-1}\)</span> with <span class="math inline">\(\langle\gamma,\omega\rangle=0\)</span> and <span class="math inline">\(d_g(\omega,x_0^M),d_g(\omega,y^M)\geqslant\pi/2\)</span>; the points <span class="math inline">\(\omega_\pm\)</span> at geodesic distance <span class="math inline">\(\pi/8\)</span> from <span class="math inline">\(\omega\)</span> toward <span class="math inline">\(\pm\gamma\)</span> then satisfy <span class="math inline">\(d_g(\omega_\pm,x_0^M),d_g(\omega_\pm,y^M)\geqslant 3\pi/8\)</span>, so <span class="math inline">\(\{\langle\omega,x\rangle=\cos(\pi/8+\tau)\}\)</span> separates the cap <span class="math inline">\(B(\omega,\pi/8+\tau)\)</span> from <span class="math inline">\(x_0^M,y^M\)</span>. <em>Phase 1 — “gather” <span class="math inline">\(\psi_1\)</span> (Steps 1-2, <span class="math inline">\(2\)</span> switches).</em> Two opposite gates <span class="math inline">\((\langle\pm\gamma,x\rangle-\epsilon/2)_+\)</span> with drift targets <span class="math inline">\(\omega_\pm\)</span> run the Riemannian gradient flow of <span class="math inline">\(d_g(\cdot,\omega_\pm)\)</span> (using <span class="math inline">\(\nabla_1 d_g(x,\omega_+)=-\mathbf P_x^\perp\omega_+/\sqrt{1-\langle x,\omega_+\rangle^2}\)</span>); <span class="math inline">\(\langle x,\omega_\pm\rangle\)</span> increases monotonically (4.5) and the trajectory settles exponentially near <span class="math inline">\(\omega_\pm\)</span> by LaSalle / Hartman-Grobman (4.6), so after time <span class="math inline">\(T/3\)</span> every inactive point lies in the cap <span class="math inline">\(B(\omega,3\pi/16)\)</span> while points of <span class="math inline">\(H_\varepsilon^\gamma\)</span> stay fixed (4.7). <em>Phase 2 — “corridor” <span class="math inline">\(\psi_2\)</span> (Step 3, <span class="math inline">\(2\)</span> switches).</em> The gate <span class="math inline">\((\langle-\omega,x\rangle+\cos(3\pi/16))_+\)</span> is identically <span class="math inline">\(0\)</span> on <span class="math inline">\(B(\omega,3\pi/16)\)</span> and positive outside; driving <span class="math inline">\(x_0^M\)</span> first toward an intermediate <span class="math inline">\(z_1\)</span> then toward <span class="math inline">\(z_2\)</span> along a geodesic corridor that lies outside the cap and passes through <span class="math inline">\(y^M\)</span> lands the active point at <span class="math inline">\(y^M\)</span>, while the inactive points do not move (gate off on the cap). <em>Phase 3 — “restore” <span class="math inline">\(\psi_1^{-1}\)</span> (Step 4, <span class="math inline">\(2\)</span> switches).</em> Re-running the gather action with flipped drifts time-reverses Phase 1, returning every inactive point to its start; the active point remains at <span class="math inline">\(y^M\)</span> since the corridor gate is off on the cap. The composition <span class="math inline">\((\psi_1)^{-1}\circ\psi_2\circ\psi_1\)</span> sends <span class="math inline">\(x_0^M\mapsto y^M\)</span> and fixes all other <span class="math inline">\(x_0^i\)</span>; choosing drift size <span class="math inline">\(\|\mathbf W\|\asymp(T\varepsilon)^{-1}\)</span> gives total time <span class="math inline">\(T\)</span> and <span class="math inline">\(\|\theta\|_{L^\infty}\lesssim 1/(T\varepsilon)\)</span>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors’ construction (pp.&nbsp;18-23) realises the matching of one point as the gather / corridor / restore composition <span class="math inline">\((\psi_1)^{-1}\circ\psi_2\circ\psi_1\)</span>, a <span class="math inline">\(6\)</span>-interval piecewise-constant control whose middle phase steers the active <span class="math inline">\(x_0^M\)</span> to <span class="math inline">\(y^M\)</span> while a gate parked on the cap <span class="math inline">\(B(\omega,3\pi/16)\)</span> freezes the inactive points. We record a type-correct Lean <strong>statement</strong> of this proposition as a <code>sorry</code> (open): with <span class="math inline">\(d\geqslant 3\)</span>, the inactive points already at their targets (<code>hfix</code>), at most <span class="math inline">\(6\)</span> switches drive every input to its target while keeping the inactive ones fixed. We do <strong>not</strong> claim a proof. Two of the construction’s cores are however discharged as kernel-checked leaves: the separating-hyperplane estimate of Step 1 is leaf <strong>L3</strong> (<a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/SeparatingHyperplane.lean" class="lean-src"><code>Leaves/SeparatingHyperplane.lean</code></a>, <code>separating_hyperplane</code>), and the geodesic-gradient identity driving the gather and corridor flows is leaf <strong>L4</strong> (<a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GeodesicGradient.lean" class="lean-src"><code>Leaves/GeodesicGradient.lean</code></a>, <code>geodesicDist_hasDerivAt</code>). The selective-motion mechanism — active point reaches the target, parked points stay fixed — is validated numerically by experiment <strong>E4</strong>.</p>
+<pre class="lean"><code>/-- **Proposition 4.2** (steer one active point). With `d ≥ 3` and the inactive points already at
+their targets, at most `6` switches move every input to its target, keeping the inactive ones fixed
+(`x₀ i = y i` is preserved by `flowMap θ T (x₀ i) = y i`). Stub (`sorry`): `math.open`. Step 1 is
+leaf L3, the geodesic gradient is leaf L4. -/
+theorem prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 &lt; T)
+    (hfix : ∀ i : Fin M, (i : ℕ) &lt; M - 1 → x₀ i = y i) :
+    ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-prop-4-1" class="level2">
+<h2 class="anchored" data-anchor-id="node-prop-4-1">Proposition 4.1 — match the ensemble</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, §4, Proposition 4.1, p.&nbsp;18).</p>
+<p>Suppose <span class="math inline">\(d \geqslant 3\)</span>. Consider <span class="math display">\[(x_0^i, y^i) \in \mathbb S^{d-1} \times \mathbb S^{d-1} \qquad \text{for } i \in [\![1, M]\!], \tag{$\mathscr D$}\]</span> with <span class="math inline">\(x_0^i \neq x_0^j\)</span> and <span class="math inline">\(y^i \neq y^j\)</span> for <span class="math inline">\(i \neq j\)</span>, and suppose that for any <span class="math inline">\(i\)</span> there exist <span class="math inline">\(\gamma_i \in \mathbb S^{d-1}\)</span> and <span class="math inline">\(\varepsilon_i &gt; 0\)</span> such that <span class="math inline">\(\langle \gamma_i, x_0^i - y^i\rangle = 0\)</span> and <span class="math inline">\(x_0^j \notin H_{\varepsilon_i}^{\gamma_i}\)</span> for <span class="math inline">\(j \neq i\)</span>, where <span class="math display">\[H_{\varepsilon_i}^{\gamma_i} := \{x \in \mathbb S^{d-1} : |\langle x, \gamma_i\rangle| \leqslant \varepsilon_i\}.\]</span></p>
+<p>For any <span class="math inline">\(T &gt; 0\)</span> there exist piecewise constant <span class="math inline">\(\theta = (\mathbf W, \mathbf U, b) : [0, T] \to \mathcal M_{d\times d}(\mathbb R)^2 \times \mathbb R^d\)</span>, having at most <span class="math inline">\(6M\)</span> switches, such that for any <span class="math inline">\(i\)</span>, the solution <span class="math inline">\(x^i(\cdot) \in \mathscr C^0([0,T];\mathbb S^{d-1})\)</span> to (4.1) satisfies <span class="math inline">\(x^i(T) = y^i\)</span>. Moreover, there exists <span class="math inline">\(C &gt; 0\)</span>, not depending on <span class="math inline">\(\mathscr D\)</span> nor <span class="math inline">\(T\)</span>, such that <span class="math display">\[\|\theta\|_{L^\infty((0,T);\Theta)} \leqslant \frac{C\cdot M}{T\,\min_i \varepsilon_i}.\]</span></p>
+<p><strong>Proof sketch</strong> (proof sketch; full proof p.&nbsp;18). “The proof of Proposition 4.1 follows directly from [Proposition 4.2], combined with a straightforward induction argument”: activating one pair <span class="math inline">\((x_0^i,y^i)\)</span> at a time, each application of Proposition 4.2 steers the <span class="math inline">\(i\)</span>-th point to its target in at most <span class="math inline">\(6\)</span> switches while leaving the already-matched points fixed, so <span class="math inline">\(M\)</span> applications cost at most <span class="math inline">\(6M\)</span> switches and the norm bound accumulates to <span class="math inline">\(C\cdot M / (T\min_i\varepsilon_i)\)</span>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The authors obtain Proposition 4.1 by induction over the <span class="math inline">\(M\)</span> pairs, each step being one application of Proposition 4.2 (the active point reaches its target; the previously matched points are inactive and stay fixed), giving the <span class="math inline">\(\leqslant 6M\)</span>-switch budget and the <span class="math inline">\(O\!\big(CM/(T\min_i\varepsilon_i)\big)\)</span> norm. We record a type-correct Lean <strong>statement</strong> as a <code>sorry</code> (open): with <span class="math inline">\(d\geqslant 3\)</span> and injective inputs/targets, at most <span class="math inline">\(6M\)</span> switches steer every <span class="math inline">\(x_0^i\)</span> to <span class="math inline">\(y^i\)</span>. We do <strong>not</strong> claim a proof; the discharge would be the <span class="math inline">\(M\)</span>-fold composition of <code>prop_4_2</code>. (Validated numerically by experiment <strong>E4</strong>, alongside Proposition 4.2.)</p>
+<pre class="lean"><code>/-- **Proposition 4.1** (match an ensemble). With `d ≥ 3` and distinct inputs/targets, at most `6M`
+switches steer every `x₀ i` to `y i`. Stub (`sorry`): `math.open`. Follows from Proposition 4.2 by
+induction. -/
+theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 &lt; T)
+    (hx₀ : Function.Injective x₀) (hy : Function.Injective y) :
+    ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+</section>
+<section id="sec-main-results" class="level1">
+<h1>Main results</h1>
+<p>The paper assembles its leaves and mid-level propositions into one solution map <span class="math inline">\(\Phi^T_{\mathrm{fin}}\)</span> by a three-stage recipe: <strong>disentangle</strong> the <span class="math inline">\(N\)</span> supports until they are pairwise disjoint (Proposition 3.1), <strong>cluster</strong> each measure — to a single point (Proposition 2.1) or to an <span class="math inline">\(M\)</span>-atom empirical measure (Proposition 2.2) — and <strong>match</strong> each cluster to its prescribed target (Propositions 4.1/4.2). Theorem 1.1 is the Dirac-target case, steering each input to a point mass <span class="math inline">\(\delta_{x^i}\)</span> with <span class="math inline">\(O(d\,N)\)</span> switches and an explicit norm bound, while Theorem 1.2 is the general case, reaching any <span class="math inline">\(L^2\)</span> transport-matchable targets by interposing the map-transfer Lemma 5.1, the flow-approximation Lemma 5.4, and the coupling bound Lemma 5.2. Every node here is stated type-correctly in Lean against the axiom layer and left as a <code>sorry</code> (status open), except Proposition 6.2 — the generic <span class="math inline">\(O(1)\)</span>-switch disentanglement heuristic — which we reviewed on paper only.</p>
+<section id="node-lemma-5-1" class="level2">
+<h2 class="anchored" data-anchor-id="node-lemma-5-1">Lemma 5.1 — transport maps preserved by disentanglement</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.1, p.&nbsp;24).</p>
+<p>Suppose that for every <span class="math inline">\(i\)</span> there exists <span class="math inline">\(\mathsf T^i \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})\)</span> with <span class="math inline">\(\mathsf T^i_\#\mu_0^i = \mu_1^i\)</span>. Consider the flow map <span class="math inline">\(\Phi_1 : \mathscr P(\mathbb S^{d-1}) \to \mathscr P(\mathbb S^{d-1})\)</span> (resp. <span class="math inline">\(\Phi_3\)</span>) given by Proposition 3.1 with data <span class="math inline">\(\mu_0^i \in \mathscr P(\mathbb S^{d-1})\)</span> (resp. <span class="math inline">\(\mu_1^i \in \mathscr P(\mathbb S^{d-1})\)</span>). Then there exists a Lipschitz-continuous and invertible map <span class="math inline">\(\psi : \mathbb S^{d-1} \to \mathbb S^{d-1}\)</span> such that <span class="math display">\[\psi\big|_{\operatorname{supp}\Phi_1(\mu_0^i)} = \psi^i\big|_{\operatorname{supp}\Phi_1(\mu_0^i)} \tag{5.1}\]</span> for any <span class="math inline">\(i \in \{1,\dots,N\}\)</span>, where <span class="math inline">\(\psi^i : \mathbb S^{d-1} \to \mathbb S^{d-1}\)</span> is another Lipschitz-continuous and invertible map that satisfies <span class="math display">\[(\psi^i \circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = (\psi \circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = (\mathsf T^i_{\Phi_3})_\#\mu_1^i = \Phi_3(\mu_1^i)\]</span> for some Lipschitz-continuous and invertible maps <span class="math inline">\(\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3} : \mathbb S^{d-1} \to \mathbb S^{d-1}\)</span>. The proof can be found in Appendix B.4.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The paper’s strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p.&nbsp;37) exploits disentanglement: once Proposition 3.1 has pushed the supports <span class="math inline">\(\operatorname{supp}\Phi_1(\mu_0^i)\)</span> pairwise disjoint, the per-pair transport maps <span class="math inline">\(\mathsf T^i\)</span> are carried through the flow as Lipschitz-invertible maps <span class="math inline">\(\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3}\)</span>, and the individual matchings <span class="math inline">\(\psi^i\)</span> can be glued into one global Lipschitz-continuous, invertible <span class="math inline">\(\psi\)</span> that agrees with each <span class="math inline">\(\psi^i\)</span> on the <span class="math inline">\(i\)</span>-th (now disjoint) support and realizes <span class="math inline">\((\psi\circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = \Phi_3(\mu_1^i)\)</span>. We give a type-correct Lean <strong>statement</strong> as a <code>sorry</code> (open), abstracting the Lipschitz/geodesic bookkeeping into the matchability hypothesis: from a per-index family of transport maps we ask for a single <code>Bijective</code> <span class="math inline">\(\psi\)</span> pushing every <span class="math inline">\(\mu_0^i\)</span> to <span class="math inline">\(\mu_1^i\)</span>. We do not claim a proof.</p>
+<pre class="lean"><code>/-- **Lemma 5.1** (transport map after disentanglement). If each disentangled pair is matchable, a
+single bijective map matches them all. Stub (`sorry`): `math.open`. -/
+theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
+    ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-lemma-5-4" class="level2">
+<h2 class="anchored" data-anchor-id="node-lemma-5-4">Lemma 5.4 — L² approximation by a flow map</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.4, p.&nbsp;24).</p>
+<p>Suppose <span class="math inline">\(\varepsilon &gt; 0\)</span> and <span class="math inline">\(\mu \in \mathscr P(\mathbb S^{d-1})\)</span>. For every <span class="math inline">\(\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})\)</span>, there exists a Lipschitz-continuous and invertible map <span class="math inline">\(\psi_\varepsilon : \mathbb S^{d-1} \to \mathbb S^{d-1}\)</span> induced by the solution map of (B.1), namely <span class="math inline">\(\Phi^T_{\theta_\varepsilon}(\mu) = (\psi_\varepsilon)_\#\mu\)</span> for some piecewise constant <span class="math inline">\(\theta_\varepsilon : [0,T] \to \Theta\)</span> with finitely many switches, such that <span class="math display">\[\|\psi - \psi_\varepsilon\|_{L^2(\mu)} \leq \varepsilon.\]</span> The proof of Lemma 5.4 is involved, so we postpone it to Appendix B.5.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p.&nbsp;38) shows any <span class="math inline">\(\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})\)</span> is approximated in <span class="math inline">\(L^2(\mu)\)</span>, to any tolerance, by a flow map <span class="math inline">\(\psi_\varepsilon\)</span> of the continuity equation (B.1) with piecewise-constant control and finitely many switches; chained with the coupling bound <span class="math inline">\(W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}\)</span> (Lemma 5.2, leaf L7) this converts <span class="math inline">\(L^2\)</span> control of the map into <span class="math inline">\(W_2\)</span> control of the pushforward. We give a type-correct Lean <strong>statement</strong> as a <code>sorry</code> (open): for any <span class="math inline">\(\psi\)</span> and <span class="math inline">\(\varepsilon\)</span>, a parameter <span class="math inline">\(\theta\)</span> and a map <span class="math inline">\(\psi_\varepsilon\)</span> with <code>measureFlow θ T μ = μ.map ψε</code> and <span class="math inline">\(\sqrt{\int \|\psi-\psi_\varepsilon\|^2\,\mathrm d\mu} \le \varepsilon\)</span>. We do not claim a proof.</p>
+<pre class="lean"><code>/-- **Lemma 5.4** (`L²` approximation by a flow map). Any transport map `ψ` is approximated in
+`L²(μ)` by a flow map of the dynamics, to any tolerance, with finitely many switches. Stub
+(`sorry`): `math.open`. Combined with the coupling bound (leaf L7) this controls `W₂`. -/
+theorem lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε) :
+    ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
+      measureFlow θ T μ = μ.map ψε ∧ Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
+</div>
+</section>
+<section id="node-theorem-1-2" class="level2">
+<h2 class="anchored" data-anchor-id="node-theorem-1-2">Theorem 1.2 — matching transport-matchable targets</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Theorem 1.2, p.&nbsp;5).</p>
+<p>Suppose <span class="math inline">\(d \geq 3\)</span>. Consider data <span class="math inline">\((\mathscr D)\)</span> such that</p>
+<ol type="1">
+<li><p>there exist <span class="math inline">\(w_0, w_1 \in \mathbb S^{d-1}\)</span> such that <span class="math display">\[w_0 \notin \bigcup_i \operatorname{supp}(\mu_0^i) \quad\text{and}\quad w_1 \notin \bigcup_i \operatorname{supp}(\mu_1^i); \tag{1.5}\]</span></p></li>
+<li><p>for any <span class="math inline">\(i \in \{1,\dots,N\}\)</span>, there exists <span class="math inline">\(\mathsf T^i \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})\)</span> such that <span class="math inline">\(\mathsf T^i_\#\mu_0^i = \mu_1^i\)</span>.</p></li>
+</ol>
+<p>Then for any <span class="math inline">\(T &gt; 0\)</span> and <span class="math inline">\(\varepsilon &gt; 0\)</span>, there exists <span class="math inline">\(\theta \in L^\infty((0,T);\Theta)\)</span> such that for any <span class="math inline">\(i \in \{1,\dots,N\}\)</span>, the unique solution <span class="math inline">\(\mu^i \in \mathscr C^0([0,T];\mathscr P(\mathbb S^{d-1}))\)</span> to (1.3) with data <span class="math inline">\(\mu_0^i\)</span> and parameters <span class="math inline">\(\theta\)</span> satisfies <span class="math display">\[\mathsf W_2(\mu^i(T), \mu_1^i) \leq \varepsilon.\]</span> Moreover, <span class="math inline">\(\theta\)</span> can be chosen piecewise constant.</p>
+<p><em>Proof sketch (full proof §5.1, p.&nbsp;25).</em> The construction <span class="math inline">\(\Phi^T_{\mathrm{fin}} := (\Phi_{\theta_3}^{T/3})^{-1} \circ \Phi_{\theta_2}^{T/3} \circ \Phi_{\theta_1}^{T/3}\)</span> proceeds in three steps. <strong>(1) Disentanglement:</strong> Proposition 3.1 renders the input supports <span class="math inline">\((\mu_0^i)\)</span> pairwise disjoint via <span class="math inline">\(\Phi_{\theta_1}\)</span> on <span class="math inline">\([0,T/3]\)</span> and the target supports <span class="math inline">\((\mu_1^i)\)</span> via <span class="math inline">\(\Phi_{\theta_3}\)</span> on <span class="math inline">\([2T/3,T]\)</span>; well-posedness and time-reversibility give a constant <span class="math inline">\(C\)</span> with <span class="math inline">\(\mathsf W_2((\Phi_{\theta_3}^T)^{-1}\mu,(\Phi_{\theta_3}^T)^{-1}\nu) \le C\,\mathsf W_2(\mu,\nu)\)</span> (5.3). <strong>(2) Matching:</strong> Lemma 5.1 produces a single Lipschitz-invertible <span class="math inline">\(\psi\)</span> agreeing with each <span class="math inline">\(\psi^i\)</span> on the disentangled support, and Lemma 5.4 realizes <span class="math inline">\(\psi\)</span> up to <span class="math inline">\(L^2\)</span> error by a flow map <span class="math inline">\(\psi_\varepsilon = \Phi_{\theta_2}\)</span> on <span class="math inline">\([T/3,2T/3]\)</span>; the coupling bound (Lemma 5.2) turns the <span class="math inline">\(L^2\)</span> error into <span class="math inline">\(\mathsf W_2\big((\Phi_{\theta_2}^{2T/3}\!\circ\Phi_{\theta_1}^{T/3})(\mu_0^i),\Phi_{\theta_3}^T(\mu_1^i)\big) \le \varepsilon/C\)</span> (5.5–5.6). <strong>(3) Composition:</strong> applying <span class="math inline">\((\Phi_{\theta_3}^T)^{-1}\)</span> and (5.3) yields <span class="math inline">\(\mathsf W_2(\mu^i(T),\mu_1^i) \le \varepsilon\)</span> for all <span class="math inline">\(i\)</span>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single <span class="math inline">\(\psi\)</span> by Lemma 5.1, approximate <span class="math inline">\(\psi\)</span> by a flow map by Lemma 5.4, and bound the resulting <span class="math inline">\(W_2\)</span> error by the coupling Lemma 5.2. We give a type-correct Lean <strong>statement</strong> as a <code>sorry</code> (open). The hypothesis (1.5) — a shared missing direction off every input support and off every target support — and the <span class="math inline">\(L^2\)</span>-matchability of the pairs are recorded as the opaque predicates <code>SharedMissingDirection</code> and <code>Matchable</code>, so the statement stays faithful without re-deriving the absent support / optimal-transport API; the conclusion is the controllability core, a single piecewise-constant <span class="math inline">\(\theta\)</span> with <code>W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε</code> for every <span class="math inline">\(i\)</span>. We do not claim a proof.</p>
+<pre class="lean"><code>/-- **Theorem 1.2** (general targets). If every input/target pair is matchable by a transport map
+and the families share a missing direction, then for any horizon `T` and tolerance `ε` there is a
+piecewise-constant parameter `θ` whose solution map steers each input measure to within `ε` of its
+target in `W₂`. Stub (`sorry`): status `math.open`. -/
+theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (hmiss₀ : SharedMissingDirection μ₀) (hmiss₁ : SharedMissingDirection μ₁)
+    (hmatch : Matchable μ₀ μ₁) :
+    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean" class="lean-src"><code>Statements/MainResults.lean</code></a></p>
+</div>
+</section>
+<section id="node-theorem-1-1" class="level2">
+<h2 class="anchored" data-anchor-id="node-theorem-1-1">Theorem 1.1 — matching Dirac targets</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Theorem 1.1, p.&nbsp;5).</p>
+<p>Suppose <span class="math inline">\(d \geq 3\)</span>. Consider data <span class="math inline">\((\mathscr D)\)</span> such that</p>
+<ol type="1">
+<li><p>there exists <span class="math inline">\(w_0 \in \mathbb S^{d-1}\)</span> such that <span class="math display">\[w_0 \notin \bigcup_i \operatorname{supp}(\mu_0^i); \tag{1.4}\]</span></p></li>
+<li><p>for any <span class="math inline">\(i \in \{1,\dots,N\}\)</span>, we have <span class="math inline">\(\mu_1^i = \delta_{x^i}\)</span>.</p></li>
+</ol>
+<p>Then for any <span class="math inline">\(T &gt; 0\)</span> and <span class="math inline">\(\varepsilon &gt; 0\)</span>, there exists <span class="math inline">\(\theta \in L^\infty((0,T);\Theta)\)</span> such that for any <span class="math inline">\(i \in \{1,\dots,N\}\)</span>, the unique solution <span class="math inline">\(\mu^i \in \mathscr C^0([0,T];\mathscr P(\mathbb S^{d-1}))\)</span> to (1.3) with data <span class="math inline">\(\mu_0^i\)</span> and parameters <span class="math inline">\(\theta\)</span> satisfies <span class="math display">\[\mathsf W_2(\mu^i(T), \mu_1^i) \leq \varepsilon.\]</span> Moreover, <span class="math inline">\(\theta\)</span> can be chosen piecewise constant, with <span class="math inline">\(O(d\cdot N)\)</span> switches, and <span class="math display">\[\|\theta\|_{L^\infty((0,T);\Theta)} = O\!\left(\frac{d\cdot N}{T} + \log\frac1\varepsilon\right).\]</span></p>
+<p><em>Proof sketch (full proof §5.2, p.&nbsp;29).</em> The proof follows the same ideas as Theorem 1.2 but is significantly simpler — some steps are omitted — using <span class="math inline">\(\Phi^T_{\mathrm{fin}} := \Phi_{\theta_3}^{T} \circ \Phi_{\theta_2}^{2T/3} \circ \Phi_{\theta_1}^{T/3}\)</span>. <strong>(1) Disentangle:</strong> <span class="math inline">\(\Phi_{\theta_1}\)</span> on <span class="math inline">\([0,T/3]\)</span> from Proposition 3.1, with <span class="math inline">\(\|\theta_1\| \lesssim d\,N/T\)</span>. <strong>(2) Cluster:</strong> <span class="math inline">\(\Phi_{\theta_2}\)</span> on <span class="math inline">\([T/3,2T/3]\)</span> from Proposition 2.1, applicable since the <span class="math inline">\(\Phi^{T/3}(\mu_0^i)\)</span> are now disjoint and single-hemisphere, driving each to within <span class="math inline">\(\delta\)</span> of a point <span class="math inline">\(\delta_{x_0^i}\)</span> with <span class="math inline">\(T_\delta = O(\log 1/\delta)\)</span>, so <span class="math inline">\(\|\theta_2\| \lesssim \log 1/\delta\)</span>. <strong>(3) Match:</strong> <span class="math inline">\(\Phi_{\theta_3}\)</span> on <span class="math inline">\([2T/3,T]\)</span> from Proposition 4.1 steers the ensemble of atoms <span class="math inline">\(x_0^i\)</span> to the targets <span class="math inline">\(y^i\)</span>, with <span class="math inline">\(\|\theta_3\| \lesssim N/T\)</span>; since all measures are <span class="math inline">\(\delta\)</span>-close to <span class="math inline">\(\delta_{x_0^i}\)</span> the error is <span class="math inline">\(e^{O(N\cdot T)}\delta\)</span>. All in all <span class="math inline">\(\mathsf W_2(\mu^i(T),\delta_{y^i}) \le \varepsilon\)</span> with <span class="math inline">\(\|\theta\|_{L^\infty((0,T);\Theta)} = O(d\cdot N/T + \log 1/\varepsilon)\)</span>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
+<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 (<span class="math inline">\(\|\theta_1\| \lesssim dN/T\)</span>), cluster each now-disjoint single-hemisphere measure to within <span class="math inline">\(\delta\)</span> of a point by Proposition 2.1 (<span class="math inline">\(T_\delta = O(\log 1/\delta)\)</span>, <span class="math inline">\(\|\theta_2\| \lesssim \log 1/\delta\)</span>), then match the ensemble of cluster atoms <span class="math inline">\(x_0^i\)</span> to the targets <span class="math inline">\(y^i\)</span> by Proposition 4.1 (<span class="math inline">\(\|\theta_3\| \lesssim N/T\)</span>); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment <strong>E6</strong>, while the negative control <strong>E7</strong> shows that a single <em>linear</em> continuity equation cannot achieve it — motivating the measure-dependent vector field. We give a type-correct Lean <strong>statement</strong> as a <code>sorry</code> (open): a shared missing direction and Dirac targets <span class="math inline">\(\delta_{x^i}\)</span> yield a single piecewise-constant <span class="math inline">\(\theta\)</span> with <code>W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε</code> for every <span class="math inline">\(i\)</span>. The <span class="math inline">\(O(d\,N)\)</span> switch count and the norm bound <span class="math inline">\(O(dN/T + \log 1/\varepsilon)\)</span> are documented in this blueprint prose, not encoded in the Lean type. We do not claim a proof.</p>
+<pre class="lean"><code>/-- **Theorem 1.1** (Dirac targets). If the targets are point masses `δ_{x i}` and the inputs share
+a missing direction, then for any horizon and tolerance a single piecewise-constant `θ` steers each
+input to within `ε` of its target in `W₂`. Stub (`sorry`): status `math.open`. The proof also gives
+`O(d N)` switches and the stated norm bound (see the blueprint). -/
+theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
+    (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε) (hmiss : SharedMissingDirection μ₀) :
+    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
+  sorry</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean" class="lean-src"><code>Statements/MainResults.lean</code></a></p>
+</div>
+</section>
+<section id="node-prop-6-2" class="level2">
+<h2 class="anchored" data-anchor-id="node-prop-6-2">Proposition 6.2 — generic O(1) disentanglement</h2>
+<div class="from-paper">
+<p><strong>From the original paper</strong> (Geshkovski, Rigollet, Ruiz-Balet, Proposition 6.2, p.&nbsp;30).</p>
+<p>Let <span class="math inline">\(d \geq 3\)</span>, <span class="math inline">\(\pi = \operatorname{Unif}((\mathbb S^{d-1})^n)\)</span>, and sample <span class="math inline">\(\mu_0^1, \dots, \mu_0^N\)</span> i.i.d. from <span class="math display">\[\mathscr S_n := \left\{ \frac1n \sum_{k=1}^n \delta_{x_k} : x_k \in \mathbb S^{d-1} \right\} \simeq (\mathbb S^{d-1})^n.\]</span> Consider (1.3)–(1.2) with <span class="math inline">\(\mathbf B \equiv \beta I_d\)</span> (<span class="math inline">\(\beta \geq 0\)</span>), <span class="math inline">\(\mathbf V \equiv I_d\)</span>, <span class="math inline">\(\mathbf W \equiv 0\)</span>. Let <span class="math inline">\(x_*^i\)</span> be the (a.s. existing) limit cluster point of <span class="math inline">\(\mu^i(t)\)</span>. Then <span class="math inline">\(\mathbb P[x_*^i \neq x_*^j] = 1\)</span> for <span class="math inline">\(i \neq j\)</span>.</p>
+</div>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge informal">informal</span></p>
+<p><strong>Reviewed on paper; not stated in Lean.</strong> The paper’s argument (sketch of proof, p.&nbsp;30) is a symmetry/measure-theoretic one: for <span class="math inline">\(\pi\)</span>-almost every empirical input the dynamics with <span class="math inline">\(\mathbf B \equiv \beta I_d\)</span>, <span class="math inline">\(\mathbf V \equiv I_d\)</span>, <span class="math inline">\(\mathbf W \equiv 0\)</span> converge to a Dirac <span class="math inline">\(\delta_X\)</span>, defining a map <span class="math inline">\(f : \mathscr S_n \to \mathbb S^{d-1}\)</span>. Because the flow and the law <span class="math inline">\(\pi\)</span> are <span class="math inline">\(\mathbb O(d)\)</span>-equivariant, the law <span class="math inline">\(\nu = f_\#\pi\)</span> of the limit is rotation-invariant, hence non-atomic — an atom at <span class="math inline">\(x_0\)</span> of mass <span class="math inline">\(p\)</span> would force an atom of mass <span class="math inline">\(p\)</span> at every <span class="math inline">\(\mathsf R x_0\)</span>, contradicting <span class="math inline">\(\nu(\mathbb S^{d-1}) = 1\)</span> once enough distinct rotations are chosen. Two independent inputs then give independent limits with this common non-atomic law, so <span class="math inline">\(\mathbb P[x_*^i = x_*^j] = \int \nu(\{x\})\,\mathrm d\nu(x) = 0\)</span>. We do not state this in Lean: it would require Haar measure on <span class="math inline">\(\mathbb O(d)\)</span>, the equivariant <span class="math inline">\(\omega\)</span>-limit map <span class="math inline">\(f\)</span>, and non-atomicity infrastructure outside our current axiom layer. The result is recorded as the heuristic that the generic switch complexity is <span class="math inline">\(O(1)\)</span> rather than the <span class="math inline">\(O(d\,N)\)</span> of Theorem 1.1.</p>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Lean formalization and experiments: Alexandre Quemy.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Original paper: Geshkovski, Rigollet, Ruiz-Balet (arXiv:2411.04551v3).</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

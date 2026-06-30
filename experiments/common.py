@@ -14,7 +14,12 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+import platform
+import socket
+import subprocess
+import sys
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -64,6 +69,40 @@ def integrate(field, x0: np.ndarray, t_span: float, n_steps: int) -> np.ndarray:
     return x
 
 
+def integrate_trace(field, x0: np.ndarray, t_span: float, n_steps: int, record_every: int | None = None):
+    """Like `integrate`, but also returns sampled `(times, states)` along the trajectory.
+
+    `states[i]` is the full point cloud at `times[i]` (a copy). Experiments use this to plot a
+    scalar of the flow -- diameter, separation, distance-to-target -- as a function of time,
+    without re-implementing the RK4 loop. Returns `(times: np.ndarray, states: list[np.ndarray])`.
+    """
+    if record_every is None:
+        record_every = max(1, n_steps // 100)
+    dt = t_span / n_steps
+    x = normalize(np.asarray(x0, dtype=float))
+
+    def rhs(t, x):
+        return tangential_projector_apply(x, field(t, x))
+
+    t = 0.0
+    times = [0.0]
+    states = [x.copy()]
+    for step in range(n_steps):
+        k1 = rhs(t, x)
+        k2 = rhs(t + 0.5 * dt, normalize(x + 0.5 * dt * k1))
+        k3 = rhs(t + 0.5 * dt, normalize(x + 0.5 * dt * k2))
+        k4 = rhs(t + dt, normalize(x + dt * k3))
+        x = normalize(x + (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4))
+        t += dt
+        if (step + 1) % record_every == 0:
+            times.append(t)
+            states.append(x.copy())
+    if times[-1] != t:                 # always keep the true endpoint as the last snapshot
+        times.append(t)
+        states.append(x.copy())
+    return np.array(times), states
+
+
 def sample_cap(rng: np.ndarray, center: np.ndarray, radius: float, n: int) -> np.ndarray:
     """Sample n points uniformly-ish inside the geodesic cap B(center, radius) on S^{d-1}.
 
@@ -107,16 +146,65 @@ def diam_after(field, X0: np.ndarray, t_span: float, n_steps: int) -> float:
     return max_pairwise_geodesic(XT)
 
 
+# --- plotting + provenance ------------------------------------------------------------------
+# Figures and a per-run manifest are the visual + provenance evidence the report and the website
+# consume. matplotlib is imported lazily (Agg backend) so experiments that do not plot stay
+# numpy-only and fast.
+
+
+def _git_sha() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True
+        ).strip()
+    except Exception:
+        return "unknown"
+
+
+def new_axes(figsize=(6.4, 4.2), nrows=1, ncols=1):
+    """Create (fig, ax[es]) on the non-interactive Agg backend."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    return plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
+
+
+def save_figure(fig, results_dir: str, exp_name: str, stem: str) -> list[str]:
+    """Save `fig` as PNG + SVG under results/<exp_name>/, returning paths relative to
+    `results_dir` (e.g. 'E1_mass_transport/chain.png') for the report and website to reference."""
+    import matplotlib.pyplot as plt
+
+    d = os.path.join(results_dir, exp_name)
+    os.makedirs(d, exist_ok=True)
+    rels = []
+    for ext in ("png", "svg"):
+        p = os.path.join(d, f"{stem}.{ext}")
+        fig.savefig(p, bbox_inches="tight", dpi=140)
+        rels.append(os.path.relpath(p, start=results_dir))
+    plt.close(fig)
+    return rels
+
+
 @dataclass
 class Result:
-    """A seeded experiment verdict, written to results/ as CKC evidence."""
+    """A seeded experiment verdict, written to results/ as CKC evidence.
+
+    `hypothesis` / `explanation` carry the experiment's narrative (what it predicts and how it
+    tests it); `figures` lists the saved plot paths (relative to results/). The report and the
+    website read these fields, so each `summary.json` is the single source of truth for an
+    experiment's story, and `manifest.json` records its provenance (git sha, time, host)."""
 
     name: str
     claim: str
     seed: int
     passed: bool
     criterion: str
-    metrics: dict
+    metrics: dict[str, object]
+    hypothesis: str = ""
+    explanation: str = ""
+    figures: list[str] = field(default_factory=list)
 
     def write(self, results_dir: str) -> str:
         d = os.path.join(results_dir, self.name)
@@ -127,11 +215,29 @@ class Result:
             "seed": self.seed,
             "passed": bool(self.passed),
             "criterion": self.criterion,
+            "hypothesis": self.hypothesis,
+            "explanation": self.explanation,
             "metrics": self.metrics,
+            "figures": self.figures,
         }
         path = os.path.join(d, "summary.json")
         with open(path, "w") as f:
             json.dump(summary, f, indent=2, sort_keys=True)
+        manifest = {
+            "experiment": self.name,
+            "claim": self.claim,
+            "seed": self.seed,
+            "passed": bool(self.passed),
+            "git_sha": _git_sha(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "host": socket.gethostname(),
+            "python": sys.version.split()[0],
+            "platform": platform.platform(),
+            "numpy": np.__version__,
+            "figures": self.figures,
+        }
+        with open(os.path.join(d, "manifest.json"), "w") as f:
+            json.dump(manifest, f, indent=2, sort_keys=True)
         return path
 
 

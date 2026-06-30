@@ -2,6 +2,12 @@
   "claim": "claim:exp-e5-lyapunov",
   "criterion": "E=1-cos(theta) nonincreasing (max step increase <= 1e-09) and theta(T) -> 0 (|theta(T)| <= 0.001) over 200 seeded trials",
   "experiment": "E5_lyapunov",
+  "explanation": "We integrate the angle ODE from 200 seeded (alpha, theta0) pairs and form E = 1 - cos(theta) along each trajectory. The figure overlays a subsample of E(t) curves (all monotonically decreasing) with the ensemble mean. The verdict checks that no step increases E beyond RK4 round-off and that every trajectory converges to 0.",
+  "figures": [
+    "E5_lyapunov/lyapunov_decrease.png",
+    "E5_lyapunov/lyapunov_decrease.svg"
+  ],
+  "hypothesis": "For the d=2 flow theta' = -alpha sin(theta) (Example 6.1), the Lyapunov function E(theta) = 1 - cos(theta) satisfies E'(t) = -alpha sin^2(theta) <= 0, so E decreases monotonically and theta(t) -> 0 (the cluster direction) from any start in (-pi, pi).",
   "metrics": {
     "max_E_increase_per_step": 0.0,
     "n_trials": 200,

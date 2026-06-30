@@ -28,15 +28,33 @@ __pycache__/
 .venv*/
 .ipynb_checkpoints/
 
-# Experiment outputs: track the CKC evidence (manifest = provenance, summary = verdict);
-# regenerate raw arrays from the seeded code.
+# Experiment outputs: track the CKC evidence (manifest = provenance, summary = verdict,
+# figures = visual evidence consumed by the report and website); regenerate raw arrays
+# from the seeded code.
 experiments/results/*
 !experiments/results/.gitkeep
 !experiments/results/*/
 !experiments/results/**/manifest*.json
 !experiments/results/**/summary*.json
+!experiments/results/**/*.png
+!experiments/results/**/*.svg
 *.npz
 *.pkl
+
+# Quarto experiment report: track the source (build_report.py, experiments.qmd) and the citable
+# PDF; the HTML render and its support files regenerate (the docs/ site serves the web version).
+/report/experiments.html
+/report/experiments_files/
+/report/*.tex
+/report/.quarto/
+
+# Quarto site: build artifacts and the vendored Lean-unicode font (fetched by site/fonts/fetch.sh).
+# site/experiments-figures/ is a build-time copy of the tracked experiment figures (site/build.py
+# stages it so the website is self-contained); the originals live under experiments/results/.
+/site/_site/
+/site/.quarto/
+/site/fonts/*.ttf
+/site/experiments-figures/
 
 # OS
 .DS_Store

@@ -1,0 +1,27 @@
+---
+title: "Claim graph"
+subtitle: "The dependency graph and its commit-by-commit history"
+toc: false
+---
+
+Every result in this project is a **claim** in a [Conventional Knowledge
+Commits](https://conventional-knowledge-commits.org/) graph: a node whose colour is its
+**effective status** (machine-checked, axiomatised, or open) and whose edges are the
+`Depends-On` / `Closes` relations recorded in the commit trail. A claim's effective status is the
+*weakest* of its own status and everything it rests on, so a single open leaf colours every result
+above it -- the graph cannot flatter the work.
+
+Click a node to trace what it depends on; press **Play** (or drag the slider) to replay the
+commits in order and watch each claim's status resolve as the formalization advances. The view is
+generated from git by [`claimgraph`](https://github.com/hotherio/claimgraph) and embedded below;
+the same data drives the compact [history timeline](history.qmd).
+
+<iframe src="claimgraph-viewer.html" title="ClaimGraph interactive viewer" loading="lazy"
+        style="width:100%;height:820px;border:1px solid var(--bs-border-color,#dee2e6);border-radius:6px">
+</iframe>
+
+::: {.callout-note appearance="simple"}
+The status colours are kernel-honest: they are derived from `#print axioms` over each node's Lean
+name by `bin/axiom-report`, the same source that drives the [blueprint](proofs.qmd) badges. A node
+is green only if its Lean compiles with no `sorry` and no project axiom.
+:::

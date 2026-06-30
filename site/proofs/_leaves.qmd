@@ -1,0 +1,665 @@
+# Self-contained leaves {#sec-leaves}
+
+These are the self-contained computational cores the paper's proofs rest on, each isolated from its
+measure-theoretic and flow-map scaffolding and given a clean Lean kernel proof. Two of them (L7, L8)
+reduce instead to a single labeled Wasserstein axiom and are flagged as such; the gate leaf (L2) and
+the non-colinearity leaves (L11, L11$'$) additionally repair or discharge a gap in the original text.
+
+## Gate algebra and gate ODE {#node-gate}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.2 and eq. (B.4)-(B.5), pp. 31-32).
+
+Lemma B.2 transports mass between two overlapping balls $\mathcal B_0,\mathcal B_1\subset\mathbb S^{d-1}$
+($\mathcal B_0\cap\mathcal B_1\neq\varnothing$): for any $\varepsilon>0$, $T>0$ there exist
+$W,U\in\mathscr M_{d\times d}(\mathbb R)$ and $b\in\mathbb R^d$ so that the solution $\mu$ satisfies
+$\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. In the proof:
+
+"Let $z\in\mathbb S^{d-1}$ denote the center and $R>0$ the radius of $\mathcal B_0$. Take an arbitrary
+$\omega\in\operatorname{int}(\mathcal B_0\cap\mathcal B_1)$. We consider $U=-\mathbf 1 z^\top$ and
+$b=\cos(R)\mathbf 1$, as well as any $W\in\mathscr M_{d\times d}(\mathbb R)$ such that $W\mathbf 1=\omega$.
+Then $W(Ux+b)_+=(-\cos d_g(z,x)+\cos(R))_+\,\omega$, and note that"
+$$(-\cos d_g(z,x)+\cos(R))_+>0 \quad\Longleftrightarrow\quad x\in\mathcal B_0. \tag{B.4}$$
+"Now observe that"
+$$\frac{\mathrm d}{\mathrm dt}\langle x(t),\omega\rangle=(-\cos d_g(z,x(t))+\cos(R))_+\bigl(1-\langle x(t),\omega\rangle^2\bigr), \tag{B.5}$$
+"which is positive whenever $x(t)\in\mathcal B_0\setminus\{\omega\}$."
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The gated drift is $W(Ux+b)_+ = g\cdot\omega$ with scalar gate $g=(\cos R-\langle z,x\rangle)_+$.
+Projecting onto the tangent space and pairing with the unit vector $\omega$, the projector identity L1
+collapses the tangential part to a scalar:
+$\langle \mathbf P_x^\perp(g\,\omega),\omega\rangle = g\,\langle\mathbf P_x^\perp\omega,\omega\rangle
+= g(\|\omega\|^2-\langle x,\omega\rangle^2) = g(1-\langle x,\omega\rangle^2)$ since $\|\omega\|=1$ — this is
+`gate_inner_identity`. The ODE (B.5) is then the chain rule: $\frac{\mathrm d}{\mathrm dt}\langle x(t),\omega\rangle
+= \langle x'(t),\omega\rangle$ ($\omega$ constant), and substituting the projected drift $x'(t)=\mathbf P_{x(t)}^\perp(g\,\omega)$
+reproduces the logistic factor. For the sign (B.4), $0<\cos R-\langle z,x\rangle\iff\langle z,x\rangle<\cos R$,
+and rewriting $\langle z,x\rangle=\cos d_g(z,x)$ with strict antitonicity of $\cos$ on $[0,\pi]$ gives the
+geodesic form. The key step is the quadratic projector identity, which turns the ambient projection into the
+scalar $1-\langle x,\omega\rangle^2$.
+
+```lean
+/-- L2 (algebra of B.5): for unit `x` and unit `ω`, projecting the scaled drift `g•ω` and pairing
+with `ω` gives the logistic factor `g(1 - ⟪x,ω⟫²)`. -/
+theorem gate_inner_identity {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ) :
+    ⟪tangentialProjector x (g • ω), ω⟫ = g * (1 - ⟪x, ω⟫ ^ 2) := by
+  rw [tangentialProjector_smul, real_inner_smul_left, projector_inner_sub_sq hx ω,
+    norm_eq_one_of_mem_sphere hω, one_pow]
+
+/-- L2 (the gate ODE B.5): along a path `x(t)` on the sphere whose velocity is the projected gated
+drift `x'(t) = P_{x(t)}^⊥ (g • ω)`, the inner product `⟪x(t), ω⟫` evolves as
+`g(1 - ⟪x(t), ω⟫²)`. -/
+theorem gate_hasDerivAt_inner {x : ℝ → Eucl d} {ω : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (hxs : x t ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ)
+    (hode : x' = tangentialProjector (x t) (g • ω)) :
+    HasDerivAt (fun s => (⟪x s, ω⟫ : ℝ)) (g * (1 - ⟪x t, ω⟫ ^ 2)) t := by
+  have hconst : HasDerivAt (fun _ : ℝ => ω) (0 : Eucl d) t := hasDerivAt_const t ω
+  have h := hx.inner ℝ hconst
+  rw [hode, gate_inner_identity hxs hω g] at h
+  simpa using h
+
+/-- L2 (gate sign, B.4, geodesic form): the gate is active exactly outside the closed cap of radius
+`R` around `z`, i.e. on `{x : d_g(z, x) > R}`. -/
+theorem gate_pos_iff_dist {z x : Eucl d} (hz : z ∈ sphere d) (hx : x ∈ sphere d)
+    {R : ℝ} (hR : R ∈ Set.Icc (0 : ℝ) Real.pi) :
+    (⟪z, x⟫ : ℝ) < Real.cos R ↔ R < geodesicDist z x := by
+  rw [← cos_geodesicDist hz hx]
+  exact Real.strictAntiOn_cos.lt_iff_gt (geodesicDist_mem_Icc z x) hR
+```
+
+[`Leaves/GateODE.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GateODE.lean){.lean-src}
+:::
+
+::: {.strengthen}
+**Strengthening (finding F1).** The printed (B.4) asserts the gate is active iff $x\in\mathcal B_0=B(z,R)$.
+Our kernel-checked `gate_pos_iff_dist` proves instead
+$(\cos R-\langle z,x\rangle)_+>0 \iff d_g(z,x)>R$ — the gate is active on the **complement** of the cap.
+The opposite sign is the consistent one: (B.5) needs the gate active *inside* $\mathcal B_0\setminus\{\omega\}$ to
+push interior mass toward $\omega$, whereas the printed parameters $U=-\mathbf 1 z^\top,\ b=\cos(R)\mathbf 1$
+leave the interior mass on a zero gate, so the lemma as written transports nothing; the fix is
+$U=+\mathbf 1 z^\top,\ b=-\cos(R)\mathbf 1$. This is corroborated independently by experiment E1 (the gated-transport
+mass fraction rises from $\approx 0.27$ to $1.0$ once the seed is placed on $\{d_g(z,x)>R\}$) and by the paper's own
+§4 Step 3, which states the identical construction with the correct side. See `ERRATA.md`.
+:::
+
+## Barycenter ODE {#node-barycenter}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, eq. (B.9), p. 33).
+
+In Step 1 of the proof of Lemma 3.3, the solution to
+$$\begin{cases}\partial_t\mu(t)+\operatorname{div}\!\bigl(\mathbf P_x^\perp\langle\alpha_1,\mathbb E_{\mu(t)}[x]\rangle\,\alpha_1\,\mu(t)\bigr)=0 & \text{on }\mathbb R_{\ge0}\times\mathbb S^{d-1},\\[2pt] \mu(0)=\mu_0 & \text{on }\mathbb S^{d-1}\end{cases} \tag{B.9}$$
+for $\mu_0\in\mathscr P(\mathbb Q_1^{d-1})$ satisfies
+$$\frac{\mathrm d}{\mathrm dt}\langle\mathbb E_{\mu(t)}[x],\alpha_1\rangle=\langle\mathbb E_{\mu(t)}[x],\alpha_1\rangle\Bigl(1-\int\langle x',\alpha_1\rangle^2\mu(t,\mathrm dx')\Bigr).$$
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The disentangling field is $\mathbf P_x^\perp(c\,\alpha)$ with $c=\langle\mathbb E_\mu[x],\alpha\rangle$, so the
+per-particle characteristic $\langle x(t),\alpha\rangle$ obeys exactly the gate identity of L2 with $c$ in place of
+the gate scalar: $\frac{\mathrm d}{\mathrm dt}\langle x(t),\alpha\rangle = c\,(1-\langle x(t),\alpha\rangle^2)$. The
+Lean derivative is therefore literally `gate_hasDerivAt_inner` instantiated at $g=c$. The sign lemma
+`barycenter_deriv_pos` records that when $c>0$ and the component lies strictly inside $(-1,1)$ the right-hand side is
+positive, the dissipation that drives $\langle x,\alpha\rangle\to 1$, i.e. $x\to\alpha$. The key point is that the
+paper shows $c$ is sign-preserved along the flow, so the logistic ODE is monotone.
+
+```lean
+/-- L6 (derivative, eq. B.9): along `x'(t) = P_{x(t)}^⊥ (c • α)` with `α` a unit vector, the
+component `⟪x(t), α⟫` evolves as `c(1 - ⟪x(t), α⟫²)`. -/
+theorem barycenter_hasDerivAt_inner {x : ℝ → Eucl d} {α : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (hxs : x t ∈ sphere d) (hα : α ∈ sphere d) (c : ℝ)
+    (hode : x' = tangentialProjector (x t) (c • α)) :
+    HasDerivAt (fun s => (⟪x s, α⟫ : ℝ)) (c * (1 - ⟪x t, α⟫ ^ 2)) t :=
+  gate_hasDerivAt_inner hx hxs hα c hode
+
+/-- L6 (sign / strict increase): when the barycenter coefficient `c` is positive and the component
+is strictly inside `(-1, 1)`, the component strictly increases. This is the dissipation that pushes
+`⟪x, α⟫` toward `1`. -/
+theorem barycenter_deriv_pos {c y : ℝ} (hc : 0 < c) (hy : y ∈ Set.Ioo (-1 : ℝ) 1) :
+    0 < c * (1 - y ^ 2) := by
+  obtain ⟨h1, h2⟩ := hy
+  have hy2 : y ^ 2 < 1 := by nlinarith
+  have : 0 < 1 - y ^ 2 := by linarith
+  positivity
+```
+
+[`Leaves/BarycenterODE.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterODE.lean){.lean-src}
+:::
+
+## Geodesic-distance gradient {#node-geodesic-gradient}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, eq. after (4.4), p. 20).
+
+"Observe that the trajectories of the ODE"
+$$\dot x(t)=(\langle\gamma,x(t)\rangle-\epsilon/2)_+\,\mathbf P_{x(t)}^\perp\omega_+ \qquad\text{for }t\ge0, \tag{4.4}$$
+"follow the Riemannian gradient flow of the distance between $\omega_+$ and $x$ in $\mathcal S_+$. Indeed,"
+$$\nabla_1 d_g(x,\omega_+)=-\frac{\mathbf P_x^\perp(\omega_+)}{\sqrt{1-\langle x,\omega_+\rangle^2}}.$$
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+Two facts pin down the gradient. First, the chain rule for $\arccos\circ\langle\cdot,\omega\rangle$: since
+$(\arccos)'(u)=-1/\sqrt{1-u^2}$ (Mathlib's `Real.hasDerivAt_arccos`),
+$\frac{\mathrm d}{\mathrm dt}d_g(x(t),\omega)=-(1-\langle x,\omega\rangle^2)^{-1/2}\langle x',\omega\rangle$.
+Second, for a tangent velocity ($\langle x',x\rangle=0$) the ambient $\omega$ may be replaced by its tangential
+projection: $\langle x',\mathbf P_x^\perp\omega\rangle=\langle x',\omega\rangle-\langle x,\omega\rangle\langle x',x\rangle=\langle x',\omega\rangle$.
+Hence the derivative is $\bigl\langle x',\,-(1-\langle x,\omega\rangle^2)^{-1/2}\,\mathbf P_x^\perp\omega\bigr\rangle$,
+exhibiting $-\mathbf P_x^\perp\omega/\sqrt{1-\langle x,\omega\rangle^2}$ as the Riemannian (tangential) gradient. The
+key step is that tangency annihilates the cross term, letting the Euclidean inner product against $\omega$ be read as
+the inner product against the gradient direction.
+
+```lean
+/-- L4 (derivative of geodesic distance along a path): the chain rule for `arccos∘⟪·, ω⟫`. -/
+theorem geodesicDist_hasDerivAt {x : ℝ → Eucl d} {ω : Eucl d} {t : ℝ} {x' : Eucl d}
+    (hx : HasDerivAt x x' t) (h1 : (⟪x t, ω⟫ : ℝ) ≠ -1) (h2 : (⟪x t, ω⟫ : ℝ) ≠ 1) :
+    HasDerivAt (fun s => geodesicDist (x s) ω)
+      (-(1 / Real.sqrt (1 - (⟪x t, ω⟫ : ℝ) ^ 2)) * ⟪x', ω⟫) t := by
+  have hinner : HasDerivAt (fun s => (⟪x s, ω⟫ : ℝ)) (⟪x', ω⟫) t := by
+    have h := hx.inner ℝ (hasDerivAt_const t ω)
+    simpa using h
+  have h := (Real.hasDerivAt_arccos h1 h2).comp t hinner
+  simpa only [geodesicDist, Function.comp_def] using h
+
+/-- L4 (gradient direction): on the sphere, for a tangent velocity the inner product with `ω` equals
+the inner product with the tangential projection `P_x^⊥ ω`. Hence the geodesic-distance derivative
+is `⟪x', -(1/√(1-⟪x,ω⟫²)) • P_x^⊥ ω⟫`, exhibiting `-P_x^⊥ ω / √(1-⟪x,ω⟫²)` as the Riemannian
+gradient. -/
+theorem inner_eq_inner_tangentialProjector {x ω x' : Eucl d}
+    (htangent : (⟪x', x⟫ : ℝ) = 0) :
+    (⟪x', ω⟫ : ℝ) = ⟪x', tangentialProjector x ω⟫ := by
+  rw [tangentialProjector, inner_sub_right, real_inner_smul_right, htangent]
+  ring
+```
+
+[`Leaves/GeodesicGradient.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/GeodesicGradient.lean){.lean-src}
+:::
+
+## Separating hyperplane {#node-separating-hyperplane}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 4.2 Step 1, p. 20).
+
+With $\omega_+$ on the minimizing geodesic between $\omega$ and $\gamma$ at distance $\pi/8$ from $\omega$, one has
+$d_g(\omega_+,x_0^M)\ge d_g(\omega,x_0^M)-d_g(\omega,\omega_+)\ge\tfrac{3\pi}{8}$.
+
+"As a consequence, the hyperplane $\{x\in\mathbb S^{d-1}:\langle\omega,x\rangle=\cos(\pi/8+\tau)\}$ is a separating
+hyperplane for the ball $B(\omega,\pi/8+\tau)$ and the points $x_0^M$ and $y^M$ for every $\tau\in(0,3\pi/8)$;
+namely"
+$$\langle\omega,x_0^M\rangle-\cos\Bigl(\frac{\pi}{8}+\tau\Bigr)=\cos d_g(\omega,x_0^M)-\cos\Bigl(\frac{\pi}{8}+\tau\Bigr)<0,$$
+"where the inequality is by virtue of (4.3)" (the choice $d_g(\omega,x_0^M)\ge\pi/2$).
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The whole content is the strict antitonicity of cosine on $[0,\pi]$. From $\tau<3\pi/8$ we get the cap angle
+$\pi/8+\tau<\pi/2\le d_g(\omega,x)$, and both angles lie in $[0,\pi]$, so Mathlib's `Real.strictAntiOn_cos` gives
+$\cos d_g(\omega,x)<\cos(\pi/8+\tau)$. Rewriting $\cos d_g(\omega,x)=\langle\omega,x\rangle$ lands the separating
+inequality $\langle\omega,x\rangle<\cos(\pi/8+\tau)$. The key step is that monotonicity of cosine converts the angle
+gap $\pi/8+\tau<d_g(\omega,x)$ into the inner-product gap that places $x$ strictly on the far side of the
+hyperplane.
+
+```lean
+/-- L3 (separating side): if `x` is far from the anchor `ω` (`d_g(ω, x) ≥ π/2`) and
+`τ ∈ (0, 3π/8)`, then `⟪ω, x⟫ < cos(π/8 + τ)`, so `x` lies strictly on the far side of the
+separating hyperplane. -/
+theorem separating_hyperplane {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d)
+    {τ : ℝ} (hτ : τ ∈ Set.Ioo 0 (3 * Real.pi / 8))
+    (hfar : Real.pi / 2 ≤ geodesicDist ω x) :
+    ⟪ω, x⟫ < Real.cos (Real.pi / 8 + τ) := by
+  obtain ⟨hτ0, hτ8⟩ := hτ
+  have hpi := Real.pi_pos
+  -- both angles lie in [0, π]
+  have ha : Real.pi / 8 + τ ∈ Set.Icc (0 : ℝ) Real.pi := by
+    constructor <;> nlinarith [Real.pi_pos]
+  have hb : geodesicDist ω x ∈ Set.Icc (0 : ℝ) Real.pi := geodesicDist_mem_Icc ω x
+  -- the far angle exceeds the cap angle
+  have hab : Real.pi / 8 + τ < geodesicDist ω x := by nlinarith [hfar]
+  -- cosine is strictly decreasing on [0, π]
+  have hcos : Real.cos (geodesicDist ω x) < Real.cos (Real.pi / 8 + τ) :=
+    Real.strictAntiOn_cos ha hb hab
+  rwa [cos_geodesicDist hω hx] at hcos
+```
+
+[`Leaves/SeparatingHyperplane.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/SeparatingHyperplane.lean){.lean-src}
+:::
+
+## Lyapunov sign {#node-lyapunov}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Example 6.1, pp. 29-30).
+
+On the circle ($d=2$), for a particle following a characteristic of $\mu^i(t)$ one has
+$\dot x(t)=\mathbf P_{x(t)}^\perp(m_i(t))=\alpha_i(t)\mathbf P_{x(t)}^\perp(u_i)$ and, in the angle variable
+$\vartheta:=\theta-\theta_i$,
+$$\dot\vartheta(t)=-\alpha_i(t)\sin\vartheta(t).$$
+"The Lyapunov function $\mathsf E(\vartheta):=1-\cos\vartheta$ satisfies"
+$$\dot{\mathsf E}=\sin\vartheta\,\dot\vartheta=-\alpha_i(t)\sin^2\vartheta\le0,$$
+"with equality only at $\vartheta=0$ (since $\alpha_i(t)>0$ ...). Thus $\vartheta(t)\to0$ and each trajectory
+converges to $u_i$."
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+Both halves are kernel-checked. The derivative is the chain rule:
+$\frac{\mathrm d}{\mathrm dt}(1-\cos\theta(s))=\sin\theta(t)\,\theta'(t)$, and substituting the ODE
+$\theta'=-\alpha\sin\theta$ gives $-\alpha\sin^2\theta$. The sign lemma `lyapunov_deriv_nonpos` then notes
+$-\alpha\sin^2\theta\le0$ for $\alpha\ge0$ because $\alpha\sin^2\theta\ge0$. So $\mathsf E=1-\cos\theta$ is
+nonincreasing along the angle flow, forcing $\theta\to0$. The key step is that the $\sin\theta$ produced by the ODE
+cancels with the $\sin\theta$ from differentiating $1-\cos\theta$, leaving a perfect square of definite sign.
+
+```lean
+/-- L5 (derivative of the Lyapunov function along the flow): if `θ` solves `θ' = -α sin θ` at `t`,
+then `E(s) = 1 - cos θ(s)` has derivative `-α sin²(θ t)` at `t`. -/
+theorem lyapunov_hasDerivAt (α : ℝ) (θ : ℝ → ℝ) (t θ' : ℝ)
+    (hθ : HasDerivAt θ θ' t) (hode : θ' = -α * Real.sin (θ t)) :
+    HasDerivAt (fun s => 1 - Real.cos (θ s)) (-α * Real.sin (θ t) ^ 2) t := by
+  have hcos : HasDerivAt (fun s => Real.cos (θ s)) (-Real.sin (θ t) * θ') t :=
+    (Real.hasDerivAt_cos (θ t)).comp t hθ
+  have h : HasDerivAt (fun s => 1 - Real.cos (θ s)) (0 - (-Real.sin (θ t) * θ')) t :=
+    (hasDerivAt_const t 1).sub hcos
+  convert h using 1
+  rw [hode]; ring
+
+/-- L5 (sign): the Lyapunov derivative is nonpositive when `α ≥ 0`. -/
+theorem lyapunov_deriv_nonpos {α : ℝ} (hα : 0 ≤ α) (s : ℝ) :
+    -α * Real.sin s ^ 2 ≤ 0 := by
+  have : 0 ≤ α * Real.sin s ^ 2 := mul_nonneg hα (sq_nonneg _)
+  linarith
+```
+
+[`Leaves/Lyapunov.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Lyapunov.lean){.lean-src}
+:::
+
+## Ball-chain retention {#node-ball-chain-retention}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma B.1 and its proof, pp. 31, 33).
+
+Lemma B.1 transports mass through $K+1$ overlapping balls and concludes
+$\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\mu_0\bigl(\bigcup_k\mathcal B_k\bigr)$. Its proof:
+
+"Write $[0,T]=\bigcup_{k\in[1,M]}[t_{k-1},t_k]$ where $t_k=kT/K$, and proceed by backward induction:"
+$$\mu(T,\mathcal B_K)=\mu(T,\mathcal B_K\setminus\mathcal B_{K-1})+\mu(T,\mathcal B_K\cap\mathcal B_{K-1})\ge\mu(t_{K-1},\mathcal B_K\setminus\mathcal B_{K-1})+(1-\varepsilon)\mu(t_{K-1},\mathcal B_{K-1}),$$
+"where the last inequality follows from Lemma B.2. Using $\mathcal B_k\cap\mathcal B_{k'}=\varnothing$ whenever
+$|k-k'|\ge2$, we arrive to"
+$$\mu(T,\mathcal B_k)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\setminus\mathcal B_{k-1})+\mu_0(\mathcal B_0)\Bigr)=(1-\varepsilon)^K\mu_0\Bigl(\bigcup_{k\in[0,K]}\mathcal B_k\Bigr).$$
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+Stripped of the measure-theoretic bookkeeping, the backward induction is a clean arithmetic fact about a
+nonnegative sequence with per-step retention. We prove by induction on $K$ that if $m\le a_0$ and
+$(1-\varepsilon)\,a_k\le a_{k+1}$ for all $k$, then $(1-\varepsilon)^K m\le a_K$. The base case is $m\le a_0$; the
+step chains $(1-\varepsilon)^{n+1}m=(1-\varepsilon)\bigl((1-\varepsilon)^n m\bigr)\le(1-\varepsilon)\,a_n\le a_{n+1}$.
+The key step is $0\le1-\varepsilon$, which lets the induction hypothesis be scaled by $(1-\varepsilon)$ without
+reversing the inequality before applying the retention hypothesis.
+
+```lean
+/-- L9: geometric retention through a chain. With retention factor `1 - ε ∈ [0, 1]` per step and
+initial mass at least `m ≥ 0`, after `K` steps at least `(1 - ε)^K · m` remains. -/
+theorem ball_chain_geom {ε : ℝ} (hε1 : ε ≤ 1) (a : ℕ → ℝ) {m : ℝ}
+    (h0 : m ≤ a 0) (hstep : ∀ k, (1 - ε) * a k ≤ a (k + 1)) :
+    ∀ K : ℕ, (1 - ε) ^ K * m ≤ a K := by
+  have h1ε : (0 : ℝ) ≤ 1 - ε := by linarith
+  intro K
+  induction K with
+  | zero => simpa using h0
+  | succ n ih =>
+    calc (1 - ε) ^ (n + 1) * m
+        = (1 - ε) * ((1 - ε) ^ n * m) := by ring
+      _ ≤ (1 - ε) * a n := by exact mul_le_mul_of_nonneg_left ih h1ε
+      _ ≤ a (n + 1) := hstep n
+```
+
+[`Leaves/BallChain.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BallChain.lean){.lean-src}
+:::
+
+## Pigeonhole {#node-pigeonhole}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma 3.4 Part 1, App. B.3, p. 35).
+
+"Part 1. There exists an open ball $\mathcal B\subset\operatorname{supp}\mu_0\cup\operatorname{supp}\nu_0$ such that
+$\mu_0(\mathcal B)\neq\nu_0(\mathcal B)$. We now claim that there exists some $x^*\in\mathcal B$ such that"
+$$\mu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\mu_0(\mathrm dx)\neq\nu_0(\mathcal B)x^*+\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,\nu_0(\mathrm dx).$$
+"Indeed if this were to be false, then we'd have"
+$$x^*=\frac{1}{\mu_0(\mathcal B)-\nu_0(\mathcal B)}\int_{\mathbb S^{d-1}\setminus\mathcal B}x\,(\nu_0(\mathrm dx)-\mu_0(\mathrm dx))$$
+"for all $x^*\in\mathcal B$, which cannot hold."
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The displayed contradiction is "$x^*$ equals a fixed vector for all $x^*\in\mathcal B$" — i.e. the identity would be
+constant on the open ball $\mathcal B$, impossible. We isolate exactly that general fact: in a nontrivial real normed
+space, an open ball of positive radius contains a point distinct from any prescribed $a$. Pick $u\neq0$ and set
+$v=(r/2\|u\|)\,u$, so $\|v\|=r/2<r$ and $v\neq0$; then $c$ and $c+v$ both lie in $B(c,r)$ (at distances $0$ and
+$r/2$) and are distinct. If $c=a$, return $c+v$ (which differs from $c=a$ because $v\neq0$); otherwise return $c$.
+The key step is that a positive-radius ball is never a single point, so it cannot be forced to one value — the
+contradiction the pigeonhole argument exploits.
+
+```lean
+/-- L10: an open ball of positive radius in a nontrivial real normed space contains a point distinct
+from any prescribed `a`. Hence no map can be forced to a single value on the ball, which is the
+contradiction the pigeonhole step exploits. -/
+theorem exists_ne_in_ball (c a : E) {r : ℝ} (hr : 0 < r) :
+    ∃ x ∈ Metric.ball c r, x ≠ a := by
+  obtain ⟨u, hu⟩ := exists_ne (0 : E)
+  have hunorm : 0 < ‖u‖ := norm_pos_iff.mpr hu
+  set v : E := (r / (2 * ‖u‖)) • u with hv
+  have hvnorm : ‖v‖ = r / 2 := by
+    rw [hv, norm_smul, Real.norm_of_nonneg (by positivity)]
+    field_simp
+  have hvne : v ≠ 0 := by
+    rw [← norm_pos_iff, hvnorm]; linarith
+  -- `c` and `c + v` both lie in the ball and are distinct
+  have hc_mem : c ∈ Metric.ball c r := Metric.mem_ball_self hr
+  have hcv_mem : c + v ∈ Metric.ball c r := by
+    rw [Metric.mem_ball, dist_eq_norm]
+    have h1 : c + v - c = v := by abel
+    rw [h1, hvnorm]; linarith
+  -- at least one of the two distinct points differs from `a`
+  rcases eq_or_ne c a with hca | hca
+  · refine ⟨c + v, hcv_mem, fun h => hvne ?_⟩
+    have h2 : c + v = c + 0 := by rw [add_zero, h, hca]
+    exact add_left_cancel h2
+  · exact ⟨c, hc_mem, hca⟩
+```
+
+[`Leaves/Pigeonhole.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Pigeonhole.lean){.lean-src}
+:::
+
+## Disjoint hulls give non-colinear barycenters {#node-noncolinear}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 3.1 induction step, pp. 16-17).
+
+The induction hypothesis (3.3) is
+$$\operatorname{conv}_g\operatorname{supp}\mu_0^i\cap\operatorname{conv}_g\operatorname{supp}\mu_0^j=\varnothing\qquad\text{for }i\neq j\in[\![1,N-1]\!]. \tag{3.3}$$
+The induction step then asserts, without proof:
+
+"Since $\operatorname{supp}\mu_0^i\subset\mathbb Q_1^{d-1}$, (3.3) implies that"
+$$\mathbb E_{\mu_0^i}[x]\text{ is not colinear with }\mathbb E_{\mu_0^j}[x]\qquad\text{for }i\neq j\in[\![1,N-1]\!].$$
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+Within an open hemisphere spherical geodesics are radial projections of Euclidean chords, so we model the geodesic
+hull as $\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}$ — the unit vectors that are nonnegative
+combinations of $s$ (`geodesicHull`). The empirical barycenter $\sum_p w_p\,p$ with $w_p\ge0$ is a manifest conical
+combination of $s$, and the cone is closed under nonnegative scaling, so the normalization $\|b\|^{-1}b$ of any
+nonzero conical point lies in $\operatorname{conv}_g(s)$. If the two barycenters were colinear — for vectors in the
+positive orthant "colinear" means a *positive* multiple, i.e. `SameRay` — then $b=k\,c$ with $k>0$, so their
+normalizations coincide, $\|b\|^{-1}b=\|c\|^{-1}c$. That common unit direction would then sit in *both* geodesic
+hulls, contradicting their disjointness. The key step is that positive colinearity forces a shared normalized
+direction, which disjoint hulls forbid.
+
+```lean
+/-- The geodesic-convex hull of `s`, modeled within a hemisphere as `cone(s) ∩ 𝕊^{d-1}`: the unit
+vectors that are nonnegative combinations of `s`. Faithful to `conv_g` when `s` lies in an open
+hemisphere (e.g. the orthant `Q₁^{d-1}`), since spherical geodesics are radial projections of chords. -/
+def geodesicHull (s : Finset (Eucl d)) : Set (Eucl d) :=
+  {x | ‖x‖ = 1 ∧ inConicalSpan s x}
+
+/-- **Core of finding F2.** If two nonzero conical points `b`, `c` (the unnormalized barycenters) are
+colinear — `SameRay ℝ b c`, i.e. positive multiples, which is what "colinear" means for vectors in the
+positive orthant — then their common normalized direction lies in *both* geodesic hulls. -/
+theorem geodesicHull_inter_nonempty_of_sameRay {s₁ s₂ : Finset (Eucl d)} {b c : Eucl d}
+    (hb : inConicalSpan s₁ b) (hc : inConicalSpan s₂ c) (hb0 : b ≠ 0) (hc0 : c ≠ 0)
+    (hsr : SameRay ℝ b c) : (geodesicHull s₁ ∩ geodesicHull s₂).Nonempty := by
+  obtain ⟨r₁, r₂, hr₁, hr₂, hrel⟩ := hsr.exists_pos hb0 hc0
+  -- `b = k • c` with `k = r₁⁻¹ r₂ > 0`
+  set k : ℝ := r₁⁻¹ * r₂ with hkdef
+  have hk : 0 < k := by positivity
+  have hbk : b = k • c := by
+    rw [hkdef, mul_smul, ← hrel, smul_smul, inv_mul_cancel₀ (ne_of_gt hr₁), one_smul]
+  -- the normalized vectors coincide
+  have key : ‖b‖⁻¹ • b = ‖c‖⁻¹ • c := by
+    have hnc : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+    rw [hbk, norm_smul, Real.norm_eq_abs, abs_of_pos hk, smul_smul]
+    congr 1
+    field_simp
+  refine ⟨‖b‖⁻¹ • b, ?_⟩
+  rw [Set.mem_inter_iff]
+  exact ⟨mem_geodesicHull_normalize hb hb0, key ▸ mem_geodesicHull_normalize hc hc0⟩
+
+/-- **Finding F2, discharged.** Empirical measures (with nonnegative weights) in the orthant whose
+geodesic hulls are disjoint have non-colinear barycenters. This is the step Proposition 3.1's
+induction asserts without proof. -/
+theorem barycenter_noncolinear_of_disjoint_hull {s₁ s₂ : Finset (Eucl d)} {w₁ w₂ : Eucl d → ℝ}
+    (hw₁ : ∀ p ∈ s₁, 0 ≤ w₁ p) (hw₂ : ∀ p ∈ s₂, 0 ≤ w₂ p)
+    (hb0 : (∑ p ∈ s₁, w₁ p • p) ≠ 0) (hc0 : (∑ p ∈ s₂, w₂ p • p) ≠ 0)
+    (hdisj : Disjoint (geodesicHull s₁) (geodesicHull s₂)) :
+    ¬ SameRay ℝ (∑ p ∈ s₁, w₁ p • p) (∑ p ∈ s₂, w₂ p • p) := by
+  intro hsr
+  obtain ⟨u, hu⟩ := geodesicHull_inter_nonempty_of_sameRay
+    (barycenter_mem_conicalSpan hw₁) (barycenter_mem_conicalSpan hw₂) hb0 hc0 hsr
+  rw [Set.mem_inter_iff] at hu
+  exact Set.disjoint_left.mp hdisj hu.1 hu.2
+```
+
+[`Leaves/BarycenterNonColinear.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean){.lean-src}
+:::
+
+::: {.strengthen}
+**Strengthening (finding F2).** Proposition 3.1's induction *asserts* "(3.3) [disjoint geodesic hulls] $\Rightarrow$
+$\mathbb E_{\mu_0^i}[x]$ not colinear with $\mathbb E_{\mu_0^j}[x]$" with no justification — the one genuine rigor gap
+the adversarial review flagged. This leaf supplies the kernel-checked proof for the empirical regime (the Dirac
+targets of Theorem 1.1 and the empirical targets of the restricted Theorem 1.2), under the faithful hemisphere model
+$\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}$.
+:::
+
+## F2, general probability measures {#node-noncolinear-general}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Proposition 3.1 induction step, pp. 16-17).
+
+The same unproved assertion as above, now read for arbitrary $\mu_0,\nu_0\in\mathscr P(\mathbb Q_1^{d-1})$ with
+barycenter $\mathbb E_{\mu_0}[x]=\int x\,\mu_0(\mathrm dx)$:
+$$\operatorname{conv}_g\operatorname{supp}\mu_0\cap\operatorname{conv}_g\operatorname{supp}\nu_0=\varnothing\ \Longrightarrow\ \mathbb E_{\mu_0}[x]\text{ not colinear with }\mathbb E_{\nu_0}[x].$$
+:::
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The finite case above is elementary; for a general probability measure the only extra ingredient is the standard
+fact that the barycenter $\int x\,\mathrm d\mu$ lies in any closed convex set carrying full mass — Mathlib's
+`Convex.integral_mem`. Wrapping it as `barycenter_mem_of_supportedIn` (from $\mu(s^c)=0$ to $\int x\,\mathrm d\mu\in s$),
+the same `SameRay` argument runs verbatim: both normalized barycenters land in their respective closed convex
+*cones* $s_1,s_2$, the shared unit direction sits in both, and disjointness on the sphere is contradicted. The key
+step is that `Convex.integral_mem` is the measure-theoretic analogue of "the barycenter lies in the convex hull of
+the support," so no optimal-transport axiom is reintroduced.
+
+```lean
+/-- The barycenter of a probability measure lies in any closed convex set carrying full mass
+(`μ Sᶜ = 0`). This is the standard measure-theoretic fact the general case of finding F2 needs; it
+rests only on Mathlib's `Convex.integral_mem`, not on the optimal-transport axioms. -/
+theorem barycenter_mem_of_supportedIn {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hint : Integrable (fun x : Eucl d => x) μ) {s : Set (Eucl d)}
+    (hconv : Convex ℝ s) (hclosed : IsClosed s) (hsupp : μ sᶜ = 0) :
+    barycenter μ ∈ s := by
+  have hae : ∀ᵐ x ∂μ, x ∈ s := by
+    rw [ae_iff]; exact hsupp
+  rw [barycenter]
+  exact hconv.integral_mem hclosed hae hint
+
+/-- **Finding F2, general case.** Two probability measures whose supports lie in disjoint closed
+convex cones `s₁`, `s₂` (disjoint on the sphere) have non-colinear barycenters. Generalizes
+`barycenter_noncolinear_of_disjoint_hull` from empirical to arbitrary probability measures; kernel-
+clean, via `barycenter_mem_of_supportedIn`. -/
+theorem barycenter_noncolinear_of_disjoint_hull_general
+    {μ ν : Measure (Eucl d)} [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (hμi : Integrable (fun x : Eucl d => x) μ) (hνi : Integrable (fun x : Eucl d => x) ν)
+    {s₁ s₂ : Set (Eucl d)}
+    (hc₁ : Convex ℝ s₁) (hcl₁ : IsClosed s₁) (hcone₁ : ∀ x ∈ s₁, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₁)
+    (hc₂ : Convex ℝ s₂) (hcl₂ : IsClosed s₂) (hcone₂ : ∀ x ∈ s₂, ∀ a : ℝ, 0 ≤ a → a • x ∈ s₂)
+    (hμs : μ s₁ᶜ = 0) (hνs : ν s₂ᶜ = 0)
+    (hb0 : barycenter μ ≠ 0) (hc0 : barycenter ν ≠ 0)
+    (hdisj : ∀ u : Eucl d, ‖u‖ = 1 → u ∈ s₁ → u ∉ s₂) :
+    ¬ SameRay ℝ (barycenter μ) (barycenter ν) := by
+  intro hsr
+  set b := barycenter μ with hbdef
+  set c := barycenter ν with hcdef
+  obtain ⟨r₁, r₂, hr₁, hr₂, hrel⟩ := hsr.exists_pos hb0 hc0
+  have hbs₁ : b ∈ s₁ := barycenter_mem_of_supportedIn hμi hc₁ hcl₁ hμs
+  have hcs₂ : c ∈ s₂ := barycenter_mem_of_supportedIn hνi hc₂ hcl₂ hνs
+  set k : ℝ := r₁⁻¹ * r₂ with hkdef
+  have hk : 0 < k := by positivity
+  have hbk : b = k • c := by
+    rw [hkdef, mul_smul, ← hrel, smul_smul, inv_mul_cancel₀ (ne_of_gt hr₁), one_smul]
+  have key : ‖b‖⁻¹ • b = ‖c‖⁻¹ • c := by
+    have hnc : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+    rw [hbk, norm_smul, Real.norm_eq_abs, abs_of_pos hk, smul_smul]
+    congr 1
+    field_simp
+  set u := ‖b‖⁻¹ • b with hu
+  have hunorm : ‖u‖ = 1 := by
+    rw [hu, norm_smul, norm_inv, norm_norm, inv_mul_cancel₀ (norm_ne_zero_iff.mpr hb0)]
+  have hus₁ : u ∈ s₁ := by rw [hu]; exact hcone₁ b hbs₁ _ (by positivity)
+  have hus₂ : u ∈ s₂ := by rw [key]; exact hcone₂ c hcs₂ _ (by positivity)
+  exact hdisj u hunorm hus₁ hus₂
+```
+
+[`Leaves/BarycenterNonColinear.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean){.lean-src}
+:::
+
+::: {.strengthen}
+**Strengthening (finding F2, residual).** The finite leaf above closes F2 for the empirical regime; this companion
+closes the remaining general-measure case, extending the non-colinearity to arbitrary probability measures supported
+in disjoint closed convex cones. It rests only on Mathlib's `Convex.integral_mem` and introduces **no new axioms** —
+in particular it does not reach for the optimal-transport ($W_2$) axiom.
+:::
+
+## Linearized OT bound {#node-linearized-ot}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Lemma 5.2, p. 24).
+
+"Lemma 5.2. Suppose $\mu\in\mathscr P(\mathbb S^{d-1})$ and $T^1,T^2:\mathbb S^{d-1}\to\mathbb S^{d-1}$ measurable,
+with $T^1$ bijective. Then"
+$$\mathsf W_2\bigl(T^1_\#\mu,\,T^2_\#\mu\bigr)\lesssim\|T^1-T^2\|_{L^2(\mu)}. \tag{5.2}$$
+"Proof of Lemma 5.2. Since $T^1$ is bijective, there is a measurable $\psi:\mathbb S^{d-1}\to\mathbb S^{d-1}$ such
+that $\psi(T^1(x))=T^2(x)$ for all $x\in\mathbb S^{d-1}$. Then"
+$$\mathsf W_2^2\bigl(T^1_\#\mu,\,T^2_\#\mu\bigr)\lesssim\int\|x-\psi(x)\|^2(T^1_\#\mu)(\mathrm dx)=\|T^1-T^2\|_{L^2(\mu)}^2.$$
+:::
+
+::: {.our-work}
+**Our formalization.** [axiomatised]{.badge .axiom}
+
+This is the map-induced coupling bound. Since $T^1$ is bijective there is $\psi$ with $\psi\circ T^1=T^2$, and the
+deterministic coupling $(\mathrm{id},\psi)_\#(T^1_\#\mu)$ between the two pushforwards realizes transport cost
+$\int\|x-\psi(x)\|^2\,\mathrm d(T^1_\#\mu)=\|T^1-T^2\|_{L^2(\mu)}^2$, bounding $\mathsf W_2^2$. Mathlib `v4.31.0` has
+no $W_2$, so the Lean statement is asserted over the labeled optimal-transport axiom `W2_map_le_L2`; the node is
+therefore **axiomatised**, not a kernel proof. Its effective status is the minimum over its dependency closure, which
+contains the $W_2$ axiom.
+
+```lean
+/-- L7 (Lemma 5.2): the `W₂` distance between two pushforwards of `μ` is bounded by the `L²(μ)`
+distance of the maps. Rests on the optimal-transport axiom `W2_map_le_L2`. -/
+theorem lemma_5_2 (μ : Measure (Eucl d)) (T₁ T₂ : Eucl d → Eucl d) :
+    W2 (μ.map T₁) (μ.map T₂) ≤ Real.sqrt (∫ x, ‖T₁ x - T₂ x‖ ^ 2 ∂μ) :=
+  W2_map_le_L2 μ T₁ T₂
+```
+
+[`Leaves/Coupling.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/Coupling.lean){.lean-src}
+:::
+
+## Markov bound {#node-markov}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, Claim 2, App. B.5, p. 39).
+
+"Claim 2. Suppose $\mu\in\mathscr P(\mathbb S^{d-1})$ and $x_0\in\mathbb S^{d-1}$ satisfy
+$\mathsf W_2(\mu,\delta_{x_0})\le\eta_2$. There exists a universal constant $C>0$ such that
+$1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ for all $\eta_3>0$."
+
+"Proof of Claim 2. By compactness of $\mathbb S^{d-1}$ and Kantorovich-Rubinstein duality,"
+$$\mathsf W_1(\mu,\delta_{x_0})=\sup_{\mathrm{Lip}(g)\le1}\int g\,(\mu-\delta_{x_0})\le C\cdot\eta_2$$
+"for some numerical constant $C>0$. Hence, for $g:\mathbb S^{d-1}\to\mathbb S^{d-1}$ defined as"
+$$g(x)=\begin{cases}1 & x\in B(x,\eta_3)\\[2pt] 1-\dfrac{1-\eta_3}{\eta_3} & x\in B(x,\eta_3)\cap B(x,2\eta_3)\\[4pt] 0 & x\notin B(x,2\eta_3),\end{cases}$$
+"we obtain $1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$."
+:::
+
+::: {.our-work}
+**Our formalization.** [axiomatised]{.badge .axiom}
+
+We take the cleaner truncated-distance bump $f(x)=\min(\eta_3,\ d(x,x_0))$ in place of the paper's hat. It is
+**machine-checked $1$-Lipschitz** — `distBump_lipschitz`, obtained by truncating the $1$-Lipschitz distance through
+the map $t\mapsto\min(\eta_3,t)$ and routed through the `dist`-characterization to dodge the
+`EuclideanSpace`/`PiLp` extended-metric instance diamond — vanishes at $x_0$, and dominates
+$\eta_3\cdot\mathbf 1_{\{d(\cdot,x_0)\ge\eta_3\}}$. Hence
+$\eta_3\,\mu\{d(\cdot,x_0)\ge\eta_3\}\le\int f\,\mathrm d\mu=\int f\,\mathrm d\mu-f(x_0)\le\mathsf W_1(\mu,\delta_{x_0})\le C\eta_2$,
+and since $\{\eta_3\le d(\cdot,x_0)\}=B(x_0,\eta_3)^c$ this is $1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ for a
+probability measure. The Lipschitz bound is kernel-checked, but the middle inequality is Kantorovich-Rubinstein
+duality, supplied here by the labeled $W_1$ axiom `W1_ge_of_lipschitz`; so the node as a whole is **axiomatised**.
+
+```lean
+/-- The truncated-distance bump `f(x) = min(η₃, d(x, x₀))`. -/
+noncomputable def distBump (x₀ : Eucl d) (η₃ : ℝ) (x : Eucl d) : ℝ := min η₃ (dist x x₀)
+
+/-- The bump is `1`-Lipschitz (a truncation of the `1`-Lipschitz distance). Proved through the
+`dist`-characterization to avoid the `EuclideanSpace`/`PiLp` extended-metric instance diamond. -/
+theorem distBump_lipschitz (x₀ : Eucl d) (η₃ : ℝ) : LipschitzWith 1 (distBump x₀ η₃) := by
+  rw [lipschitzWith_iff_dist_le_mul]
+  intro x y
+  -- `t ↦ min η₃ t` is 1-Lipschitz on ℝ (no PiLp instance diamond on the codomain)
+  have hL : LipschitzWith 1 (fun t : ℝ => min η₃ t) := LipschitzWith.const_min LipschitzWith.id η₃
+  have hmin := hL.dist_le_mul (dist x x₀) (dist y x₀)
+  simp only [distBump, Real.dist_eq, NNReal.coe_one, one_mul] at hmin ⊢
+  exact hmin.trans (abs_dist_sub_le x y x₀)
+
+/-- **Lemma L8 / Claim 2 (Markov bound).** For a probability measure with
+`W₁(μ, δ_{x₀}) ≤ C η₂`, the mass at geodesic/Euclidean distance `≥ η₃` from `x₀` is at most
+`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Rests on the `W₁` axiom (KR duality):
+status `math.axiomatised`. -/
+theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 < η₃)
+    (hW1 : W1 μ (Measure.dirac x₀) ≤ C * η₂) :
+    μ.real {x | η₃ ≤ dist x x₀} ≤ C * η₂ / η₃ := by
+  set s : Set (Eucl d) := {x | η₃ ≤ dist x x₀} with hs
+  have hcont : Continuous (fun x : Eucl d => dist x x₀) := by fun_prop
+  have hsmeas : MeasurableSet s := measurableSet_le measurable_const hcont.measurable
+  -- the bump is integrable (bounded by η₃ on a finite measure)
+  have hbump_int : Integrable (distBump x₀ η₃) μ := by
+    refine Integrable.mono' (integrable_const η₃)
+      (distBump_lipschitz x₀ η₃).continuous.aestronglyMeasurable ?_
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_of_nonneg (distBump_nonneg hη₃.le x)]
+    exact min_le_left _ _
+  have hind_int : Integrable (s.indicator (fun _ => η₃)) μ :=
+    (integrable_const η₃).indicator hsmeas
+  -- η₃ · 𝟙_s ≤ bump pointwise
+  have hdom : s.indicator (fun _ => η₃) ≤ distBump x₀ η₃ := by
+    intro x
+    by_cases hx : x ∈ s
+    · rw [Set.indicator_apply, if_pos hx]; exact (distBump_eq_outside hx).ge
+    · rw [Set.indicator_apply, if_neg hx]; exact distBump_nonneg hη₃.le x
+  -- ∫ η₃·𝟙_s dμ = η₃ · μ(s)
+  have hint_ind : ∫ x, s.indicator (fun _ => η₃) x ∂μ = μ.real s * η₃ := by
+    rw [integral_indicator_const η₃ hsmeas, smul_eq_mul]
+  -- ∫ bump dδ_{x₀} = f(x₀) = 0
+  have hdirac : ∫ x, distBump x₀ η₃ x ∂(Measure.dirac x₀) = 0 := by
+    rw [integral_dirac]
+    simp [distBump, min_eq_right hη₃.le]
+  -- KR duality (axiom): ∫ bump dμ - ∫ bump dδ ≤ W₁
+  have hdual := W1_ge_of_lipschitz μ (Measure.dirac x₀) (distBump x₀ η₃) (distBump_lipschitz x₀ η₃)
+  rw [hdirac, sub_zero] at hdual
+  -- assemble: η₃ · μ(s) ≤ ∫ bump dμ ≤ W₁ ≤ C η₂
+  have hmono : μ.real s * η₃ ≤ ∫ x, distBump x₀ η₃ x ∂μ := by
+    rw [← hint_ind]; exact integral_mono hind_int hbump_int hdom
+  have key : μ.real s * η₃ ≤ C * η₂ := le_trans hmono (le_trans hdual hW1)
+  rw [le_div_iff₀ hη₃]
+  exact key
+```
+
+[`Leaves/MarkovBound.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/MarkovBound.lean){.lean-src}
+:::
