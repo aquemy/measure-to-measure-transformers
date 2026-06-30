@@ -164,8 +164,8 @@ created   = "2026-06-30"
 [claims.leaf-projector]
 kind      = "conjecture"
 statement = "L1: the tangential projector P_x^perp = I - x x^T is symmetric, idempotent, kills x, and satisfies <P_x^perp v, v> = ||v||^2 - <x,v>^2 for ||x||=1."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.projector_inner_sub_sq"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.projector_inner_sub_sq"
 paper     = "sec 1.2 / 1.5"
 created   = "2026-06-30"
 
@@ -179,8 +179,8 @@ created   = "2026-06-30"
 
 [claims.leaf-sep-hyperplane]
 kind      = "conjecture"
-statement = "L3: monotonicity of cos gives <omega, x_0^M> - cos(pi/8 + tau) < 0 when d_g(omega, x_0^M) >= 3pi/8 and tau in (0, 3pi/8) (Prop 4.2 Step 1 separating hyperplane)."
-status    = "math.proved-informal"
+statement = "L3: monotonicity of cos gives <omega, x_0^M> - cos(pi/8 + tau) < 0 when d_g(omega, x_0^M) >= pi/2 and tau in (0, 3pi/8) (Prop 4.2 Step 1 separating hyperplane)."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Leaves.separating_hyperplane"
 paper     = "Prop 4.2 Step 1, p.20"
 created   = "2026-06-30"
@@ -196,8 +196,8 @@ created   = "2026-06-30"
 [claims.leaf-lyapunov]
 kind      = "conjecture"
 statement = "L5: for E(theta) = 1 - cos theta along theta' = -alpha sin theta, the derivative is E' = -alpha sin^2 theta <= 0 (Example 6.1 Lyapunov function)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.lyapunov_decreasing"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.lyapunov_hasDerivAt"
 paper     = "Example 6.1, p.29"
 created   = "2026-06-30"
 
@@ -228,7 +228,7 @@ created   = "2026-06-30"
 [claims.leaf-ball-chain-induction]
 kind      = "conjecture"
 statement = "L9: if each step multiplies retained mass by at least (1-eps), then after K steps mu(T, B_K) >= (1-eps)^K mu_0(union B_k) (Lemma B.1 induction, abstracted)."
-status    = "math.proved-informal"
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Leaves.ball_chain_geom"
 paper     = "Lem B.1 proof, p.33"
 created   = "2026-06-30"
@@ -239,6 +239,24 @@ statement = "L10: a function that is constant on an open ball forces the stated 
 status    = "math.proved-informal"
 lean      = "MeasureToMeasure.Leaves.exists_point_barycenters_differ"
 paper     = "Lem 3.4 Part 1, p.35"
+created   = "2026-06-30"
+
+# ===========================================================================
+# Meta nodes (infrastructure, not mathematical claims)
+# ===========================================================================
+
+[claims.meta-coverage-map]
+kind      = "review"
+statement = "Mathlib v4.31.0 coverage of the prerequisites: optimal transport / W2, continuity-equation flows, geodesic convexity, LaSalle and Hartman-Grobman are absent; sphere, inner-product algebra, and ODE existence/Gronwall are present."
+status    = "math.proved-informal"
+paper     = "n/a (infrastructure)"
+created   = "2026-06-30"
+
+[claims.meta-axiom-layer]
+kind      = "review"
+statement = "The labeled axiom layer: W2/W1 with the coupling and KR-duality bounds, and the continuity-equation flow map with its Lipschitz/bijective/parked-identity properties, standing in for the missing Mathlib theory."
+status    = "math.axiomatised"
+paper     = "n/a (infrastructure)"
 created   = "2026-06-30"
 
 # ===========================================================================
