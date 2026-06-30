@@ -60,16 +60,61 @@ axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) 
     (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
     ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
 
+/-- AXIOM (geometric output of the disentanglement dynamics, Section 3.3). Under a shared missing
+direction, one schedule concentrates each measure of the family into a small ball
+`B(α i, r)` (`r < 1`) around a *unit* direction `α i`, with the directions pairwise separated by at
+least `2 r`. This is exactly what Lemmas 3.2 (rotate into the orthant), 3.3 (shrink each hull onto its
+barycenter direction) and 3.4 (make barycenter directions pairwise non-colinear) produce, run as the
+Section 3.3 induction; the leaf L11 (`barycenter_noncolinear_of_disjoint_hull`) is the geometric core.
+The dynamical construction rests on the missing continuity-equation theory, so it is axiomatized at
+this concrete geometric level. `Depends-On` Lemmas 3.2-3.4 and leaf L11. -/
+axiom exists_disentangling_balls (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
+    (T : ℝ) (hT : 0 < T) (hmiss : SharedMissingDirection μ₀) :
+    ∃ (θ : Params d) (α : Fin N → Eucl d) (r : ℝ), 0 < r ∧ r < 1 ∧
+      (∀ i, ‖α i‖ = 1) ∧
+      (∀ i j, i ≠ j → 2 * r ≤ dist (α i) (α j)) ∧
+      (∀ i, supportedIn (measureFlow θ T (μ₀ i)) (Metric.ball (α i) r))
+
 /-- **Proposition 3.1** (disentanglement). Under a shared missing direction there is a schedule whose
 solution map renders the family's supports pairwise disjoint, each concentrated in an open
-hemisphere. AXIOM (`math.axiomatised`): the Section 3.3 induction (Lemmas 3.2-3.4, leaf L11) produces
-explicit disjoint supports; formalizing that construction is a large standalone task. The hemisphere
-clause records that disentanglement also confines each measure to a hemisphere (it rotates them into
-the orthant), which the clustering step of Theorem 1.1 consumes. `Depends-On` Lemmas 3.2-3.4. -/
-axiom prop_3_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
+hemisphere.
+
+**Proved** (effective `math.axiomatised`): the dynamical construction is captured by
+`exists_disentangling_balls` (the concrete output of Lemmas 3.2-3.4), and this proof discharges the
+geometric packaging the paper states without proof (review finding F2): from balls around unit
+directions separated by `2 r` we machine-check that (i) the carrier balls are pairwise *disjoint*
+(`Metric.ball_disjoint_ball`), and (ii) each ball lies in the open hemisphere `{x | 0 < ⟪α i, x⟫}`
+(Cauchy-Schwarz: `‖x - α i‖ < r < 1` forces `⟪α i, x⟫ > 1 - r > 0`). -/
+theorem prop_3_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
     (hmiss : SharedMissingDirection μ₀) :
     ∃ θ : Params d, DisjointSupports (fun i => measureFlow θ T (μ₀ i)) ∧
-      ∀ i, ∃ e : Eucl d, ‖e‖ = 1 ∧ supportedIn (measureFlow θ T (μ₀ i)) {x | 0 < ⟪e, x⟫}
+      ∀ i, ∃ e : Eucl d, ‖e‖ = 1 ∧ supportedIn (measureFlow θ T (μ₀ i)) {x | 0 < ⟪e, x⟫} := by
+  obtain ⟨θ, α, r, hr0, hr1, hα, hsep, hsupp⟩ := exists_disentangling_balls hd μ₀ T hT hmiss
+  -- Each carrier ball lies in the open hemisphere around its centre direction.
+  have hball_hemi : ∀ (i : Fin N) (x : Eucl d), x ∈ Metric.ball (α i) r → 0 < ⟪α i, x⟫ := by
+    intro i x hx
+    rw [Metric.mem_ball] at hx
+    have hnorm : ‖x - α i‖ < r := by rw [← dist_eq_norm]; exact hx
+    have hself : ⟪α i, α i⟫ = 1 := by
+      rw [real_inner_self_eq_norm_sq, hα i]; norm_num
+    have hbound : -‖x - α i‖ ≤ ⟪α i, x - α i⟫ := by
+      have habs := abs_real_inner_le_norm (α i) (x - α i)
+      rw [hα i, one_mul] at habs
+      have := (abs_le.mp habs).1
+      linarith
+    have hexp : ⟪α i, x⟫ = ⟪α i, x - α i⟫ + ⟪α i, α i⟫ := by
+      rw [inner_sub_right]; ring
+    rw [hexp, hself]
+    linarith
+  refine ⟨θ, ⟨fun i => Metric.ball (α i) r, hsupp, ?_⟩, ?_⟩
+  · -- The carrier balls are pairwise disjoint because their centres are `2r`-separated.
+    intro i j hij
+    exact Metric.ball_disjoint_ball (by linarith [hsep i j hij])
+  · -- Each measure is supported in the hemisphere around its centre direction.
+    intro i
+    refine ⟨α i, hα i, ?_⟩
+    have hsub : Metric.ball (α i) r ⊆ {x | 0 < ⟪α i, x⟫} := fun x hx => hball_hemi i x hx
+    exact measure_mono_null (Set.compl_subset_compl.mpr hsub) (hsupp i)
 
 /-- **Theorem 1.1** (Dirac targets). If the inputs share a missing direction, then for any horizon and
 tolerance a single piecewise-constant `θ` steers each input to within `ε` of its point-mass target
