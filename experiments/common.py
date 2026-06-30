@@ -78,6 +78,35 @@ def sample_cap(rng: np.ndarray, center: np.ndarray, radius: float, n: int) -> np
     return np.array(out[:n])
 
 
+def softmax(s: np.ndarray) -> np.ndarray:
+    """Row-wise softmax."""
+    s = s - s.max(axis=-1, keepdims=True)
+    e = np.exp(s)
+    return e / e.sum(axis=-1, keepdims=True)
+
+
+def attention_ambient(beta: float):
+    """Ambient self-attention field A_B[mu](x) = sum_j softmax_j(beta <x_i, x_j>) x_j for the
+    empirical measure of the stack X (B = beta I). Returns a field(t, X) for `integrate`."""
+
+    def field(t, X):
+        scores = beta * (X @ X.T)         # (n, n)
+        return softmax(scores) @ X        # (n, d)
+
+    return field
+
+
+def max_pairwise_geodesic(X: np.ndarray) -> float:
+    """Diameter of a point cloud in the geodesic metric (max pairwise angle)."""
+    G = np.clip(X @ X.T, -1.0, 1.0)
+    return float(np.arccos(G).max())
+
+
+def diam_after(field, X0: np.ndarray, t_span: float, n_steps: int) -> float:
+    XT = integrate(field, X0, t_span, n_steps)
+    return max_pairwise_geodesic(XT)
+
+
 @dataclass
 class Result:
     """A seeded experiment verdict, written to results/ as CKC evidence."""

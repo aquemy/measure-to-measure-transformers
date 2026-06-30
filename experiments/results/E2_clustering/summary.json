@@ -1,0 +1,24 @@
+{
+  "claim": "claim:exp-e2-clustering",
+  "criterion": "diameter contracts from 2.207 to < eps=0.05; time-to-eps grows ~ log(1/eps) (positive slope)",
+  "experiment": "E2_clustering",
+  "metrics": {
+    "eps_list": [
+      0.2,
+      0.1,
+      0.05,
+      0.025
+    ],
+    "final_diam": 1.4901161193847656e-08,
+    "init_diam": 2.206577130849125,
+    "rate_slope_vs_log": 1.00123035837692,
+    "times": [
+      3.920000000000003,
+      4.6199999999999894,
+      5.3199999999999745,
+      5.99999999999996
+    ]
+  },
+  "passed": true,
+  "seed": 0
+}
