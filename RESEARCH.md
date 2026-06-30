@@ -31,17 +31,25 @@ continuity-equation well-posedness / flow-map existence.
 
 ## Mathlib coverage (Phase 0)
 
-To be filled by `/lean-math:mathlib-coverage-check`. Summary expectation:
+Determined by grepping the checked-out Mathlib `v4.31.0` source (`.lake/packages/mathlib`).
 
-| Prerequisite | Mathlib status | Plan |
+| Prerequisite | Mathlib v4.31.0 status | Plan |
 | --- | --- | --- |
-| Sphere `S^{d-1}`, norm/inner facts | exists | use directly |
-| Tangential projector `I - x x^T` | buildable | define + prove L1 |
-| Geodesic distance `arccos <x,y>` | exists (angle) | wrap |
-| Wasserstein `W2`, KR duality, transport maps | absent | axiomatize |
-| Continuity-equation well-posedness, flow maps | absent | axiomatize |
-| Geodesic convexity / convex hull | absent | axiomatize |
+| Sphere `S^{d-1}`, norm/inner facts | present (`Metric.sphere`, `EuclideanSpace`) | use directly |
+| Sphere as a smooth manifold | present (`Geometry/Manifold/Instances/Sphere`) | use if needed |
+| Tangential projector `I - x x^T` | buildable from inner-product API | define + prove L1 |
+| Geodesic distance `arccos <x,y>` | partial: `InnerProductGeometry.angle` exists; not packaged as the Riemannian geodesic distance | wrap `arccos<x,y>` as `d_g` |
+| Geodesic convexity / geodesic convex hull | absent (no `geodesic` in `Geometry`) | axiomatize the nesting facts |
+| ODE existence/uniqueness, Picard-Lindelof, Gronwall | present (`Analysis/ODE/`) | use for the L2/L5/L6 ODE facts |
+| Wasserstein `W2`/`W1`, Kantorovich duality, transport maps | absent (only `LevyProkhorovMetric`, `Prokhorov` weak-convergence) | axiomatize |
+| Continuity-equation well-posedness, mean-field flow maps | absent (no `continuityEquation`) | axiomatize |
 | LaSalle invariance, Hartman-Grobman | absent | axiomatize |
+
+Conclusion: the axiom boundary is exactly the analytic infrastructure (optimal transport,
+continuity-equation flows, geodesic convexity, long-time ODE behaviour). Everything below it
+(projector algebra, the gate and barycenter ODE identities as Picard-Lindelof/Gronwall facts,
+monotone-cos inequalities, the abstract ball-chain induction, the pigeonhole step) is provable from
+Mathlib and becomes the kernel-checked leaf set L1-L10.
 
 ## Node status
 
