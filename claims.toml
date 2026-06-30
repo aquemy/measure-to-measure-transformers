@@ -55,10 +55,18 @@ created   = "2026-06-30"
 
 [claims.prop-3-1]
 kind      = "conjecture"
-statement = "Proposition 3.1: there is a piecewise-constant theta with O(d N) switches that disentangles the supports of N measures on the positive orthant cap."
+statement = "Proposition 3.1: a piecewise-constant theta disentangles the supports of N measures (pairwise disjoint, each in a hemisphere). PROVED from exists_disentangling_balls: the disjointness + hemisphere packaging is machine-checked (Metric.ball_disjoint_ball + Cauchy-Schwarz), closing the F2 hand-wave; the dynamical construction is the more primitive axiom."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_3_1"
 paper     = "Prop 3.1, p.15"
+created   = "2026-06-30"
+
+[claims.axiom-disentangle-balls]
+kind      = "conjecture"
+statement = "Disentanglement dynamics output (Section 3.3): one schedule concentrates each measure into a small ball B(alpha_i, r), r<1, around a unit direction alpha_i, with directions pairwise 2r-separated. The concrete geometric output of Lemmas 3.2-3.4 run as the Section 3.3 induction (leaf L11 the geometric core); rests on the missing continuity-equation theory."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.exists_disentangling_balls"
+paper     = "Prop 3.1 / Sec 3.3, p.15-17"
 created   = "2026-06-30"
 
 [claims.lem-3-2]

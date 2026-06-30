@@ -48,3 +48,5 @@
 | 46 | 2026-06-30 | `axiomatize` | axiomatize~(statements): close the mid-level lemmas; prove the ball-chain bound | `MeasureToMeasure.Statements.lemma_B_1` |
 | 47 | 2026-06-30 | `formalize` | formalize(main): prove Theorems 1.1 and 1.2 by assembly | `MeasureToMeasure.Statements.theorem_1_1` |
 | 48 | 2026-06-30 | `docs` | docs(ledger): record Phase 7 closure, axiom surface, and refreshed ClaimGraph | `ledger` |
+| 49 | 2026-06-30 | `docs` | docs(site): republish with Phase 7 statuses (headlines now math.axiomatised) | `site` |
+| 50 | 2026-06-30 | `formalize` | formalize(main): prove Proposition 3.1's disentanglement packaging | `MeasureToMeasure.Statements.prop_3_1` |

@@ -278,10 +278,12 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     `Φ_fin = (Φ_θ₁)⁻¹ ∘ Φ_θ₂ ∘ Φ_θ₁`. Theorem 1.2's `W₂` bookkeeping (transport map through the
     inverse flow, then `L²`-to-`W₂` via L7) is machine-checked.
   - `lemma_B_1` (ball-chain mass retention), a real induction over `lemma_B_2` and the flow algebra.
-- **Axiomatized (faithful, cited):** `prop_3_1` (the Section 3.3 disentanglement induction producing
-  explicit disjoint supports is a large standalone formalization), and the irreducible mid-levels
-  `prop_2_1`, `prop_2_2`, `lemma_3_2/3.3/3.4`, `prop_4_1`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`,
-  `lemma_B_2`.
+  - `prop_3_1` (disentanglement), proved from `exists_disentangling_balls`: the disjointness +
+    hemisphere packaging the paper states without proof (review finding F2) is machine-checked
+    (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
+    `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
+- **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`, `prop_2_2`,
+  `lemma_3_2/3.3/3.4`, `prop_4_1`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
 ### Axiom surface (what every closed statement ultimately rests on)
 
@@ -298,7 +300,8 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
 - **Analytic mid-levels** (`Statements/MidLevel.lean`): `prop_2_1`, `prop_2_2`, `lemma_3_2`,
   `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_1`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
   `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1).
-- **Construction-level** (`Statements/MainResults.lean`): `prop_3_1` (disentanglement),
+- **Construction-level** (`Statements/MainResults.lean`): `exists_disentangling_balls` (the geometric
+  output of the Section 3.3 disentanglement; `prop_3_1` is *proved* from it), and
   `exists_parked_schedule` (Appendix B parking / simultaneous action on a disjoint-support family).
 
 ### Fidelity corrections made while closing
