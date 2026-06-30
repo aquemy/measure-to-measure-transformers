@@ -1,0 +1,12 @@
+{
+  "claim": "claim:exp-e4-matching",
+  "criterion": "inactive points stay fixed (max move < eps=0.05) and the active point reaches the target (geodesic distance < eps=0.05)",
+  "experiment": "E4_matching",
+  "metrics": {
+    "M": 6,
+    "active_to_target": 0.0,
+    "inactive_max_move": 0.0
+  },
+  "passed": true,
+  "seed": 0
+}
