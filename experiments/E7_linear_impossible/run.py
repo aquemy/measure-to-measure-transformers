@@ -27,8 +27,10 @@ from common import (  # noqa: E402
     announce,
     geodesic_distance,
     integrate,
+    new_axes,
     normalize,
     sample_cap,
+    save_figure,
     softmax,
     tangential_projector_apply,
 )
@@ -73,11 +75,40 @@ def main() -> int:
     pass_escape = velocity_gap > 1e-2
     passed = pass_obstruction and pass_escape
 
+    # figure: the obstruction gap (~0) vs the attention escape gap (>0) on a log scale
+    fig, ax = new_axes(figsize=(6.2, 4.4))
+    labels = ["linear field\n(images of $x^*$)", "attention field\n(velocities at $x^*$)"]
+    real = [image_gap, velocity_gap]
+    plot_vals = [max(image_gap, 1e-12), velocity_gap]   # clamp the ~0 bar so it is visible on log
+    bars = ax.bar(labels, plot_vals, color=["#d62728", "#1f77b4"], width=0.6)
+    ax.set_yscale("log")
+    ax.axhline(1e-6, color="#7f7f7f", linestyle="--", label="obstruction tol $10^{-6}$")
+    ax.axhline(1e-2, color="#2ca02c", linestyle=":", label="escape tol $10^{-2}$")
+    ax.set_ylabel("gap (log scale)")
+    ax.set_title("E7 - linear flow collapses $x^*$; attention separates it")
+    ax.legend(loc="center left")
+    for b, v in zip(bars, real):
+        ax.text(b.get_x() + b.get_width() / 2, b.get_height() * 1.4, f"{v:.1e}",
+                ha="center", fontsize=9)
+    figures = save_figure(fig, RESULTS, "E7_linear_impossible", "obstruction_vs_escape")
+
     result = Result(
         name="E7_linear_impossible",
         claim="claim:exp-e7-linear-impossible",
         seed=SEED,
         passed=passed,
+        hypothesis=(
+            "A single measure-independent (linear) continuity equation cannot separate overlapping "
+            "supports (eq. 1.7): a point x* shared by two inputs is sent to ONE image, so disjoint "
+            "targets are unreachable. The measure-dependent attention field escapes this obstruction "
+            "by assigning x* different velocities under the two measures."
+        ),
+        explanation=(
+            "Under a fixed drift, x* flows to a single image regardless of which measure it belongs "
+            "to, so the two images coincide (gap ~ 0). Under self-attention, the velocity at x* "
+            "depends on the surrounding measure, so the two velocities differ (gap > 0). The bar "
+            "chart contrasts the two gaps on a log scale against the pass tolerances."
+        ),
         criterion=(
             "linear field sends shared x* to a single image (gap ~ 0, so disjoint targets are "
             "unreachable); attention assigns x* different velocities under the two measures (gap > 0)"
@@ -86,6 +117,7 @@ def main() -> int:
             "linear_image_gap": image_gap,
             "attention_velocity_gap": velocity_gap,
         },
+        figures=figures,
     )
     result.write(RESULTS)
     announce(result)

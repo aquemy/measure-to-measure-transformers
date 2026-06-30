@@ -2,6 +2,12 @@
   "claim": "claim:exp-e3-disentangle",
   "criterion": "two measures with overlapping supports (min cross-distance < 0.2) become disjoint (min cross-distance > 2.0) under barycenter-separation",
   "experiment": "E3_disentangle",
+  "explanation": "Each measure evolves under x' = <alpha, E_mu[x]> P_x^perp alpha (its own barycenter sign). We track the minimum cross-measure geodesic distance over time: it starts near 0 (overlap) and rises toward pi (antipodal). The dashed line marks the 0.2 overlap threshold; the dotted line marks the antipodal distance pi.",
+  "figures": [
+    "E3_disentangle/separation_over_time.png",
+    "E3_disentangle/separation_over_time.svg"
+  ],
+  "hypothesis": "Two measures with overlapping supports but opposite-sign barycenters along alpha are driven to the antipodal clusters +alpha and -alpha by the barycenter field of Proposition 3.1 / Lemma 3.3, so their supports become disjoint.",
   "metrics": {
     "final_cross_min_distance": 3.141592653589793,
     "init_cross_min_distance": 0.08342744244150263

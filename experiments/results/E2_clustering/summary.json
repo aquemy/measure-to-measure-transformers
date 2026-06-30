@@ -2,6 +2,12 @@
   "claim": "claim:exp-e2-clustering",
   "criterion": "diameter contracts from 2.207 to < eps=0.05; time-to-eps grows ~ log(1/eps) (positive slope)",
   "experiment": "E2_clustering",
+  "explanation": "We integrate the characteristic flow x' = P_x^perp A_B[mu](x) and record the cloud diameter over time (panel A, log scale -- a straight line is exponential decay). Panel B plots the first time the diameter drops below eps against log(1/eps) for a geometric sweep of eps; a positive-slope linear fit confirms the O(log 1/eps) rate.",
+  "figures": [
+    "E2_clustering/contraction_and_rate.png",
+    "E2_clustering/contraction_and_rate.svg"
+  ],
+  "hypothesis": "Self-attention with B = beta I on a measure supported in an open hemisphere contracts its geodesic convex hull to a single point (Proposition 2.1); the diameter decays exponentially, so the time to reach diameter eps grows like O(log(1/eps)).",
   "metrics": {
     "eps_list": [
       0.2,

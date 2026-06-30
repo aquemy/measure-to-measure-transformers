@@ -2,6 +2,12 @@
   "claim": "claim:exp-e4-matching",
   "criterion": "inactive points stay fixed (max move < eps=0.05) and the active point reaches the target (geodesic distance < eps=0.05)",
   "experiment": "E4_matching",
+  "explanation": "M-1 inactive points are seeded inside the parking cap (gate off) and one active point outside it (gate on). We record each point's geodesic distance to the drift target z over time: the active point's distance falls below eps while the parked points' distances stay flat (they never move). This is the selective-motion core of the gather / corridor / restore matching construction.",
+  "figures": [
+    "E4_matching/selective_motion.png",
+    "E4_matching/selective_motion.svg"
+  ],
+  "hypothesis": "The perceptron gate g(x) = (tau - <a,x>)_+ is identically zero on the parking cap B(a, rho) and positive outside it, so the field x' = g(x) P_x^perp z (Proposition 4.2) drives only the active point to the target z while every parked point stays fixed.",
   "metrics": {
     "M": 6,
     "active_to_target": 0.0,

@@ -21,10 +21,12 @@ from common import (  # noqa: E402
     Result,
     announce,
     attention_ambient,
-    integrate,
+    integrate_trace,
     max_pairwise_geodesic,
+    new_axes,
     normalize,
     sample_cap,
+    save_figure,
 )
 
 SEED = 0
@@ -64,8 +66,9 @@ def main() -> int:
     field = attention_ambient(beta)
 
     init_diam = max_pairwise_geodesic(X0)
-    final_diam = integrate(field, X0, t_span=60.0, n_steps=4000)
-    final_diam = max_pairwise_geodesic(final_diam)
+    times_d, states = integrate_trace(field, X0, t_span=60.0, n_steps=4000)
+    diams = np.array([max_pairwise_geodesic(s) for s in states])
+    final_diam = float(diams[-1])
 
     # rate check: time to reach successively smaller diameters
     eps_list = [0.2, 0.1, 0.05, 0.025]
@@ -81,11 +84,42 @@ def main() -> int:
     pass_rate = slope > 0.0
     passed = pass_contract and pass_rate
 
+    # figure: (A) diameter contracts exponentially; (B) time-to-eps is linear in log(1/eps)
+    fig, (axA, axB) = new_axes(figsize=(11.0, 4.2), ncols=2)
+    axA.semilogy(times_d, diams, color="#1f77b4", linewidth=2)
+    axA.axhline(eps, color="#d62728", linestyle="--", label=fr"$\epsilon = {eps}$")
+    axA.set_xlabel("time $t$")
+    axA.set_ylabel("cloud diameter (geodesic, log scale)")
+    axA.set_title("(A) diameter contraction")
+    axA.grid(True, which="both", alpha=0.3)
+    axA.legend()
+
+    axB.plot(logs, times, "o", color="#1f77b4", markersize=8, label=r"measured $T(\epsilon)$")
+    xs = np.linspace(float(logs.min()), float(logs.max()), 100)
+    axB.plot(xs, coef[0] * xs + coef[1], "--", color="#d62728", label=fr"linear fit, slope $={slope:.2f}$")
+    axB.set_xlabel(r"$\log(1/\epsilon)$")
+    axB.set_ylabel(r"time to reach diameter $\epsilon$")
+    axB.set_title(r"(B) $T(\epsilon) \sim \log(1/\epsilon)$")
+    axB.grid(True, alpha=0.3)
+    axB.legend()
+    figures = save_figure(fig, RESULTS, "E2_clustering", "contraction_and_rate")
+
     result = Result(
         name="E2_clustering",
         claim="claim:exp-e2-clustering",
         seed=SEED,
         passed=passed,
+        hypothesis=(
+            "Self-attention with B = beta I on a measure supported in an open hemisphere contracts "
+            "its geodesic convex hull to a single point (Proposition 2.1); the diameter decays "
+            "exponentially, so the time to reach diameter eps grows like O(log(1/eps))."
+        ),
+        explanation=(
+            "We integrate the characteristic flow x' = P_x^perp A_B[mu](x) and record the cloud "
+            "diameter over time (panel A, log scale -- a straight line is exponential decay). "
+            "Panel B plots the first time the diameter drops below eps against log(1/eps) for a "
+            "geometric sweep of eps; a positive-slope linear fit confirms the O(log 1/eps) rate."
+        ),
         criterion=(
             f"diameter contracts from {init_diam:.3f} to < eps={eps}; "
             f"time-to-eps grows ~ log(1/eps) (positive slope)"
@@ -97,6 +131,7 @@ def main() -> int:
             "times": times,
             "eps_list": eps_list,
         },
+        figures=figures,
     )
     result.write(RESULTS)
     announce(result)
