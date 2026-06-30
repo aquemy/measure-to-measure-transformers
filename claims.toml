@@ -20,16 +20,16 @@
 [claims.thm-1-1]
 kind      = "conjecture"
 statement = "Theorem 1.1: for Dirac targets sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.theorem_1_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.theorem_1_1"
 paper     = "Thm 1.1, p.5"
 created   = "2026-06-30"
 
 [claims.thm-1-2]
 kind      = "conjecture"
 statement = "Theorem 1.2: for targets matchable by transport maps and a shared missing direction, a single Transformer steers N inputs to within eps in W2 with piecewise-constant parameters."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.theorem_1_2"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.theorem_1_2"
 paper     = "Thm 1.2, p.5"
 created   = "2026-06-30"
 
@@ -56,8 +56,8 @@ created   = "2026-06-30"
 [claims.prop-3-1]
 kind      = "conjecture"
 statement = "Proposition 3.1: there is a piecewise-constant theta with O(d N) switches that disentangles the supports of N measures on the positive orthant cap."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_3_1"
+status    = "math.open"
+lean      = "MeasureToMeasure.Statements.prop_3_1"
 paper     = "Prop 3.1, p.15"
 created   = "2026-06-30"
 
