@@ -188,8 +188,8 @@ created   = "2026-06-30"
 [claims.leaf-geodesic-grad]
 kind      = "conjecture"
 statement = "L4: the Riemannian gradient of geodesic distance is grad_1 d_g(x, omega) = - P_x^perp omega / sqrt(1 - <x,omega>^2)."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.Leaves.grad_geodesic_dist"
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt"
 paper     = "eq. after 4.4, p.20"
 created   = "2026-06-30"
 

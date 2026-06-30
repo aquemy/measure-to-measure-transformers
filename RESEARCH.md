@@ -51,6 +51,25 @@ continuity-equation flows, geodesic convexity, long-time ODE behaviour). Everyth
 monotone-cos inequalities, the abstract ball-chain induction, the pigeonhole step) is provable from
 Mathlib and becomes the kernel-checked leaf set L1-L10.
 
+## Leaf scoreboard (Phase 4)
+
+| Leaf | Content | Lean | Status |
+| --- | --- | --- | --- |
+| L1 | projector identity `⟪P_x^⊥v,v⟫ = ‖v‖²−⟪x,v⟫²` | `projector_inner_sub_sq` | machine-checked |
+| L2 | gate algebra + gate ODE (B.4-B.5) | `gate_hasDerivAt_inner` | machine-checked |
+| L3 | separating hyperplane (Prop 4.2 Step 1) | `separating_hyperplane` | machine-checked |
+| L4 | geodesic-distance derivative + gradient (4.4) | `geodesicDist_hasDerivAt` | machine-checked |
+| L5 | Lyapunov `Ė=−α sin²θ ≤ 0` (Ex. 6.1) | `lyapunov_hasDerivAt` | machine-checked |
+| L6 | barycenter ODE + strict increase (B.9) | `barycenter_hasDerivAt_inner` | machine-checked |
+| L7 | linearized OT bound (Lemma 5.2) | `lemma_5_2` | axiomatised (over `W2`) |
+| L8 | Markov bound (Claim 2) | (deferred) | proved-informal |
+| L9 | ball-chain retention (Lemma B.1) | `ball_chain_geom` | machine-checked |
+| L10 | pigeonhole (Lemma 3.4 Part 1) | `exists_ne_in_ball` | machine-checked |
+
+L8 is deferred: a faithful proof needs a Lipschitz-bump and a `μ(B) ≤ ∫ g dμ` measure-integral
+argument on top of the `W1` axiom, and its status would be `math.axiomatised` regardless. It is left
+`math.proved-informal` (reviewed, not formalized) until the bump construction is added.
+
 ## Node status
 
 See `claims.toml` for the authoritative registry. As commits land, each node advances from
