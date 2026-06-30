@@ -51,37 +51,38 @@ def gated_field(z: np.ndarray, R: float, omega: np.ndarray):
     return field
 
 
-def single_ball(rng, d=3, R=0.9, t_span=30.0, n_steps=3000, n=4000):
-    """One ball B0 = B(z, R); anchor omega interior; report fraction reaching B(omega, R/2)."""
+def single_ball(rng, d=3, t_span=30.0, n_steps=3000, n=4000):
+    """Faithful to leaf L2: the gate (cos R - <z,x>)_+ is active on {d_g(z,x) > R}. With R = pi/2
+    the active region is the open hemisphere {<z,x> < 0}, a geodesic cap of radius pi/2 around the
+    interior anchor omega = -z. Mass seeded in that region drifts to omega; report the fraction
+    reaching a small cap around omega."""
+    R = np.pi / 2.0
     z = normalize(rng.normal(size=d))
-    # omega: a point well inside B0 (distance ~ R/3 from z), standing in for int(B0 cap B1)
-    direction = normalize(rng.normal(size=d))
-    direction = normalize(direction - (direction @ z) * z)   # tangent at z
-    omega = normalize(np.cos(R / 3.0) * z + np.sin(R / 3.0) * direction)
-
-    x0 = sample_cap(rng, z, R, n)
+    omega = -z                                    # deepest point of the active region
+    # seed in the active region (cap around omega), away from the boundary
+    x0 = sample_cap(rng, omega, 0.45 * np.pi, n)
     xT = integrate(gated_field(z, R, omega), x0, t_span, n_steps)
-    # "B0 cap B1" stand-in: a small cap around the interior anchor omega
-    inner_radius = R / 2.0
-    frac = float(np.mean(geodesic_distance(xT, omega[None, :]) <= inner_radius))
+    frac = float(np.mean(geodesic_distance(xT, omega[None, :]) <= 0.1))
     return frac, omega
 
 
-def chain(rng, K=4, d=3, R=0.9, t_span=30.0, n_steps=3000, n=4000):
-    """Pass mass through K overlapping balls; each stage drifts to the next anchor."""
-    # build K anchors along a geodesic, consecutive balls overlapping
+def chain(rng, K=4, d=3, t_span=30.0, n_steps=3000, n=4000):
+    """Chain of K stages (Lemma B.1). Anchors a_0..a_K lie along a geodesic with small spacing;
+    stage k uses z = -a_{k+1}, R = pi/2, so its active region is the hemisphere around a_{k+1} and
+    the drift carries mass from a_k to a_{k+1}. After K stages, report the fraction near a_K."""
+    R = np.pi / 2.0
     base = normalize(rng.normal(size=d))
     tangent = normalize(rng.normal(size=d))
     tangent = normalize(tangent - (tangent @ base) * base)
-    step = R / 2.0
+    step = 0.3                                    # geodesic spacing < pi/2, so stages overlap
     anchors = [normalize(np.cos(k * step) * base + np.sin(k * step) * tangent) for k in range(K + 1)]
 
-    x = sample_cap(rng, anchors[0], R, n)
+    x = sample_cap(rng, anchors[0], 0.12, n)      # start tightly around a_0
     for k in range(K):
-        z = anchors[k]
         omega = anchors[k + 1]
+        z = -omega
         x = integrate(gated_field(z, R, omega), x, t_span, n_steps)
-    frac = float(np.mean(geodesic_distance(x, anchors[K][None, :]) <= R / 2.0))
+    frac = float(np.mean(geodesic_distance(x, anchors[K][None, :]) <= 0.1))
     return frac, K
 
 

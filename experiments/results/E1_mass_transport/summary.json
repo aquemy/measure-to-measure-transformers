@@ -1,0 +1,13 @@
+{
+  "claim": "claim:exp-e1-mass-transport",
+  "criterion": "single ball: fraction in inner cap >= 1-eps=0.95; chain of K=4: fraction >= (1-eps)^K=0.8145",
+  "experiment": "E1_mass_transport",
+  "metrics": {
+    "K": 4,
+    "eps": 0.05,
+    "fraction_chain": 1.0,
+    "fraction_single_ball": 1.0
+  },
+  "passed": true,
+  "seed": 0
+}

@@ -27,6 +27,7 @@ __pycache__/
 # regenerate raw arrays from the seeded code.
 experiments/results/*
 !experiments/results/.gitkeep
+!experiments/results/*/
 !experiments/results/**/manifest*.json
 !experiments/results/**/summary*.json
 *.npz
