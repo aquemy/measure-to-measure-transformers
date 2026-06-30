@@ -1,0 +1,225 @@
+# Research ledger
+
+Status of the formalization and validation of Geshkovski-Rigollet-Ruiz-Balet,
+*Measure-to-measure interpolation using Transformers* (arXiv:2411.04551v3).
+
+This file is the human-readable companion to `claims.toml` and the ClaimGraph. It records the
+proof review, the formalization status of each node, and the precise boundary between what is
+kernel-checked and what rests on axioms.
+
+## Rough correctness review (Phase 1, initial pass)
+
+Worked through the key computations from the PDF. No errors found. Hand-verified clean:
+
+- Gate ODE (B.5): with `U=-1 z^T`, `b=cos(R) 1`, `W 1 = omega`, the velocity is
+  `W(Ux+b)_+ = (cos R - <z,x>)_+ omega`, hence
+  `d/dt <x,omega> = <P_x^perp omega, omega> (cos R - <z,x>)_+ = (1 - <x,omega>^2)(cos R - cos d_g(z,x))_+`.
+  Matches the paper.
+- Separating hyperplane (Prop 4.2 Step 1): `<omega, x_0^M> - cos(pi/8 + tau) < 0` because
+  `d_g(omega, x_0^M) >= 3pi/8 > pi/8 + tau` and `cos` is decreasing on `[0, pi]`.
+- Barycenter ODE (B.9): `d/dt <x,alpha> = <E_mu[x], alpha>(1 - <alpha,x>^2)`, sign-preserving,
+  converges to `+-alpha`.
+- Lyapunov (Example 6.1): `E = 1 - cos theta`, `theta' = -alpha sin theta`, so `E' = -alpha sin^2 theta <= 0`.
+- Coupling bound (Lemma 5.2): `W2^2(T1_# mu, T2_# mu) <= integral ||T1 - T2||^2 d mu` via the
+  map-induced coupling.
+- Ball-chain induction (Lemma B.1): `mu(T, B_K) >= (1-eps)^K mu_0(union B_k)` by backward induction
+  on the chain, each step from Lemma B.2.
+
+Parts that are correct but rest on cited machinery (these become labeled axioms): clustering via
+LaSalle invariance, exponential rates via Hartman-Grobman, geodesic-convex-hull nesting, and
+continuity-equation well-posedness / flow-map existence.
+
+## Mathlib coverage (Phase 0)
+
+Determined by grepping the checked-out Mathlib `v4.31.0` source (`.lake/packages/mathlib`).
+
+| Prerequisite | Mathlib v4.31.0 status | Plan |
+| --- | --- | --- |
+| Sphere `S^{d-1}`, norm/inner facts | present (`Metric.sphere`, `EuclideanSpace`) | use directly |
+| Sphere as a smooth manifold | present (`Geometry/Manifold/Instances/Sphere`) | use if needed |
+| Tangential projector `I - x x^T` | buildable from inner-product API | define + prove L1 |
+| Geodesic distance `arccos <x,y>` | partial: `InnerProductGeometry.angle` exists; not packaged as the Riemannian geodesic distance | wrap `arccos<x,y>` as `d_g` |
+| Geodesic convexity / geodesic convex hull | absent (no `geodesic` in `Geometry`) | axiomatize the nesting facts |
+| ODE existence/uniqueness, Picard-Lindelof, Gronwall | present (`Analysis/ODE/`) | use for the L2/L5/L6 ODE facts |
+| Wasserstein `W2`/`W1`, Kantorovich duality, transport maps | absent (only `LevyProkhorovMetric`, `Prokhorov` weak-convergence) | axiomatize |
+| Continuity-equation well-posedness, mean-field flow maps | absent (no `continuityEquation`) | axiomatize |
+| LaSalle invariance, Hartman-Grobman | absent | axiomatize |
+
+Conclusion: the axiom boundary is exactly the analytic infrastructure (optimal transport,
+continuity-equation flows, geodesic convexity, long-time ODE behaviour). Everything below it
+(projector algebra, the gate and barycenter ODE identities as Picard-Lindelof/Gronwall facts,
+monotone-cos inequalities, the abstract ball-chain induction, the pigeonhole step) is provable from
+Mathlib and becomes the kernel-checked leaf set L1-L10.
+
+## Leaf scoreboard (Phase 4)
+
+| Leaf | Content | Lean | Status |
+| --- | --- | --- | --- |
+| L1 | projector identity `⟪P_x^⊥v,v⟫ = ‖v‖²−⟪x,v⟫²` | `projector_inner_sub_sq` | machine-checked |
+| L2 | gate algebra + gate ODE (B.4-B.5) | `gate_hasDerivAt_inner` | machine-checked |
+| L3 | separating hyperplane (Prop 4.2 Step 1) | `separating_hyperplane` | machine-checked |
+| L4 | geodesic-distance derivative + gradient (4.4) | `geodesicDist_hasDerivAt` | machine-checked |
+| L5 | Lyapunov `Ė=−α sin²θ ≤ 0` (Ex. 6.1) | `lyapunov_hasDerivAt` | machine-checked |
+| L6 | barycenter ODE + strict increase (B.9) | `barycenter_hasDerivAt_inner` | machine-checked |
+| L7 | linearized OT bound (Lemma 5.2) | `lemma_5_2` | axiomatised (over `W2`) |
+| L8 | Markov bound (Claim 2) | (deferred) | proved-informal |
+| L9 | ball-chain retention (Lemma B.1) | `ball_chain_geom` | machine-checked |
+| L10 | pigeonhole (Lemma 3.4 Part 1) | `exists_ne_in_ball` | machine-checked |
+| L11 | disjoint hulls ⟹ non-colinear barycenters (F2) | `barycenter_noncolinear_of_disjoint_hull` | machine-checked |
+
+L8 is deferred: a faithful proof needs a Lipschitz-bump and a `μ(B) ≤ ∫ g dμ` measure-integral
+argument on top of the `W1` axiom, and its status would be `math.axiomatised` regardless. It is left
+`math.proved-informal` (reviewed, not formalized) until the bump construction is added.
+
+## Adversarial proof review (Phase 1, deep pass)
+
+Skeptical referee pass over the mid-level lemmas (`[informal]` blueprint nodes), reading the proofs
+verbatim from the PDF with the intent to break them. Page numbers refer to arXiv 2411.04551v3.
+Findings are ordered by severity; each ends with a fix or the question to resolve. The headline
+result: the formalization caught one real (typographical but load-bearing) sign error in the paper,
+and one genuine rigor gap. Everything else is sound, and the leaves L1-L10 correctly capture the
+self-contained cores.
+
+### F1 (SERIOUS, typographical) Lemma B.2 gate is active on the wrong side of the ball (eq. B.4, p.31)
+
+The construction sets `U = -z 1ᵀ`, `b = cos(R) 1`, giving the gate
+`g(x) = (cos R - cos d_g(z,x))₊ = (cos R - ⟨z,x⟩)₊`. The paper claims (B.4) that
+`g(x) > 0 ⟺ x ∈ ℬ₀ = B(z,R)`. This is **false**: `cos R - ⟨z,x⟩ > 0 ⟺ ⟨z,x⟩ < cos R ⟺ d_g(z,x) > R`,
+i.e. `g` is active on the *complement* of `ℬ₀`. Our kernel-checked leaf L2 (`gate_pos_iff_dist`)
+proves exactly `g(x) > 0 ⟺ d_g(z,x) > R`, contradicting the printed (B.4).
+
+Why it matters: the proof body (B.5, "positive whenever `x ∈ ℬ₀ \ {ω}`") needs the gate active
+*inside* `ℬ₀` to push interior mass toward `ω ∈ ℬ₀ ∩ ℬ₁`. With the printed parameters the interior
+mass has `g ≡ 0` and never moves, so the lemma as written cannot transport anything.
+
+Fix: flip the sign, `U = +z 1ᵀ`, `b = -cos(R) 1`, giving `g(x) = (cos d_g(z,x) - cos R)₊ = (⟨z,x⟩ - cos R)₊`,
+which is positive exactly on `ℬ₀`; then (B.4), (B.5) and the rest of the proof are correct. This is a
+sign typo in the (U,b) definition, not a flaw in the statement. Two independent corroborations:
+(i) Prop 4.2 Step 3 (p.22) uses the *identical* construction `U₃ = -ω 1ᵀ`, `b₃ = cos(3π/16) 1` and
+correctly states `(U₃x+b₃)₊ = 0 for x ∈ B(ω,3π/16)` (active outside) - so the paper is internally
+inconsistent between B.2 and §4; (ii) numerical experiment E1 failed at fraction 0.27 until the seed
+region was moved to the gate-active side `{d_g(z,x) > R}`, the exact region L2 pins down.
+
+### F2 (SERIOUS, rigor gap) Prop 3.1 uses "disjoint hulls ⟹ non-colinear barycenters" unproved (p.16)
+
+The induction asserts: "Since `supp μ₀ ⊂ Q₁^{d-1}`, (3.3) implies that `ℰ_{μᵢ}[x]` is not colinear with
+`ℰ_{μⱼ}[x]` for `i ≠ j ∈ [1,N-1]`," and from this that `ℰ_{μ_N}` is colinear with at most one of them.
+The implication is stated, not proved. In the open positive cone `Q₁^{d-1}` colinearity of barycenters
+means same ray (positive multiple, since all coordinates are positive), so "at most one" follows by
+transitivity *if* the first claim holds - but two measures can a priori have disjoint geodesic-convex
+hulls while their barycenters lie on a common ray. The argument needs the lemma "geodesically convex,
+pairwise-disjoint subsets of the open orthant cap have pairwise non-colinear barycenters," which is
+not supplied.
+
+Why it matters: the entire case split (colinear-with-at-most-one, relabel as `N-1`, apply Lemma 3.4)
+is well-defined only if `ℰ_{μ_N}` cannot be colinear with two distinct earlier barycenters.
+
+**Resolved (leaf L11, machine-checked).** The implication is true, with a clean proof. Within an open
+hemisphere, spherical geodesics are radial projections of chords, so `conv_g(s) = cone(s) ∩ 𝕊^{d-1}`.
+The barycenter `∫ x dμ` is a nonnegative average of support points, hence lies in `cone(supp μ)`;
+its normalization lies in `conv_g(supp μ)`. If two barycenters were colinear (same ray — both in the
+positive orthant, so "colinear" is a positive multiple, i.e. `SameRay`), their common normalized
+direction would lie in both hulls, contradicting disjointness. Leaf L11
+(`barycenter_noncolinear_of_disjoint_hull`) formalizes this for the empirical barycenter `∑ wₚ • p`
+(`wₚ ≥ 0`), kernel-clean — exactly the regime of Theorem 1.1 (Dirac targets) and restricted
+Theorem 1.2 (empirical targets). The only residual for the general-measure case is the standard fact
+"the barycenter of a probability measure lies in the closed convex hull of its support," which does
+not reintroduce the optimal-transport axioms. The Prop 3.1 headline stays `math.open` (it still rests
+on the flow / `conv_g`-nesting axioms), but the F2 gap itself is closed.
+
+### F3 (MINOR, expected) Prop 2.1 rate and clustering rest on cited dynamical-systems machinery (p.11)
+
+Two steps are not self-contained and are correctly in the axiom layer: (i) the limiting argument
+"if `φ* > 0`, compactness yields times `t_k → ∞` with boundary points that do not move inward,
+contradicting strict interior-pointing" is a LaSalle-type invariance argument stated informally;
+(ii) the exponential rate `inf{t : W₂(μ(t),δ_z) ≤ ε} = O(log 1/ε)` is outsourced to
+`[GLPR25, Theorem 2.3]` and not proved here. Both map onto our `LaSalle` / `Hartman-Grobman` axiom
+boundary. No error; this confirms the boundary is drawn in the right place. The norm bound in
+Theorem 1.1 (`O(dN/T + log 1/ε)`) inherits the `log 1/ε` term from this cited rate.
+
+### F4 (MINOR, expected) Prop 2.1 interior-pointing of the attention field rests on geodesic convexity (p.11)
+
+The load-bearing geometric fact is that `γ(x) = 𝒜_B[μ](x)/‖·‖` points strictly into
+`int conv_g supp μ₀` at boundary points, established via "a first-order expansion." This is the
+geodesic-convex-hull / time-nesting property (`conv_g supp μ(t₂) ⊂ conv_g supp μ(t₁)`), which Lemma
+3.3 and Prop 3.1 also rely on ("`conv_g supp μ(t) ⊂ conv_g supp μ₀`", p.17). Mathlib has no geodesic
+convexity, so this is axiomatized. Correct, not self-contained.
+
+### F5 (CONFIRMED sound) Lemma 5.2 / L7 coupling bound (p.24)
+
+`T¹` bijective ⟹ `∃ ψ` measurable with `ψ ∘ T¹ = T²`; then `(id, ψ)` pushed through `T¹_#μ` is a
+coupling of `T¹_#μ` and `T²_#μ` with cost `∫‖x-ψ(x)‖² d(T¹_#μ) = ∫‖T¹-T²‖² dμ`, giving
+`W₂²(T¹_#μ, T²_#μ) ≤ ‖T¹-T²‖²_{L²(μ)}`. The bijectivity hypothesis is load-bearing (without it `ψ` is
+only defined on `range T¹`) and is correctly stated. Leaf L7 axiomatizes `W₂` itself but states this
+exact coupling inequality as its content - faithful.
+
+### F6 (CONFIRMED sound) Prop 4.2 matching: hypotheses and switch count (p.18-23)
+
+`d ≥ 3` is necessary and used: picking `ω ⊥ γ` with `d_g(ω, x₀ᴹ) ≥ π/2` and `d_g(ω, yᴹ) ≥ π/2`
+needs `γ^⊥` to be at least 2-dimensional. The "≤ 6 switches" matches the explicit 6-piece schedule
+with `W₅ = -W₁, W₆ = -W₂` (the gather/restore symmetry). Step 1's separating bound is leaf L3
+(`separating_hyperplane`): `d_g(ω,x) ≥ 3π/8 ⟹ ⟨ω,x⟩ < cos(π/8+τ)` via monotone `cos`. Step 2's
+gradient-flow identity `ẋ = -f̄ ∇₁ d_g(x,ω₊)` with `∇₁ d_g = -P_x^⊥ω₊/√(1-⟨x,ω₊⟩²)` is leaf L4.
+The cap `δ₊ = {⟨γ,x⟩ ≥ ε}` is geodesically convex because `ε > 0` makes it a cap of radius `< π/2`
+(used for flow-invariance); worth stating but true. Convergence to `ω₊` (LaSalle) and the exponential
+approach (Hartman-Grobman, `[Shu13]`) are axiomatized. Cores captured by L3 + L4; the rest is the
+axiom layer. Sound.
+
+### F7 (CONFIRMED sound) Lemma B.1 / L9 ball-chain retention (p.31)
+
+Backward induction: in the last interval the flow acts on `ℬ_{K-1}` (B.2 with `ℬ₀ = ℬ_{K-1}`,
+`ℬ₁ = ℬ_K`) and is the identity outside `ℬ_{K-1}`, so mass in `ℬ_K \ ℬ_{K-1}` is untouched
+(`μ(T;ℬ_K\ℬ_{K-1}) = μ(t_{K-1};·)`) while `μ(T;ℬ_K∩ℬ_{K-1}) ≥ (1-ε)μ(t_{K-1};ℬ_{K-1})` by B.2;
+the `|k-k'| ≥ 2` disjointness prevents interference. Unrolling gives `(1-ε)^K μ₀(⋃ℬ_k)`. Leaf L9
+(`ball_chain_geom`) captures the arithmetic `a_K ≥ (1-ε)^K a₀`; the geometric non-interference is the
+parking property (axiom). Faithful scoping. Sound.
+
+### F8 (CONFIRMED sound) Lemma 3.4 Part 1 / L10 pigeonhole (p.16, proof App. B.3)
+
+The `γ₁ = 1` case must produce parameters with `ℰ_{μ(T)} ≠ ℰ_{ν(T)}`; the obstruction to avoid is a
+map forced constant on a support. Leaf L10 (`exists_ne_in_ball`) supplies the self-contained core: a
+nonempty open ball contains a point `≠ a`, so no map is constant on it. The full Part-1 construction
+(and Part 2, ≤ 2 switches) is deferred to Appendix B.3 and rests on the flow-map / `conv_g`-invariance
+axioms; not re-derived. Core captured.
+
+### F9 (MINOR) Lemma 3.2 uniform exit time over the family (p.15)
+
+The proof picks `ω ∉ ⋃ᵢ supp μ₀ⁱ` and claims `∃ T₀` with `supp μⁱ(T₀) ⊂ B(-ω, π/8)` for all `i`.
+Uniformity over `i` is implicit: it holds because `N` is finite and the supports are closed and avoid
+a fixed neighborhood of `+ω` (the only repelling fixed point of `ẋ = -P_x^⊥ω`), giving a uniform
+finite exit time by compactness. Worth one sentence in a formalization; not an error. The drift sign
+(`d/dt⟨x,ω⟩ = -(1-⟨x,ω⟩²) < 0`, motion *away* from `ω` toward `-ω`) matches leaves L1/L2 and was the
+sign cross-checked by experiment E1.
+
+### F10 (MINOR) Theorem 1.2 ε/C bookkeeping is internally consistent (p.25-28)
+
+General case: the disentangling map `Φ_{θ₁}` is bi-Lipschitz with constant `C` (5.3); the match step
+is performed to tolerance `ε/C` (5.5, 5.6) via Lemmas 5.1/5.4/5.2; applying `Φ_{θ₁}^{-1}` reinflates
+by `C` (5.3) to land at `ε` (Step 3). The logic is sound. Restricted case (a.c. inputs, `M`-atom
+targets) replaces the packing/`L²`-approximation by `M` recursive applications of Lemma B.2 (Claim 1
+selects ball radii by IVT on `f(s,r) = νⁱ(B(γ(s),r))`, valid since `νⁱ` is a.c.), giving the trackable
+`O((d+M)N)` switch count. Bookkeeping checks out; the constants are uniform in `ε` as claimed
+(dependence on `M,N` is explicit via `≲_{M,N}`). The dense per-symbol details rest on the OT / flow
+axioms and were not re-derived line-by-line.
+
+### Verdict
+
+- **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
+  self-contained content of B.2/B.5 (with the F1 sign correction), 5.2, B.1, 3.4-Part-1, Prop 4.2
+  Steps 1-2, faithfully.
+- **Ready after fixes**: Lemma B.2 needs the F1 sign correction (`U = +z1ᵀ, b = -cos(R)1`); the
+  statement is true once corrected. Our Lean L2 already uses the mathematically correct gate identity.
+- **F2 resolved**: Prop 3.1's "disjoint hulls ⟹ non-colinear barycenters" step is now the
+  machine-checked leaf L11 (`barycenter_noncolinear_of_disjoint_hull`) for the empirical regime; only
+  the standard "barycenter ∈ closed convex hull of support" remains for general measures. The Prop 3.1
+  headline stays `math.open` for the independent reason that it rests on the flow / `conv_g`-nesting
+  axioms.
+- No errors found that threaten the main theorems; the one real bug (F1) is a recoverable sign typo,
+  and the formalization plus the numerical campaign caught it independently.
+
+## Node status
+
+See `claims.toml` for the authoritative registry. As commits land, each node advances from
+`math.proved-informal` to `math.axiomatised` or `math.machine-checked`. A node's *effective* status
+is the minimum over its `Depends-On` / `Assumes` closure, so any result above an axiom reads
+`math.axiomatised`, honestly.

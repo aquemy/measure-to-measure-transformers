@@ -1,0 +1,842 @@
+{
+  "$schema": "https://raw.githubusercontent.com/hotherio/claimgraph/main/schema/claimgraph.schema.json",
+  "meta": {
+    "generator": "claimgraph",
+    "spec_version": "0.1.0"
+  },
+  "nodes": [
+    {
+      "id": "MeasureToMeasure.Leaves.ball_chain_geom",
+      "kind": "formalize",
+      "statement": "ball-chain geometric retention of Lemma B.1 (L9)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.barycenter_deriv_pos",
+      "kind": "formalize",
+      "statement": "barycenter ODE and strict increase of eq. B.9 (L6)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
+      "kind": "formalize",
+      "statement": "barycenter ODE and strict increase of eq. B.9 (L6)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull",
+      "kind": "formalize",
+      "statement": "disjoint hulls give non-colinear barycenters (L11, closes F2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.exists_ne_in_ball",
+      "kind": "formalize",
+      "statement": "pigeonhole step of Lemma 3.4 Part 1 (L10)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "kind": "formalize",
+      "statement": "gate algebra and gate ODE of Lemma B.2 (L2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.gate_inner_identity",
+      "kind": "formalize",
+      "statement": "gate algebra and gate ODE of Lemma B.2 (L2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.gate_pos_iff_dist",
+      "kind": "formalize",
+      "statement": "gate algebra and gate ODE of Lemma B.2 (L2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
+      "kind": "formalize",
+      "statement": "gradient of geodesic distance along a path (L4)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.geodesicHull_inter_nonempty_of_sameRay",
+      "kind": "formalize",
+      "statement": "disjoint hulls give non-colinear barycenters (L11, closes F2)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.inner_eq_inner_tangentialProjector",
+      "kind": "formalize",
+      "statement": "gradient of geodesic distance along a path (L4)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.lemma_5_2",
+      "kind": "axiomatize",
+      "statement": "linearized optimal-transport bound of Lemma 5.2 (L7)",
+      "status": "math.axiomatised",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "MeasureToMeasure.Axioms.W2_map_le_L2"
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.lyapunov_deriv_nonpos",
+      "kind": "formalize",
+      "statement": "Lyapunov derivative and sign of Example 6.1 (L5)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.lyapunov_hasDerivAt",
+      "kind": "formalize",
+      "statement": "Lyapunov derivative and sign of Example 6.1 (L5)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Leaves.separating_hyperplane",
+      "kind": "formalize",
+      "statement": "separating-hyperplane bound of Proposition 4.2 Step 1 (L3)",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.Statements.theorem_1_2",
+      "kind": "state",
+      "statement": "type-correct stubs for Theorems 1.1, 1.2 and Proposition 3.1",
+      "status": "math.open",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "MeasureToMeasure.Axioms.W2"
+    },
+    {
+      "id": "MeasureToMeasure.cos_geodesicDist",
+      "kind": "formalize",
+      "statement": "tangential projector and geodesic distance from Mathlib",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "MeasureToMeasure.projector_inner_sub_sq",
+      "kind": "formalize",
+      "statement": "tangential projector and geodesic distance from Mathlib",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "axioms",
+      "kind": "axiomatize",
+      "statement": "introduce the labeled axiom layer for the missing Mathlib theory",
+      "status": "math.axiomatised",
+      "effective_status": "math.axiomatised",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "blueprint",
+      "kind": "docs",
+      "statement": "dependency graph of all ~18 results with Lean refs and status",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "claims",
+      "kind": "docs",
+      "statement": "refresh status cache for the four machine-checked leaves",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "coverage",
+      "kind": "review",
+      "statement": "map Mathlib v4.31.0 support and fix the axiom boundary",
+      "status": "math.proved-informal",
+      "effective_status": "math.proved-informal",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "e1",
+      "kind": "experiment",
+      "statement": "gated flow transports mass through overlapping regions (Lemma B.2/B.1)",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "e2",
+      "kind": "experiment",
+      "statement": "self-attention clusters a hemisphere measure to a point (Proposition 2.1)",
+      "status": "sci.measured",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "prop-2-1"
+    },
+    {
+      "id": "e3",
+      "kind": "experiment",
+      "statement": "barycenter separation disentangles overlapping supports (Proposition 3.1)",
+      "status": "sci.measured",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "prop-3-1"
+    },
+    {
+      "id": "e4",
+      "kind": "experiment",
+      "statement": "gated steering moves the active point and parks the rest (Proposition 4.2)",
+      "status": "sci.measured",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "prop-4-2"
+    },
+    {
+      "id": "e5",
+      "kind": "experiment",
+      "statement": "Lyapunov function decreases and theta converges (Example 6.1)",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "e6",
+      "kind": "experiment",
+      "statement": "end-to-end disentangle-cluster-match reaches the targets (Theorems 1.1/1.2)",
+      "status": "sci.measured",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "thm-1-1"
+    },
+    {
+      "id": "e7",
+      "kind": "experiment",
+      "statement": "a single linear continuity equation cannot separate supports (eq. 1.7)",
+      "status": "sci.measured",
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": "prop-3-1"
+    },
+    {
+      "id": "exp-e1-mass-transport",
+      "kind": "experiment",
+      "statement": "E1: integrate the ReLU-gated flow and verify mass fraction in B0 cap B1 >= 1-eps, and >= (1-eps)^K through a K-ball chain. Tests Lemma B.2 / B.1.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e2-clustering",
+      "kind": "experiment",
+      "statement": "E2: simulate the attention-field flow and verify diam(conv_g supp mu(t)) -> 0 with rate ~ log(1/eps). Tests Proposition 2.1.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e3-disentangle",
+      "kind": "experiment",
+      "statement": "E3: run theta_1 on N overlapping-support measures and verify supports become pairwise disjoint; count switches ~ O(dN). Tests Proposition 3.1.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e4-matching",
+      "kind": "experiment",
+      "statement": "E4: run gather/corridor/restore and verify x_0^M -> y^M while inactive points stay fixed; switches <= 6M. Tests Proposition 4.2 / 4.1.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e5-lyapunov",
+      "kind": "experiment",
+      "statement": "E5: simulate the d=2 dynamics and verify E = 1 - cos theta decreases monotonically and x_i -> u_i. Tests Example 6.1.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e6-end-to-end",
+      "kind": "experiment",
+      "statement": "E6: compose disentangle/match/un-disentangle on small N, M and verify W2(mu(T), target) <= eps with switch count O((d+M)N) / O(dN). Tests Theorems 1.1 / 1.2.",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "exp-e7-linear-impossible",
+      "kind": "experiment",
+      "statement": "E7 (negative control): show a single linear continuity equation cannot match overlapping inputs to disjoint targets (eq. 1.7).",
+      "status": "sci.measured",
+      "effective_status": "sci.measured",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-ball-chain-induction",
+      "kind": "conjecture",
+      "statement": "L9: if each step multiplies retained mass by at least (1-eps), then after K steps mu(T, B_K) >= (1-eps)^K mu_0(union B_k) (Lemma B.1 induction, abstracted).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-barycenter-noncolinear",
+      "kind": "conjecture",
+      "statement": "L11: empirical measures in the orthant (geodesic hull modeled as cone(s) cap sphere) with disjoint geodesic hulls have non-colinear barycenters (not SameRay). Discharges review finding F2: the implication Prop 3.1's induction asserts without proof, for the empirical regime of Thm 1.1 and restricted Thm 1.2. General-measure case adds only 'barycenter in closed convex hull of support'.",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-barycenter-ode",
+      "kind": "conjecture",
+      "statement": "L6: along d/dt <x,alpha> = c (1 - <alpha,x>^2) with c != 0 of fixed sign, the inner product is monotone and converges to +-1 (sign of c), i.e. x -> +-alpha (eq. B.9).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-coupling-bound",
+      "kind": "conjecture",
+      "statement": "L7: the map-induced coupling gives W2^2(T1_# mu, T2_# mu) <= integral ||T1 - T2||^2 d mu (the core of Lemma 5.2).",
+      "status": "math.axiomatised",
+      "effective_status": "math.axiomatised",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-gate-ode",
+      "kind": "conjecture",
+      "statement": "L2: with U=-1 z^T, b=cos(R) 1, W 1 = omega, the ReLU gate equals (cos R - <z,x>)_+ and d/dt <x,omega> = (1 - <x,omega>^2)(cos R - cos d_g(z,x))_+ (eq. B.4-B.5).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-geodesic-grad",
+      "kind": "conjecture",
+      "statement": "L4: the Riemannian gradient of geodesic distance is grad_1 d_g(x, omega) = - P_x^perp omega / sqrt(1 - <x,omega>^2).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-lyapunov",
+      "kind": "conjecture",
+      "statement": "L5: for E(theta) = 1 - cos theta along theta' = -alpha sin theta, the derivative is E' = -alpha sin^2 theta <= 0 (Example 6.1 Lyapunov function).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-markov-bound",
+      "kind": "conjecture",
+      "statement": "L8: if W2(mu, delta_{x0}) <= eta2 then 1 - mu(B(x0, eta3)) <= C eta2 / eta3, via a Lipschitz bump and W1 duality (Claim 2).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-pigeonhole",
+      "kind": "conjecture",
+      "statement": "L10: a function that is constant on an open ball forces the stated barycenter identity to fail, so some x* in B makes the two barycenters differ (Lemma 3.4 Part 1).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-projector",
+      "kind": "conjecture",
+      "statement": "L1: the tangential projector P_x^perp = I - x x^T is symmetric, idempotent, kills x, and satisfies <P_x^perp v, v> = ||v||^2 - <x,v>^2 for ||x||=1.",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "leaf-sep-hyperplane",
+      "kind": "conjecture",
+      "statement": "L3: monotonicity of cos gives <omega, x_0^M> - cos(pi/8 + tau) < 0 when d_g(omega, x_0^M) >= pi/2 and tau in (0, 3pi/8) (Prop 4.2 Step 1 separating hyperplane).",
+      "status": "math.machine-checked",
+      "effective_status": "math.machine-checked",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-3-2",
+      "kind": "conjecture",
+      "statement": "Lemma 3.2: one switch of W transports measures not filling the sphere into the positive orthant cap Q_1^{d-1}.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-3-3",
+      "kind": "conjecture",
+      "statement": "Lemma 3.3: if barycenters are pairwise non-colinear, a piecewise-constant theta shrinks one measure's geodesic convex hull into a small ball around its barycenter direction.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-3-4",
+      "kind": "conjecture",
+      "statement": "Lemma 3.4: two measures can be made non-colinear in barycenter, via the perceptron (gamma1=1) or via attention (gamma1!=1).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-5-1",
+      "kind": "conjecture",
+      "statement": "Lemma 5.1: transport maps T^i are preserved by the disentangling flow maps; there is a Lipschitz invertible psi with the stated pushforward identity.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-5-2",
+      "kind": "conjecture",
+      "statement": "Lemma 5.2 (linearized OT bound): W2(T1_# mu, T2_# mu) <= ||T1 - T2||_{L2(mu)} for measurable T1, T2 with T1 bijective.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-5-4",
+      "kind": "conjecture",
+      "statement": "Lemma 5.4: any psi in L2(S^{d-1}; S^{d-1}) is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-a-1",
+      "kind": "conjecture",
+      "statement": "Lemma A.1: the support condition (1.5) can be removed at O(eta) cost in W2 by a curated input perturbation.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-b-1",
+      "kind": "conjecture",
+      "statement": "Lemma B.1: through a chain of overlapping balls, mass mu(T, B_K) >= (1-eps)^K mu_0(union B_k), with a Lipschitz invertible flow map fixing points outside the balls.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "lem-b-2",
+      "kind": "conjecture",
+      "statement": "Lemma B.2: through a single overlapping ball pair, mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0), via the ReLU-gated drift toward an interior anchor.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "meta-axiom-layer",
+      "kind": "review",
+      "statement": "The labeled axiom layer: W2/W1 with the coupling and KR-duality bounds, and the continuity-equation flow map with its Lipschitz/bijective/parked-identity properties, standing in for the missing Mathlib theory.",
+      "status": "math.axiomatised",
+      "effective_status": "math.axiomatised",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "meta-coverage-map",
+      "kind": "review",
+      "statement": "Mathlib v4.31.0 coverage of the prerequisites: optimal transport / W2, continuity-equation flows, geodesic convexity, LaSalle and Hartman-Grobman are absent; sphere, inner-product algebra, and ODE existence/Gronwall are present.",
+      "status": "math.proved-informal",
+      "effective_status": "math.proved-informal",
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-2-1",
+      "kind": "conjecture",
+      "statement": "Proposition 2.1: attention with parameter B clusters a single-hemisphere measure to a point mass; diam(conv_g supp mu(t)) -> 0 with rate O(log 1/eps).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-2-2",
+      "kind": "conjecture",
+      "statement": "Proposition 2.2: an ensemble of disjoint-support atomless measures can be clustered to M atoms each by one flow map (packing balls + Lemma B.1).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-3-1",
+      "kind": "conjecture",
+      "statement": "Proposition 3.1: there is a piecewise-constant theta with O(d N) switches that disentangles the supports of N measures on the positive orthant cap.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-4-1",
+      "kind": "conjecture",
+      "statement": "Proposition 4.1: M points x_0^i can be steered exactly to y^i with a perceptron, using at most 6M switches and norm O(C M / (T min eps_i)).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-4-2",
+      "kind": "conjecture",
+      "statement": "Proposition 4.2: the single active point x_0^M is steered to y^M while inactive points stay fixed, via gather/corridor/restore, with at most 6 switches.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "prop-6-2",
+      "kind": "conjecture",
+      "statement": "Proposition 6.2: for generic i.i.d. discrete inputs, a single constant parameter disentangles all measures almost surely (limit clusters are distinct).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "review",
+      "kind": "docs",
+      "statement": "adversarial proof-review of the mid-level lemmas",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "thm-1-1",
+      "kind": "conjecture",
+      "statement": "Theorem 1.1: for Dirac targets sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps).",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    },
+    {
+      "id": "thm-1-2",
+      "kind": "conjecture",
+      "statement": "Theorem 1.2: for targets matchable by transport maps and a shared missing direction, a single Transformer steers N inputs to within eps in W2 with piecewise-constant parameters.",
+      "status": null,
+      "effective_status": null,
+      "in_question": false,
+      "weakest_dep": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "coverage",
+      "target": "meta-coverage-map",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.projector_inner_sub_sq",
+      "target": "leaf-projector",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "axioms",
+      "target": "meta-axiom-layer",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.separating_hyperplane",
+      "target": "MeasureToMeasure.cos_geodesicDist",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.separating_hyperplane",
+      "target": "leaf-sep-hyperplane",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.ball_chain_geom",
+      "target": "leaf-ball-chain-induction",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.lyapunov_hasDerivAt",
+      "target": "leaf-lyapunov",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "target": "MeasureToMeasure.projector_inner_sub_sq",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "target": "leaf-gate-ode",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
+      "target": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
+      "target": "leaf-barycenter-ode",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.exists_ne_in_ball",
+      "target": "leaf-pigeonhole",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.lemma_5_2",
+      "target": "MeasureToMeasure.Axioms.W2_map_le_L2",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.lemma_5_2",
+      "target": "leaf-coupling-bound",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
+      "target": "MeasureToMeasure.cos_geodesicDist",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.geodesicDist_hasDerivAt",
+      "target": "leaf-geodesic-grad",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e5",
+      "target": "MeasureToMeasure.Leaves.lyapunov_hasDerivAt",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e5",
+      "target": "exp-e5-lyapunov",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e1",
+      "target": "MeasureToMeasure.Leaves.gate_hasDerivAt_inner",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e1",
+      "target": "MeasureToMeasure.Leaves.ball_chain_geom",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e1",
+      "target": "exp-e1-mass-transport",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e2",
+      "target": "prop-2-1",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e2",
+      "target": "exp-e2-clustering",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e3",
+      "target": "prop-3-1",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e3",
+      "target": "MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e3",
+      "target": "exp-e3-disentangle",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e4",
+      "target": "prop-4-2",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e4",
+      "target": "MeasureToMeasure.Leaves.separating_hyperplane",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e4",
+      "target": "exp-e4-matching",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e7",
+      "target": "prop-3-1",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e7",
+      "target": "exp-e7-linear-impossible",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "e6",
+      "target": "thm-1-1",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e6",
+      "target": "exp-e2-clustering",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e6",
+      "target": "exp-e3-disentangle",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "e6",
+      "target": "exp-e6-end-to-end",
+      "relation": "Closes",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Statements.theorem_1_2",
+      "target": "MeasureToMeasure.Axioms.measureFlow",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Statements.theorem_1_2",
+      "target": "MeasureToMeasure.Axioms.W2",
+      "relation": "Depends-On",
+      "breaking": false
+    },
+    {
+      "source": "MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull",
+      "target": "leaf-barycenter-noncolinear",
+      "relation": "Closes",
+      "breaking": false
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "claim": "claim:exp-e5-lyapunov",
+  "criterion": "E=1-cos(theta) nonincreasing (max step increase <= 1e-09) and theta(T) -> 0 (|theta(T)| <= 0.001) over 200 seeded trials",
+  "experiment": "E5_lyapunov",
+  "metrics": {
+    "max_E_increase_per_step": 0.0,
+    "n_trials": 200,
+    "worst_final_abs_theta": 0.00036729366002211154
+  },
+  "passed": true,
+  "seed": 0
+}

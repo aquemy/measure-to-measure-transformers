@@ -1,0 +1,7 @@
+# Conventional Knowledge Commits configuration.
+# This repository holds both formalized mathematics (Lean 4 proofs of the leaf lemmas, plus a
+# labeled axiom layer and a full blueprint of statements) and empirical work (the numerical
+# validation campaign E1-E7). Both profiles are active: `proof` governs the Lean formalization
+# commits, `science` governs the experiment/result commits.
+# Spec: https://conventional-knowledge-commits.org/0.1.0/en/
+profiles = ["proof", "science"]

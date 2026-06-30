@@ -1,0 +1,148 @@
+% Blueprint content for the formalization of
+% Geshkovski-Rigollet-Ruiz-Balet, "Measure-to-measure interpolation using Transformers"
+% (arXiv:2411.04551v3). Dependency graph with Lean references and honest per-node status.
+%
+% Status convention used in the text of each node:
+%   [machine-checked]  clean Lean kernel proof (only propext/Classical.choice/Quot.sound)
+%   [axiomatised]      stated in Lean, rests on a labeled axiom (W2 / flow map)
+%   [open]             stated in Lean as a sorry stub
+%   [informal]         reviewed on paper, not yet stated in Lean
+
+\section{Foundations}
+
+\begin{definition}[Tangential projector]\label{def:projector}\lean{MeasureToMeasure.tangentialProjector}\leanok
+The layer-normalization projector $P_x^\perp v = v - \langle x, v\rangle x$ onto the tangent space.
+\end{definition}
+
+\begin{lemma}[Projector identity, L1]\label{lem:projector}\lean{MeasureToMeasure.projector_inner_sub_sq}\uses{def:projector}\leanok
+For $\|x\|=1$, $P_x^\perp$ is symmetric and idempotent, $P_x^\perp x = 0$, and
+$\langle P_x^\perp v, v\rangle = \|v\|^2 - \langle x,v\rangle^2$. [machine-checked]
+\end{lemma}
+
+\begin{definition}[Geodesic distance]\label{def:dg}\lean{MeasureToMeasure.geodesicDist}\leanok
+$d_g(x,y) = \arccos\langle x,y\rangle$, with $\cos d_g(x,y) = \langle x,y\rangle$ for unit vectors. [machine-checked]
+\end{definition}
+
+\section{Labeled axioms (missing Mathlib infrastructure)}
+
+\begin{definition}[Wasserstein distance]\label{ax:W2}\lean{MeasureToMeasure.Axioms.W2}
+$W_2$, $W_1$ with nonnegativity, symmetry, triangle inequality, the map-coupling bound, and
+Kantorovich-Rubinstein duality. [axiomatised]
+\end{definition}
+
+\begin{definition}[Continuity-equation flow]\label{ax:flow}\lean{MeasureToMeasure.Axioms.measureFlow}
+The solution map $\Phi_\theta^t$ on points and on measures, with Lipschitz, bijective and
+parked-region-identity properties; the switch count. [axiomatised]
+\end{definition}
+
+\section{Self-contained leaves}
+
+\begin{lemma}[Gate algebra and gate ODE, L2]\label{lem:gate}\lean{MeasureToMeasure.Leaves.gate_hasDerivAt_inner}\uses{lem:projector}\leanok
+$\frac{d}{dt}\langle x(t),\omega\rangle = (\cos R - \langle z,x\rangle)_+\,(1-\langle x,\omega\rangle^2)$
+along the gated flow, with the gate active exactly on $\{d_g(z,x)>R\}$ (eq. B.4-B.5). [machine-checked]
+The kernel-checked equivalence $g(x)>0 \iff d_g(z,x)>R$ corrects the printed (B.4), which states the
+gate is active on $\mathcal B_0=B(z,R)$; consistency of Lemma B.2 requires the opposite sign
+(finding F1 in \texttt{RESEARCH.md}, confirmed independently by experiment E1).
+\end{lemma}
+
+\begin{lemma}[Barycenter ODE, L6]\label{lem:bary}\lean{MeasureToMeasure.Leaves.barycenter_hasDerivAt_inner}\uses{lem:gate}\leanok
+$\frac{d}{dt}\langle x,\alpha\rangle = c\,(1-\langle x,\alpha\rangle^2)$ and strict increase for
+$c>0$ (eq. B.9). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Geodesic gradient, L4]\label{lem:grad}\lean{MeasureToMeasure.Leaves.geodesicDist_hasDerivAt}\uses{def:dg,def:projector}\leanok
+$\frac{d}{dt} d_g(x(t),\omega) = -(1-\langle x,\omega\rangle^2)^{-1/2}\langle x',\omega\rangle$,
+exhibiting $-P_x^\perp\omega/\sqrt{1-\langle x,\omega\rangle^2}$ as the Riemannian gradient (4.4). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Separating hyperplane, L3]\label{lem:sep}\lean{MeasureToMeasure.Leaves.separating_hyperplane}\uses{def:dg}\leanok
+$d_g(\omega,x)\ge\pi/2$ and $\tau\in(0,3\pi/8)$ give $\langle\omega,x\rangle<\cos(\pi/8+\tau)$ (Prop 4.2 Step 1). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Lyapunov sign, L5]\label{lem:lyap}\lean{MeasureToMeasure.Leaves.lyapunov_hasDerivAt}\leanok
+$E=1-\cos\theta$ along $\theta'=-\alpha\sin\theta$ has $\dot E = -\alpha\sin^2\theta\le 0$ (Ex. 6.1). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Ball-chain retention, L9]\label{lem:chain}\lean{MeasureToMeasure.Leaves.ball_chain_geom}\leanok
+Per-step retention $(1-\varepsilon)$ gives $a_K \ge (1-\varepsilon)^K a_0$ (Lemma B.1 induction). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Pigeonhole, L10]\label{lem:pigeon}\lean{MeasureToMeasure.Leaves.exists_ne_in_ball}\leanok
+A nonempty open ball contains a point $\ne a$, so no map is constant on it (Lemma 3.4 Part 1). [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Disjoint hulls give non-colinear barycenters, L11]\label{lem:noncol}\lean{MeasureToMeasure.Leaves.barycenter_noncolinear_of_disjoint_hull}\leanok
+Modeling $\operatorname{conv}_g(s)=\operatorname{cone}(s)\cap\mathbb S^{d-1}$ (faithful in a
+hemisphere), empirical measures in the orthant with disjoint geodesic hulls have non-colinear
+barycenters (not $\mathrm{SameRay}$). Discharges the step Proposition 3.1's induction asserts without
+proof (finding F2); kernel-clean for the empirical regime of Thm 1.1 / restricted Thm 1.2. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Linearized OT bound, L7]\label{lem:l52}\lean{MeasureToMeasure.Leaves.lemma_5_2}\uses{ax:W2}
+$W_2(T^1_\#\mu, T^2_\#\mu) \le \|T^1-T^2\|_{L^2(\mu)}$ (Lemma 5.2). [axiomatised]
+\end{lemma}
+
+\begin{lemma}[Markov bound, L8]\label{lem:markov}\uses{ax:W2}
+$W_2(\mu,\delta_{x_0})\le\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). [informal]
+\end{lemma}
+
+\section{Mass transport and clustering}
+
+\begin{lemma}[Single ball pair, B.2]\label{lem:b2}\uses{lem:gate}
+Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. [informal]
+Caveat (F1): the printed parameters $U=-z\mathbf 1^\top,\ b=\cos(R)\mathbf 1$ make the gate active on
+the complement of $\mathcal B_0$, so the lemma transports nothing as written; the sign must be flipped
+to $U=+z\mathbf 1^\top,\ b=-\cos(R)\mathbf 1$. True once corrected.
+\end{lemma}
+
+\begin{lemma}[Ball chain, B.1]\label{lem:b1}\uses{lem:b2,lem:chain}
+Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. [informal]
+\end{lemma}
+
+\begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\uses{def:projector,ax:flow}
+A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$. [informal]
+\end{proposition}
+
+\begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\uses{lem:b1,prop:21}
+Disjoint-support atomless measures cluster to $M$ atoms. [informal]
+\end{proposition}
+
+\section{Disentangling supports}
+
+\begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [informal]\end{lemma}
+\begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [informal]\end{lemma}
+\begin{lemma}[Make non-colinear, 3.4]\label{lem:34}\uses{lem:pigeon,lem:bary}Two measures made non-colinear. [informal]\end{lemma}
+
+\begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34,lem:noncol}
+A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]
+The "disjoint hulls $\Rightarrow$ non-colinear barycenters" step the induction asserted without proof
+(finding F2) is now the machine-checked leaf L11 (\ref{lem:noncol}) for the empirical regime; the
+headline stays open only because it rests on the flow / $\operatorname{conv}_g$-nesting axioms.
+\end{proposition}
+
+\section{Matching discrete measures}
+
+\begin{proposition}[Steer one point, 4.2]\label{prop:42}\uses{lem:sep,lem:grad}
+$x_0^M\to y^M$ while inactive points stay fixed, $\le 6$ switches. [informal]
+\end{proposition}
+
+\begin{proposition}[Match ensembles, 4.1]\label{prop:41}\uses{prop:42}
+$M$ points $x_0^i\to y^i$ exactly, $\le 6M$ switches. [informal]
+\end{proposition}
+
+\section{Main results}
+
+\begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\uses{prop:31}Existence of $\psi$. [informal]\end{lemma}
+\begin{lemma}[$L^2$ approximation, 5.4]\label{lem:54}\uses{prop:22,prop:41}Approximate any $\psi$ by a flow map. [informal]\end{lemma}
+
+\begin{theorem}[Theorem 1.2]\label{thm:12}\lean{MeasureToMeasure.Statements.theorem_1_2}\uses{prop:31,lem:51,lem:l52,lem:54}
+A single Transformer matches $N$ arbitrary inputs to $N$ arbitrary (transport-matchable) targets in $W_2$. [open]
+\end{theorem}
+
+\begin{theorem}[Theorem 1.1]\label{thm:11}\lean{MeasureToMeasure.Statements.theorem_1_1}\uses{prop:31,prop:21,prop:41}
+Dirac targets: matching with $O(dN)$ switches and norm $O(dN/T+\log 1/\varepsilon)$. [open]
+\end{theorem}
+
+\begin{proposition}[Generic O(1) switches, 6.2]\label{prop:62}\uses{prop:21}
+For generic i.i.d. discrete inputs a single constant parameter disentangles almost surely. [informal]
+\end{proposition}

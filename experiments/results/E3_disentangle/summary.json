@@ -1,0 +1,11 @@
+{
+  "claim": "claim:exp-e3-disentangle",
+  "criterion": "two measures with overlapping supports (min cross-distance < 0.2) become disjoint (min cross-distance > 2.0) under barycenter-separation",
+  "experiment": "E3_disentangle",
+  "metrics": {
+    "final_cross_min_distance": 3.141592653589793,
+    "init_cross_min_distance": 0.08342744244150263
+  },
+  "passed": true,
+  "seed": 0
+}

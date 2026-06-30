@@ -1,0 +1,12 @@
+{
+  "claim": "claim:exp-e6-end-to-end",
+  "criterion": "supports disjoint after disentangle (cross-distance > 1.0) and each transported measure is within eps=0.05 of its target (W2 proxy = max atom-to-target distance)",
+  "experiment": "E6_end_to_end",
+  "metrics": {
+    "separation_after_disentangle": 3.141592653589793,
+    "w2_proxy_measure_1": 0.0,
+    "w2_proxy_measure_2": 0.0
+  },
+  "passed": true,
+  "seed": 0
+}

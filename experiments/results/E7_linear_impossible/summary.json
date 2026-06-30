@@ -1,0 +1,11 @@
+{
+  "claim": "claim:exp-e7-linear-impossible",
+  "criterion": "linear field sends shared x* to a single image (gap ~ 0, so disjoint targets are unreachable); attention assigns x* different velocities under the two measures (gap > 0)",
+  "experiment": "E7_linear_impossible",
+  "metrics": {
+    "attention_velocity_gap": 0.38069795276821833,
+    "linear_image_gap": 0.0
+  },
+  "passed": true,
+  "seed": 0
+}

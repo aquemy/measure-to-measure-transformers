@@ -1,0 +1,47 @@
+# Lean / Lake
+/.lake/
+/lake-packages/
+/build/
+
+# LaTeX build artifacts (blueprint)
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+blueprint/*.pdf
+!references/paper.pdf
+# Blueprint build outputs (sources live in blueprint/src; the web output is
+# published under docs/ for classic GitHub Pages).
+/blueprint/print/
+/blueprint/web/
+/blueprint/lean_decls
+
+# Python / uv
+__pycache__/
+*.pyc
+*.pyo
+.venv*/
+.ipynb_checkpoints/
+
+# Experiment outputs: track the CKC evidence (manifest = provenance, summary = verdict);
+# regenerate raw arrays from the seeded code.
+experiments/results/*
+!experiments/results/.gitkeep
+!experiments/results/*/
+!experiments/results/**/manifest*.json
+!experiments/results/**/summary*.json
+*.npz
+*.pkl
+
+# OS
+.DS_Store
+
+# The in-repo reference copy lives at references/paper.pdf; ignore the root working copy.
+/paper.pdf
+
+/blueprint/src/web.paux
