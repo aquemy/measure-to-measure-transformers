@@ -379,6 +379,14 @@ lean      = "MeasureToMeasure.integralCurve_semigroup"
 paper     = "Continuity equation flow map Phi_theta^t: well-posedness algebra (Lipschitz/bijective/semigroup/parked)"
 created   = "2026-07-01"
 
+[claims.wasserstein-w1-foundations]
+kind      = "theorem"
+statement = "Optimal transport: couplings and the W1 Kantorovich cost (milestone M2, Phase 0/2 opening). MACHINE-CHECKED. Mathlib v4.31.0 has the Levy-Prokhorov metric but NO optimal transport (no couplings, no Wasserstein, no Kantorovich duality; Axioms/Wasserstein.lean axiomatizes W1/W2). This builds the substrate from scratch on Measure.prod / Measure.fst / Measure.snd. IsCoupling pi mu nu := pi.fst = mu and pi.snd = nu (transport plan with fixed marginals). isCoupling_prod (product/independent coupling for probability measures, via fst_prod/snd_prod), isCoupling_diagonal (the diagonal (id,id)_# mu couples mu with itself -- zero-cost plan), IsCoupling.swap (Prod.swap exchanges marginals, via fst_map_swap/snd_map_swap). transportCost pi := lintegral of edist p.1 p.2 (ENNReal-valued total cost). transportCost_swap (symmetric, via edist_comm), transportCost_diagonal (= 0, via edist_self). W1 mu nu := iInf over couplings of transportCost (ENNReal-valued Kantorovich cost). Metric facts proved unconditionally on the ENNReal lattice: W1_le_transportCost (each plan upper-bounds W1), W1_self_eq_zero (W1 mu mu = 0 via the diagonal), W1_comm (symmetry via swap). #print axioms clean (propext/Classical.choice/Quot.sound). First real slice of M2; the harder facts (Kantorovich-Rubinstein bound needs signed integrals; triangle inequality needs gluing of couplings; completeness) are deferred. Does not yet discharge the W1/W2 axioms (that is the M2 rewiring once KR + triangle land)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W1_comm"
+paper     = "Wasserstein W1 / optimal transport substrate (Kantorovich cost over couplings)"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
