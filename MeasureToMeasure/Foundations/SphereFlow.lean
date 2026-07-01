@@ -22,7 +22,7 @@ LaSalle/Lyapunov convergence analysis (M6).
 
 namespace MeasureToMeasure
 
-open scoped RealInnerProductSpace
+open scoped RealInnerProductSpace NNReal
 open Set
 
 variable {d : ℕ}
@@ -109,5 +109,73 @@ theorem sphere_invariant {x g : ℝ → Eucl d} {K T : ℝ}
   intro t ht
   have : ‖x t‖ = 1 := hnorm t ht
   simpa [sphere, Metric.mem_sphere, dist_eq_norm] using this
+
+/-!
+## The flow algebra of an autonomous Lipschitz field
+
+Mathlib has local Picard-Lindelöf, global uniqueness (`ODE_solution_unique_univ`), and the Grönwall
+trajectory bound (`dist_le_of_trajectories_ODE`), but **no** global-existence continuation and **no**
+constructor turning a Lipschitz vector field into a `Flow` object (only `Flow.id` / `Flow.fromIter`).
+Global existence for a globally-Lipschitz field is a true fact (linear growth ⟹ no blow-up) but is
+not yet in Mathlib, so we do not fabricate the `Flow` object (nor axiomatize it). Instead we prove the
+*properties* of the flow that the paper's construction actually uses -- uniqueness, Lipschitz
+dependence on the initial value, the semigroup law, and fixed points of the field -- each stated for a
+given integral curve of the autonomous field `v ≡ V`. These are the mathematical content behind the
+axioms `flowMap_bijective` (injectivity), `flowMap_lipschitz`, `flowMap_comp`, and
+`flowMap_id_on_parked`; the remaining gap is exactly the (missing) global-existence packaging that
+would turn "for a given curve" into "for the flow map".
+-/
+
+variable {V : Eucl d → Eucl d} {K : ℝ≥0} {γ : ℝ → Eucl d}
+
+/-- **Uniqueness.** Two integral curves of the same autonomous globally-Lipschitz field that agree at
+time `0` are equal. This is the injectivity content behind `flowMap_bijective`, and it drives the
+semigroup and fixed-point facts below. -/
+theorem integralCurve_unique (hV : LipschitzWith K V) {γ₁ γ₂ : ℝ → Eucl d}
+    (h₁ : IsIntegralCurve γ₁ (fun _ => V)) (h₂ : IsIntegralCurve γ₂ (fun _ => V))
+    (h0 : γ₁ 0 = γ₂ 0) : γ₁ = γ₂ :=
+  ODE_solution_unique_univ (s := fun _ => Set.univ) (fun _ => hV.lipschitzOnWith)
+    (fun t => ⟨h₁ t, Set.mem_univ _⟩) (fun t => ⟨h₂ t, Set.mem_univ _⟩) h0
+
+/-- **Lipschitz dependence on the initial value.** Two integral curves of the same autonomous
+`K`-Lipschitz field diverge at most exponentially: `dist (γ₁ t) (γ₂ t) ≤ dist (γ₁ 0) (γ₂ 0) e^{K t}`
+for `t ≥ 0`. This is the Grönwall estimate behind `flowMap_lipschitz`. -/
+theorem integralCurve_dist_le (hV : LipschitzWith K V) {γ₁ γ₂ : ℝ → Eucl d}
+    (h₁ : IsIntegralCurve γ₁ (fun _ => V)) (h₂ : IsIntegralCurve γ₂ (fun _ => V))
+    {t : ℝ} (ht : 0 ≤ t) :
+    dist (γ₁ t) (γ₂ t) ≤ dist (γ₁ 0) (γ₂ 0) * Real.exp ((K : ℝ) * t) := by
+  have h := dist_le_of_trajectories_ODE (v := fun _ => V) (K := K)
+    (fun _ => hV) h₁.continuous.continuousOn (fun s _ => (h₁ s).hasDerivWithinAt)
+    h₂.continuous.continuousOn (fun s _ => (h₂ s).hasDerivWithinAt)
+    (le_refl (dist (γ₁ 0) (γ₂ 0))) t (Set.mem_Icc.2 ⟨ht, le_refl t⟩)
+  simpa using h
+
+/-- **Fixed points.** If the field vanishes at `x`, then the (unique) integral curve through `x` is
+constant: it stays at `x` for all time. This is the `Parked` / `flowMap_id_on_parked` content -- on a
+region where the velocity is switched off, the flow is the identity. -/
+theorem integralCurve_eq_of_field_zero (hV : LipschitzWith K V)
+    (hγ : IsIntegralCurve γ (fun _ => V)) {x : Eucl d} (hx : V x = 0) (h0 : γ 0 = x) :
+    ∀ t, γ t = x := by
+  have hconst : IsIntegralCurve (fun _ : ℝ => x) (fun _ => V) := isIntegralCurve_const (fun _ => hx)
+  have heq := integralCurve_unique hV hγ hconst (by simpa using h0)
+  intro t; rw [heq]
+
+/-- The time-shift of an integral curve of an autonomous field is again an integral curve (of the same
+field): `t ↦ γ (s + t)` solves the ODE. The building block of the semigroup law. -/
+theorem integralCurve_comp_add (hγ : IsIntegralCurve γ (fun _ => V)) (s : ℝ) :
+    IsIntegralCurve (fun t => γ (s + t)) (fun _ => V) := by
+  have h := hγ.comp_add s
+  have e1 : (γ ∘ fun x => x + s) = fun t => γ (s + t) := by funext x; rw [Function.comp_apply, add_comm]
+  have e2 : ((fun _ : ℝ => V) ∘ fun x => x + s) = fun _ => V := rfl
+  rwa [e1, e2] at h
+
+/-- **Semigroup law.** If `γ` is the integral curve from `x₀` and `η` is the integral curve from
+`γ s`, then `η t = γ (s + t)`: flowing for time `s` then time `t` equals flowing for time `s + t`.
+This is the `flowMap_comp` content `Φ^{s+t} = Φ^t ∘ Φ^s`. -/
+theorem integralCurve_semigroup (hV : LipschitzWith K V) {η : ℝ → Eucl d}
+    (hγ : IsIntegralCurve γ (fun _ => V)) (hη : IsIntegralCurve η (fun _ => V))
+    (s : ℝ) (h0 : η 0 = γ s) : ∀ t, η t = γ (s + t) := by
+  have heq := integralCurve_unique hV hη (integralCurve_comp_add hγ s) (by simpa using h0)
+  intro t; rw [heq]
 
 end MeasureToMeasure

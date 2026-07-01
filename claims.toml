@@ -371,6 +371,14 @@ lean      = "MeasureToMeasure.sphere_invariant"
 paper     = "Continuity equation (1.2)-(1.3); layer-normalized characteristic ODE on the sphere"
 created   = "2026-07-01"
 
+[claims.flow-algebra-integral-curve]
+kind      = "theorem"
+statement = "Flow algebra of an autonomous Lipschitz field (milestone M3, Phase 1 completion). MACHINE-CHECKED. Mathlib has local Picard-Lindelof, global uniqueness (ODE_solution_unique_univ), and the Gronwall trajectory bound (dist_le_of_trajectories_ODE), but NO global-existence continuation and NO constructor turning a Lipschitz vector field into a Flow object (only Flow.id / Flow.fromIter). Rather than fabricate/axiomatize the Flow object, we prove the flow PROPERTIES the paper's construction uses, each for a given integral curve of the autonomous field v == V: integralCurve_unique (two curves agreeing at 0 are equal -- injectivity behind flowMap_bijective), integralCurve_dist_le (dist(g1 t)(g2 t) <= dist(g1 0)(g2 0) e^{K t} for t>=0 -- the Lipschitz-in-initial-value estimate behind flowMap_lipschitz; NO axioms at all, fully constructive), integralCurve_eq_of_field_zero (field vanishing at x => the curve through x is constant -- the Parked / flowMap_id_on_parked content), integralCurve_comp_add + integralCurve_semigroup (eta t = gamma(s+t) -- the flowMap_comp semigroup law Phi^{s+t}=Phi^t o Phi^s). These are the genuine mathematical content of the four flow axioms; the only remaining gap is the (missing-in-Mathlib) global-existence packaging that turns 'for a given curve' into 'for the flow map'. #print axioms clean. Does not yet discharge a paper flow axiom (that needs global existence + the mean-field coupling, M3 Phase 4)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.integralCurve_semigroup"
+paper     = "Continuity equation flow map Phi_theta^t: well-posedness algebra (Lipschitz/bijective/semigroup/parked)"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================

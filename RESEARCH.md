@@ -360,6 +360,21 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     continuity-equation layer itself is absent from Mathlib, so this in-repo lemma is the geometric
     well-posedness core the mean-field flow (M3) and the LaSalle/Lyapunov convergence (M6) both rest on.
     Kernel-clean. Reusable infrastructure; does not yet discharge a paper flow axiom (that is M3 Phase 4).
+  - **Flow algebra of an autonomous Lipschitz field** (`Foundations/SphereFlow.lean`), M3 Phase 1
+    completion. Mathlib has *local* Picard–Lindelöf, global *uniqueness* (`ODE_solution_unique_univ`),
+    and the Grönwall trajectory bound (`dist_le_of_trajectories_ODE`), but **no** global-existence
+    continuation and **no** constructor turning a Lipschitz field into a `Flow` object (only `Flow.id` /
+    `Flow.fromIter`). Rather than fabricate or axiomatize the `Flow` object, the flow *properties* the
+    paper uses are proved per integral curve of the autonomous field `v ≡ V`: `integralCurve_unique`
+    (curves agreeing at `0` are equal — injectivity behind `flowMap_bijective`), `integralCurve_dist_le`
+    (`dist(γ₁ t)(γ₂ t) ≤ dist(γ₁ 0)(γ₂ 0) e^{K t}`, `t ≥ 0` — the Lipschitz-in-initial-value estimate
+    behind `flowMap_lipschitz`, and *axiom-free*), `integralCurve_eq_of_field_zero` (field zero at `x` ⟹
+    the curve through `x` is constant — the `Parked` / `flowMap_id_on_parked` content),
+    `integralCurve_comp_add` + `integralCurve_semigroup` (`η t = γ(s+t)` — the `flowMap_comp` semigroup
+    law `Φ^{s+t} = Φ^t ∘ Φ^s`). This is the genuine mathematical content of the four flow axioms; the only
+    remaining gap is the (missing-in-Mathlib) global-existence packaging turning "for a given curve" into
+    "for the flow map". Kernel-clean; does not yet discharge a paper flow axiom (needs global existence +
+    the mean-field coupling, M3 Phase 4, gated on optimal transport M2).
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
