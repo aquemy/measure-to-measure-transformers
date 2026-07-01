@@ -74,3 +74,7 @@
 | 72 | 2026-07-01 | `formalize` | formalize(axioms): define measureFlow as a pushforward, deriving the measure-level flow laws (M3) | `MeasureToMeasure.Axioms.measureFlow` |
 | 73 | 2026-07-01 | `docs` | docs(ledger): record measureFlow-as-pushforward (M3 slice); refresh ClaimGraph and site | `ledger` |
 | 74 | 2026-07-01 | `formalize` | formalize(axioms): make the schedule type concrete, proving the switch algebra (M3) | `MeasureToMeasure.Axioms.switches_comp` |
+| 75 | 2026-07-01 | `docs` | docs(ledger): record concrete schedule algebra (M3 slice); refresh ClaimGraph and site | `ledger` |
+| 76 | 2026-07-01 | `formalize` | formalize(foundations): sphere invariance of the layer-normalized flow (M3 Phase 1) | `MeasureToMeasure.sphere_invariant` |
+| 77 | 2026-07-01 | `docs` | docs(ledger): record sphere invariance (M3 Phase 1); refresh ClaimGraph and site | `ledger` |
+| 78 | 2026-07-01 | `formalize` | formalize(foundations): flow algebra of an autonomous Lipschitz field (M3 Phase 1) | `MeasureToMeasure.integralCurve_unique` |
