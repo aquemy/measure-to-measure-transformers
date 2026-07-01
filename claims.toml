@@ -355,6 +355,14 @@ lean      = "MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex"
 paper     = "Section 3.3 (disentanglement); geodesic-convex hull"
 created   = "2026-07-01"
 
+[claims.geodesic-hull-disjoint]
+kind      = "theorem"
+statement = "Separating-hyperplane criterion for geodesic-hull disjointness (milestone M5). MACHINE-CHECKED. geodesicHull_disjoint_of_separated: if a direction e is strictly positive on every generator of s1 and strictly negative on every generator of s2, then geodesicHull s1 and geodesicHull s2 are disjoint (any common point would have <e,.> both positive and negative). Mirror lemma inner_neg_of_inConicalSpan. Corollary barycenter_noncolinear_of_separated composes this with leaf L11 (barycenter_noncolinear_of_disjoint_hull) to get non-colinear barycenters from a separating hyperplane. This is the clean sufficient condition the Section 3.3 disentanglement uses to make two clusters' hulls disjoint. #print axioms clean."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated"
+paper     = "Section 3.3 (disentanglement); finding F2 (leaf L11)"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
