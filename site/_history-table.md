@@ -78,3 +78,5 @@
 | 76 | 2026-07-01 | `formalize` | formalize(foundations): sphere invariance of the layer-normalized flow (M3 Phase 1) | `MeasureToMeasure.sphere_invariant` |
 | 77 | 2026-07-01 | `docs` | docs(ledger): record sphere invariance (M3 Phase 1); refresh ClaimGraph and site | `ledger` |
 | 78 | 2026-07-01 | `formalize` | formalize(foundations): flow algebra of an autonomous Lipschitz field (M3 Phase 1) | `MeasureToMeasure.integralCurve_unique` |
+| 79 | 2026-07-01 | `docs` | docs(ledger): record the autonomous-field flow algebra (M3 Phase 1); refresh ClaimGraph and site | `ledger` |
+| 80 | 2026-07-01 | `formalize` | formalize(foundations): couplings and the W1 Kantorovich cost (M2 Phase 0/2 opening) | `MeasureToMeasure.W1` |
