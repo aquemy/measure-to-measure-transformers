@@ -61,3 +61,5 @@
 | 59 | 2026-07-01 | `fix` | fix(foundations): require StandardBorelSpace in the Sierpinski IVT axiom (soundness) | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq` |
 | 60 | 2026-07-01 | `formalize` | formalize(foundations): reduce the Sierpinski IVT to the real line via embeddingReal | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |
 | 61 | 2026-07-01 | `formalize` | formalize(foundations): prove the Sierpinski IVT on R, fully discharging M8a | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |
+| 62 | 2026-07-01 | `docs` | docs(ledger): record Sierpinski IVT + atomless splitting proved; refresh ClaimGraph and site | `ledger` |
+| 63 | 2026-07-01 | `formalize` | formalize(foundations): geodesic convexity on the sphere (M5 foundations) | `MeasureToMeasure.geodesicConvex_open_hemisphere` |
