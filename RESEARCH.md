@@ -325,11 +325,13 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   disjoint-support family).
 - **Measure-theoretic primitive** (`Foundations/AtomlessSplitting.lean`):
   `exists_measurableSet_subset_measure_eq` — Sierpiński's intermediate-value theorem for nonatomic
-  measures (subset form: a finite atomless `μ` has a measurable subset of any value `r ≤ μ E`). This is
-  now the *only* axiom under the atomless splitting: the prescribed-mass disjoint partition
-  (`exists_disjoint_subset_measure_eq`) and the probability decomposition (`exists_probability_decomposition`,
-  hence `exists_atomless_partition`) are machine-checked on top of it (milestone M8a — the old bespoke
-  `exists_atomless_partition` axiom was removed).
+  measures (subset form: a finite atomless `μ` **on a standard Borel space** has a measurable subset of
+  any value `r ≤ μ E`). This is now the *only* axiom under the atomless splitting: the prescribed-mass
+  disjoint partition (`exists_disjoint_subset_measure_eq`) and the probability decomposition
+  (`exists_probability_decomposition`, hence `exists_atomless_partition`) are machine-checked on top of
+  it (milestone M8a — the old bespoke `exists_atomless_partition` axiom was removed). The
+  `[StandardBorelSpace X]` hypothesis is load-bearing for *soundness*, not convenience — see the
+  fidelity corrections.
 
 ### Fidelity corrections made while closing
 
@@ -358,3 +360,12 @@ Several type-correct stubs were loose transcriptions; axiomatizing them as writt
   prescribed-mass disjoint decomposition; `prop_2_2` now acquires the hemisphere per piece dynamically
   (rotate into the orthant via `lemma_3_2`; the orthant lies in a basis direction's hemisphere),
   matching the paper's actual argument, and gains a `0 < d` hypothesis to name that basis direction.
+- `exists_measurableSet_subset_measure_eq` (the Sierpiński IVT primitive, added with M8a): carries a
+  `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. Stated with `NoAtoms` alone the axiom is
+  *false* — on `ℝ` with the countable-cocountable σ-algebra and the `0/1` measure, every singleton is
+  null (`NoAtoms` holds) yet no measurable set has measure `½`, so no subset of prescribed measure
+  exists. `NoAtoms` is the point-mass notion; Sierpiński needs measure-algebra atomless-ness (every
+  positive set splits), which `NoAtoms` supplies on a standard Borel space (Borel-isomorphic to `ℝ`,
+  continuous CDF). `Eucl d` is standard Borel, so `exists_atomless_partition` and `prop_2_2` are
+  unaffected — but the axiom is now sound rather than vacuously inconsistent. (Caught by adversarially
+  re-reading the just-introduced axiom, the same discipline applied to the paper's own lemmas.)
