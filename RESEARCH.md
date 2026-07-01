@@ -347,6 +347,19 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     two switch-budget axioms, so the depth/switch accounting behind `prop_4_1` (`6M`) and `lemma_B_1`
     (`K`) is now *proved*, not assumed. The only remaining schedule-layer opacity is `Block` and the
     `flowMap` facts over it.
+  - **Sphere invariance of the layer-normalized flow** (`Foundations/SphereFlow.lean`), milestone **M3**,
+    Phase 1 foundation (ODE-based, reusable). `sphere_invariant` — an integral curve of the
+    tangentially-projected field `ẋ = P_x^⊥(g t)` that starts on `𝕊^{d-1}` stays on it throughout `[0,T]`,
+    given a uniform bound on the raw radial drift `⟪x t, g t⟫` (automatic when `g` is bounded, e.g. the
+    attention field on the compact sphere). The care point: `P_x^⊥ g` is tangent *only on* the sphere —
+    `inner_tangentialProjector_left` gives `⟪x, P_x^⊥ w⟫ = ⟪x,w⟫(1 − ‖x‖²)`, which vanishes exactly at
+    `‖x‖ = 1` — so `u(t) = ‖x t‖² − 1` solves the *linear homogeneous* ODE `u′ = c(t) u` with `u(0) = 0`,
+    and Grönwall (`norm_le_gronwallBound_of_norm_deriv_right_le` + `gronwallBound_ε0_δ0`) forces `u ≡ 0`.
+    Grönwall core isolated as `norm_sq_eq_one_of_radial_tangent`; the derivative of `‖x‖²` along a curve
+    as `hasDerivAt_norm_sq_sub_one` (via `HasDerivAt.inner`). Reuses Mathlib's ODE/Grönwall substrate; the
+    continuity-equation layer itself is absent from Mathlib, so this in-repo lemma is the geometric
+    well-posedness core the mean-field flow (M3) and the LaSalle/Lyapunov convergence (M6) both rest on.
+    Kernel-clean. Reusable infrastructure; does not yet discharge a paper flow axiom (that is M3 Phase 4).
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 

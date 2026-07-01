@@ -363,6 +363,14 @@ lean      = "MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated"
 paper     = "Section 3.3 (disentanglement); finding F2 (leaf L11)"
 created   = "2026-07-01"
 
+[claims.sphere-invariance]
+kind      = "theorem"
+statement = "Sphere invariance of the layer-normalized flow (milestone M3, Phase 1 foundation). MACHINE-CHECKED. sphere_invariant: an integral curve of the tangentially-projected field x-dot = P_x^perp (g t) that starts on the unit sphere S^{d-1} stays on it throughout [0,T], provided the raw radial drift <x t, g t> is uniformly bounded (automatic when g is bounded, e.g. the attention field on the compact sphere). The subtlety is that P_x^perp g is only genuinely tangent ON the sphere: inner_tangentialProjector_left gives <x, P_x^perp w> = <x,w>(1 - ||x||^2), which vanishes exactly at ||x||=1. So u(t)=||x t||^2-1 solves the LINEAR homogeneous ODE u' = c(t) u with u(0)=0, and Grownwall (norm_le_gronwallBound_of_norm_deriv_right_le + gronwallBound_e0_d0) forces u == 0. Grownwall core stated separately as norm_sq_eq_one_of_radial_tangent; derivative-of-norm-squared along a curve as hasDerivAt_norm_sq_sub_one (via HasDerivAt.inner). Mathlib has Picard-Lindelof/Gronwall but no continuity-equation theory, so this in-repo lemma is the geometric well-posedness core the mean-field flow (M3) and the LaSalle/Lyapunov convergence (M6) both rest on. #print axioms clean (propext/Classical.choice/Quot.sound only). Reusable infrastructure; does not yet discharge a paper flow axiom (that is M3 Phase 4)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.sphere_invariant"
+paper     = "Continuity equation (1.2)-(1.3); layer-normalized characteristic ODE on the sphere"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
