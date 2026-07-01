@@ -300,6 +300,16 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     now lists **only** `propext`/`Classical.choice`/`Quot.sound` — the bespoke partition axiom *and*
     the Sierpiński IVT axiom beneath it are both gone, so `prop_2_2` no longer rests on any
     measure-theoretic axiom.
+  - **Geodesic convexity on the sphere** (`Foundations/GeodesicConvex.lean`), milestone **M5**,
+    foundations slice. `GeodesicConvex s` := `s ⊆ 𝕊` and closure under normalized positive chords
+    `‖a·x + b·y‖⁻¹ • (a·x + b·y)` (`a,b > 0`) — the pure inner-product characterization, which on an
+    open hemisphere coincides with the minimizing-geodesic-arc definition. Machine-checked lemmas:
+    `geodesicConvex_open_hemisphere` (an open spherical hemisphere `{x ∈ 𝕊 | 0 < ⟪e,x⟫}` is
+    geodesically convex — the paper's orthant/hemisphere confinement), `geodesicConvex_singleton`,
+    `GeodesicConvex.inter` / `geodesicConvex_iInter` (so an orthant, an intersection of hemispheres, is
+    geodesically convex). Mathlib has `Convex`/`ConvexCone`/`SameRay` but no geodesic convexity, so this
+    is built in-repo. First slice toward the disentanglement geometry behind `exists_disentangling_balls`
+    and a generalization of leaf L11; does not yet discharge an axiom.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 

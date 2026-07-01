@@ -331,6 +331,14 @@ lean      = "MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq
 paper     = "Prop 2.2 (nonatomic splitting primitive)"
 created   = "2026-07-01"
 
+[claims.geodesic-convex-foundations]
+kind      = "theorem"
+statement = "Geodesic convexity on the sphere (milestone M5, foundations). MACHINE-CHECKED. A subset s of the unit sphere S^{d-1} is geodesically convex (GeodesicConvex) when it is closed under normalized positive chords: for x,y in s and a,b>0, the point ||a*x+b*y||^-1 * (a*x+b*y) lies in s. On an open hemisphere these normalized chords are exactly the minimizing geodesic arcs, so this is the faithful spherical analogue of ordinary convexity (pure inner-product characterization, no arccos). Key lemma geodesicConvex_open_hemisphere: an open spherical hemisphere {x in S | 0 < <e,x>} is geodesically convex -- the fact the paper uses for the orthant/hemisphere confinement (Lemma 3.2). Also: singletons are geodesically convex, and geodesic convexity is closed under arbitrary (nonempty-indexed) intersection, so an orthant (intersection of hemispheres) is geodesically convex. Mathlib has Convex/ConvexCone/SameRay but no geodesic convexity, so this is built in-repo. #print axioms clean. First slice toward the disentanglement geometry behind exists_disentangling_balls; generalizes leaf L11 (barycenter_noncolinear_of_disjoint_hull)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.geodesicConvex_open_hemisphere"
+paper     = "Section 3.3 (disentanglement geometry); Lemma 3.2 (hemisphere confinement)"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
