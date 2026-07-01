@@ -70,3 +70,5 @@
 | 68 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull minimality (M5); refresh ClaimGraph and site | `ledger` |
 | 69 | 2026-07-01 | `docs` | docs(site): mark M8a done and M5 in progress on the Beyond Mathlib page + build DAG | `site` |
 | 70 | 2026-07-01 | `formalize` | formalize(leaves): separating-hyperplane criterion for hull disjointness (M5) | `MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated` |
+| 71 | 2026-07-01 | `docs` | docs(ledger): record hull-disjointness criterion (M5); refresh ClaimGraph and site | `ledger` |
+| 72 | 2026-07-01 | `formalize` | formalize(axioms): define measureFlow as a pushforward, deriving the measure-level flow laws (M3) | `MeasureToMeasure.Axioms.measureFlow` |
