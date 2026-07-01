@@ -2,6 +2,7 @@ import Mathlib.MeasureTheory.Measure.Typeclasses.NoAtoms
 import Mathlib.MeasureTheory.Measure.Restrict
 import Mathlib.MeasureTheory.Measure.Dirac
 import Mathlib.MeasureTheory.Constructions.Polish.Basic
+import Mathlib.MeasureTheory.Constructions.Polish.EmbeddingReal
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Tuple.Basic
 
@@ -34,17 +35,51 @@ open scoped ENNReal
 
 variable {X : Type*} [MeasurableSpace X]
 
-/-- AXIOM (Sierpiński's intermediate-value theorem for nonatomic measures, subset form). For a finite
-atomless measure `μ` on a **standard Borel space**, a measurable set `E`, and any target `r ≤ μ E`,
-there is a measurable subset `F ⊆ E` with `μ F = r`: the range of `μ` over the measurable subsets of
-`E` is the full interval `[0, μ E]`. A classical theorem (Sierpiński 1922; Fremlin §215D), absent from
-Mathlib `v4.31.0`. The `[StandardBorelSpace X]` hypothesis is essential: `NoAtoms` alone is the
-point-mass notion and does not imply the splitting property on a coarse σ-algebra (see the module
-docstring for the countable-cocountable counterexample). -/
-axiom exists_measurableSet_subset_measure_eq (μ : Measure X) [StandardBorelSpace X]
+/-- AXIOM (Sierpiński's intermediate-value theorem on the real line, subset form) -- the analytic
+core. For a finite atomless measure on `ℝ`, a measurable set `E`, and any target `r ≤ μ E`, there is a
+measurable subset `F ⊆ E` with `μ F = r`. This is the one remaining primitive: the standard-Borel case
+below reduces to it, and everything else is machine-checked. Discharging it (via the continuity of
+`t ↦ μ (E ∩ Iic t)`, which holds because `μ` has no atoms, plus the intermediate value theorem;
+Sierpiński 1922, Fremlin §215D) is the remaining analytic step. -/
+axiom exists_measurableSet_subset_measure_eq_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NoAtoms μ]
+    {E : Set ℝ} (hE : MeasurableSet E) (r : ℝ≥0∞) (hr : r ≤ μ E) :
+    ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r
+
+/-- Sierpiński's intermediate-value theorem for nonatomic measures on a **standard Borel space**
+(subset form): the range of `μ` over the measurable subsets of `E` is the full interval `[0, μ E]`.
+Reduced to the real line via the measurable embedding `embeddingReal`: push `μ` forward to `ℝ` (still
+finite and atomless, since the embedding is injective), solve there, and pull the subset back. The
+`[StandardBorelSpace X]` hypothesis is essential -- `NoAtoms` alone is the point-mass notion and does
+not imply the splitting property on a coarse σ-algebra (see the module docstring for the
+countable-cocountable counterexample). -/
+theorem exists_measurableSet_subset_measure_eq (μ : Measure X) [StandardBorelSpace X]
     [IsFiniteMeasure μ] [NoAtoms μ]
     {E : Set X} (hE : MeasurableSet E) (r : ℝ≥0∞) (hr : r ≤ μ E) :
-    ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r
+    ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r := by
+  set e := embeddingReal X with he_def
+  have he : MeasurableEmbedding e := measurableEmbedding_embeddingReal X
+  -- push `μ` forward to `ℝ`
+  set ν := μ.map e with hν
+  haveI : IsFiniteMeasure ν :=
+    ⟨by rw [hν, he.map_apply, Set.preimage_univ]; exact measure_lt_top μ Set.univ⟩
+  haveI : NoAtoms ν := by
+    refine ⟨fun y => ?_⟩
+    rw [hν, he.map_apply]
+    have hss : (e ⁻¹' {y}).Subsingleton := fun a ha b hb =>
+      he.injective (by simp only [Set.mem_preimage, Set.mem_singleton_iff] at ha hb; rw [ha, hb])
+    rcases hss.eq_empty_or_singleton with h | ⟨a, h⟩
+    · rw [h, measure_empty]
+    · rw [h, measure_singleton]
+  -- transport `E` and solve on `ℝ`
+  have hEim : MeasurableSet (e '' E) := he.measurableSet_image.mpr hE
+  have hνE : ν (e '' E) = μ E := by
+    rw [hν, he.map_apply, Set.preimage_image_eq E he.injective]
+  obtain ⟨F', hF'meas, hF'sub, hF'μ⟩ :=
+    exists_measurableSet_subset_measure_eq_real ν hEim r (by rw [hνE]; exact hr)
+  refine ⟨e ⁻¹' F', he.measurable hF'meas, ?_, ?_⟩
+  · calc e ⁻¹' F' ⊆ e ⁻¹' (e '' E) := Set.preimage_mono hF'sub
+      _ = E := Set.preimage_image_eq E he.injective
+  · rw [← he.map_apply, ← hν]; exact hF'μ
 
 /-- Within a set `E` of sufficient measure, carve `M` pairwise-disjoint measurable subsets of
 prescribed measures `α k`. Proved by induction on `M` over the Sierpiński IVT axiom: peel off a

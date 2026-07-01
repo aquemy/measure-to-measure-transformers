@@ -324,14 +324,18 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   is *proved* from it) and `exists_parked_schedule` (Appendix B parking / simultaneous action on a
   disjoint-support family).
 - **Measure-theoretic primitive** (`Foundations/AtomlessSplitting.lean`):
-  `exists_measurableSet_subset_measure_eq` — Sierpiński's intermediate-value theorem for nonatomic
-  measures (subset form: a finite atomless `μ` **on a standard Borel space** has a measurable subset of
-  any value `r ≤ μ E`). This is now the *only* axiom under the atomless splitting: the prescribed-mass
-  disjoint partition (`exists_disjoint_subset_measure_eq`) and the probability decomposition
-  (`exists_probability_decomposition`, hence `exists_atomless_partition`) are machine-checked on top of
-  it (milestone M8a — the old bespoke `exists_atomless_partition` axiom was removed). The
-  `[StandardBorelSpace X]` hypothesis is load-bearing for *soundness*, not convenience — see the
-  fidelity corrections.
+  `exists_measurableSet_subset_measure_eq_real` — Sierpiński's IVT for a finite atomless measure **on
+  `ℝ`** (subset form: a measurable subset of any value `r ≤ μ E`). This ℝ-case is now the *only* axiom
+  under the atomless splitting. Everything above it is machine-checked: the standard-Borel case
+  `exists_measurableSet_subset_measure_eq` is *proved* from it by pushing `μ` forward along the
+  measurable embedding `embeddingReal` into `ℝ` (injective ⇒ the pushforward stays finite and atomless),
+  solving there, and pulling the subset back; and the prescribed-mass partition
+  (`exists_disjoint_subset_measure_eq`) + probability decomposition (`exists_probability_decomposition`,
+  hence `exists_atomless_partition`) sit above that (milestone M8a — the old bespoke
+  `exists_atomless_partition` axiom was removed). Remaining to fully discharge M8a: prove the ℝ-IVT
+  itself (continuity of `t ↦ μ(E ∩ Iic t)` from `NoAtoms` + the intermediate value theorem). The
+  standard-Borel reduction is also what supplies the soundness the bare `NoAtoms` statement lacks — see
+  the fidelity corrections.
 
 ### Fidelity corrections made while closing
 
