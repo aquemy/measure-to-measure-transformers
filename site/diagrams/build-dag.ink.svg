@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Build DAG for de-axiomatizing "Measure-to-measure interpolation using Transformers".
+     House-style ink + watercolor-wash figure (aq:ink-diagrams). Conceptual companion to the
+     precise D2 source (build-dag.d2). Clean theme (system monospace). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1080" width="1560" height="1080">
+  <defs>
+    <style type="text/css"><![CDATA[
+      text          { fill: #111111; font-family: 'SF Mono', Menlo, Monaco, Consolas, 'Courier New', monospace; }
+      .mono         { font-family: 'SF Mono', Menlo, Monaco, Consolas, 'Courier New', monospace; }
+      .title        { font-size: 40px; font-weight: 500; }
+      .layer-tag    { font-size: 17px; letter-spacing: 4px; fill: #6b7280; }
+      .box-h        { font-size: 28px; }
+      .box-s        { font-size: 17px; fill: #6b7280; }
+      .box-v        { font-size: 18px; fill: #475569; }
+      .arrow-label  { font-size: 20px; fill: #6b7280; font-style: italic; paint-order: stroke; stroke: #ffffff; stroke-width: 4px; }
+      .caption      { font-size: 22px; fill: #111111; }
+    ]]></style>
+
+    <!-- Watercolor wash — on COLORED FILL rects. -->
+    <filter id="wash-a" x="-20%" y="-25%" width="140%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="3" seed="2"/>
+      <feDisplacementMap in="SourceGraphic" scale="16"/>
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+    <filter id="wash-b" x="-20%" y="-25%" width="140%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="9"/>
+      <feDisplacementMap in="SourceGraphic" scale="14"/>
+      <feGaussianBlur stdDeviation="1.8"/>
+    </filter>
+    <filter id="wash-c" x="-20%" y="-25%" width="140%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="14"/>
+      <feDisplacementMap in="SourceGraphic" scale="18"/>
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+
+    <!-- Ink wobble — on STROKES of 2-D shapes. -->
+    <filter id="ink-a" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" scale="3"/>
+    </filter>
+    <filter id="ink-b" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="13"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.8"/>
+    </filter>
+    <filter id="ink-c" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="21"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.5"/>
+    </filter>
+  </defs>
+
+  <!-- White background -->
+  <rect x="0" y="0" width="1560" height="1080" fill="#ffffff"/>
+
+  <!-- Title + hand-drawn underline -->
+  <text x="760" y="52" text-anchor="middle" class="title">The de-axiomatization build DAG</text>
+  <path d="M 500 72 Q 640 68 760 72 Q 900 76 1020 70" fill="none" stroke="#111111" stroke-width="2.4" stroke-linecap="round" filter="url(#ink-a)"/>
+
+  <!-- ================= edges (drawn first, so boxes sit on top of any tip) ================= -->
+  <g stroke="#111111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- spine: M1 -> M2 -> M3 -->
+    <path d="M 760 242 Q 764 270 760 298 L 754 289 M 760 298 L 766 289" filter="url(#ink-a)"/>
+    <path d="M 760 382 Q 756 410 760 436 L 754 427 M 760 436 L 766 427" filter="url(#ink-c)"/>
+    <!-- M3 fans to M4, M6, M7 -->
+    <path d="M 700 524 Q 400 556 288 588 L 289 577 M 288 588 L 298 594" filter="url(#ink-b)"/>
+    <path d="M 760 524 Q 764 556 760 588 L 754 579 M 760 588 L 766 579" filter="url(#ink-a)"/>
+    <path d="M 820 524 Q 1100 556 1172 588 L 1170 577 M 1172 588 L 1162 592" filter="url(#ink-c)"/>
+    <!-- independent geodesic track: M5 -> M6 -->
+    <path d="M 300 382 Q 520 540 700 586 L 690 582 M 700 586 L 695 596" filter="url(#ink-b)"/>
+    <!-- convergence into M8b: M4, M6, M7 -->
+    <path d="M 292 672 Q 480 704 700 726 L 690 722 M 700 726 L 695 736" filter="url(#ink-c)"/>
+    <path d="M 760 672 Q 756 700 760 726 L 754 717 M 760 726 L 766 717" filter="url(#ink-a)"/>
+    <path d="M 1160 672 Q 1000 704 820 726 L 830 722 M 820 726 L 825 736" filter="url(#ink-b)"/>
+    <!-- M6 -> M7 (short, same row) -->
+    <path d="M 910 630 Q 970 626 1030 630 L 1021 625 M 1030 630 L 1021 635" filter="url(#ink-c)"/>
+    <!-- M8b -> DONE -->
+    <path d="M 760 812 Q 764 840 760 866 L 754 857 M 760 866 L 766 857" filter="url(#ink-b)"/>
+    <!-- M8a express lane -> DONE (down the right, in from the right edge) -->
+    <path d="M 1400 242 Q 1446 500 1400 700 Q 1356 832 944 895 L 955 890 M 944 895 L 955 900" filter="url(#ink-a)"/>
+  </g>
+
+  <!-- edge labels (clear space, off the line, white halo) -->
+  <text x="1290" y="330" text-anchor="middle" class="arrow-label">prop 2.2</text>
+  <text x="610" y="843" text-anchor="middle" class="arrow-label">prop 3.1 / disentangle</text>
+
+  <!-- ================= nodes ================= -->
+
+  <!-- M1 · Measurable selection (cool) -->
+  <rect x="610" y="158" width="300" height="84" fill="#abc1d2" opacity="0.5" filter="url(#wash-a)"/>
+  <rect x="618" y="166" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
+  <text x="760" y="198" text-anchor="middle" class="mono box-h">M1</text>
+  <text x="760" y="219" text-anchor="middle" class="box-s">Measurable selection</text>
+
+  <!-- M8a · Atomless split — FIRST target (sage/green, bold) -->
+  <text x="1400" y="146" text-anchor="middle" class="mono layer-tag">NO PREREQUISITES</text>
+  <rect x="1280" y="158" width="240" height="84" fill="#a9c39c" opacity="0.5" filter="url(#wash-b)"/>
+  <rect x="1288" y="166" width="224" height="68" fill="none" stroke="#111111" stroke-width="2" filter="url(#ink-b)"/>
+  <text x="1400" y="198" text-anchor="middle" class="mono box-h">M8a · FIRST</text>
+  <text x="1400" y="219" text-anchor="middle" class="box-s">Atomless split</text>
+
+  <!-- M2 · Optimal transport (stone) -->
+  <rect x="610" y="298" width="300" height="84" fill="#d2cabb" opacity="0.5" filter="url(#wash-c)"/>
+  <rect x="618" y="306" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-c)"/>
+  <text x="760" y="338" text-anchor="middle" class="mono box-h">M2</text>
+  <text x="760" y="359" text-anchor="middle" class="box-s">Optimal transport</text>
+
+  <!-- M5 · Geodesic convexity (lavender) -->
+  <rect x="130" y="298" width="300" height="84" fill="#b9b2d2" opacity="0.5" filter="url(#wash-b)"/>
+  <rect x="138" y="306" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
+  <text x="280" y="338" text-anchor="middle" class="mono box-h">M5</text>
+  <text x="280" y="359" text-anchor="middle" class="box-s">Geodesic convexity</text>
+
+  <!-- M3 · Mean-field flow — LINCHPIN (ochre/gold, bold) -->
+  <rect x="600" y="436" width="320" height="88" fill="#dcc085" opacity="0.5" filter="url(#wash-a)"/>
+  <rect x="608" y="444" width="304" height="72" fill="none" stroke="#111111" stroke-width="2.2" filter="url(#ink-b)"/>
+  <text x="760" y="478" text-anchor="middle" class="mono box-h">M3 · LINCHPIN</text>
+  <text x="760" y="500" text-anchor="middle" class="box-s">Mean-field flow</text>
+
+  <!-- M4 · Per-point lemmas (rose) -->
+  <rect x="130" y="588" width="300" height="84" fill="#d3a3ad" opacity="0.4" filter="url(#wash-c)"/>
+  <rect x="138" y="596" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
+  <text x="280" y="628" text-anchor="middle" class="mono box-h">M4</text>
+  <text x="280" y="649" text-anchor="middle" class="box-s">Per-point lemmas</text>
+
+  <!-- M6 · LaSalle / Lyapunov (teal) -->
+  <rect x="610" y="588" width="300" height="84" fill="#8fbcb1" opacity="0.45" filter="url(#wash-b)"/>
+  <rect x="618" y="596" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-c)"/>
+  <text x="760" y="628" text-anchor="middle" class="mono box-h">M6</text>
+  <text x="760" y="649" text-anchor="middle" class="box-s">LaSalle / Lyapunov</text>
+
+  <!-- M7 · Transport + L² density (clay) -->
+  <rect x="1030" y="588" width="300" height="84" fill="#d29c82" opacity="0.4" filter="url(#wash-a)"/>
+  <rect x="1038" y="596" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-b)"/>
+  <text x="1180" y="628" text-anchor="middle" class="mono box-h">M7</text>
+  <text x="1180" y="649" text-anchor="middle" class="box-s">Transport + L² density</text>
+
+  <!-- M8b · Parking + assembly (slate) -->
+  <rect x="610" y="728" width="300" height="84" fill="#8d9aab" opacity="0.5" filter="url(#wash-c)"/>
+  <rect x="618" y="736" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
+  <text x="760" y="768" text-anchor="middle" class="mono box-h">M8b</text>
+  <text x="760" y="789" text-anchor="middle" class="box-s">Parking + assembly</text>
+
+  <!-- DONE (cool) -->
+  <rect x="580" y="866" width="360" height="88" fill="#abc1d2" opacity="0.55" filter="url(#wash-b)"/>
+  <rect x="588" y="874" width="344" height="72" fill="none" stroke="#111111" stroke-width="1.6" filter="url(#ink-c)"/>
+  <text x="760" y="908" text-anchor="middle" class="mono box-h">DONE</text>
+  <text x="760" y="929" text-anchor="middle" class="box-s">Thm 1.1 / 1.2 checked</text>
+
+  <!-- One-line takeaway -->
+  <text x="760" y="1044" text-anchor="middle" class="caption">The axioms discharge in dependency order: M8a is the standalone first win, M3 the linchpin all else waits on.</text>
+</svg>

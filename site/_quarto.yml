@@ -1,11 +1,14 @@
 project:
   type: website
   output-dir: ../docs
+  resources:
+    - diagrams/
   # Explicit render list: the partials (proofs/_*.qmd) are includes, not pages, and blueprint.qmd
   # is the pdf-only standalone. Listing the inputs keeps the build deterministic and avoids
   # rendering stray files left in the project tree.
   render:
     - index.qmd
+    - beyond-mathlib.qmd
     - proofs.qmd
     - experiments.qmd
     - claimgraph.qmd
@@ -25,6 +28,8 @@ website:
         href: index.qmd
       - text: "Blueprint"
         href: proofs.qmd
+      - text: "Beyond Mathlib"
+        href: beyond-mathlib.qmd
       - text: "Experiments"
         href: experiments.qmd
       - text: "Claim graph"

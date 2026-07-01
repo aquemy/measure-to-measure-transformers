@@ -64,8 +64,11 @@ Every node carries a status badge driven by the Lean kernel (`#print axioms`, vi
 - [informal]{.badge .informal} -- reviewed on paper, not yet stated in Lean.
 
 A node is never badged above its true kernel status. The mid-level connective lemmas and the two
-headline theorems are stated in Lean against the axiom layer but are `open` (sorry stubs); the
-self-contained leaves carry the machine-checked load.
+headline theorems are now **proved by assembling** the mid-level results over the axiom layer (zero
+`sorry`), so their effective status is [axiomatised]{.badge .axiom} -- clean on their own logic, but
+resting on the labeled optimal-transport / flow axioms. The self-contained leaves carry the
+machine-checked load; see **[Beyond Mathlib](beyond-mathlib.qmd)** for the plan to discharge those
+axioms and lift the headline results to [machine-checked]{.badge .ok}.
 
 ## Licensing
 

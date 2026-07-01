@@ -127,6 +127,10 @@ window.Quarto = {
 <span class="menu-text">Blueprint</span></a>
   </li>  
   <li class="nav-item">
+    <a class="nav-link" href="./beyond-mathlib.html"> 
+<span class="menu-text">Beyond Mathlib</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="./experiments.html"> 
 <span class="menu-text">Experiments</span></a>
   </li>  
@@ -252,7 +256,7 @@ window.Quarto = {
 <li><span class="badge open">open</span> – stated in Lean as a <code>sorry</code>;</li>
 <li><span class="badge informal">informal</span> – reviewed on paper, not yet stated in Lean.</li>
 </ul>
-<p>A node is never badged above its true kernel status. The mid-level connective lemmas and the two headline theorems are stated in Lean against the axiom layer but are <code>open</code> (sorry stubs); the self-contained leaves carry the machine-checked load.</p>
+<p>A node is never badged above its true kernel status. The mid-level connective lemmas and the two headline theorems are now <strong>proved by assembling</strong> the mid-level results over the axiom layer (zero <code>sorry</code>), so their effective status is <span class="badge axiom">axiomatised</span> – clean on their own logic, but resting on the labeled optimal-transport / flow axioms. The self-contained leaves carry the machine-checked load; see <strong><a href="./beyond-mathlib.html">Beyond Mathlib</a></strong> for the plan to discharge those axioms and lift the headline results to <span class="badge ok">machine-checked</span>.</p>
 </section>
 <section id="licensing" class="level2">
 <h2 class="anchored" data-anchor-id="licensing">Licensing</h2>

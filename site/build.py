@@ -12,6 +12,7 @@ One command regenerates every derived artifact and renders the Quarto site:
      Quarto *website* reliably copies into its output);
   5. the experiment report pages (``report/build_report.py`` -> ``report/experiments.qmd`` +
      ``site/experiments.qmd``);
+  5b. the D2 diagram SVGs under ``site/diagrams/`` (best-effort; needs the ``d2`` CLI);
   6. ``quarto render`` of the site into ``docs/`` (the html pages + the standalone blueprint PDF);
   7. a best-effort citable ``docs/experiments-report.pdf``; and ``docs/.nojekyll``.
 
@@ -41,6 +42,7 @@ DOCS = REPO / "docs"
 RESULTS = REPO / "experiments" / "results"
 CLAIMS = REPO / "claims.toml"
 FIG_STAGE = SITE / "experiments-figures"
+DIAGRAMS = SITE / "diagrams"
 NAME = "Measure-to-measure interpolation using Transformers"
 
 # Pure leanblueprint/plastex leftovers in docs/ that the Quarto build does not overwrite. The
@@ -84,6 +86,25 @@ def stage_figures() -> int:
             dest = FIG_STAGE / src.relative_to(RESULTS)
             dest.parent.mkdir(parents=True, exist_ok=True)
             _ = shutil.copy2(src, dest)
+            n += 1
+    return n
+
+
+def render_diagrams() -> int:
+    """Render the D2 diagram sources under site/diagrams/ to SVG (best-effort; needs the `d2` CLI).
+
+    Only the ``*.d2`` sources are (re)rendered; the hand-authored ink SVGs are committed as-is. If
+    ``d2`` is not installed, the committed SVGs are used unchanged so the site still builds.
+    """
+    if shutil.which("d2") is None:
+        print("  warning: `d2` not on PATH; using the committed diagram SVGs as-is.")
+        return 0
+    n = 0
+    for src in sorted(DIAGRAMS.glob("*.d2")):
+        out = src.with_suffix(".svg")
+        if run(["d2", "--layout", "dagre", str(src), str(out)], SITE).returncode != 0:
+            print(f"  warning: d2 failed on {src.name}; keeping the committed SVG.")
+        else:
             n += 1
     return n
 
@@ -150,6 +171,11 @@ def main() -> int:
     print("regenerating the experiment report pages ...")
     if run([sys.executable, str(REPO / "report" / "build_report.py")], REPO).returncode != 0:
         return 1
+
+    # 5b. Render the D2 diagram sources under site/diagrams/ to SVG (best-effort).
+    print("rendering the D2 diagrams ...")
+    ndia = render_diagrams()
+    print(f"  rendered {ndia} D2 diagram(s)")
 
     # 6. Render the website into docs/ (html pages + the standalone blueprint PDF).
     clean_stale_docs()
