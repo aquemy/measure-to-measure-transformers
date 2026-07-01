@@ -43,3 +43,14 @@
 | 41 | 2026-06-30 | `docs` | docs(report): data-driven experiment validation report (HTML + PDF) | `report` |
 | 42 | 2026-06-30 | `docs` | docs(errata): correct the transpose in the Lemma B.2 gate parameter (F1) | `errata` |
 | 43 | 2026-06-30 | `docs` | docs(blueprint): rich Quarto blueprint with verbatim paper extracts, Lean, and provenance | `blueprint` |
+| 44 | 2026-06-30 | `docs` | docs(site): assemble the rich Quarto website into /docs for classic Pages | `site` |
+| 45 | 2026-06-30 | `axiomatize` | axiomatize~(dynamics): structural flow algebra to assemble the construction | `MeasureToMeasure.Axioms.comp` |
+| 46 | 2026-06-30 | `axiomatize` | axiomatize~(statements): close the mid-level lemmas; prove the ball-chain bound | `MeasureToMeasure.Statements.lemma_B_1` |
+| 47 | 2026-06-30 | `formalize` | formalize(main): prove Theorems 1.1 and 1.2 by assembly | `MeasureToMeasure.Statements.theorem_1_1` |
+| 48 | 2026-06-30 | `docs` | docs(ledger): record Phase 7 closure, axiom surface, and refreshed ClaimGraph | `ledger` |
+| 49 | 2026-06-30 | `docs` | docs(site): republish with Phase 7 statuses (headlines now math.axiomatised) | `site` |
+| 50 | 2026-06-30 | `formalize` | formalize(main): prove Proposition 3.1's disentanglement packaging | `MeasureToMeasure.Statements.prop_3_1` |
+| 51 | 2026-06-30 | `docs` | docs(ledger): record Proposition 3.1 proved; refresh ClaimGraph and site | `ledger` |
+| 52 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 4.1 by induction over Proposition 4.2 | `MeasureToMeasure.Statements.prop_4_1` |
+| 53 | 2026-07-01 | `docs` | docs(ledger): record Proposition 4.1 proved; refresh ClaimGraph and site | `ledger` |
+| 54 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 2.2 via a probability-measure refactor | `MeasureToMeasure.Statements.prop_2_2` |

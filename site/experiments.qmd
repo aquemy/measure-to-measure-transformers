@@ -48,8 +48,8 @@ Claim `claim:exp-e1-mass-transport`. It validates:
 | --- | --- | --- |
 | `leaf-gate-ode` | eq. B.4-B.5, p.32 | math.machine-checked |
 | `leaf-ball-chain-induction` | Lem B.1 proof, p.33 | math.machine-checked |
-| `lem-b-2` | Lem B.2, p.31 | math.open |
-| `lem-b-1` | Lem B.1, p.31 | math.open |
+| `lem-b-2` | Lem B.2, p.31 | math.axiomatised |
+| `lem-b-1` | Lem B.1, p.31 | math.axiomatised |
 
 **Pass criterion.** single ball: fraction in inner cap >= 1-eps=0.95; chain of K=4: fraction >= (1-eps)^K=0.8145
 
@@ -139,7 +139,7 @@ Claim `claim:exp-e2-clustering`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `prop-2-1` | Prop 2.1, p.11 | math.open |
+| `prop-2-1` | Prop 2.1, p.11 | math.axiomatised |
 
 **Pass criterion.** diameter contracts from 2.207 to < eps=0.05; time-to-eps grows ~ log(1/eps) (positive slope)
 
@@ -230,8 +230,8 @@ Claim `claim:exp-e3-disentangle`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `prop-3-1` | Prop 3.1, p.15 | math.open |
-| `lem-3-3` | Lem 3.3, p.16 | math.open |
+| `prop-3-1` | Prop 3.1, p.15 | math.axiomatised |
+| `lem-3-3` | Lem 3.3, p.16 | math.axiomatised |
 | `leaf-barycenter-ode` | eq. B.9, p.33 | math.machine-checked |
 | `leaf-barycenter-noncolinear` | Prop 3.1 induction, p.16-17 (finding F2) | math.machine-checked |
 
@@ -321,8 +321,8 @@ Claim `claim:exp-e4-matching`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `prop-4-2` | Prop 4.2, p.18 | math.open |
-| `prop-4-1` | Prop 4.1, p.18 | math.open |
+| `prop-4-2` | Prop 4.2, p.18 | math.axiomatised |
+| `prop-4-1` | Prop 4.1, p.18 | math.axiomatised |
 | `leaf-sep-hyperplane` | Prop 4.2 Step 1, p.20 | math.machine-checked |
 
 **Pass criterion.** inactive points stay fixed (max move < eps=0.05) and the active point reaches the target (geodesic distance < eps=0.05)
@@ -476,8 +476,8 @@ Claim `claim:exp-e6-end-to-end`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `thm-1-1` | Thm 1.1, p.5 | math.open |
-| `thm-1-2` | Thm 1.2, p.5 | math.open |
+| `thm-1-1` | Thm 1.1, p.5 | math.axiomatised |
+| `thm-1-2` | Thm 1.2, p.5 | math.axiomatised |
 
 **Pass criterion.** supports disjoint after disentangle (cross-distance > 1.0) and each transported measure is within eps=0.05 of its target (W2 proxy = max atom-to-target distance)
 
@@ -595,7 +595,7 @@ Claim `claim:exp-e7-linear-impossible`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `thm-1-1` | Thm 1.1, p.5 | math.open |
+| `thm-1-1` | Thm 1.1, p.5 | math.axiomatised |
 
 **Pass criterion.** linear field sends shared x* to a single image (gap ~ 0, so disjoint targets are unreachable); attention assigns x* different velocities under the two measures (gap > 0)
 

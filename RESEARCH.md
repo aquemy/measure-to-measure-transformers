@@ -249,9 +249,8 @@ axioms and were not re-derived line-by-line.
   statement is true once corrected. Our Lean L2 already uses the mathematically correct gate identity.
 - **F2 resolved**: Prop 3.1's "disjoint hulls ⟹ non-colinear barycenters" step is now the
   machine-checked leaf L11 (`barycenter_noncolinear_of_disjoint_hull`) for the empirical regime; only
-  the standard "barycenter ∈ closed convex hull of support" remains for general measures. The Prop 3.1
-  headline stays `math.open` for the independent reason that it rests on the flow / `conv_g`-nesting
-  axioms.
+  the standard "barycenter ∈ closed convex hull of support" remains for general measures (closed by
+  leaf L11′). Prop 3.1 itself is now a faithful axiom (`math.axiomatised`); see Phase 7 below.
 - No errors found that threaten the main theorems; the one real bug (F1) is a recoverable sign typo,
   and the formalization plus the numerical campaign caught it independently.
 
@@ -261,3 +260,77 @@ See `claims.toml` for the authoritative registry. As commits land, each node adv
 `math.proved-informal` to `math.axiomatised` or `math.machine-checked`. A node's *effective* status
 is the minimum over its `Depends-On` / `Assumes` closure, so any result above an axiom reads
 `math.axiomatised`, honestly.
+
+## Closing the open statements (Phase 7)
+
+All 15 `sorry` stubs (the 3 headline statements + the 12 mid-level lemmas) are now discharged:
+`lake build` is green with **zero `sorry`** repo-wide, and `#print axioms` on every closed statement
+shows no `sorryAx`. A literal Mathlib-first-principles proof is impossible (the optimal-transport /
+continuity-equation / geodesic-convexity / LaSalle infrastructure is absent), so the posture is
+*axiomatize-and-assemble*: the irreducible analytic facts are clearly labeled axioms, and the results
+above them are **proved** by assembling those facts, so the kernel verifies the paper's logical
+skeleton. Effective status of everything here is `math.axiomatised`.
+
+### What is proved vs axiomatized
+
+- **Proved (genuine Lean, effective `math.axiomatised`):**
+  - `theorem_1_1` and `theorem_1_2` (the two main theorems), assembled along
+    `Φ_fin = (Φ_θ₁)⁻¹ ∘ Φ_θ₂ ∘ Φ_θ₁`. Theorem 1.2's `W₂` bookkeeping (transport map through the
+    inverse flow, then `L²`-to-`W₂` via L7) is machine-checked.
+  - `lemma_B_1` (ball-chain mass retention), a real induction over `lemma_B_2` and the flow algebra.
+  - `prop_4_1` (match an ensemble), proved by induction on `M` over `prop_4_2` and the flow algebra
+    (place one point per step; `6k + 6 = 6(k+1)` switch budget machine-checked via `switches_comp`).
+  - `prop_2_2` (cluster to a discrete measure), proved over the probability-measure layer: partition
+    the atomless `μ` into probability pieces of the prescribed weights in disjoint hemispheres
+    (`exists_atomless_partition`), cluster each to its target with one parked schedule
+    (`cluster_to_point` + `exists_parked_schedule`), then lift the per-piece bounds by the convexity
+    of `W₂` under mixtures (`W2_convexCombo_le`). `measureFlow` distributes over the convex
+    combination (`measureFlow_sum_smul`); the mixture bookkeeping is machine-checked.
+  - `prop_3_1` (disentanglement), proved from `exists_disentangling_balls`: the disjointness +
+    hemisphere packaging the paper states without proof (review finding F2) is machine-checked
+    (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
+    `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
+- **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
+  `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
+
+### Axiom surface (what every closed statement ultimately rests on)
+
+Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
+
+- **Wasserstein layer** (`Axioms/Wasserstein.lean`): `W2`/`W1`, `W2_map_le_L2` (L7 coupling),
+  `W1_ge_of_lipschitz` (KR duality), `W2_convexCombo_le` (convexity of `W₂` under probability
+  mixtures).
+- **Continuity-equation layer** (`Axioms/ContinuityEquation.lean`): `Params`, `flowMap`,
+  `measureFlow`, `switches`, `flowMap_lipschitz`, `flowMap_bijective`, `Parked` + `flowMap_id_on_parked`.
+- **Structural flow algebra** (`Axioms/Dynamics.lean`): `comp` (`+ flowMap_comp`, `measureFlow_comp`),
+  `switches_comp`, `idParams` (`+ measureFlow_id`, `switches_id`), `inv` (`+ measureFlow_inv`),
+  `measureFlow_map` (pushforward identity). Standard semigroup / well-posedness facts; structural, not
+  conclusions of the paper.
+- **Analytic mid-levels** (`Statements/MidLevel.lean`): `prop_2_1`, `prop_2_2`, `lemma_3_2`,
+  `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
+  `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1). (`prop_4_1` is *proved*
+  from `prop_4_2`.)
+- **Construction-level** (`Statements/MidLevel.lean`, `Statements/MainResults.lean`):
+  `exists_disentangling_balls` (the geometric output of the Section 3.3 disentanglement; `prop_3_1`
+  is *proved* from it), `exists_parked_schedule` (Appendix B parking / simultaneous action on a
+  disjoint-support family), and `exists_atomless_partition` (atomless decomposition into disjoint
+  hemisphere pieces, the packing step of Prop 2.2).
+
+### Fidelity corrections made while closing
+
+Two type-correct stubs were loose transcriptions; axiomatizing them as written would have been
+*unsound* (a false axiom collapses the system). Corrected to faithful statements first:
+
+- `lemma_B_1`: the retained fraction multiplies `μ(B₀)` (mass starting in the first ball, funneled
+  along the chain), not `μ(⋃ Bₖ)` — the latter makes the `K = 0` base case `μ(⋃ Bₖ) ≤ μ(B₀)` false.
+  Added the chain-overlap hypothesis.
+- `lemma_B_2`: added the `switches θ ≤ 1` bound (one switch per ball), required for `lemma_B_1`'s
+  `≤ K` budget.
+- `prop_4_2`: added injective inputs/targets. The flow map is bijective, so steering the active point
+  to its target while fixing the inactive ones is possible only if the points are distinct; without
+  it the stub is false when targets collide.
+- `prop_2_2` / `prop_2_1` / `cluster_to_point`: now carry `[IsProbabilityMeasure]`, and `prop_2_2`
+  requires convex weights (`∑ αₖ = 1`). `W₂` between measures of different total mass is ill-posed;
+  the probability-measure layer makes the discrete-target statement well-posed and lets the pieces be
+  normalized so clustering and the mixture bound apply cleanly. `theorem_1_1` likewise now assumes
+  each input is a probability measure (consumed by `cluster_to_point` via `isProbabilityMeasure_measureFlow`).

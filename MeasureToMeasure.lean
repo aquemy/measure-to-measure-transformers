@@ -5,6 +5,7 @@ import MeasureToMeasure.Foundations.Projector
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
+import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.SeparatingHyperplane
 import MeasureToMeasure.Leaves.BallChain
 import MeasureToMeasure.Leaves.Lyapunov
