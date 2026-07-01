@@ -63,3 +63,5 @@
 | 61 | 2026-07-01 | `formalize` | formalize(foundations): prove the Sierpinski IVT on R, fully discharging M8a | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |
 | 62 | 2026-07-01 | `docs` | docs(ledger): record Sierpinski IVT + atomless splitting proved; refresh ClaimGraph and site | `ledger` |
 | 63 | 2026-07-01 | `formalize` | formalize(foundations): geodesic convexity on the sphere (M5 foundations) | `MeasureToMeasure.geodesicConvex_open_hemisphere` |
+| 64 | 2026-07-01 | `docs` | docs(ledger): record geodesic-convexity foundations (M5); refresh ClaimGraph and site | `ledger` |
+| 65 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is geodesically convex (M5 hull bridge) | `MeasureToMeasure.Leaves.geodesicConvex_geodesicHull` |
