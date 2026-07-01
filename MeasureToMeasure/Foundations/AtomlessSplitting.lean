@@ -3,6 +3,8 @@ import Mathlib.MeasureTheory.Measure.Restrict
 import Mathlib.MeasureTheory.Measure.Dirac
 import Mathlib.MeasureTheory.Constructions.Polish.Basic
 import Mathlib.MeasureTheory.Constructions.Polish.EmbeddingReal
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
+import Mathlib.MeasureTheory.Integral.Bochner.Set
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Tuple.Basic
 
@@ -35,15 +37,88 @@ open scoped ENNReal
 
 variable {X : Type*} [MeasurableSpace X]
 
-/-- AXIOM (Sierpiński's intermediate-value theorem on the real line, subset form) -- the analytic
-core. For a finite atomless measure on `ℝ`, a measurable set `E`, and any target `r ≤ μ E`, there is a
-measurable subset `F ⊆ E` with `μ F = r`. This is the one remaining primitive: the standard-Borel case
-below reduces to it, and everything else is machine-checked. Discharging it (via the continuity of
-`t ↦ μ (E ∩ Iic t)`, which holds because `μ` has no atoms, plus the intermediate value theorem;
-Sierpiński 1922, Fremlin §215D) is the remaining analytic step. -/
-axiom exists_measurableSet_subset_measure_eq_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NoAtoms μ]
+/-- Sierpiński's intermediate-value theorem on the real line (subset form): for a finite atomless
+measure on `ℝ`, a measurable `E`, and any `r ≤ μ E`, there is a measurable `F ⊆ E` with `μ F = r`.
+
+Proof: the cumulative function `t ↦ (μ (E ∩ Iic t)).toReal` is continuous -- its increment over
+`[0,t]` is the primitive `∫ x in 0..t, 𝟙_E ∂μ`, continuous by `intervalIntegral.continuous_primitive`
+precisely because `μ` has no atoms. It runs from `0` (as `t → -∞`, `Antitone.measure_iInter`) up to
+`(μ E).toReal` (as `t → +∞`, `Monotone.measure_iUnion`), so by the intermediate value theorem it
+attains `r.toReal` at some `t₀`; take `F = E ∩ Iic t₀`. The endpoints `r = 0` (`F = ∅`) and `r = μ E`
+(`F = E`) are handled directly. (Sierpiński 1922; Fremlin §215D.) -/
+theorem exists_measurableSet_subset_measure_eq_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NoAtoms μ]
     {E : Set ℝ} (hE : MeasurableSet E) (r : ℝ≥0∞) (hr : r ≤ μ E) :
-    ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r
+    ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r := by
+  rcases eq_or_lt_of_le hr with hrE | hrE
+  · exact ⟨E, hE, subset_rfl, hrE.symm⟩
+  rcases (bot_le : (0 : ℝ≥0∞) ≤ r).eq_or_lt with hr0 | hr0
+  · exact ⟨∅, MeasurableSet.empty, Set.empty_subset _, by rw [measure_empty]; exact hr0⟩
+  have hrtop : r ≠ ⊤ := ne_top_of_lt hrE
+  have hmonoS : Monotone (fun t : ℝ => E ∩ Set.Iic t) := fun s t hst =>
+    Set.inter_subset_inter_right E (Set.Iic_subset_Iic.mpr hst)
+  have hmono : Monotone (fun t : ℝ => μ (E ∩ Set.Iic t)) := fun s t hst =>
+    measure_mono (hmonoS hst)
+  -- Continuity of the real-valued cumulative function via the indicator primitive.
+  have hint : Integrable (E.indicator (fun _ => (1 : ℝ))) μ := (integrable_const 1).indicator hE
+  have key : ∀ s u : ℝ, s ≤ u → (μ (E ∩ Set.Iic u)).toReal
+      = (μ (E ∩ Set.Iic s)).toReal + ∫ x in s..u, E.indicator (fun _ => (1 : ℝ)) x ∂μ := by
+    intro s u hsu
+    have hIoc : (∫ x in s..u, E.indicator (fun _ => (1 : ℝ)) x ∂μ) = (μ (E ∩ Set.Ioc s u)).toReal := by
+      rw [intervalIntegral.integral_of_le hsu, MeasureTheory.setIntegral_indicator hE]
+      simp only [MeasureTheory.setIntegral_const, smul_eq_mul, mul_one, Set.inter_comm,
+        MeasureTheory.measureReal_def]
+    rw [hIoc, ← ENNReal.toReal_add (measure_ne_top _ _) (measure_ne_top _ _)]
+    congr 1
+    have hdisj : Disjoint (E ∩ Set.Iic s) (E ∩ Set.Ioc s u) :=
+      Set.disjoint_left.mpr fun x hx1 hx2 => absurd hx2.2.1 (not_lt.mpr hx1.2)
+    rw [← measure_union hdisj (hE.inter measurableSet_Ioc), ← Set.inter_union_distrib_left,
+      Set.Iic_union_Ioc_eq_Iic hsu]
+  have hfeq : ∀ t : ℝ, (μ (E ∩ Set.Iic t)).toReal
+      = (μ (E ∩ Set.Iic (0 : ℝ))).toReal + ∫ x in (0 : ℝ)..t, E.indicator (fun _ => (1 : ℝ)) x ∂μ := by
+    intro t
+    rcases le_total (0 : ℝ) t with h0t | ht0
+    · exact key 0 t h0t
+    · have hk := key t 0 ht0
+      have hsym : (∫ x in (0 : ℝ)..t, E.indicator (fun _ => (1 : ℝ)) x ∂μ)
+          = -∫ x in t..(0 : ℝ), E.indicator (fun _ => (1 : ℝ)) x ∂μ := intervalIntegral.integral_symm t 0
+      rw [hsym]; linarith [hk]
+  have hcont : Continuous (fun t : ℝ => (μ (E ∩ Set.Iic t)).toReal) := by
+    have hfe : (fun t : ℝ => (μ (E ∩ Set.Iic t)).toReal)
+        = fun t => (μ (E ∩ Set.Iic (0 : ℝ))).toReal
+            + ∫ x in (0 : ℝ)..t, E.indicator (fun _ => (1 : ℝ)) x ∂μ := funext hfeq
+    rw [hfe]
+    exact continuous_const.add (hint.continuous_primitive 0)
+  -- The cumulative reaches above `r` (union to `+∞`) and below `r` (intersection to `-∞`).
+  obtain ⟨b, hb⟩ : ∃ b : ℝ, r < μ (E ∩ Set.Iic b) := by
+    have hUnion : ⋃ t : ℝ, E ∩ Set.Iic t = E := by
+      rw [← Set.inter_iUnion]
+      exact Set.inter_eq_left.mpr fun x _ => Set.mem_iUnion.mpr ⟨x, Set.mem_Iic.mpr le_rfl⟩
+    have htend : Filter.Tendsto (fun t : ℝ => μ (E ∩ Set.Iic t)) Filter.atTop (nhds (μ E)) := by
+      have h := tendsto_measure_iUnion_atTop (μ := μ) (s := fun t : ℝ => E ∩ Set.Iic t) hmonoS
+      rwa [hUnion] at h
+    exact (htend.eventually (eventually_gt_nhds hrE)).exists
+  obtain ⟨a, ha⟩ : ∃ a : ℝ, μ (E ∩ Set.Iic a) < r := by
+    have hInter : ⋂ t : ℝ, E ∩ Set.Iic t = ∅ := by
+      refine Set.eq_empty_iff_forall_notMem.mpr fun x hx => ?_
+      obtain ⟨t, ht⟩ := exists_lt x
+      exact absurd (Set.mem_iInter.mp hx t).2 (by simp only [Set.mem_Iic, not_le]; exact ht)
+    have htend : Filter.Tendsto (fun t : ℝ => μ (E ∩ Set.Iic t)) Filter.atBot (nhds 0) := by
+      have h := tendsto_measure_iInter_atBot (μ := μ) (s := fun t : ℝ => E ∩ Set.Iic t)
+        (fun t => (hE.inter measurableSet_Iic).nullMeasurableSet) hmonoS ⟨0, measure_ne_top _ _⟩
+      rwa [hInter, measure_empty] at h
+    exact (htend.eventually (eventually_lt_nhds hr0)).exists
+  have hab : a ≤ b := by
+    by_contra h
+    rw [not_le] at h
+    exact absurd (hmono h.le) (not_le.mpr (ha.trans hb))
+  have hfa : (μ (E ∩ Set.Iic a)).toReal ≤ r.toReal :=
+    (ENNReal.toReal_le_toReal (measure_ne_top _ _) hrtop).mpr ha.le
+  have hfb : r.toReal ≤ (μ (E ∩ Set.Iic b)).toReal :=
+    (ENNReal.toReal_le_toReal hrtop (measure_ne_top _ _)).mpr hb.le
+  obtain ⟨t, -, ht⟩ := intermediate_value_Icc hab hcont.continuousOn ⟨hfa, hfb⟩
+  simp only at ht
+  refine ⟨E ∩ Set.Iic t, hE.inter measurableSet_Iic, Set.inter_subset_left, ?_⟩
+  rw [← ENNReal.ofReal_toReal (measure_ne_top μ (E ∩ Set.Iic t)), ht, ENNReal.ofReal_toReal hrtop]
 
 /-- Sierpiński's intermediate-value theorem for nonatomic measures on a **standard Borel space**
 (subset form): the range of `μ` over the measurable subsets of `E` is the full interval `[0, μ E]`.
