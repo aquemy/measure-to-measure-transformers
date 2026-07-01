@@ -65,3 +65,5 @@
 | 63 | 2026-07-01 | `formalize` | formalize(foundations): geodesic convexity on the sphere (M5 foundations) | `MeasureToMeasure.geodesicConvex_open_hemisphere` |
 | 64 | 2026-07-01 | `docs` | docs(ledger): record geodesic-convexity foundations (M5); refresh ClaimGraph and site | `ledger` |
 | 65 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is geodesically convex (M5 hull bridge) | `MeasureToMeasure.Leaves.geodesicConvex_geodesicHull` |
+| 66 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull convexity (M5 bridge); refresh ClaimGraph and site | `ledger` |
+| 67 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is the smallest geodesic-convex set (M5 minimality) | `MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex` |
