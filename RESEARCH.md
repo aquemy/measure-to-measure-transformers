@@ -310,6 +310,13 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     geodesically convex). Mathlib has `Convex`/`ConvexCone`/`SameRay` but no geodesic convexity, so this
     is built in-repo. First slice toward the disentanglement geometry behind `exists_disentangling_balls`
     and a generalization of leaf L11; does not yet discharge an axiom.
+  - **Geodesic hull is geodesically convex** (`Leaves/GeodesicHullConvex.lean`), M5 hull-bridge slice.
+    Connects L11's `geodesicHull s = cone(s) ∩ 𝕊^{d-1}` to the `GeodesicConvex` predicate:
+    `geodesicConvex_geodesicHull` — if `s` lies in the open hemisphere of `e` (`∀ p ∈ s, 0 < ⟪e,p⟫`),
+    then `geodesicHull s` is geodesically convex; `geodesicHull_subset_hemisphere` — and it sits inside
+    that hemisphere. This machine-checks the "`hull = cone ∩ sphere` is geodesic-convex" characterization
+    the paper asserts, giving the geometric picture behind Section 3.3 (disjoint hulls inside a common
+    hemisphere). Supporting: `inConicalSpan.add`, `inner_pos_of_inConicalSpan`. Kernel-clean.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 

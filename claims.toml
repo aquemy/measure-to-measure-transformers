@@ -339,6 +339,14 @@ lean      = "MeasureToMeasure.geodesicConvex_open_hemisphere"
 paper     = "Section 3.3 (disentanglement geometry); Lemma 3.2 (hemisphere confinement)"
 created   = "2026-07-01"
 
+[claims.geodesic-hull-convex]
+kind      = "theorem"
+statement = "The geodesic hull is geodesically convex (milestone M5, hull bridge). MACHINE-CHECKED. Connects leaf L11's geodesicHull s = cone(s) cap S^{d-1} to the GeodesicConvex predicate: geodesicConvex_geodesicHull -- if every generator of s lies strictly on e's side (0 < <e,p>, i.e. s is in the open hemisphere of e), then geodesicHull s is geodesically convex. This is the 'hull = cone cap sphere is geodesic-convex' characterization the paper asserts when it calls conv_g geodesic-convex. Also geodesicHull_subset_hemisphere: the hull sits inside the open hemisphere of e. Together with geodesicConvex_open_hemisphere this gives the exact geometric picture behind Section 3.3 disentanglement (disjoint hulls inside a common hemisphere). Supporting facts inConicalSpan.add (cone closed under addition) and inner_pos_of_inConicalSpan (a nonzero conical point in e's hemisphere has 0 < <e,.>) proved too. #print axioms clean."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.geodesicConvex_geodesicHull"
+paper     = "Section 3.3 (disentanglement); finding F2 (leaf L11)"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
