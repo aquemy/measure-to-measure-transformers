@@ -317,6 +317,13 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     that hemisphere. This machine-checks the "`hull = cone ∩ sphere` is geodesic-convex" characterization
     the paper asserts, giving the geometric picture behind Section 3.3 (disjoint hulls inside a common
     hemisphere). Supporting: `inConicalSpan.add`, `inner_pos_of_inConicalSpan`. Kernel-clean.
+  - **Geodesic hull is the smallest geodesic-convex set** (`Leaves/GeodesicHullConvex.lean`), M5
+    minimality slice. `geodesicHull_subset_of_geodesicConvex` — if `C` is geodesically convex and
+    contains every point of `s`, then `geodesicHull s ⊆ C` (the universal property of a hull). Proved by
+    `Finset.induction` (`normalize_conical_mem`): each normalized conical combination is rebuilt as an
+    iterated normalized positive chord that stays in `C`. Companions `geodesicHull_mono`,
+    `mem_geodesicHull_self`, `inConicalSpan.mono`. Together with `geodesicConvex_geodesicHull` this
+    closes the hull characterization (`hull = cone ∩ sphere = smallest geodesic-convex set`). Kernel-clean.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 

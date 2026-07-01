@@ -347,6 +347,14 @@ lean      = "MeasureToMeasure.Leaves.geodesicConvex_geodesicHull"
 paper     = "Section 3.3 (disentanglement); finding F2 (leaf L11)"
 created   = "2026-07-01"
 
+[claims.geodesic-hull-minimal]
+kind      = "theorem"
+statement = "The geodesic hull is the smallest geodesically convex set (milestone M5, minimality). MACHINE-CHECKED. geodesicHull_subset_of_geodesicConvex: if C is geodesically convex and contains every point of s, then geodesicHull s subset of C. This is the universal property that justifies calling geodesicHull a hull. Proof by Finset.induction (normalize_conical_mem): split off one generator p0; the remaining sub-combination u, once nonzero, normalizes into C by the inductive hypothesis, and normalize(w*p0 + u) = normalize(w*p0 + ||u||*normalize(u)) is a normalized positive chord of p0 in C and normalize(u) in C, hence in C by geodesic convexity. Companions: geodesicHull_mono (monotone in the generating set), mem_geodesicHull_self (each unit generator is in its hull), inConicalSpan.mono. #print axioms clean. Completes the hull characterization side of M5 (hull = smallest geodesic-convex set = cone cap sphere)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex"
+paper     = "Section 3.3 (disentanglement); geodesic-convex hull"
+created   = "2026-07-01"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
