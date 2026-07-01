@@ -1,0 +1,65 @@
+# Build DAG for de-axiomatizing "Measure-to-measure interpolation using Transformers".
+# Declarative source of truth for the milestone dependency graph; rendered to SVG by
+# site/build.py via the `d2` CLI and embedded on the "Beyond Mathlib" page.
+#
+# Two focal nodes are highlighted: M8a (the independent first target, green) and
+# M3 (the mean-field-flow linchpin, gold).
+
+direction: down
+
+M1: M1 · Measurable selection (KRN)
+M2: M2 · Optimal transport (W1, W2, duality)
+
+M3: M3 · Mean-field flow  ★ LINCHPIN {
+  style.fill: "#fff3bf"
+  style.stroke: "#f08c00"
+  style.stroke-width: 2
+  style.bold: true
+}
+
+M4: M4 · Per-point lemmas (3.2, 4.2, B.2)
+M5: M5 · Geodesic convexity (sphere)
+M6: M6 · LaSalle / Lyapunov + convergence
+M7: M7 · Transport map + L² density (5.1, 5.4)
+
+M8a: M8a · Atomless split  ★ FIRST {
+  style.fill: "#d3f9d8"
+  style.stroke: "#2f9e44"
+  style.stroke-width: 2
+  style.bold: true
+}
+
+M8b: M8b · Parking + §3.3 assembly
+
+DONE: All axioms discharged → Thm 1.1 / 1.2 machine-checked {
+  style.fill: "#e7f5ff"
+  style.stroke: "#1971c2"
+  style.stroke-width: 2
+}
+
+# dependency spine: selection unlocks OT, OT unlocks the mean-field flow
+M1 -> M2
+M2 -> M3
+
+# the flow foundation unlocks the dynamical + per-point layers
+M3 -> M4
+M3 -> M6
+M3 -> M7
+
+# independent tracks feeding convergence / assembly
+M5 -> M6
+M5 -> M8b
+
+# transport-map track
+M1 -> M7
+M2 -> M7
+
+# convergence + per-point results feed the disentangle/assembly step
+M4 -> M8b
+M6 -> M7
+M6 -> M8b
+M7 -> M8b
+
+# the two ways the headline theorems close out
+M8a -> DONE: prop_2_2
+M8b -> DONE: prop_3_1 / disentangle

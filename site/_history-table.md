@@ -54,3 +54,4 @@
 | 52 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 4.1 by induction over Proposition 4.2 | `MeasureToMeasure.Statements.prop_4_1` |
 | 53 | 2026-07-01 | `docs` | docs(ledger): record Proposition 4.1 proved; refresh ClaimGraph and site | `ledger` |
 | 54 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 2.2 via a probability-measure refactor | `MeasureToMeasure.Statements.prop_2_2` |
+| 55 | 2026-07-01 | `docs` | docs(ledger): record Proposition 2.2 proved; refresh ClaimGraph and site | `ledger` |
