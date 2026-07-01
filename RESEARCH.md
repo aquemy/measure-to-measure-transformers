@@ -375,6 +375,19 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     remaining gap is the (missing-in-Mathlib) global-existence packaging turning "for a given curve" into
     "for the flow map". Kernel-clean; does not yet discharge a paper flow axiom (needs global existence +
     the mean-field coupling, M3 Phase 4, gated on optimal transport M2).
+  - **Optimal transport: couplings and the `W₁` Kantorovich cost** (`Foundations/Wasserstein.lean`),
+    milestone **M2**, Phase 0/2 opening. Mathlib has the Lévy–Prokhorov metric but **no** optimal
+    transport (no couplings, no Wasserstein, no Kantorovich duality; `Axioms/Wasserstein.lean`
+    axiomatizes `W1`/`W2`). Built from scratch on `Measure.prod` / `Measure.fst` / `Measure.snd`:
+    `IsCoupling π μ ν := π.fst = μ ∧ π.snd = ν` (a transport plan with fixed marginals), with
+    `isCoupling_prod` (independent coupling), `isCoupling_diagonal` (the zero-cost diagonal plan), and
+    `IsCoupling.swap` (coordinate swap exchanges marginals). The cost `transportCost π = ∫⁻ edist p.1 p.2 ∂π`
+    (ℝ≥0∞-valued), with `transportCost_swap`/`transportCost_diagonal`. `W1 μ ν = ⨅` over couplings of the
+    cost; on the ℝ≥0∞ lattice the metric facts hold unconditionally: `W1_le_transportCost`,
+    `W1_self_eq_zero`, `W1_comm`. Kernel-clean. The first real slice of M2; the harder facts — the
+    Kantorovich–Rubinstein bound (signed integrals), the triangle inequality (gluing of couplings), and
+    completeness — are deferred, and the `W1`/`W2` axioms are not yet discharged (that is the M2 rewiring
+    once KR + triangle land). This is the gating prerequisite for the mean-field flow (M3 Phase 3–4).
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
