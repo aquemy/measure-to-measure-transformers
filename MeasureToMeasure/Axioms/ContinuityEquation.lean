@@ -16,9 +16,15 @@ open MeasureTheory
 
 variable {d : ℕ}
 
-/-- A piecewise-constant parameter schedule `θ` for the velocity field. Kept opaque here; the
-analytic content lives in the axioms below. -/
-axiom Params (d : ℕ) : Type
+/-- The parameters of a single piecewise-constant block of the velocity field (attention weights +
+duration). Kept opaque -- the per-block ODE content is what `flowMap` axiomatizes. -/
+axiom Block (d : ℕ) : Type
+
+/-- A piecewise-constant parameter schedule `θ` is a finite **list of blocks**. Making the schedule
+type concrete (rather than an opaque axiom) means composition is concatenation, the identity schedule
+is the empty list, time-reversal is `List.reverse`, and the switch count is the block count -- so the
+schedule algebra and the depth/switch budget are *proved*, not assumed. -/
+abbrev Params (d : ℕ) : Type := List (Block d)
 
 /-- AXIOM: the flow map `Φ_θ^t` on points of the sphere induced by the characteristics of the
 continuity equation. Lipschitz-continuous and invertible (see the structural axioms). -/
@@ -34,9 +40,9 @@ noncomputable def measureFlow (θ : Params d) (t : ℝ) (μ : MeasureTheory.Meas
     MeasureTheory.Measure (Eucl d) :=
   μ.map (flowMap θ t)
 
-/-- AXIOM: the number of parameter switches of a piecewise-constant schedule `θ` (the depth proxy
-discussed in Section 1.4.3 and Section 6). -/
-axiom switches (θ : Params d) : ℕ
+/-- The number of parameter switches of a piecewise-constant schedule `θ` (the depth proxy discussed in
+Section 1.4.3 and Section 6): the number of blocks, i.e. the list length. -/
+def switches (θ : Params d) : ℕ := θ.length
 
 /-- AXIOM: the flow map is Lipschitz on `[0, T]` (well-posedness of the characteristic ODE). -/
 axiom flowMap_lipschitz (θ : Params d) (t : ℝ) : ∃ K : ℝ, LipschitzWith K.toNNReal (flowMap θ t)

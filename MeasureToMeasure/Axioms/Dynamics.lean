@@ -29,9 +29,9 @@ theorem flowMap_measurable (θ : Params d) (t : ℝ) : Measurable (flowMap θ t)
   obtain ⟨K, hK⟩ := flowMap_lipschitz θ t
   exact hK.continuous.measurable
 
-/-- AXIOM (identity schedule). The empty parameter programme: it runs no velocity field, so its flow
-is the identity and it costs no switches. The unit for `comp`. -/
-axiom idParams (d : ℕ) : Params d
+/-- The identity schedule: the empty block list. It runs no velocity field, so its flow is the identity
+(`flowMap_id`) and it costs no switches. The unit for `comp`. -/
+def idParams (d : ℕ) : Params d := ([] : List (Block d))
 
 /-- AXIOM (point level): the identity schedule's flow map is the identity (it runs no velocity). More
 primitive than the former measure-level `measureFlow_id`, which is now derived. -/
@@ -43,13 +43,12 @@ theorem measureFlow_id (t : ℝ) (μ : Measure (Eucl d)) : measureFlow (idParams
   show μ.map (flowMap (idParams d) t) = μ
   rw [flowMap_id, Measure.map_id]
 
-/-- AXIOM: the identity schedule has zero switches. -/
-axiom switches_id : switches (idParams d) = 0
+/-- The identity schedule has zero switches: the empty list has length `0`. Now a theorem. -/
+theorem switches_id : switches (idParams d) = 0 := rfl
 
-/-- AXIOM (sequential composition of schedules). `comp θ₁ θ₂` is the piecewise-constant schedule that
-runs `θ₁` first and then `θ₂` (concatenation of the two parameter programmes over `[0, T]`). Encodes
-the time-additivity of the continuity-equation flow / the depth-stacking of two Transformer blocks. -/
-axiom comp (θ₁ θ₂ : Params d) : Params d
+/-- Sequential composition of schedules: `comp θ₁ θ₂` runs `θ₁` first and then `θ₂`, i.e. list
+concatenation of the two block programmes. Encodes the depth-stacking of two Transformer blocks. -/
+def comp (θ₁ θ₂ : Params d) : Params d := θ₁ ++ θ₂
 
 /-- AXIOM (composition on points). The composite schedule's flow map is the composition of the two
 flow maps: the characteristics of `θ₁` followed by those of `θ₂`. -/
@@ -63,14 +62,16 @@ theorem measureFlow_comp (θ₁ θ₂ : Params d) (T : ℝ) (μ : Measure (Eucl 
   show μ.map (flowMap (comp θ₁ θ₂) T) = (μ.map (flowMap θ₁ T)).map (flowMap θ₂ T)
   rw [flowMap_comp, Measure.map_map (flowMap_measurable θ₂ T) (flowMap_measurable θ₁ T)]
 
-/-- AXIOM (switch sub-additivity). Concatenating two schedules costs at most the sum of their
-switches (one extra boundary is absorbed into the count). This drives every switch-budget bound. -/
-axiom switches_comp (θ₁ θ₂ : Params d) :
-    switches (comp θ₁ θ₂) ≤ switches θ₁ + switches θ₂
+/-- Switch sub-additivity: concatenating two schedules costs the sum of their switches (list-length is
+additive over append), a fortiori `≤`. Now a theorem; drives every switch-budget bound. -/
+theorem switches_comp (θ₁ θ₂ : Params d) :
+    switches (comp θ₁ θ₂) ≤ switches θ₁ + switches θ₂ := by
+  simp [switches, comp]
 
-/-- AXIOM (time-reversal). `inv θ` is the schedule whose flow undoes that of `θ` (the dynamics are
-time-reversible, `flowMap_bijective`). This realizes the un-disentangling factor `(Φ_θ₁)⁻¹`. -/
-axiom inv (θ : Params d) : Params d
+/-- Time-reversal: `inv θ` runs the blocks of `θ` in reverse order (`List.reverse`). Its flow undoes
+that of `θ` (the dynamics are time-reversible, `flowMap_inv` / `flowMap_bijective`); this realizes the
+un-disentangling factor `(Φ_θ₁)⁻¹`. -/
+def inv (θ : Params d) : Params d := θ.reverse
 
 /-- AXIOM (point level): the reverse schedule's flow map is a left inverse of the forward one. More
 primitive than the former measure-level `measureFlow_inv`, which is now derived; consistent with

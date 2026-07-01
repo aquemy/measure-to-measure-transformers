@@ -72,3 +72,5 @@
 | 70 | 2026-07-01 | `formalize` | formalize(leaves): separating-hyperplane criterion for hull disjointness (M5) | `MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated` |
 | 71 | 2026-07-01 | `docs` | docs(ledger): record hull-disjointness criterion (M5); refresh ClaimGraph and site | `ledger` |
 | 72 | 2026-07-01 | `formalize` | formalize(axioms): define measureFlow as a pushforward, deriving the measure-level flow laws (M3) | `MeasureToMeasure.Axioms.measureFlow` |
+| 73 | 2026-07-01 | `docs` | docs(ledger): record measureFlow-as-pushforward (M3 slice); refresh ClaimGraph and site | `ledger` |
+| 74 | 2026-07-01 | `formalize` | formalize(axioms): make the schedule type concrete, proving the switch algebra (M3) | `MeasureToMeasure.Axioms.switches_comp` |
