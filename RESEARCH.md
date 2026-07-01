@@ -292,6 +292,13 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     hemisphere packaging the paper states without proof (review finding F2) is machine-checked
     (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
     `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
+  - `exists_atomless_partition` (atomless prescribed-mass decomposition), **de-axiomatized** (milestone
+    M8a) from the Sierpiński IVT primitive: normalize the restrictions `(αₖ)⁻¹ • μ.restrict(Aₖ)` to a
+    disjoint partition carved by iterating the IVT (`Foundations.exists_disjoint_subset_measure_eq`
+    then `exists_probability_decomposition`). Assumes positive weights (`αₖ ≠ 0`) so each piece is a
+    genuine probability measure. Its `#print axioms` now lists the single measure-theoretic primitive
+    `exists_measurableSet_subset_measure_eq` in place of the old bespoke partition axiom, so `prop_2_2`
+    and `theorem_1_1/1_2` rest on the IVT rather than on a hand-written splitting axiom.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
@@ -314,9 +321,15 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   from `prop_4_2`.)
 - **Construction-level** (`Statements/MidLevel.lean`, `Statements/MainResults.lean`):
   `exists_disentangling_balls` (the geometric output of the Section 3.3 disentanglement; `prop_3_1`
-  is *proved* from it), `exists_parked_schedule` (Appendix B parking / simultaneous action on a
-  disjoint-support family), and `exists_atomless_partition` (atomless decomposition into disjoint
-  prescribed-mass pieces, the Sierpiński/Lyapunov splitting step of Prop 2.2).
+  is *proved* from it) and `exists_parked_schedule` (Appendix B parking / simultaneous action on a
+  disjoint-support family).
+- **Measure-theoretic primitive** (`Foundations/AtomlessSplitting.lean`):
+  `exists_measurableSet_subset_measure_eq` — Sierpiński's intermediate-value theorem for nonatomic
+  measures (subset form: a finite atomless `μ` has a measurable subset of any value `r ≤ μ E`). This is
+  now the *only* axiom under the atomless splitting: the prescribed-mass disjoint partition
+  (`exists_disjoint_subset_measure_eq`) and the probability decomposition (`exists_probability_decomposition`,
+  hence `exists_atomless_partition`) are machine-checked on top of it (milestone M8a — the old bespoke
+  `exists_atomless_partition` axiom was removed).
 
 ### Fidelity corrections made while closing
 
@@ -332,9 +345,11 @@ Several type-correct stubs were loose transcriptions; axiomatizing them as writt
   to its target while fixing the inactive ones is possible only if the points are distinct; without
   it the stub is false when targets collide.
 - `prop_2_2` / `prop_2_1` / `cluster_to_point`: now carry `[IsProbabilityMeasure]`, and `prop_2_2`
-  requires convex weights (`∑ αₖ = 1`). `W₂` between measures of different total mass is ill-posed;
-  the probability-measure layer makes the discrete-target statement well-posed and lets the pieces be
-  normalized so clustering and the mixture bound apply cleanly. `theorem_1_1` likewise now assumes
+  requires positive convex weights (`∑ αₖ = 1`, `αₖ ≠ 0`). `W₂` between measures of different total mass
+  is ill-posed; the probability-measure layer makes the discrete-target statement well-posed and lets
+  the pieces be normalized so clustering and the mixture bound apply cleanly. The `αₖ ≠ 0` hypothesis
+  (added with the M8a de-axiomatization) keeps each normalized piece `(αₖ)⁻¹ • μ.restrict(Aₖ)` a genuine
+  probability measure; a zero-weight atom is vacuous for a discrete target. `theorem_1_1` likewise now assumes
   each input is a probability measure (consumed by `cluster_to_point` via `isProbabilityMeasure_measureFlow`).
 - `exists_atomless_partition` / `prop_2_2`: dropped the per-piece hemisphere clause from the partition
   axiom. Requiring every piece to sit in an open hemisphere is inconsistent at `M = 1` — it forces the
