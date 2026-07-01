@@ -3,6 +3,7 @@
 import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Foundations.Projector
 import MeasureToMeasure.Foundations.GeodesicDistance
+import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics

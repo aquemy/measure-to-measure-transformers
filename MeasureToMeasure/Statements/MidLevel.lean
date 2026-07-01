@@ -2,6 +2,7 @@ import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
+import MeasureToMeasure.Foundations.AtomlessSplitting
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
@@ -224,27 +225,37 @@ axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) 
     (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
     ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
 
-/-- AXIOM (atomless decomposition, Sierpiński/Lyapunov splitting). An atomless probability measure
-splits into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`) and
-pairwise disjoint supports: `μ = ∑ α k • P k`. This is the standard prescribed-mass partition of an
-atomless measure (Sierpiński's intermediate-value theorem for nonatomic measures; Fremlin, *Measure
-Theory* Vol. 2, §215D), absent from Mathlib `v4.31.0`.
+/-- Atomless decomposition (Sierpiński/Lyapunov splitting). An atomless probability measure splits
+into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`)
+and pairwise disjoint supports: `μ = ∑ α k • P k`.
 
-Soundness note: an earlier form of this axiom additionally required each piece to sit in an open
-hemisphere. That clause is inconsistent at `M = 1` -- it would force the whole measure into a
-half-space through the origin, which no centrally-symmetric atomless measure (a Gaussian, or the
-uniform law on a ball or sphere) satisfies -- so it is dropped here. The hemisphere is instead
-acquired dynamically per piece inside `prop_2_2` (rotate into the orthant via `lemma_3_2`), the way
-the paper actually proceeds. -/
-axiom exists_atomless_partition (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+**Proved** (`Foundations.exists_probability_decomposition`): the pieces are the normalized restrictions
+`P k = (α k)⁻¹ • μ.restrict (A k)` to a prescribed-mass disjoint partition `A k`, which is carved by
+iterating **Sierpiński's intermediate-value theorem** for nonatomic measures. The bespoke partition
+axiom is thereby removed; what remains is the single primitive
+`Foundations.exists_measurableSet_subset_measure_eq` (that IVT, absent from Mathlib `v4.31.0`; Fremlin,
+*Measure Theory* Vol. 2, §215D). Positive weights (`α k ≠ 0`) are assumed so each normalized piece is a
+genuine probability measure; a zero-weight atom is vacuous for a discrete target.
+
+Soundness note: an earlier form additionally required each piece to sit in an open hemisphere. That
+clause is inconsistent at `M = 1` -- it would force the whole measure into a half-space through the
+origin, which no centrally-symmetric atomless measure (a Gaussian, or the uniform law on a ball or
+sphere) satisfies -- so it is dropped here. The hemisphere is instead acquired dynamically per piece
+inside `prop_2_2` (rotate into the orthant via `lemma_3_2`), the way the paper actually proceeds. -/
+theorem exists_atomless_partition (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
-    {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) :
+    {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) (hα0 : ∀ k, α k ≠ 0) :
     ∃ P : Fin M → Measure (Eucl d), (∀ k, IsProbabilityMeasure (P k)) ∧
-      μ = ∑ k, α k • P k ∧ DisjointSupports P
+      μ = ∑ k, α k • P k ∧ DisjointSupports P := by
+  haveI : NoAtoms μ := ⟨hatomless⟩
+  obtain ⟨P, S, hProb, hμeq, hsupp, hSdisj⟩ :=
+    Foundations.exists_probability_decomposition μ α hα hα0
+  exact ⟨P, hProb, hμeq, S, hsupp, hSdisj⟩
 
 /-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure can be
 driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` (convex weights,
-`∑ α k = 1`). Needs `0 < d` (a basis direction is used to place each piece in a hemisphere).
+`∑ α k = 1`, each `α k ≠ 0`). Needs `0 < d` (a basis direction is used to place each piece in a
+hemisphere).
 
 **Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass `α k`
 with pairwise disjoint supports (`exists_atomless_partition`); for each piece, rotate it into the
@@ -258,10 +269,11 @@ theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
     (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
+    (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
     ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
-  obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα
+  obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα hα0
   -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
   obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
     refine ⟨EuclideanSpace.single ⟨0, hd⟩ (1 : ℝ), by simp, ?_⟩
