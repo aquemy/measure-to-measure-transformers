@@ -280,11 +280,13 @@ skeleton. Effective status of everything here is `math.axiomatised`.
   - `lemma_B_1` (ball-chain mass retention), a real induction over `lemma_B_2` and the flow algebra.
   - `prop_4_1` (match an ensemble), proved by induction on `M` over `prop_4_2` and the flow algebra
     (place one point per step; `6k + 6 = 6(k+1)` switch budget machine-checked via `switches_comp`).
-  - `prop_2_2` (cluster to a discrete measure), proved over the probability-measure layer: partition
-    the atomless `μ` into probability pieces of the prescribed weights in disjoint hemispheres
-    (`exists_atomless_partition`), cluster each to its target with one parked schedule
-    (`cluster_to_point` + `exists_parked_schedule`), then lift the per-piece bounds by the convexity
-    of `W₂` under mixtures (`W2_convexCombo_le`). `measureFlow` distributes over the convex
+  - `prop_2_2` (cluster to a discrete measure), proved over the probability-measure layer (needs
+    `0 < d`): partition the atomless `μ` into probability pieces of the prescribed weights with
+    pairwise disjoint supports (`exists_atomless_partition`); per piece, rotate into the orthant with
+    one switch (`lemma_3_2`) — the orthant sits in a basis direction's open hemisphere — then cluster
+    to its target (`cluster_to_point`), composing the schedules (`measureFlow_comp`); run all pieces
+    with one parked schedule (`exists_parked_schedule`), then lift the per-piece bounds by the
+    convexity of `W₂` under mixtures (`W2_convexCombo_le`). `measureFlow` distributes over the convex
     combination (`measureFlow_sum_smul`); the mixture bookkeeping is machine-checked.
   - `prop_3_1` (disentanglement), proved from `exists_disentangling_balls`: the disjointness +
     hemisphere packaging the paper states without proof (review finding F2) is machine-checked
@@ -314,11 +316,11 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   `exists_disentangling_balls` (the geometric output of the Section 3.3 disentanglement; `prop_3_1`
   is *proved* from it), `exists_parked_schedule` (Appendix B parking / simultaneous action on a
   disjoint-support family), and `exists_atomless_partition` (atomless decomposition into disjoint
-  hemisphere pieces, the packing step of Prop 2.2).
+  prescribed-mass pieces, the Sierpiński/Lyapunov splitting step of Prop 2.2).
 
 ### Fidelity corrections made while closing
 
-Two type-correct stubs were loose transcriptions; axiomatizing them as written would have been
+Several type-correct stubs were loose transcriptions; axiomatizing them as written would have been
 *unsound* (a false axiom collapses the system). Corrected to faithful statements first:
 
 - `lemma_B_1`: the retained fraction multiplies `μ(B₀)` (mass starting in the first ball, funneled
@@ -334,3 +336,10 @@ Two type-correct stubs were loose transcriptions; axiomatizing them as written w
   the probability-measure layer makes the discrete-target statement well-posed and lets the pieces be
   normalized so clustering and the mixture bound apply cleanly. `theorem_1_1` likewise now assumes
   each input is a probability measure (consumed by `cluster_to_point` via `isProbabilityMeasure_measureFlow`).
+- `exists_atomless_partition` / `prop_2_2`: dropped the per-piece hemisphere clause from the partition
+  axiom. Requiring every piece to sit in an open hemisphere is inconsistent at `M = 1` — it forces the
+  whole atomless measure into a half-space through the origin, false for any centrally-symmetric
+  measure (a Gaussian, or the uniform law on a ball/sphere). The sound statement keeps only the
+  prescribed-mass disjoint decomposition; `prop_2_2` now acquires the hemisphere per piece dynamically
+  (rotate into the orthant via `lemma_3_2`; the orthant lies in a basis direction's hemisphere),
+  matching the paper's actual argument, and gains a `0 < d` hypothesis to name that basis direction.

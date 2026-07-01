@@ -224,41 +224,61 @@ axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) 
     (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
     ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
 
-/-- AXIOM (atomless decomposition). An atomless probability measure splits into `M` probability
-measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`), with pairwise disjoint supports
-each confined to an open hemisphere: `μ = ∑ α k • P k`. This is the standard packing/partition step
-of Proposition 2.2 (atomless measures admit any convex decomposition with disjoint supports, a
-Lyapunov/Sierpiński-type fact), placing the pieces into disjoint hemispheres so Proposition 2.1
-clustering applies to each. Absent from Mathlib `v4.31.0`. -/
+/-- AXIOM (atomless decomposition, Sierpiński/Lyapunov splitting). An atomless probability measure
+splits into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`) and
+pairwise disjoint supports: `μ = ∑ α k • P k`. This is the standard prescribed-mass partition of an
+atomless measure (Sierpiński's intermediate-value theorem for nonatomic measures; Fremlin, *Measure
+Theory* Vol. 2, §215D), absent from Mathlib `v4.31.0`.
+
+Soundness note: an earlier form of this axiom additionally required each piece to sit in an open
+hemisphere. That clause is inconsistent at `M = 1` -- it would force the whole measure into a
+half-space through the origin, which no centrally-symmetric atomless measure (a Gaussian, or the
+uniform law on a ball or sphere) satisfies -- so it is dropped here. The hemisphere is instead
+acquired dynamically per piece inside `prop_2_2` (rotate into the orthant via `lemma_3_2`), the way
+the paper actually proceeds. -/
 axiom exists_atomless_partition (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
     {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) :
     ∃ P : Fin M → Measure (Eucl d), (∀ k, IsProbabilityMeasure (P k)) ∧
-      μ = ∑ k, α k • P k ∧ DisjointSupports P ∧
-      ∀ k, ∃ e : Eucl d, ‖e‖ = 1 ∧ supportedIn (P k) {x | 0 < ⟪e, x⟫}
+      μ = ∑ k, α k • P k ∧ DisjointSupports P
 
 /-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure can be
 driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` (convex weights,
-`∑ α k = 1`).
+`∑ α k = 1`). Needs `0 < d` (a basis direction is used to place each piece in a hemisphere).
 
-**Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass
-`α k` in disjoint hemispheres (`exists_atomless_partition`); cluster each piece to its target point
-`x k` with a single parked schedule `Θ` (`cluster_to_point` per piece, combined by
-`exists_parked_schedule`); the solution map distributes over the convex combination
-(`measureFlow_sum_smul`), and the convexity of `W₂` under mixtures (`W2_convexCombo_le`) lifts the
+**Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass `α k`
+with pairwise disjoint supports (`exists_atomless_partition`); for each piece, rotate it into the
+orthant with one switch (`lemma_3_2`) -- the orthant lies in the open hemisphere `{x | 0 < ⟪e_j, x⟫}`
+of a basis direction `e_j` -- then cluster it to its target point `x k` (`cluster_to_point`),
+composing the two schedules (`measureFlow_comp`). A single parked schedule `Θ` runs all pieces at once
+(`exists_parked_schedule`); the solution map distributes over the convex combination
+(`measureFlow_sum_smul`), and convexity of `W₂` under mixtures (`W2_convexCombo_le`) lifts the
 per-piece bounds to the whole measure. The convex-combination bookkeeping is machine-checked. -/
-theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
     (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
     ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
-  obtain ⟨P, hPprob, hμeq, hdisj, hhemi⟩ := exists_atomless_partition μ hatomless α hα
+  obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα
+  -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
+  obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
+    refine ⟨EuclideanSpace.single ⟨0, hd⟩ (1 : ℝ), by simp, ?_⟩
+    intro y hy
+    have hinner : ⟪EuclideanSpace.single (⟨0, hd⟩ : Fin d) (1 : ℝ), y⟫ = y ⟨0, hd⟩ := by
+      simp [EuclideanSpace.inner_single_left]
+    simpa [Set.mem_setOf_eq, hinner] using hy ⟨0, hd⟩
+  -- Each piece: rotate into the orthant (Lemma 3.2), then cluster to its target (Prop 2.1 + 4.1).
   have hper : ∀ k, ∃ θ : Params d, W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
     intro k
-    obtain ⟨e, he, hsupp⟩ := hhemi k
     haveI := hPprob k
-    exact cluster_to_point (P k) T ε hT hε (x k) e he hsupp
+    obtain ⟨θ₁, _hsw, horth⟩ := lemma_3_2 (P k) T hT
+    haveI := isProbabilityMeasure_measureFlow θ₁ T (P k)
+    have hsupp : supportedIn (measureFlow θ₁ T (P k)) {y : Eucl d | 0 < ⟪e, y⟫} :=
+      measure_mono_null (Set.compl_subset_compl.mpr hsub) horth
+    obtain ⟨θ₂, hθ₂⟩ := cluster_to_point (measureFlow θ₁ T (P k)) T ε hT hε (x k) e he hsupp
+    exact ⟨comp θ₁ θ₂, by rw [measureFlow_comp]; exact hθ₂⟩
   obtain ⟨Θ, hΘ⟩ := exists_parked_schedule P (fun k => Measure.dirac (x k)) T ε hdisj hper
   refine ⟨Θ, ?_⟩
   rw [htgt, hμeq, measureFlow_sum_smul]
