@@ -24,11 +24,15 @@ axiom Params (d : ℕ) : Type
 continuity equation. Lipschitz-continuous and invertible (see the structural axioms). -/
 axiom flowMap (θ : Params d) (t : ℝ) : Eucl d → Eucl d
 
-/-- AXIOM: the solution map `Φ_θ^t : 𝒫(𝕊^{d-1}) → 𝒫(𝕊^{d-1})` of the continuity equation, acting on
-measures. This is the object the main theorems control. It is the pushforward of the point flow map,
-but with no Mathlib continuity-equation theory we take it as a primitive. -/
-axiom measureFlow (θ : Params d) (t : ℝ) : MeasureTheory.Measure (Eucl d) →
-    MeasureTheory.Measure (Eucl d)
+/-- The solution map `Φ_θ^t : 𝒫(𝕊^{d-1}) → 𝒫(𝕊^{d-1})` of the continuity equation, acting on
+measures. **Defined** as the pushforward of the point flow map `flowMap θ t` -- this is precisely the
+continuity equation's defining property (mass is transported along characteristics), so we take it as
+a *definition* rather than a primitive. With this, `measureFlow_map` is definitional and the semigroup
+laws (`measureFlow_comp`, `_id`, `_inv`) are *derived* from the point-level flow facts plus
+`Measure.map_map` / `Measure.map_id`, isolating the genuine ODE content in `flowMap`. -/
+noncomputable def measureFlow (θ : Params d) (t : ℝ) (μ : MeasureTheory.Measure (Eucl d)) :
+    MeasureTheory.Measure (Eucl d) :=
+  μ.map (flowMap θ t)
 
 /-- AXIOM: the number of parameter switches of a piecewise-constant schedule `θ` (the depth proxy
 discussed in Section 1.4.3 and Section 6). -/

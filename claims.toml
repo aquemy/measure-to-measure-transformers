@@ -285,7 +285,7 @@ created   = "2026-06-30"
 
 [claims.axiom-flow-algebra]
 kind      = "review"
-statement = "Structural flow algebra (Axioms/Dynamics.lean): schedule composition comp with measureFlow_comp/flowMap_comp, switch sub-additivity switches_comp, the identity schedule idParams, time-reversal inv with measureFlow_inv, and the pushforward identity measureFlow_map (Phi_theta^t mu = (Phi_theta^t)_# mu). Standard continuity-equation semigroup facts, absent from Mathlib; used to assemble the construction."
+statement = "Structural flow algebra (Axioms/Dynamics.lean). PARTIALLY DE-AXIOMATIZED (M3 pushforward slice): measureFlow is now DEFINED as the pushforward of the point flow map (measureFlow theta t mu := mu.map (flowMap theta t)), so measureFlow_map is definitional (rfl) and the measure-level semigroup laws measureFlow_comp / measureFlow_id / measureFlow_inv are now DERIVED theorems (from Measure.map_map / Measure.map_id plus the point-level flow facts). This removed the opaque measureFlow constant and 4 measure-level axioms, leaving the genuine ODE content isolated in flowMap and the more-primitive point-level axioms flowMap_comp, flowMap_id (flowMap idParams = id), flowMap_inv (flowMap (inv theta) T composed with flowMap theta T = id). Effective status stays axiomatised: it still rests on flowMap and those point-level facts (Mathlib has no continuity-equation solver). switch sub-additivity switches_comp and switches_id remain axioms over the still-opaque Params/comp/inv."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Axioms.measureFlow_map"
 paper     = "n/a (structural infrastructure)"

@@ -23,12 +23,25 @@ open scoped ENNReal
 
 variable {d : ℕ}
 
+/-- The flow map is measurable: it is Lipschitz (`flowMap_lipschitz`), hence continuous, hence Borel
+measurable. Used throughout to evaluate the pushforward `measureFlow`. -/
+theorem flowMap_measurable (θ : Params d) (t : ℝ) : Measurable (flowMap θ t) := by
+  obtain ⟨K, hK⟩ := flowMap_lipschitz θ t
+  exact hK.continuous.measurable
+
 /-- AXIOM (identity schedule). The empty parameter programme: it runs no velocity field, so its flow
 is the identity and it costs no switches. The unit for `comp`. -/
 axiom idParams (d : ℕ) : Params d
 
-/-- AXIOM: the identity schedule leaves every measure unchanged. -/
-axiom measureFlow_id (t : ℝ) (μ : Measure (Eucl d)) : measureFlow (idParams d) t μ = μ
+/-- AXIOM (point level): the identity schedule's flow map is the identity (it runs no velocity). More
+primitive than the former measure-level `measureFlow_id`, which is now derived. -/
+axiom flowMap_id (t : ℝ) : flowMap (idParams d) t = id
+
+/-- The identity schedule leaves every measure unchanged. Derived from `flowMap_id` and
+`Measure.map_id` now that `measureFlow` is the pushforward of `flowMap`. -/
+theorem measureFlow_id (t : ℝ) (μ : Measure (Eucl d)) : measureFlow (idParams d) t μ = μ := by
+  show μ.map (flowMap (idParams d) t) = μ
+  rw [flowMap_id, Measure.map_id]
 
 /-- AXIOM: the identity schedule has zero switches. -/
 axiom switches_id : switches (idParams d) = 0
@@ -43,10 +56,12 @@ flow maps: the characteristics of `θ₁` followed by those of `θ₂`. -/
 axiom flowMap_comp (θ₁ θ₂ : Params d) (T : ℝ) :
     flowMap (comp θ₁ θ₂) T = flowMap θ₂ T ∘ flowMap θ₁ T
 
-/-- AXIOM (composition on measures). The composite schedule's solution map is the composition of the
-two solution maps. The measure-level shadow of `flowMap_comp`. -/
-axiom measureFlow_comp (θ₁ θ₂ : Params d) (T : ℝ) (μ : Measure (Eucl d)) :
-    measureFlow (comp θ₁ θ₂) T μ = measureFlow θ₂ T (measureFlow θ₁ T μ)
+/-- The composite schedule's solution map is the composition of the two solution maps (the measure-level
+shadow of `flowMap_comp`). Derived from `flowMap_comp` and `Measure.map_map`. -/
+theorem measureFlow_comp (θ₁ θ₂ : Params d) (T : ℝ) (μ : Measure (Eucl d)) :
+    measureFlow (comp θ₁ θ₂) T μ = measureFlow θ₂ T (measureFlow θ₁ T μ) := by
+  show μ.map (flowMap (comp θ₁ θ₂) T) = (μ.map (flowMap θ₁ T)).map (flowMap θ₂ T)
+  rw [flowMap_comp, Measure.map_map (flowMap_measurable θ₂ T) (flowMap_measurable θ₁ T)]
 
 /-- AXIOM (switch sub-additivity). Concatenating two schedules costs at most the sum of their
 switches (one extra boundary is absorbed into the count). This drives every switch-budget bound. -/
@@ -57,23 +72,25 @@ axiom switches_comp (θ₁ θ₂ : Params d) :
 time-reversible, `flowMap_bijective`). This realizes the un-disentangling factor `(Φ_θ₁)⁻¹`. -/
 axiom inv (θ : Params d) : Params d
 
-/-- AXIOM: the reverse schedule cancels the forward one at the measure level. -/
-axiom measureFlow_inv (θ : Params d) (T : ℝ) (μ : Measure (Eucl d)) :
-    measureFlow (inv θ) T (measureFlow θ T μ) = μ
+/-- AXIOM (point level): the reverse schedule's flow map is a left inverse of the forward one. More
+primitive than the former measure-level `measureFlow_inv`, which is now derived; consistent with
+`flowMap_bijective`. -/
+axiom flowMap_inv (θ : Params d) (T : ℝ) : flowMap (inv θ) T ∘ flowMap θ T = id
 
-/-- AXIOM (pushforward identity). The solution map is the pushforward of the point flow map:
-`Φ_θ^t(μ) = (Φ_θ^t)_# μ`. This is definitional for the continuity equation (mass is transported
-along characteristics) but, absent a Mathlib development, is taken as an axiom. It is the bridge that
-turns a point-level steering statement `flowMap θ T (x i) = y i` into a measure-level
-`measureFlow θ T (δ_{x i}) = δ_{y i}`. -/
-axiom measureFlow_map (θ : Params d) (t : ℝ) (μ : Measure (Eucl d)) :
-    measureFlow θ t μ = μ.map (flowMap θ t)
+/-- The reverse schedule cancels the forward one at the measure level. Derived from `flowMap_inv`,
+`Measure.map_map`, and `Measure.map_id`. -/
+theorem measureFlow_inv (θ : Params d) (T : ℝ) (μ : Measure (Eucl d)) :
+    measureFlow (inv θ) T (measureFlow θ T μ) = μ := by
+  show (μ.map (flowMap θ T)).map (flowMap (inv θ) T) = μ
+  rw [Measure.map_map (flowMap_measurable (inv θ) T) (flowMap_measurable θ T), flowMap_inv,
+    Measure.map_id]
 
-/-- The flow map is measurable: it is Lipschitz (`flowMap_lipschitz`), hence continuous, hence Borel
-measurable. Used to evaluate the pushforward on Dirac masses. -/
-theorem flowMap_measurable (θ : Params d) (t : ℝ) : Measurable (flowMap θ t) := by
-  obtain ⟨K, hK⟩ := flowMap_lipschitz θ t
-  exact hK.continuous.measurable
+/-- Pushforward identity: the solution map is the pushforward of the point flow map,
+`Φ_θ^t(μ) = (Φ_θ^t)_# μ`. Now **definitional** (`measureFlow` is defined as the pushforward), so this
+is `rfl`; kept as a named lemma because it is the bridge that turns a point-level steering statement
+`flowMap θ T (x i) = y i` into a measure-level `measureFlow θ T (δ_{x i}) = δ_{y i}`. -/
+theorem measureFlow_map (θ : Params d) (t : ℝ) (μ : Measure (Eucl d)) :
+    measureFlow θ t μ = μ.map (flowMap θ t) := rfl
 
 /-- The solution map sends a Dirac mass to the Dirac mass at the image point: a direct consequence of
 the pushforward identity (`measureFlow_map`) and `Measure.map_dirac` (needs measurability). -/

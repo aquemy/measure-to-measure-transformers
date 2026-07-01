@@ -329,6 +329,16 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     their hulls (disjoint); `inner_neg_of_inConicalSpan` (mirror); `barycenter_noncolinear_of_separated`
     composes it with leaf L11 to get non-colinear barycenters from a separating hyperplane. The clean
     sufficient condition Section 3.3 uses to make two clusters' hulls disjoint. Kernel-clean.
+  - **`measureFlow` as a pushforward** (`Axioms/ContinuityEquation.lean`, `Axioms/Dynamics.lean`), the
+    first M3 slice (ODE-free). `measureFlow θ t μ` is now **defined** as `μ.map (flowMap θ t)` rather than
+    an opaque axiom, so `measureFlow_map` is definitional (`rfl`) and the measure-level semigroup laws
+    `measureFlow_comp` / `measureFlow_id` / `measureFlow_inv` are now **derived theorems** (from
+    `Measure.map_map` / `Measure.map_id` plus point-level flow facts). This removed the `measureFlow`
+    constant and 4 measure-level axioms, replacing them with the two more-primitive point-level axioms
+    `flowMap_id` (`flowMap idParams = id`) and `flowMap_inv` (`flowMap (inv θ) T ∘ flowMap θ T = id`);
+    `flowMap_comp` already existed. Net −3 axioms, and the surface is now closer to "the most primitive
+    faithful point" (the genuine ODE content is isolated in `flowMap`). Effective status of the layer
+    stays axiomatised — it still rests on `flowMap` (Mathlib has no continuity-equation solver).
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
@@ -339,12 +349,15 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
 - **Wasserstein layer** (`Axioms/Wasserstein.lean`): `W2`/`W1`, `W2_map_le_L2` (L7 coupling),
   `W1_ge_of_lipschitz` (KR duality), `W2_convexCombo_le` (convexity of `W₂` under probability
   mixtures).
-- **Continuity-equation layer** (`Axioms/ContinuityEquation.lean`): `Params`, `flowMap`,
-  `measureFlow`, `switches`, `flowMap_lipschitz`, `flowMap_bijective`, `Parked` + `flowMap_id_on_parked`.
-- **Structural flow algebra** (`Axioms/Dynamics.lean`): `comp` (`+ flowMap_comp`, `measureFlow_comp`),
-  `switches_comp`, `idParams` (`+ measureFlow_id`, `switches_id`), `inv` (`+ measureFlow_inv`),
-  `measureFlow_map` (pushforward identity). Standard semigroup / well-posedness facts; structural, not
-  conclusions of the paper.
+- **Continuity-equation layer** (`Axioms/ContinuityEquation.lean`): `Params`, `flowMap`, `switches`,
+  `flowMap_lipschitz`, `flowMap_bijective`, `Parked` + `flowMap_id_on_parked`. (`measureFlow` is no
+  longer here — it is now a **definition**, the pushforward `μ.map (flowMap θ t)`.)
+- **Structural flow algebra** (`Axioms/Dynamics.lean`): `comp` (`+ flowMap_comp`), `switches_comp`,
+  `idParams` (`+ flowMap_id`, `switches_id`), `inv` (`+ flowMap_inv`). The point-level flow facts
+  `flowMap_comp` / `flowMap_id` / `flowMap_inv` are the axioms; the measure-level `measureFlow_comp` /
+  `measureFlow_id` / `measureFlow_inv` and the pushforward identity `measureFlow_map` are now **derived
+  theorems** (via `Measure.map_map` / `Measure.map_id`). Standard semigroup / well-posedness facts;
+  structural, not conclusions of the paper.
 - **Analytic mid-levels** (`Statements/MidLevel.lean`): `prop_2_1`, `prop_2_2`, `lemma_3_2`,
   `lemma_3_3`, `lemma_3_4_part1/2`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`,
   `cluster_to_point` (single-measure controllability = Prop 2.1 + Prop 4.1). (`prop_4_1` is *proved*
