@@ -90,11 +90,11 @@
   <text x="760" y="198" text-anchor="middle" class="mono box-h">M1</text>
   <text x="760" y="219" text-anchor="middle" class="box-s">Measurable selection</text>
 
-  <!-- M8a · Atomless split — FIRST target (sage/green, bold) -->
-  <text x="1400" y="146" text-anchor="middle" class="mono layer-tag">NO PREREQUISITES</text>
+  <!-- M8a · Atomless split — DONE, machine-checked (sage/green, bold) -->
+  <text x="1400" y="146" text-anchor="middle" class="mono layer-tag">DONE ✓</text>
   <rect x="1280" y="158" width="240" height="84" fill="#a9c39c" opacity="0.5" filter="url(#wash-b)"/>
   <rect x="1288" y="166" width="224" height="68" fill="none" stroke="#111111" stroke-width="2" filter="url(#ink-b)"/>
-  <text x="1400" y="198" text-anchor="middle" class="mono box-h">M8a · FIRST</text>
+  <text x="1400" y="198" text-anchor="middle" class="mono box-h">M8a ✓</text>
   <text x="1400" y="219" text-anchor="middle" class="box-s">Atomless split</text>
 
   <!-- M2 · Optimal transport (stone) -->
@@ -103,10 +103,11 @@
   <text x="760" y="338" text-anchor="middle" class="mono box-h">M2</text>
   <text x="760" y="359" text-anchor="middle" class="box-s">Optimal transport</text>
 
-  <!-- M5 · Geodesic convexity (lavender) -->
-  <rect x="130" y="298" width="300" height="84" fill="#b9b2d2" opacity="0.5" filter="url(#wash-b)"/>
+  <!-- M5 · Geodesic convexity — IN PROGRESS (cool blue) -->
+  <text x="280" y="286" text-anchor="middle" class="mono layer-tag">IN PROGRESS</text>
+  <rect x="130" y="298" width="300" height="84" fill="#abc1d2" opacity="0.5" filter="url(#wash-b)"/>
   <rect x="138" y="306" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
-  <text x="280" y="338" text-anchor="middle" class="mono box-h">M5</text>
+  <text x="280" y="338" text-anchor="middle" class="mono box-h">M5 ◐</text>
   <text x="280" y="359" text-anchor="middle" class="box-s">Geodesic convexity</text>
 
   <!-- M3 · Mean-field flow — LINCHPIN (ochre/gold, bold) -->
@@ -146,5 +147,5 @@
   <text x="760" y="929" text-anchor="middle" class="box-s">Thm 1.1 / 1.2 checked</text>
 
   <!-- One-line takeaway -->
-  <text x="760" y="1044" text-anchor="middle" class="caption">The axioms discharge in dependency order: M8a is the standalone first win, M3 the linchpin all else waits on.</text>
+  <text x="760" y="1044" text-anchor="middle" class="caption">The axioms discharge in dependency order: M8a is done, M5 in progress, M3 the linchpin all else waits on.</text>
 </svg>

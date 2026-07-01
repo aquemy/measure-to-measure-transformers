@@ -20,14 +20,38 @@ dependency closure.
 
 "Proving the axiomatized parts for real" means **building that missing mathematics in Lean** and
 discharging the axioms, so the effective status climbs `axiomatised → machine-checked`. This page is
-the public roadmap for that program.
+the public roadmap for that program -- and, increasingly, a record of it: the first milestone is
+already **discharged for real**.
+
+## Progress so far
+
+- **M8a — Atomless splitting: [done]{.badge .ok} (machine-checked).** `exists_atomless_partition` (the
+  disjoint, prescribed-mass decomposition behind Proposition 2.2) is fully de-axiomatized. The
+  measure-theoretic primitive it rested on -- **Sierpiński's intermediate-value theorem** for nonatomic
+  measures -- is now a kernel-checked theorem: proved on `ℝ` (the cumulative `t ↦ μ(E ∩ (-∞,t])` is
+  continuous because its increment is the Bochner primitive `∫ 𝟙_E`, valid *because* `μ` has no atoms,
+  then the intermediate value theorem), and lifted to any standard Borel space by pushing the measure
+  forward along a measurable embedding into `ℝ`. `#print axioms` on `exists_atomless_partition` and the
+  IVT lists only `propext` / `Classical.choice` / `Quot.sound` -- no custom axioms, no `sorry`. A
+  soundness bug was surfaced and fixed along the way (see below).
+- **M5 — Geodesic convexity on the sphere: [in progress]{.badge .partial}.** The geometric foundation
+  is machine-checked: a `GeodesicConvex` predicate (closure under normalized great-circle chords), the
+  fact that an **open hemisphere is geodesically convex** (the confinement the paper uses), and the full
+  hull characterization -- `geodesicHull = cone ∩ sphere` *is* geodesically convex and *is* the smallest
+  geodesic-convex set containing its generators. What remains for M5 is the Section 3.3 disentanglement
+  geometry that consumes these facts; the paper axiom `exists_disentangling_balls` also waits on the
+  flow layer (M3), so it stays `axiomatised` for now.
+
+Everything above is kernel-clean; the [claim graph](claimgraph.qmd) badges each node live, and the
+commit history records every step under the [Conventional Knowledge Commits](history.qmd) discipline
+(each `Status:` footer cross-checked against `#print axioms` by a pre-commit hook).
 
 ## The build DAG
 
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) is the standalone first target; M3 (gold) is the linchpin every downstream milestone waits on.](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target and is now discharged; M5 (blue) is in progress; M3 (gold) is the linchpin every downstream milestone waits on.](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)
@@ -47,10 +71,10 @@ optimal-transport and mean-field *layers*; the measure-theoretic substrate benea
 
 | Layer | In the pinned Mathlib | Plan |
 | --- | --- | --- |
-| Nonatomic prescribed-mass splitting (Sierpiński) | absent (only an interval-*average* IVT) | **build** on `NoAtoms` |
+| Nonatomic prescribed-mass splitting (Sierpiński) | absent (only an interval-*average* IVT) | **[done]{.badge .ok}** -- built on `NoAtoms` + IVT (M8a) |
 | Optimal transport / Wasserstein / Kantorovich | absent | **build** (`Measure.prod` + marginals exist) |
 | LaSalle / Lyapunov stability | theorems absent (`Flow`, `omegaLimit`, `IsPicardLindelof` exist) | **build** on the flow substrate |
-| Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **build** |
+| Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[in progress]{.badge .partial}** -- foundation + hull characterization built (M5) |
 | Measurable selection (Kuratowski--Ryll-Nardzewski) | absent | **build** on the Polish / analytic-set layer |
 | Mean-field / continuity-equation flow | absent (`Kernel`, `Measure.map` exist) | **build** -- the linchpin (M3) |
 
@@ -65,30 +89,39 @@ Nothing is importable across proof assistants, but the external audit found real
 - **Optimal transport (M2)** -- absent in *every* assistant, so genuinely from scratch; but once a
   coupling-based $W_2$ exists, the bound the paper needs is a one-liner (the pair map is an admissible
   coupling; Santambrogio, *Optimal Transport for Applied Mathematicians*, Ch. 5).
-- **Sierpiński splitting (M8a)** -- absent everywhere; mirror the explicit exhaustion argument in
-  Fremlin, *Measure Theory* Vol. 2, §215D.
-- **Geodesic convexity (M5)** -- Mathlib's Riemannian-geometry substrate is landing in open PRs; build
-  on it as it arrives rather than duplicating it.
+- **Sierpiński splitting (M8a)** -- absent everywhere; **built** ([done]{.badge .ok}) via the
+  cumulative-distribution + intermediate-value-theorem route rather than Fremlin's exhaustion argument,
+  which turned out cleaner in Mathlib.
+- **Geodesic convexity (M5)** -- Mathlib's Riemannian-geometry substrate is landing in open PRs, but
+  geodesic convexity on the sphere is absent; **built in-repo** the elementary way (normalized
+  great-circle chords, pure inner products), the foundation now machine-checked
+  ([in progress]{.badge .partial}).
 
 A caveat kept in mind: several "0 `sorry`" AI-generated Lean repos for LaSalle/Lyapunov exist, but
 such artifacts frequently prove weakened statements -- so any reuse is gated on a `#print axioms`
 check and a statement-faithfulness review, the same discipline this project applies to its own claims.
 
-## The first target: M8a
+## The first target: M8a — discharged
 
-The chosen first slice is the smallest self-contained win: discharge `exists_atomless_partition` (the
+The chosen first slice was the smallest self-contained win: discharge `exists_atomless_partition` (the
 disjoint, prescribed-mass decomposition behind Proposition 2.2) by building the nonatomic splitting
-theorem. It needs no optimal-transport or flow prerequisites, which is why it starts the program.
+theorem. It needs no optimal-transport or flow prerequisites, which is why it started the program --
+and it is now **complete and machine-checked** (see *Progress so far* above). The pieces are normalized
+restrictions `(αₖ)⁻¹ • μ|_{Aₖ}` to a disjoint partition carved by iterating the Sierpiński IVT; that
+IVT, absent from Mathlib, was built from scratch on `NoAtoms` + the intermediate value theorem.
 
 ::: {.callout-warning}
-## A soundness bug, surfaced while planning
+## A soundness bug, surfaced while planning -- and fixed
 
-The axiom as originally stated is **inconsistent**. It demanded a decomposition whose every piece sits
+The axiom as originally stated was **inconsistent**. It demanded a decomposition whose every piece sits
 in an open hemisphere -- but at $M = 1$ that forces the *whole* measure into a half-space, which no
 centrally-symmetric atomless measure (a Gaussian; the uniform law on a ball or sphere) satisfies. The
 fix drops the hemisphere clause from the *partition* and acquires it dynamically per piece, the way
-the paper actually does. It is the latest of several fidelity corrections the formalization has forced
--- the entire point of running the argument through a kernel.
+the paper actually does. A second soundness point: the splitting is only true on a **standard Borel
+space**, not for bare `NoAtoms` (a countable--cocountable `0/1` measure is a counterexample) -- so the
+proved theorem carries that hypothesis, which `Eucl d` satisfies. These are the latest of several
+fidelity corrections the formalization has forced -- the entire point of running the argument through a
+kernel.
 :::
 
 ## Scale and honesty

@@ -180,10 +180,11 @@ window.Quarto = {
    
   <ul>
   <li><a href="#where-the-formalization-stands" id="toc-where-the-formalization-stands" class="nav-link active" data-scroll-target="#where-the-formalization-stands">Where the formalization stands</a></li>
+  <li><a href="#progress-so-far" id="toc-progress-so-far" class="nav-link" data-scroll-target="#progress-so-far">Progress so far</a></li>
   <li><a href="#the-build-dag" id="toc-the-build-dag" class="nav-link" data-scroll-target="#the-build-dag">The build DAG</a></li>
   <li><a href="#what-must-be-built-and-what-mathlib-already-gives" id="toc-what-must-be-built-and-what-mathlib-already-gives" class="nav-link" data-scroll-target="#what-must-be-built-and-what-mathlib-already-gives">What must be built, and what Mathlib already gives</a></li>
   <li><a href="#what-we-can-reuse" id="toc-what-we-can-reuse" class="nav-link" data-scroll-target="#what-we-can-reuse">What we can reuse</a></li>
-  <li><a href="#the-first-target-m8a" id="toc-the-first-target-m8a" class="nav-link" data-scroll-target="#the-first-target-m8a">The first target: M8a</a></li>
+  <li><a href="#the-first-target-m8a-discharged" id="toc-the-first-target-m8a-discharged" class="nav-link" data-scroll-target="#the-first-target-m8a-discharged">The first target: M8a — discharged</a></li>
   <li><a href="#scale-and-honesty" id="toc-scale-and-honesty" class="nav-link" data-scroll-target="#scale-and-honesty">Scale and honesty</a></li>
   </ul>
 </nav>
@@ -214,7 +215,15 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="where-the-formalization-stands">Where the formalization stands</h2>
 <p>The Lean development closes every statement of the paper with <strong>zero <code>sorry</code></strong> – the headline theorems (1.1, 1.2), the propositions (2.1, 2.2, 3.1, 4.1, 4.2), and the mid-level lemmas all compile. But <em>closing a statement</em> and <em>proving it from first principles</em> are different claims, and this project is scrupulous about the difference.</p>
 <p>The honest, kernel-driven status of the headline results is <span class="badge axiom">axiomatised</span>, not <span class="badge ok">machine-checked</span>. The self-contained cores – the derivative computations, the geometry, the Grönwall / Lyapunov / pigeonhole leaves (L1–L11) – carry a clean kernel proof. The <em>deep</em> content (optimal transport, the mean-field flow, the clustering dynamics) is stated as a layer of about 30 clearly <strong>labeled axioms</strong> standing in for mathematics that Mathlib does not yet have. Every result that leans on them inherits <code>axiomatised</code> – a node’s effective status is the minimum over its dependency closure.</p>
-<p>“Proving the axiomatized parts for real” means <strong>building that missing mathematics in Lean</strong> and discharging the axioms, so the effective status climbs <code>axiomatised → machine-checked</code>. This page is the public roadmap for that program.</p>
+<p>“Proving the axiomatized parts for real” means <strong>building that missing mathematics in Lean</strong> and discharging the axioms, so the effective status climbs <code>axiomatised → machine-checked</code>. This page is the public roadmap for that program – and, increasingly, a record of it: the first milestone is already <strong>discharged for real</strong>.</p>
+</section>
+<section id="progress-so-far" class="level2">
+<h2 class="anchored" data-anchor-id="progress-so-far">Progress so far</h2>
+<ul>
+<li><strong>M8a — Atomless splitting: <span class="badge ok">done</span> (machine-checked).</strong> <code>exists_atomless_partition</code> (the disjoint, prescribed-mass decomposition behind Proposition 2.2) is fully de-axiomatized. The measure-theoretic primitive it rested on – <strong>Sierpiński’s intermediate-value theorem</strong> for nonatomic measures – is now a kernel-checked theorem: proved on <code>ℝ</code> (the cumulative <code>t ↦ μ(E ∩ (-∞,t])</code> is continuous because its increment is the Bochner primitive <code>∫ 𝟙_E</code>, valid <em>because</em> <code>μ</code> has no atoms, then the intermediate value theorem), and lifted to any standard Borel space by pushing the measure forward along a measurable embedding into <code>ℝ</code>. <code>#print axioms</code> on <code>exists_atomless_partition</code> and the IVT lists only <code>propext</code> / <code>Classical.choice</code> / <code>Quot.sound</code> – no custom axioms, no <code>sorry</code>. A soundness bug was surfaced and fixed along the way (see below).</li>
+<li><strong>M5 — Geodesic convexity on the sphere: <span class="badge partial">in progress</span>.</strong> The geometric foundation is machine-checked: a <code>GeodesicConvex</code> predicate (closure under normalized great-circle chords), the fact that an <strong>open hemisphere is geodesically convex</strong> (the confinement the paper uses), and the full hull characterization – <code>geodesicHull = cone ∩ sphere</code> <em>is</em> geodesically convex and <em>is</em> the smallest geodesic-convex set containing its generators. What remains for M5 is the Section 3.3 disentanglement geometry that consumes these facts; the paper axiom <code>exists_disentangling_balls</code> also waits on the flow layer (M3), so it stays <code>axiomatised</code> for now.</li>
+</ul>
+<p>Everything above is kernel-clean; the <a href="./claimgraph.html">claim graph</a> badges each node live, and the commit history records every step under the <a href="./history.html">Conventional Knowledge Commits</a> discipline (each <code>Status:</code> footer cross-checked against <code>#print axioms</code> by a pre-commit hook).</p>
 </section>
 <section id="the-build-dag" class="level2">
 <h2 class="anchored" data-anchor-id="the-build-dag">The build DAG</h2>
@@ -222,7 +231,7 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="diagrams/build-dag.ink.svg" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>The de-axiomatization build DAG, in the house sketch style. M8a (green) is the standalone first target; M3 (gold) is the linchpin every downstream milestone waits on.</figcaption>
+<figcaption>The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target and is now discharged; M5 (blue) is in progress; M3 (gold) is the linchpin every downstream milestone waits on.</figcaption>
 </figure>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -268,7 +277,7 @@ The same graph, precise (D2 source)
 <tr class="odd">
 <td>Nonatomic prescribed-mass splitting (Sierpiński)</td>
 <td>absent (only an interval-<em>average</em> IVT)</td>
-<td><strong>build</strong> on <code>NoAtoms</code></td>
+<td><strong><span class="badge ok">done</span></strong> – built on <code>NoAtoms</code> + IVT (M8a)</td>
 </tr>
 <tr class="even">
 <td>Optimal transport / Wasserstein / Kantorovich</td>
@@ -283,7 +292,7 @@ The same graph, precise (D2 source)
 <tr class="even">
 <td>Geodesic convexity on the sphere</td>
 <td>absent (<code>Sphere</code>, Riemannian metric exist)</td>
-<td><strong>build</strong></td>
+<td><strong><span class="badge partial">in progress</span></strong> – foundation + hull characterization built (M5)</td>
 </tr>
 <tr class="odd">
 <td>Measurable selection (Kuratowski–Ryll-Nardzewski)</td>
@@ -304,25 +313,25 @@ The same graph, precise (D2 source)
 <ul>
 <li><strong>LaSalle / Lyapunov (M6)</strong> – a complete Coq proof (Cohen–Rouhling, ITP 2017, <a href="https://github.com/drouhling/LaSalle"><code>drouhling/LaSalle</code></a>) is a proof-structure blueprint, and <a href="https://github.com/mcdoll/DynamicalSystems"><code>mcdoll/DynamicalSystems</code></a> (Apache-2.0) ships Lean <code>LaSalle.lean</code> / <code>Lyapunov.lean</code> plus Carathéodory ODE extensions to vendor.</li>
 <li><strong>Optimal transport (M2)</strong> – absent in <em>every</em> assistant, so genuinely from scratch; but once a coupling-based <span class="math inline">\(W_2\)</span> exists, the bound the paper needs is a one-liner (the pair map is an admissible coupling; Santambrogio, <em>Optimal Transport for Applied Mathematicians</em>, Ch. 5).</li>
-<li><strong>Sierpiński splitting (M8a)</strong> – absent everywhere; mirror the explicit exhaustion argument in Fremlin, <em>Measure Theory</em> Vol. 2, §215D.</li>
-<li><strong>Geodesic convexity (M5)</strong> – Mathlib’s Riemannian-geometry substrate is landing in open PRs; build on it as it arrives rather than duplicating it.</li>
+<li><strong>Sierpiński splitting (M8a)</strong> – absent everywhere; <strong>built</strong> (<span class="badge ok">done</span>) via the cumulative-distribution + intermediate-value-theorem route rather than Fremlin’s exhaustion argument, which turned out cleaner in Mathlib.</li>
+<li><strong>Geodesic convexity (M5)</strong> – Mathlib’s Riemannian-geometry substrate is landing in open PRs, but geodesic convexity on the sphere is absent; <strong>built in-repo</strong> the elementary way (normalized great-circle chords, pure inner products), the foundation now machine-checked (<span class="badge partial">in progress</span>).</li>
 </ul>
 <p>A caveat kept in mind: several “0 <code>sorry</code>” AI-generated Lean repos for LaSalle/Lyapunov exist, but such artifacts frequently prove weakened statements – so any reuse is gated on a <code>#print axioms</code> check and a statement-faithfulness review, the same discipline this project applies to its own claims.</p>
 </section>
-<section id="the-first-target-m8a" class="level2">
-<h2 class="anchored" data-anchor-id="the-first-target-m8a">The first target: M8a</h2>
-<p>The chosen first slice is the smallest self-contained win: discharge <code>exists_atomless_partition</code> (the disjoint, prescribed-mass decomposition behind Proposition 2.2) by building the nonatomic splitting theorem. It needs no optimal-transport or flow prerequisites, which is why it starts the program.</p>
+<section id="the-first-target-m8a-discharged" class="level2">
+<h2 class="anchored" data-anchor-id="the-first-target-m8a-discharged">The first target: M8a — discharged</h2>
+<p>The chosen first slice was the smallest self-contained win: discharge <code>exists_atomless_partition</code> (the disjoint, prescribed-mass decomposition behind Proposition 2.2) by building the nonatomic splitting theorem. It needs no optimal-transport or flow prerequisites, which is why it started the program – and it is now <strong>complete and machine-checked</strong> (see <em>Progress so far</em> above). The pieces are normalized restrictions <code>(αₖ)⁻¹ • μ|_{Aₖ}</code> to a disjoint partition carved by iterating the Sierpiński IVT; that IVT, absent from Mathlib, was built from scratch on <code>NoAtoms</code> + the intermediate value theorem.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-A soundness bug, surfaced while planning
+A soundness bug, surfaced while planning – and fixed
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The axiom as originally stated is <strong>inconsistent</strong>. It demanded a decomposition whose every piece sits in an open hemisphere – but at <span class="math inline">\(M = 1\)</span> that forces the <em>whole</em> measure into a half-space, which no centrally-symmetric atomless measure (a Gaussian; the uniform law on a ball or sphere) satisfies. The fix drops the hemisphere clause from the <em>partition</em> and acquires it dynamically per piece, the way the paper actually does. It is the latest of several fidelity corrections the formalization has forced – the entire point of running the argument through a kernel.</p>
+<p>The axiom as originally stated was <strong>inconsistent</strong>. It demanded a decomposition whose every piece sits in an open hemisphere – but at <span class="math inline">\(M = 1\)</span> that forces the <em>whole</em> measure into a half-space, which no centrally-symmetric atomless measure (a Gaussian; the uniform law on a ball or sphere) satisfies. The fix drops the hemisphere clause from the <em>partition</em> and acquires it dynamically per piece, the way the paper actually does. A second soundness point: the splitting is only true on a <strong>standard Borel space</strong>, not for bare <code>NoAtoms</code> (a countable–cocountable <code>0/1</code> measure is a counterexample) – so the proved theorem carries that hypothesis, which <code>Eucl d</code> satisfies. These are the latest of several fidelity corrections the formalization has forced – the entire point of running the argument through a kernel.</p>
 </div>
 </div>
 </section>
