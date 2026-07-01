@@ -1,6 +1,7 @@
 import Mathlib.MeasureTheory.Measure.Typeclasses.NoAtoms
 import Mathlib.MeasureTheory.Measure.Restrict
 import Mathlib.MeasureTheory.Measure.Dirac
+import Mathlib.MeasureTheory.Constructions.Polish.Basic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Tuple.Basic
 
@@ -16,8 +17,14 @@ the analytic core. We take that IVT as a single, standard, clearly-true **labele
 prescribed-mass disjoint partition here, and the probability-measure decomposition in
 `Statements/MidLevel.lean`.
 
-Discharging the axiom itself (a `NoAtoms`-only proof following Fremlin, *Measure Theory* Vol. 2,
-§215D) is the remaining analytic step.
+The axiom requires a `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. `NoAtoms` (null
+singletons) is the *point-mass* notion and is too weak on its own: on `ℝ` with the
+countable-cocountable σ-algebra and the `0/1` measure, every singleton is null yet no measurable set
+has measure `½`, so the IVT fails. Sierpiński's theorem needs *measure-algebra* atomless-ness (every
+positive set splits), which `NoAtoms` supplies on a standard Borel space (Borel-isomorphic to `ℝ`,
+where an atomless measure has a continuous CDF). `Eucl d` is standard Borel, so the application is
+unaffected. Discharging the axiom itself (a `StandardBorelSpace` + `NoAtoms` proof following Fremlin,
+*Measure Theory* Vol. 2, §215D) is the remaining analytic step.
 -/
 
 namespace MeasureToMeasure.Foundations
@@ -28,17 +35,22 @@ open scoped ENNReal
 variable {X : Type*} [MeasurableSpace X]
 
 /-- AXIOM (Sierpiński's intermediate-value theorem for nonatomic measures, subset form). For a finite
-atomless measure `μ`, a measurable set `E`, and any target `r ≤ μ E`, there is a measurable subset
-`F ⊆ E` with `μ F = r`. The range of `μ` over the measurable subsets of `E` is the full interval
-`[0, μ E]`. A classical theorem (Sierpiński 1922; Fremlin §215D), absent from Mathlib `v4.31.0`. -/
-axiom exists_measurableSet_subset_measure_eq (μ : Measure X) [IsFiniteMeasure μ] [NoAtoms μ]
+atomless measure `μ` on a **standard Borel space**, a measurable set `E`, and any target `r ≤ μ E`,
+there is a measurable subset `F ⊆ E` with `μ F = r`: the range of `μ` over the measurable subsets of
+`E` is the full interval `[0, μ E]`. A classical theorem (Sierpiński 1922; Fremlin §215D), absent from
+Mathlib `v4.31.0`. The `[StandardBorelSpace X]` hypothesis is essential: `NoAtoms` alone is the
+point-mass notion and does not imply the splitting property on a coarse σ-algebra (see the module
+docstring for the countable-cocountable counterexample). -/
+axiom exists_measurableSet_subset_measure_eq (μ : Measure X) [StandardBorelSpace X]
+    [IsFiniteMeasure μ] [NoAtoms μ]
     {E : Set X} (hE : MeasurableSet E) (r : ℝ≥0∞) (hr : r ≤ μ E) :
     ∃ F, MeasurableSet F ∧ F ⊆ E ∧ μ F = r
 
 /-- Within a set `E` of sufficient measure, carve `M` pairwise-disjoint measurable subsets of
 prescribed measures `α k`. Proved by induction on `M` over the Sierpiński IVT axiom: peel off a
 subset of measure `α 0` from `E`, then recurse into `E` minus that subset. -/
-theorem exists_disjoint_subset_measure_eq (μ : Measure X) [IsFiniteMeasure μ] [NoAtoms μ] :
+theorem exists_disjoint_subset_measure_eq (μ : Measure X) [StandardBorelSpace X]
+    [IsFiniteMeasure μ] [NoAtoms μ] :
     ∀ {M : ℕ} (α : Fin M → ℝ≥0∞) {E : Set X}, MeasurableSet E → ∑ k, α k ≤ μ E →
       ∃ A : Fin M → Set X, (∀ k, MeasurableSet (A k)) ∧ (∀ k, A k ⊆ E) ∧
         Pairwise (fun i j => Disjoint (A i) (A j)) ∧ ∀ k, μ (A k) = α k := by
@@ -90,7 +102,8 @@ convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`) and pairwise disjoint 
 `μ = ∑ k, α k • P k`. Each `P k := (α k)⁻¹ • μ.restrict (A k)` is the normalized restriction to the
 piece `A k` of the prescribed-mass partition. This is the true content of `exists_atomless_partition`;
 here it is proved (over the Sierpiński IVT axiom), removing the bespoke partition axiom. -/
-theorem exists_probability_decomposition (μ : Measure X) [IsProbabilityMeasure μ] [NoAtoms μ]
+theorem exists_probability_decomposition (μ : Measure X) [StandardBorelSpace X]
+    [IsProbabilityMeasure μ] [NoAtoms μ]
     {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) (hα0 : ∀ k, α k ≠ 0) :
     ∃ (P : Fin M → Measure X) (S : Fin M → Set X),
       (∀ k, IsProbabilityMeasure (P k)) ∧ μ = ∑ k, α k • P k ∧
