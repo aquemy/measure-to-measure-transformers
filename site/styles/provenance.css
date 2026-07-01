@@ -77,6 +77,7 @@
 .badge.axiom     { background: #fdeccd; color: #92560a; }   /* axiomatised */
 .badge.open      { background: #f3d6d6; color: #962020; }   /* open (sorry) */
 .badge.informal  { background: #e6e6ea; color: #444; }      /* informal */
+.badge.partial   { background: #d0ebff; color: #1856a7; }   /* in progress */
 
 /* GitHub source links under each Lean listing. */
 .lean-src {

@@ -67,3 +67,4 @@
 | 65 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is geodesically convex (M5 hull bridge) | `MeasureToMeasure.Leaves.geodesicConvex_geodesicHull` |
 | 66 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull convexity (M5 bridge); refresh ClaimGraph and site | `ledger` |
 | 67 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is the smallest geodesic-convex set (M5 minimality) | `MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex` |
+| 68 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull minimality (M5); refresh ClaimGraph and site | `ledger` |
