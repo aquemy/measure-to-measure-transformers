@@ -68,3 +68,5 @@
 | 66 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull convexity (M5 bridge); refresh ClaimGraph and site | `ledger` |
 | 67 | 2026-07-01 | `formalize` | formalize(leaves): the geodesic hull is the smallest geodesic-convex set (M5 minimality) | `MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex` |
 | 68 | 2026-07-01 | `docs` | docs(ledger): record geodesic-hull minimality (M5); refresh ClaimGraph and site | `ledger` |
+| 69 | 2026-07-01 | `docs` | docs(site): mark M8a done and M5 in progress on the Beyond Mathlib page + build DAG | `site` |
+| 70 | 2026-07-01 | `formalize` | formalize(leaves): separating-hyperplane criterion for hull disjointness (M5) | `MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated` |

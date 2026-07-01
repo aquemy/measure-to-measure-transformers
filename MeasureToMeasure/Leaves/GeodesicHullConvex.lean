@@ -156,4 +156,43 @@ theorem geodesicHull_subset_of_geodesicConvex {s : Finset (Eucl d)} {C : Set (Eu
   have hmem := normalize_conical_mem hC s hsC t ht hx0
   rwa [← hxt, hxnorm, inv_one, one_smul] at hmem
 
+/-!
+## A separating-hyperplane criterion for hull disjointness
+
+The disentanglement of Section 3.3 needs two clusters' geodesic hulls to be *disjoint*. A clean
+sufficient condition: a single direction `e` that is strictly positive on one generating set and
+strictly negative on the other separates the two hulls (they live in opposite open half-spaces of the
+hyperplane `⟪e, ·⟫ = 0`). This feeds leaf L11 (`barycenter_noncolinear_of_disjoint_hull`).
+-/
+
+/-- Mirror of `inner_pos_of_inConicalSpan`: a nonzero conical point built from generators all strictly
+on the *negative* side of `e` has `⟪e, ·⟫ < 0`. -/
+theorem inner_neg_of_inConicalSpan {s : Finset (Eucl d)} {e x : Eucl d}
+    (hs : ∀ p ∈ s, ⟪e, p⟫ < 0) (hx : inConicalSpan s x) (hx0 : x ≠ 0) : ⟪e, x⟫ < 0 := by
+  have h := inner_pos_of_inConicalSpan (e := -e)
+    (fun p hp => by rw [inner_neg_left]; exact neg_pos.mpr (hs p hp)) hx hx0
+  rwa [inner_neg_left, neg_pos] at h
+
+/-- **Separating-hyperplane criterion for hull disjointness.** If a direction `e` is strictly positive
+on every generator of `s₁` and strictly negative on every generator of `s₂`, then the geodesic hulls of
+`s₁` and `s₂` are disjoint: any common point would have `⟪e, ·⟫` both positive and negative. -/
+theorem geodesicHull_disjoint_of_separated {s₁ s₂ : Finset (Eucl d)} {e : Eucl d}
+    (h₁ : ∀ p ∈ s₁, 0 < ⟪e, p⟫) (h₂ : ∀ q ∈ s₂, ⟪e, q⟫ < 0) :
+    Disjoint (geodesicHull s₁) (geodesicHull s₂) := by
+  rw [Set.disjoint_left]
+  intro x hx₁ hx₂
+  have hxne : x ≠ 0 := by rw [← norm_ne_zero_iff, hx₁.1]; norm_num
+  exact absurd (inner_pos_of_inConicalSpan h₁ hx₁.2 hxne)
+    (not_lt.mpr (inner_neg_of_inConicalSpan h₂ hx₂.2 hxne).le)
+
+/-- **Corollary (feeds L11).** Two finite point sets separated by a hyperplane through the origin have
+non-colinear empirical barycenters (with nonnegative weights and nonzero sums). -/
+theorem barycenter_noncolinear_of_separated {s₁ s₂ : Finset (Eucl d)} {e : Eucl d}
+    {w₁ w₂ : Eucl d → ℝ} (hw₁ : ∀ p ∈ s₁, 0 ≤ w₁ p) (hw₂ : ∀ p ∈ s₂, 0 ≤ w₂ p)
+    (hb0 : (∑ p ∈ s₁, w₁ p • p) ≠ 0) (hc0 : (∑ p ∈ s₂, w₂ p • p) ≠ 0)
+    (h₁ : ∀ p ∈ s₁, 0 < ⟪e, p⟫) (h₂ : ∀ q ∈ s₂, ⟪e, q⟫ < 0) :
+    ¬ SameRay ℝ (∑ p ∈ s₁, w₁ p • p) (∑ p ∈ s₂, w₂ p • p) :=
+  barycenter_noncolinear_of_disjoint_hull hw₁ hw₂ hb0 hc0
+    (geodesicHull_disjoint_of_separated h₁ h₂)
+
 end MeasureToMeasure.Leaves

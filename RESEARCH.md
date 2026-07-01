@@ -324,6 +324,11 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     iterated normalized positive chord that stays in `C`. Companions `geodesicHull_mono`,
     `mem_geodesicHull_self`, `inConicalSpan.mono`. Together with `geodesicConvex_geodesicHull` this
     closes the hull characterization (`hull = cone ∩ sphere = smallest geodesic-convex set`). Kernel-clean.
+  - **Separating-hyperplane criterion for hull disjointness** (`Leaves/GeodesicHullConvex.lean`), M5.
+    `geodesicHull_disjoint_of_separated` — a direction `e` positive on `s₁` and negative on `s₂` separates
+    their hulls (disjoint); `inner_neg_of_inConicalSpan` (mirror); `barycenter_noncolinear_of_separated`
+    composes it with leaf L11 to get non-colinear barycenters from a separating hyperplane. The clean
+    sufficient condition Section 3.3 uses to make two clusters' hulls disjoint. Kernel-clean.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
