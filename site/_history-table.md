@@ -55,3 +55,9 @@
 | 53 | 2026-07-01 | `docs` | docs(ledger): record Proposition 4.1 proved; refresh ClaimGraph and site | `ledger` |
 | 54 | 2026-07-01 | `formalize` | formalize(statements): prove Proposition 2.2 via a probability-measure refactor | `MeasureToMeasure.Statements.prop_2_2` |
 | 55 | 2026-07-01 | `docs` | docs(ledger): record Proposition 2.2 proved; refresh ClaimGraph and site | `ledger` |
+| 56 | 2026-07-01 | `docs` | docs: add "Beyond Mathlib" de-axiomatization roadmap page | -- |
+| 57 | 2026-07-01 | `formalize` | formalize(statements): drop unsound hemisphere clause from exists_atomless_partition; re-thread prop_2_2 | `MeasureToMeasure.Statements.exists_atomless_partition` |
+| 58 | 2026-07-01 | `formalize` | formalize(foundations): prove exists_atomless_partition from Sierpinski IVT (M8a Step 1) | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq` |
+| 59 | 2026-07-01 | `fix` | fix(foundations): require StandardBorelSpace in the Sierpinski IVT axiom (soundness) | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq` |
+| 60 | 2026-07-01 | `formalize` | formalize(foundations): reduce the Sierpinski IVT to the real line via embeddingReal | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |
+| 61 | 2026-07-01 | `formalize` | formalize(foundations): prove the Sierpinski IVT on R, fully discharging M8a | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |

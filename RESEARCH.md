@@ -292,13 +292,14 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     hemisphere packaging the paper states without proof (review finding F2) is machine-checked
     (`Metric.ball_disjoint_ball` from `2r`-separation; Cauchy-Schwarz `‖x - α i‖ < r < 1` forces
     `⟪α i, x⟫ > 1 - r > 0`). The dynamical construction stays in the more-primitive axiom.
-  - `exists_atomless_partition` (atomless prescribed-mass decomposition), **de-axiomatized** (milestone
-    M8a) from the Sierpiński IVT primitive: normalize the restrictions `(αₖ)⁻¹ • μ.restrict(Aₖ)` to a
-    disjoint partition carved by iterating the IVT (`Foundations.exists_disjoint_subset_measure_eq`
-    then `exists_probability_decomposition`). Assumes positive weights (`αₖ ≠ 0`) so each piece is a
-    genuine probability measure. Its `#print axioms` now lists the single measure-theoretic primitive
-    `exists_measurableSet_subset_measure_eq` in place of the old bespoke partition axiom, so `prop_2_2`
-    and `theorem_1_1/1_2` rest on the IVT rather than on a hand-written splitting axiom.
+  - `exists_atomless_partition` (atomless prescribed-mass decomposition), **fully de-axiomatized**
+    (milestone M8a **complete**): normalize the restrictions `(αₖ)⁻¹ • μ.restrict(Aₖ)` to a disjoint
+    partition carved by iterating the now-proved Sierpiński IVT
+    (`Foundations.exists_disjoint_subset_measure_eq` then `exists_probability_decomposition`). Assumes
+    positive weights (`αₖ ≠ 0`) so each piece is a genuine probability measure. Its `#print axioms`
+    now lists **only** `propext`/`Classical.choice`/`Quot.sound` — the bespoke partition axiom *and*
+    the Sierpiński IVT axiom beneath it are both gone, so `prop_2_2` no longer rests on any
+    measure-theoretic axiom.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
@@ -323,19 +324,20 @@ Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
   `exists_disentangling_balls` (the geometric output of the Section 3.3 disentanglement; `prop_3_1`
   is *proved* from it) and `exists_parked_schedule` (Appendix B parking / simultaneous action on a
   disjoint-support family).
-- **Measure-theoretic primitive** (`Foundations/AtomlessSplitting.lean`):
-  `exists_measurableSet_subset_measure_eq_real` — Sierpiński's IVT for a finite atomless measure **on
-  `ℝ`** (subset form: a measurable subset of any value `r ≤ μ E`). This ℝ-case is now the *only* axiom
-  under the atomless splitting. Everything above it is machine-checked: the standard-Borel case
+- **Measure-theoretic primitive — DISCHARGED (no longer an axiom).**
+  Sierpiński's IVT is now fully machine-checked in `Foundations/AtomlessSplitting.lean`. The ℝ-case
+  `exists_measurableSet_subset_measure_eq_real` (a measurable subset of `E` of any prescribed value
+  `r ≤ μ E`) is *proved* directly: `t ↦ (μ(E ∩ Iic t)).toReal` is continuous because its increment over
+  `[0,t]` is the Bochner primitive `∫₀ᵗ 𝟙_E dμ` (`intervalIntegral.continuous_primitive`, valid
+  precisely because `μ` has `NoAtoms`), so it runs from `0` (`t → −∞`) to `(μ E).toReal` (`t → +∞`) and
+  the intermediate value theorem attains `r.toReal`. The standard-Borel case
   `exists_measurableSet_subset_measure_eq` is *proved* from it by pushing `μ` forward along the
-  measurable embedding `embeddingReal` into `ℝ` (injective ⇒ the pushforward stays finite and atomless),
-  solving there, and pulling the subset back; and the prescribed-mass partition
+  measurable embedding `embeddingReal` into `ℝ` (injective ⇒ pushforward stays finite and atomless),
+  solving there, and pulling the subset back. The prescribed-mass partition
   (`exists_disjoint_subset_measure_eq`) + probability decomposition (`exists_probability_decomposition`,
-  hence `exists_atomless_partition`) sit above that (milestone M8a — the old bespoke
-  `exists_atomless_partition` axiom was removed). Remaining to fully discharge M8a: prove the ℝ-IVT
-  itself (continuity of `t ↦ μ(E ∩ Iic t)` from `NoAtoms` + the intermediate value theorem). The
-  standard-Borel reduction is also what supplies the soundness the bare `NoAtoms` statement lacks — see
-  the fidelity corrections.
+  hence `exists_atomless_partition`) sit above that. `#print axioms` on all of them lists only the three
+  core logical axioms. **Milestone M8a is complete**; the standard-Borel hypothesis also supplies the
+  soundness the bare `NoAtoms` statement lacks — see the fidelity corrections.
 
 ### Fidelity corrections made while closing
 
@@ -364,12 +366,13 @@ Several type-correct stubs were loose transcriptions; axiomatizing them as writt
   prescribed-mass disjoint decomposition; `prop_2_2` now acquires the hemisphere per piece dynamically
   (rotate into the orthant via `lemma_3_2`; the orthant lies in a basis direction's hemisphere),
   matching the paper's actual argument, and gains a `0 < d` hypothesis to name that basis direction.
-- `exists_measurableSet_subset_measure_eq` (the Sierpiński IVT primitive, added with M8a): carries a
-  `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. Stated with `NoAtoms` alone the axiom is
-  *false* — on `ℝ` with the countable-cocountable σ-algebra and the `0/1` measure, every singleton is
-  null (`NoAtoms` holds) yet no measurable set has measure `½`, so no subset of prescribed measure
-  exists. `NoAtoms` is the point-mass notion; Sierpiński needs measure-algebra atomless-ness (every
-  positive set splits), which `NoAtoms` supplies on a standard Borel space (Borel-isomorphic to `ℝ`,
-  continuous CDF). `Eucl d` is standard Borel, so `exists_atomless_partition` and `prop_2_2` are
-  unaffected — but the axiom is now sound rather than vacuously inconsistent. (Caught by adversarially
-  re-reading the just-introduced axiom, the same discipline applied to the paper's own lemmas.)
+- `exists_measurableSet_subset_measure_eq` (the Sierpiński IVT primitive, now a proved theorem):
+  carries a `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. Stated with `NoAtoms` alone the
+  statement is *false* — on `ℝ` with the countable-cocountable σ-algebra and the `0/1` measure, every
+  singleton is null (`NoAtoms` holds) yet no measurable set has measure `½`, so no subset of prescribed
+  measure exists. `NoAtoms` is the point-mass notion; Sierpiński needs measure-algebra atomless-ness
+  (every positive set splits), which `NoAtoms` supplies on a standard Borel space (Borel-isomorphic to
+  `ℝ`, continuous CDF). `Eucl d` is standard Borel, so `exists_atomless_partition` and `prop_2_2` are
+  unaffected. The correct hypothesis was fixed *before* the theorem was proved (caught by adversarially
+  re-reading the then-axiom, the same discipline applied to the paper's own lemmas); the proof then goes
+  through exactly the standard-Borel reduction that the soundness analysis predicted.
