@@ -90,3 +90,7 @@
 | 88 | 2026-07-02 | `docs` | docs(ledger): record the W2 map-coupling bound (M2); refresh ClaimGraph and site | `ledger` |
 | 89 | 2026-07-02 | `formalize` | formalize(axioms): discharge the W1 Kantorovich-Rubinstein axiom; Markov bound machine-checked (M2) | `MeasureToMeasure.Axioms.W1_ge_of_lipschitz` |
 | 90 | 2026-07-02 | `docs` | docs(ledger): record the W1 axiom discharge (M2); refresh ClaimGraph and site | `ledger` |
+| 91 | 2026-07-02 | `docs` | docs(site): remove the 5-10 person-years scale estimate from the Beyond Mathlib page | `site` |
+| 92 | 2026-07-02 | `meta` | meta(ci): add kernel-honesty drift guard (regenerate-and-compare) | `ci` |
+| 93 | 2026-07-02 | `port` | port(formathlib): stage the spherical-geometry leaves as Mathlib-ready generalizations | `InnerProductGeometry.tangentialProjector` |
+| 94 | 2026-07-02 | `docs` | docs(ledger): restructure RESEARCH.md into the v0.8.0 math-research ledger | `ledger` |
