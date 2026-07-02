@@ -1,11 +1,128 @@
-# Research ledger
+# Research ledger — Measure-to-measure interpolation using Transformers
 
-Status of the formalization and validation of Geshkovski-Rigollet-Ruiz-Balet,
-*Measure-to-measure interpolation using Transformers* (arXiv:2411.04551v3).
+> Human-readable companion to `claims.toml` and the ClaimGraph, for the formalization of
+> Geshkovski-Rigollet-Ruiz-Balet, *Measure-to-measure interpolation using Transformers*
+> (arXiv:2411.04551v3). This file records *where we are*; `blueprint/src/content.tex` + the CKC
+> history + `bin/axiom-report` (via `scripts/audit.sh`) are the source of truth for *what is proved*.
+> The dashboard below follows the `lean-math:math-research` ledger template; the detailed working
+> record is preserved verbatim in the appendix.
 
-This file is the human-readable companion to `claims.toml` and the ClaimGraph. It records the
-proof review, the formalization status of each node, and the precise boundary between what is
-kernel-checked and what rests on axioms.
+## Snapshot
+- **Entry point:** existing paper (arXiv:2411.04551v3).
+- **Current phase:** J mathlib-ready / ongoing axiom discharge (M2 optimal transport, M3 mean-field
+  flow). Every paper statement is stated in Lean; the deep analytic layer is honestly axiomatized and
+  being discharged milestone by milestone (M8a and the `W₁` KR bound are done).
+- **Last updated:** 2026-07-02.
+
+## Conjecture / claims
+- **Main claim:** the paper's Theorems 1.1 / 1.2 — a Transformer (the measure-valued flow of the
+  layer-normalized attention dynamics) can interpolate an absolutely continuous measure to any
+  discrete/target measure to arbitrary `W₂` accuracy with a controlled number of switches.
+- **Sub-claims / lemmas:** Props 2.1, 2.2, 3.1, 4.1, 4.2; Lemmas 3.2-3.4, 5.1, 5.2, 5.4, B.1, B.2;
+  Claim 2 (Markov bound); the self-contained leaf cores L1-L11.
+- **Success criteria:** every statement of the paper stated type-correctly in Lean with **zero
+  `sorry`** and an honest per-node status; the irreducible analytic facts axiomatized at the *most
+  primitive faithful point* and clearly labeled; axioms discharged opportunistically where Mathlib
+  permits (done: M8a atomless splitting, the `W₁` Kantorovich-Rubinstein bound).
+
+## Definitional decisions (locked at Gate D)
+| Object | Chosen Mathlib representation | Bridge obligation | Status |
+| --- | --- | --- | --- |
+| Ambient space | `Eucl d := EuclideanSpace ℝ (Fin d)` | defeq / none | built |
+| Unit sphere | `sphere d := Metric.sphere (0 : Eucl d) 1` | defeq (`‖x‖ = 1`) | built |
+| Tangential projector | in-repo `tangentialProjector x v = v - ⟪x,v⟫•x` | relates to `orthogonalProjection {x}ᗮ`; general form staged in `ForMathlib/` | built |
+| Geodesic distance | `arccos⟪x,y⟫`; on the sphere **is** `InnerProductGeometry.angle` | bridge `angle_eq_arccos_inner_of_norm_eq_one` (`ForMathlib/`) | built |
+| Barycenter | `∫ x ∂μ` (Bochner) | `Convex.integral_mem` | built |
+| `W₁` / `W₂` | built from `Measure.prod` + marginals (`Foundations.W1`, `W2sq`); `Axioms.W1` a def, `Axioms.W2` opaque | `W₁` discharged (KR bound proved); `W₂` still an opaque axiom | partial |
+| Continuity-equation flow | opaque `flowMap` (Axioms); `measureFlow := μ.map (flowMap θ t)` | no Mathlib continuity-equation solver | axiom |
+| Atomless prescribed-mass split | Sierpiński IVT via CDF-primitive + IVT (`Foundations`) | discharged (M8a) | built |
+
+## Gate decisions (append-only log)
+| Date | Gate | Decision | Why |
+| --- | --- | --- | --- |
+| 2026-06 | A: pursue? | yes | formalize a published, self-contained result with a clear axiom boundary |
+| 2026-06 | B: novel? | known (formalize) | the mathematics is published; the Lean formalization is the contribution |
+| 2026-06 | C: sound? | formalize, one fix-first | adversarial review found F1 (sign typo, load-bearing) and F2 (rigor gap); both handled |
+| 2026-06 | D: build vs axiomatize | per-prereq | OT / continuity-equation flow / geodesic convexity / LaSalle absent in Mathlib -> axiomatize at the primitive point; projector / ODE identities / pigeonhole -> build |
+| 2026-06-19 | F: validate | yes | seven seeded experiments E1-E7 corroborate the quantitative content |
+| 2026-06-30 | discharge | M8a done | Sierpiński IVT + atomless splitting fully machine-checked |
+| 2026-07-01 | discharge | `W₁` KR bound done | Markov bound (L8) flipped to machine-checked (#27) |
+| 2026-07-02 | I: site & badges honest? | yes | `scripts/audit.sh` (regenerate-and-compare) passes; one stale badge (L8) fixed (#29) |
+| 2026-07-02 | J: mathlib-ready | staged | spherical-geometry cluster staged in `ForMathlib/`, `#print axioms`-clean (#30) |
+
+## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
+Of the 30 blueprint nodes: **13 clean** (machine-checked), **17 axiom** (rest on a labeled axiom).
+No node is `sorryAx` (zero `sorry` repo-wide). Representative:
+
+| Node (`\lean{}` name) | Status | Notes |
+| --- | --- | --- |
+| `MeasureToMeasure.Leaves.*` (L1-L6, L8, L9, L10, L11, L11′) | clean | the self-contained leaf cores; L8 `markov_bound` machine-checked since the `W₁` discharge |
+| `MeasureToMeasure.Axioms.W2` | axiom | opaque `W₂` (Mathlib has no OT) |
+| `MeasureToMeasure.Axioms.measureFlow` / `flowMap` | axiom | continuity-equation flow (no Mathlib solver) |
+| `MeasureToMeasure.Leaves.lemma_5_2` (L7) | axiom | rests on `W2` / `W2_map_le_L2` |
+| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_2,3_3,3_4,prop_4_2,lemma_5_1,5_4,lemma_B_2}` | axiom | placeholder mid-level axioms |
+| `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_2_2,prop_3_1,prop_4_1,lemma_B_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
+
+**Coverage gap (open item).** `claimgraph reconcile` reports ~73 machine-checked nodes recorded in the
+CKC history but *absent from* `blueprint/src/content.tex` — the whole `Foundations/Wasserstein` (W1/OT)
+layer, `SphereFlow`, `GeodesicHull*`, and the atomless-partition machinery. These are honest (the audit
+validity gate passes), but the blueprint is a stale curated subset. See *Open questions*.
+
+## Experiment campaign (Phase F; `lean-math:numerical-validation`)
+Seven seeded experiments (`experiments/E*`, seed 0), each cross-linked to the claim it tests. Verdicts
+are seed-honest and never upgrade a node's kernel status. Detail (incl. the E6 strengthening) in the
+appendix *Validation campaign*.
+
+| Claim | Validates | After verdict | Figure |
+| --- | --- | --- | --- |
+| E1 mass transport | L2, L9, B.2, B.1 | PASS (retention 1.0 > `(1-ε)^K`) | per-stage retention vs floor |
+| E2 clustering | Prop 2.1 | PASS (diam→0, `T(ε)~log 1/ε`) | contraction + rate |
+| E3 disentangle | Prop 3.1, L6, L11 | PASS (min cross-dist 0.08→π) | separation over time |
+| E4 matching | Prop 4.2/4.1, L3 | PASS (active→target, parked fixed) | selective motion |
+| E5 Lyapunov | L5 | PASS (`E` nonincreasing, 200 trials) | `E(t)` ensemble |
+| E6 end-to-end | Thm 1.1/1.2 | PASS (three phases distinct) | three-phase transport |
+| E7 linear impossible | Thm 1.1 (necessity) | PASS (linear gap 0, attention gap 0.38) | obstruction vs escape |
+
+## Publish state (Phase I; `lean-math:publish-site`)
+- **Site built:** yes (`site/build.py` / `bin/build-site` -> `docs/`; runs `scripts/audit.sh` fail-fast).
+- **Badges honest:** yes — `scripts/audit.sh` (axiom-report + `claimgraph audit`/`reconcile`) passes; no
+  page badges a node above its `#print axioms` status.
+- **Deployed:** yes (classic Pages on `main /docs`): http://quemy.info/measure-to-measure-transformers/
+
+## Mathlib-ready candidates (Phase J; `lean-math:mathlib-ready`)
+Staged in `ForMathlib/` (generalized to a real inner product space, `#print axioms`-clean, lint-clean,
+Apache-headed). Preparation only — nothing is contributed to Mathlib. See `ForMathlib/README.md`.
+
+| Node | General-purpose? | Staged in `ForMathlib/`? | Readiness |
+| --- | --- | --- | --- |
+| `InnerProductGeometry.tangentialProjector` (+ identities) | yes | yes (`TangentialProjector.lean`) | ready |
+| `InnerProductGeometry.{angle_eq_arccos_inner,cos_angle,inner_le_one}_of_norm_eq_one` | yes | yes (`UnitSphereGeodesic.lean`) | ready |
+| `InnerProductGeometry.inner_lt_cos_of_pi_div_two_le_angle` | yes | yes (`SeparatingHyperplane.lean`) | ready |
+| `barycenter_noncolinear_of_disjoint_hull` (+ `_general`) | partial | no | evaluated; special-purpose + Bochner dep, left in-project |
+
+## Citations to carry into the write-up
+- Geshkovski, Rigollet, Ruiz-Balet, *Measure-to-measure interpolation using Transformers*,
+  arXiv:2411.04551v3 (the formalized source).
+- LaSalle invariance principle; Hartman-Grobman ([Shu13]) — the cited dynamical-systems machinery
+  behind Prop 2.1's clustering/rate (axiom layer).
+- Santambrogio, *Optimal Transport for Applied Mathematicians* — the OT background for M2.
+
+## Open questions / next step
+- **Blueprint refresh (coverage gap):** add the ~73 machine-checked foundation nodes (`Foundations/
+  Wasserstein`, `SphereFlow`, `GeodesicHull*`, atomless partition) to `blueprint/src/content.tex` so
+  the blueprint reflects the proved content, not just the original curated subset.
+- **`W₂` axiom discharge:** thread integrability through the mid-level assembly, add the `W₂` triangle
+  (Minkowski/gluing) and convexity, and take `√` of `W2sq` to recover `W₂`.
+- **M3 mean-field flow:** discharge `flowMap` (global existence + McKean-Vlasov well-posedness), gated
+  on completing M2.
+
+---
+
+## Appendix: detailed working record
+
+The sections below are the append-only detailed record (proof review, coverage analysis, per-node
+closing notes, axiom surface, fidelity corrections), preserved verbatim; the dashboard above
+summarizes and refreshes from them.
 
 ## Rough correctness review (Phase 1, initial pass)
 
