@@ -40,6 +40,18 @@ claimgraph() {
 fail=0
 note() { printf '\n== %s ==\n' "$*"; }
 
+# --- 0. build gate ------------------------------------------------------------------------------
+# The honesty tools below read `.olean`s via `#print axioms`. If those oleans are stale (or the tree
+# does not compile), the checks silently certify whatever the last good build left behind -- exactly
+# the false-green that let a W2/Axioms name collision break `main` unnoticed (PR #36). So force a real
+# build first and fail loudly on any error. `lake build` is incremental: a no-op when nothing changed.
+note "lake build (regenerate oleans; a broken/stale build must fail here, not false-green below)"
+if ! lake build; then
+  echo "audit: FAIL -- lake build failed; the kernel-honesty checks below read oleans, so a broken" >&2
+  echo "       or stale build must fail the audit rather than certify stale oleans (see PR #36)." >&2
+  exit 1
+fi
+
 # --- 1. axiom-report ----------------------------------------------------------------------------
 note "axiom-report (#print axioms per blueprint node)"
 if [ ! -x "$AXIOM_REPORT" ]; then
