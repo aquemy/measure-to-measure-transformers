@@ -274,4 +274,53 @@ theorem Block.continuous_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
 theorem Block.measurable_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
     Measurable (b.blockFlow t) := (b.continuous_blockFlow ht).measurable
 
+/-!
+## The schedule flow map
+
+`flowMap θ t` runs each block of the schedule `θ` for time `t`, composed in order: it is the fold of
+the per-block point flows. Composition of schedules is concatenation
+(`flowMap (θ₁ ++ θ₂) t = flowMap θ₂ t ∘ flowMap θ₁ t`), the identity schedule is the empty list, and
+bijectivity / measurability / sphere invariance all descend by list induction from the single-block
+facts.
+-/
+
+/-- The **schedule flow map**: fold the per-block point flows over the block list (earlier blocks
+applied first). -/
+noncomputable def flowMap (θ : Params d) (t : ℝ) : Eucl d → Eucl d :=
+  θ.foldr (fun b acc => acc ∘ b.blockFlow t) id
+
+@[simp] theorem flowMap_nil (t : ℝ) : flowMap ([] : Params d) t = id := rfl
+
+theorem flowMap_cons (b : Block d) (θ : Params d) (t : ℝ) :
+    flowMap (b :: θ) t = flowMap θ t ∘ b.blockFlow t := rfl
+
+/-- **Composition = concatenation.** `flowMap (θ₁ ++ θ₂) t = flowMap θ₂ t ∘ flowMap θ₁ t`. -/
+theorem flowMap_append (θ₁ θ₂ : Params d) (t : ℝ) :
+    flowMap (θ₁ ++ θ₂) t = flowMap θ₂ t ∘ flowMap θ₁ t := by
+  induction θ₁ with
+  | nil => rw [List.nil_append, flowMap_nil, Function.comp_id]
+  | cons b θ ih => rw [List.cons_append, flowMap_cons, flowMap_cons, ih]; rfl
+
+/-- The schedule flow map is **bijective** (a composition of bijective point flows). -/
+theorem flowMap_bijective (θ : Params d) (t : ℝ) : Function.Bijective (flowMap θ t) := by
+  induction θ with
+  | nil => simpa using Function.bijective_id
+  | cons b θ ih => rw [flowMap_cons]; exact ih.comp (b.blockFlow_bijective t)
+
+/-- The schedule flow map is **measurable** (a composition of measurable point flows), for `t ≥ 0`. -/
+theorem measurable_flowMap (θ : Params d) {t : ℝ} (ht : 0 ≤ t) : Measurable (flowMap θ t) := by
+  induction θ with
+  | nil => simpa using measurable_id
+  | cons b θ ih => rw [flowMap_cons]; exact ih.comp (b.measurable_blockFlow ht)
+
+/-- The schedule flow map **preserves the sphere** (each block does), for `t ≥ 0`. -/
+theorem flowMap_mem_sphere (θ : Params d) {t : ℝ} (ht : 0 ≤ t) :
+    ∀ {x : Eucl d}, x ∈ sphere d → flowMap θ t x ∈ sphere d := by
+  induction θ with
+  | nil => intro x hx; simpa using hx
+  | cons b θ ih =>
+    intro x hx
+    rw [flowMap_cons, Function.comp_apply]
+    exact ih (b.blockFlow_mem_sphere hx ht)
+
 end MeasureToMeasure
