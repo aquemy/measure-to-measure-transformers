@@ -51,7 +51,8 @@ theorem distBump_eq_outside {x₀ : Eucl d} {η₃ : ℝ} {x : Eucl d} (hx : η�
 status `math.axiomatised`. -/
 theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 < η₃)
-    (hW1 : W1 μ (Measure.dirac x₀) ≤ C * η₂) :
+    (hfin : MeasureToMeasure.W1 μ (Measure.dirac x₀) ≠ ⊤)
+    (hW1 : MeasureToMeasure.Axioms.W1 μ (Measure.dirac x₀) ≤ C * η₂) :
     μ.real {x | η₃ ≤ dist x x₀} ≤ C * η₂ / η₃ := by
   set s : Set (Eucl d) := {x | η₃ ≤ dist x x₀} with hs
   have hcont : Continuous (fun x : Eucl d => dist x x₀) := by fun_prop
@@ -78,8 +79,16 @@ theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
   have hdirac : ∫ x, distBump x₀ η₃ x ∂(Measure.dirac x₀) = 0 := by
     rw [integral_dirac]
     simp [distBump, min_eq_right hη₃.le]
-  -- KR duality (axiom): ∫ bump dμ - ∫ bump dδ ≤ W₁
+  -- the bump is integrable against the Dirac (finite measure, bounded function)
+  have hbump_int_dirac : Integrable (distBump x₀ η₃) (Measure.dirac x₀) := by
+    refine Integrable.mono' (integrable_const η₃)
+      (distBump_lipschitz x₀ η₃).continuous.aestronglyMeasurable ?_
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_of_nonneg (distBump_nonneg hη₃.le x)]
+    exact min_le_left _ _
+  -- KR duality (now a theorem): ∫ bump dμ - ∫ bump dδ ≤ W₁
   have hdual := W1_ge_of_lipschitz μ (Measure.dirac x₀) (distBump x₀ η₃) (distBump_lipschitz x₀ η₃)
+    hbump_int hbump_int_dirac hfin
   rw [hdirac, sub_zero] at hdual
   -- assemble: η₃ · μ(s) ≤ ∫ bump dμ ≤ W₁ ≤ C η₂
   have hmono : μ.real s * η₃ ≤ ∫ x, distBump x₀ η₃ x ∂μ := by

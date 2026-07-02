@@ -226,9 +226,9 @@ paper     = "Lem 5.2, p.24"
 created   = "2026-06-30"
 
 [claims.leaf-markov-bound]
-kind      = "conjecture"
-statement = "L8: if W2(mu, delta_{x0}) <= eta2 then 1 - mu(B(x0, eta3)) <= C eta2 / eta3, via a Lipschitz bump and W1 duality (Claim 2)."
-status    = "math.axiomatised"
+kind      = "theorem"
+statement = "L8 (Claim 2, Markov bound): if W1(mu, delta_{x0}) <= C*eta2 (and W1 is finite) then mu{x : eta3 <= dist x x0} <= C*eta2/eta3, i.e. 1 - mu(B(x0,eta3)) <= C eta2 / eta3. NOW MACHINE-CHECKED. The Kantorovich-Rubinstein duality step (formerly the axiom W1_ge_of_lipschitz) is now a proved theorem, discharged from the from-scratch optimal-transport development (Foundations/Wasserstein: ofReal_integral_sub_le_W1). markov_bound assembles it: the truncated-distance bump f = min(eta3, dist . x0) is 1-Lipschitz, vanishes at x0, integrable (bounded on a finite measure), and dominates eta3 * indicator{dist >= eta3}, whence eta3 * mu(s) <= integral f dmu = integral f dmu - f(x0) <= W1 <= C eta2. The discharge adds the honest hypotheses the earlier axiom elided: integrability of the bump (proved in-lemma) and finiteness of W1 mu (delta x0) (valid for the compactly-supported measures on the sphere the paper uses). #print axioms clean (propext/Classical.choice/Quot.sound); no longer rests on any W1 axiom."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Leaves.markov_bound"
 paper     = "Claim 2, p.39"
 created   = "2026-06-30"
