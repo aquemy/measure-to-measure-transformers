@@ -373,4 +373,57 @@ theorem flowMap_reverseNeg_comp (θ : Params d) (t : ℝ) :
       Function.comp_apply, id_eq]
     rw [hih, b.blockFlow_neg, b.blockFlow_neg_comp]
 
+/-!
+## Lipschitz for every time, and the parked identity
+
+Two facts the axiom layer's interface states for **all** `t` (not just `t ≥ 0`), which the flip needs
+to discharge without threading a `0 ≤ t` hypothesis through every measure-level consumer:
+
+* **Lipschitz at every time.** For `t ≤ 0` the point flow is the *forward* flow of the reversed block
+  `b.neg` for time `-t ≥ 0` (`blockFlow_neg`), which the `t ≥ 0` estimate already covers -- so the
+  flow is Lipschitz (hence measurable) at every real time.
+* **The parked identity.** Where every block's field vanishes at `x`, the integral curve through `x`
+  is constant (`integralCurve_eq_of_field_zero`), so the whole schedule fixes `x`.
+-/
+
+/-- The point flow is Lipschitz at **every** time `t`: for `t ≤ 0` it is the reversed block's forward
+flow for time `-t ≥ 0`, which the `t ≥ 0` Grönwall estimate covers. -/
+theorem Block.exists_lipschitzWith_blockFlow (b : Block d) (t : ℝ) :
+    ∃ K : ℝ≥0, LipschitzWith K (b.blockFlow t) := by
+  rcases le_total 0 t with ht | ht
+  · exact ⟨_, b.lipschitzWith_blockFlow ht⟩
+  · have hfun : b.blockFlow t = b.neg.blockFlow (-t) := by
+      funext x; rw [b.blockFlow_neg (-t) x, neg_neg]
+    rw [hfun]
+    exact ⟨_, b.neg.lipschitzWith_blockFlow (by linarith)⟩
+
+/-- The schedule flow map is Lipschitz at **every** time (a composition of per-block Lipschitz flows).
+This is the all-`t` strengthening of `measurable_flowMap` the axiom interface exposes. -/
+theorem exists_lipschitzWith_flowMap (θ : Params d) (t : ℝ) :
+    ∃ K : ℝ≥0, LipschitzWith K (flowMap θ t) := by
+  induction θ with
+  | nil => exact ⟨1, by rw [flowMap_nil]; exact LipschitzWith.id⟩
+  | cons b θ ih =>
+    obtain ⟨K, hK⟩ := ih
+    obtain ⟨L, hL⟩ := b.exists_lipschitzWith_blockFlow t
+    rw [flowMap_cons]
+    exact ⟨K * L, hK.comp hL⟩
+
+/-- **Fixed point of a block.** If the block's field vanishes at `x`, the integral curve through `x`
+is constant, so `x` is a fixed point of the point flow at every time. -/
+theorem Block.blockFlow_fixed (b : Block d) {x : Eucl d} (hx : b.field x = 0) (t : ℝ) :
+    b.blockFlow t x = x :=
+  integralCurve_eq_of_field_zero b.lipschitz (b.blockCurve_isIntegralCurve x) hx
+    (b.blockCurve_zero x) t
+
+/-- **The parked identity.** If *every* block of the schedule has vanishing field at `x`, the whole
+flow map fixes `x` -- the point is parked, the velocity switched off. -/
+theorem flowMap_fixed_of_forall_field_zero (θ : Params d) (t : ℝ) {x : Eucl d}
+    (h : ∀ b ∈ θ, b.field x = 0) : flowMap θ t x = x := by
+  induction θ with
+  | nil => rfl
+  | cons b θ ih =>
+    rw [flowMap_cons, Function.comp_apply, b.blockFlow_fixed (h b (by simp)) t]
+    exact ih (fun c hc => h c (by simp [hc]))
+
 end MeasureToMeasure

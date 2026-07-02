@@ -1,19 +1,20 @@
 import MeasureToMeasure.Axioms.ContinuityEquation
 
 /-!
-# Labeled axioms: the structural algebra of the flow
+# The structural algebra of the flow (formerly axiomatised, now discharged)
 
-`ContinuityEquation.lean` introduces the flow map `Φ_θ^t` (`flowMap`), its measure action
-(`measureFlow`), the switch count, and the parking property. To *assemble* the paper's construction
-`Φ_fin = (Φ_θ₁)⁻¹ ∘ Φ_θ₂ ∘ Φ_θ₁` out of the mid-level lemmas, we additionally need the algebraic
-structure of piecewise-constant schedules: sequential composition, its effect on the switch count,
-time-reversal, and the pushforward identity linking the point flow to the measure flow.
+`ContinuityEquation.lean` provides the concrete flow map `Φ_θ^t` (`flowMap`, the fold of the per-block
+characteristic flows), its measure action (`measureFlow`), the switch count, and the parking property.
+To *assemble* the paper's construction `Φ_fin = (Φ_θ₁)⁻¹ ∘ Φ_θ₂ ∘ Φ_θ₁` out of the mid-level lemmas,
+we additionally need the algebraic structure of piecewise-constant schedules: sequential composition,
+its effect on the switch count, time-reversal, and the pushforward identity linking the point flow to
+the measure flow.
 
-Mathlib has no continuity-equation theory, so these are taken as **labeled axioms** (status
-`math.axiomatised`); each encodes a standard well-posedness / semigroup fact. They are *structural*
-(they describe how schedules combine), never a mathematical conclusion of the paper: the headline
-theorems are still *proved* by assembling the mid-level results over this algebra, so the kernel
-verifies the paper's logical skeleton modulo this documented surface.
+These are now **theorems**, discharged against `Foundations/FlowMap.lean`: composition is `List.append`
+(`flowMap_append`), the identity schedule is `[]` (`flowMap_nil`), and time-reversal is
+reverse-**and**-negate `(θ.map Block.neg).reverse` (`flowMap_reverseNeg_comp`). The last point is a
+genuine fidelity correction: reversing the block *order* alone would give flow-for-`2t`, not the
+identity, so the naive `inv := List.reverse` axiom was unsound for a real forward flow.
 -/
 
 namespace MeasureToMeasure.Axioms
@@ -33,9 +34,9 @@ theorem flowMap_measurable (θ : Params d) (t : ℝ) : Measurable (flowMap θ t)
 (`flowMap_id`) and it costs no switches. The unit for `comp`. -/
 def idParams (d : ℕ) : Params d := ([] : List (Block d))
 
-/-- AXIOM (point level): the identity schedule's flow map is the identity (it runs no velocity). More
-primitive than the former measure-level `measureFlow_id`, which is now derived. -/
-axiom flowMap_id (t : ℝ) : flowMap (idParams d) t = id
+/-- The identity schedule's flow map is the identity (it runs no velocity): the empty list folds to
+`id`. Discharged from `MeasureToMeasure.flowMap_nil`. -/
+theorem flowMap_id (t : ℝ) : flowMap (idParams d) t = id := MeasureToMeasure.flowMap_nil t
 
 /-- The identity schedule leaves every measure unchanged. Derived from `flowMap_id` and
 `Measure.map_id` now that `measureFlow` is the pushforward of `flowMap`. -/
@@ -50,10 +51,11 @@ theorem switches_id : switches (idParams d) = 0 := rfl
 concatenation of the two block programmes. Encodes the depth-stacking of two Transformer blocks. -/
 def comp (θ₁ θ₂ : Params d) : Params d := θ₁ ++ θ₂
 
-/-- AXIOM (composition on points). The composite schedule's flow map is the composition of the two
-flow maps: the characteristics of `θ₁` followed by those of `θ₂`. -/
-axiom flowMap_comp (θ₁ θ₂ : Params d) (T : ℝ) :
-    flowMap (comp θ₁ θ₂) T = flowMap θ₂ T ∘ flowMap θ₁ T
+/-- The composite schedule's flow map is the composition of the two flow maps: the characteristics of
+`θ₁` followed by those of `θ₂`. Discharged from `MeasureToMeasure.flowMap_append` (`comp` is `++`). -/
+theorem flowMap_comp (θ₁ θ₂ : Params d) (T : ℝ) :
+    flowMap (comp θ₁ θ₂) T = flowMap θ₂ T ∘ flowMap θ₁ T :=
+  MeasureToMeasure.flowMap_append θ₁ θ₂ T
 
 /-- The composite schedule's solution map is the composition of the two solution maps (the measure-level
 shadow of `flowMap_comp`). Derived from `flowMap_comp` and `Measure.map_map`. -/
@@ -68,15 +70,16 @@ theorem switches_comp (θ₁ θ₂ : Params d) :
     switches (comp θ₁ θ₂) ≤ switches θ₁ + switches θ₂ := by
   simp [switches, comp]
 
-/-- Time-reversal: `inv θ` runs the blocks of `θ` in reverse order (`List.reverse`). Its flow undoes
-that of `θ` (the dynamics are time-reversible, `flowMap_inv` / `flowMap_bijective`); this realizes the
-un-disentangling factor `(Φ_θ₁)⁻¹`. -/
-def inv (θ : Params d) : Params d := θ.reverse
+/-- Time-reversal: `inv θ` runs the blocks of `θ` in reverse order **and negates each velocity field**
+(`(θ.map Block.neg).reverse`). Reversing the order alone would flow for `2t`, not undo the flow -- the
+negation is what makes `inv` a genuine left inverse (`flowMap_inv`). This realizes the un-disentangling
+factor `(Φ_θ₁)⁻¹`; the switch count is preserved (`List.reverse`/`List.map` keep the length). -/
+def inv (θ : Params d) : Params d := (θ.map Block.neg).reverse
 
-/-- AXIOM (point level): the reverse schedule's flow map is a left inverse of the forward one. More
-primitive than the former measure-level `measureFlow_inv`, which is now derived; consistent with
-`flowMap_bijective`. -/
-axiom flowMap_inv (θ : Params d) (T : ℝ) : flowMap (inv θ) T ∘ flowMap θ T = id
+/-- The reverse-and-negate schedule's flow map is a left inverse of the forward one. Discharged from
+`MeasureToMeasure.flowMap_reverseNeg_comp` (`inv` is `(·.map Block.neg).reverse`). -/
+theorem flowMap_inv (θ : Params d) (T : ℝ) : flowMap (inv θ) T ∘ flowMap θ T = id :=
+  MeasureToMeasure.flowMap_reverseNeg_comp θ T
 
 /-- The reverse schedule cancels the forward one at the measure level. Derived from `flowMap_inv`,
 `Measure.map_map`, and `Measure.map_id`. -/
