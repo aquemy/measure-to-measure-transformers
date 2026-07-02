@@ -25,7 +25,7 @@ already **discharged for real**.
 
 ## Progress so far
 
-- **M8a — Atomless splitting: [done]{.badge .ok} (machine-checked).** `exists_atomless_partition` (the
+- **M8a -- Atomless splitting: [done]{.badge .ok} (machine-checked).** `exists_atomless_partition` (the
   disjoint, prescribed-mass decomposition behind Proposition 2.2) is fully de-axiomatized. The
   measure-theoretic primitive it rested on -- **Sierpiński's intermediate-value theorem** for nonatomic
   measures -- is now a kernel-checked theorem: proved on `ℝ` (the cumulative `t ↦ μ(E ∩ (-∞,t])` is
@@ -34,7 +34,7 @@ already **discharged for real**.
   forward along a measurable embedding into `ℝ`. `#print axioms` on `exists_atomless_partition` and the
   IVT lists only `propext` / `Classical.choice` / `Quot.sound` -- no custom axioms, no `sorry`. A
   soundness bug was surfaced and fixed along the way (see below).
-- **M5 — Geodesic convexity on the sphere: [in progress]{.badge .partial}.** The geometric foundation
+- **M5 -- Geodesic convexity on the sphere: [in progress]{.badge .partial}.** The geometric foundation
   is machine-checked: a `GeodesicConvex` predicate (closure under normalized great-circle chords), the
   fact that an **open hemisphere is geodesically convex** (the confinement the paper uses), and the full
   hull characterization -- `geodesicHull = cone ∩ sphere` *is* geodesically convex and *is* the smallest
@@ -125,7 +125,7 @@ an Apache header, passing linters) is a mechanical readiness step, but actually 
 Mathlib is a deliberate human decision, not something the pipeline does on its own. Optimal transport
 and the mean-field flow, by contrast, are multi-year theory gaps, not quick upstream wins.
 
-## The first target: M8a — discharged
+## The first target: M8a -- discharged
 
 The chosen first slice was the smallest self-contained win: discharge `exists_atomless_partition` (the
 disjoint, prescribed-mass decomposition behind Proposition 2.2) by building the nonatomic splitting
