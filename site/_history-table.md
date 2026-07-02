@@ -80,3 +80,5 @@
 | 78 | 2026-07-01 | `formalize` | formalize(foundations): flow algebra of an autonomous Lipschitz field (M3 Phase 1) | `MeasureToMeasure.integralCurve_unique` |
 | 79 | 2026-07-01 | `docs` | docs(ledger): record the autonomous-field flow algebra (M3 Phase 1); refresh ClaimGraph and site | `ledger` |
 | 80 | 2026-07-01 | `formalize` | formalize(foundations): couplings and the W1 Kantorovich cost (M2 Phase 0/2 opening) | `MeasureToMeasure.W1` |
+| 81 | 2026-07-01 | `docs` | docs(ledger): record the W1 coupling foundation (M2 Phase 0/2); refresh ClaimGraph and site | `ledger` |
+| 82 | 2026-07-02 | `formalize` | formalize(foundations): Kantorovich-Rubinstein lower bound for W1 (M2) | `MeasureToMeasure.lipschitz_integral_sub_le_transportCost` |
