@@ -18,6 +18,8 @@ open scoped RealInnerProductSpace
 
 variable {d : ℕ}
 
+-- ForMathlib candidate (general spherical-geometry leaf): stage + readiness-check via
+-- lean-math:mathlib-ready before any upstreaming (a human decision, not automated).
 /-- Geodesic distance on the unit sphere: `d_g(x, y) = arccos⟪x, y⟫`. -/
 noncomputable def geodesicDist (x y : Eucl d) : ℝ := Real.arccos (⟪x, y⟫)
 
