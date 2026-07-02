@@ -111,11 +111,11 @@ the parking construction (`exists_parked_schedule`), and pre-compose with the di
 theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀)
     (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) :
-    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
+    ∃ θ : Params d, ∀ i, Axioms.W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
   obtain ⟨θ₁, hdisj, hhemi⟩ := prop_3_1 hd μ₀ T hT hmiss
   -- Each disentangled measure can be clustered to its prescribed target point.
   have hper : ∀ i, ∃ θ : Params d,
-      W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (Measure.dirac (x i)) ≤ ε := by
+      Axioms.W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (Measure.dirac (x i)) ≤ ε := by
     intro i
     obtain ⟨e, he, hsupp⟩ := hhemi i
     haveI := hμ i
@@ -143,10 +143,10 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hmiss₀ : SharedMissingDirection μ₀) (_hmiss₁ : SharedMissingDirection μ₁)
     (hmatch : Matchable μ₀ μ₁) :
-    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
+    ∃ θ : Params d, ∀ i, Axioms.W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
   obtain ⟨θ₁, hdisj, _⟩ := prop_3_1 hd μ₀ T hT hmiss₀
   have hper : ∀ i, ∃ θ : Params d,
-      W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (μ₁ i) ≤ ε := by
+      Axioms.W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (μ₁ i) ≤ ε := by
     intro i
     obtain ⟨Ti, hTim, hTi⟩ := hmatch i
     set ν : Measure (Eucl d) := measureFlow θ₁ T (μ₀ i) with hν
@@ -159,7 +159,7 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
     obtain ⟨θ₂, ψε, hflow, hL2⟩ := lemma_5_4 ν S T ε hT hε
     refine ⟨θ₂, ?_⟩
     rw [hflow, ← hmap]
-    calc W2 (ν.map ψε) (ν.map S)
+    calc Axioms.W2 (ν.map ψε) (ν.map S)
         ≤ Real.sqrt (∫ x, ‖ψε x - S x‖ ^ 2 ∂ν) := W2_map_le_L2 ν ψε S
       _ = Real.sqrt (∫ x, ‖S x - ψε x‖ ^ 2 ∂ν) := by simp_rw [norm_sub_rev]
       _ ≤ ε := hL2

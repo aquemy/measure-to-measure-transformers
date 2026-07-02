@@ -55,7 +55,7 @@ the LaSalle invariance principle and Hartman-Grobman linearization for the atten
 (Section 2.1), which Mathlib lacks. `Depends-On` the barycenter ODE leaf L6. -/
 axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ (θ : Params d) (z : Eucl d), W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    ∃ (θ : Params d) (z : Eucl d), Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
 /-- **Lemma 3.2** (transport into the orthant). One parameter switch moves the measure into
 `Q₁^{d-1}`. AXIOM (`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
@@ -151,7 +151,7 @@ parking. `Depends-On prop_2_1`, `Depends-On prop_4_1`. -/
 axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ)
     (hT : 0 < T) (hε : 0 < ε)
     (z e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ θ : Params d, W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
 /-- **Lemma 5.1** (transport map after disentanglement). If each disentangled pair is matchable, a
 single bijective map matches them all. AXIOM (`math.axiomatised`): gluing the per-pair transport maps
@@ -222,8 +222,8 @@ its (disjoint) support region and parks on the others (`flowMap_id_on_parked`). 
 continuity-equation theory to derive this, so it is a labeled structural axiom. -/
 axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
     (hdisj : DisjointSupports ν)
-    (hper : ∀ i, ∃ θ : Params d, W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
-    ∃ Θ : Params d, ∀ i, W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
+    (hper : ∀ i, ∃ θ : Params d, Axioms.W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
+    ∃ Θ : Params d, ∀ i, Axioms.W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
 
 /-- Atomless decomposition (Sierpiński/Lyapunov splitting). An atomless probability measure splits
 into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`)
@@ -272,7 +272,7 @@ theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
     (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
-    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
+    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε := by
   obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα hα0
   -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
   obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
@@ -282,7 +282,7 @@ theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
       simp [EuclideanSpace.inner_single_left]
     simpa [Set.mem_setOf_eq, hinner] using hy ⟨0, hd⟩
   -- Each piece: rotate into the orthant (Lemma 3.2), then cluster to its target (Prop 2.1 + 4.1).
-  have hper : ∀ k, ∃ θ : Params d, W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
+  have hper : ∀ k, ∃ θ : Params d, Axioms.W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
     intro k
     haveI := hPprob k
     obtain ⟨θ₁, _hsw, horth⟩ := lemma_3_2 (P k) T hT
@@ -294,7 +294,7 @@ theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
   obtain ⟨Θ, hΘ⟩ := exists_parked_schedule P (fun k => Measure.dirac (x k)) T ε hdisj hper
   refine ⟨Θ, ?_⟩
   rw [htgt, hμeq, measureFlow_sum_smul]
-  refine W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
+  refine Axioms.W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
     hα ε hε.le (fun k => ?_) (fun k => ?_) hΘ
   · haveI := hPprob k; exact isProbabilityMeasure_measureFlow Θ T (P k)
   · infer_instance
