@@ -152,15 +152,19 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
     set ν : Measure (Eucl d) := measureFlow θ₁ T (μ₀ i) with hν
     -- ν is matchable to μ₁ i via S = Ti ∘ (Φ_{θ₁}⁻¹).
     set S : Eucl d → Eucl d := Ti ∘ flowMap (inv θ₁) T with hS
+    have hSmeas : Measurable S := hTim.comp (measurable_flowMap (inv θ₁) hT.le)
     have hmap : ν.map S = μ₁ i := by
       rw [hS, ← Measure.map_map hTim (flowMap_measurable (inv θ₁) T), ← measureFlow_map,
         hν, measureFlow_inv]
       exact hTi
-    obtain ⟨θ₂, ψε, hflow, hL2⟩ := lemma_5_4 ν S T ε hT hε
+    obtain ⟨θ₂, ψε, hflow, hψεmeas, hint, hL2⟩ := lemma_5_4 ν S T ε hT hε
+    have hfe : (fun x => ‖S x - ψε x‖ ^ 2) = (fun x => ‖ψε x - S x‖ ^ 2) := by
+      funext x; rw [norm_sub_rev]
+    have hint' : Integrable (fun x => ‖ψε x - S x‖ ^ 2) ν := hfe ▸ hint
     refine ⟨θ₂, ?_⟩
     rw [hflow, ← hmap]
     calc Axioms.W2 (ν.map ψε) (ν.map S)
-        ≤ Real.sqrt (∫ x, ‖ψε x - S x‖ ^ 2 ∂ν) := W2_map_le_L2 ν ψε S
+        ≤ Real.sqrt (∫ x, ‖ψε x - S x‖ ^ 2 ∂ν) := W2_map_le_L2 ν ψε S hψεmeas hSmeas hint'
       _ = Real.sqrt (∫ x, ‖S x - ψε x‖ ^ 2 ∂ν) := by simp_rw [norm_sub_rev]
       _ ≤ ε := hL2
   obtain ⟨Θ, hΘ⟩ :=

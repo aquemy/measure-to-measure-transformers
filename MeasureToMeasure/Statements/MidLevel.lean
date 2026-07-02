@@ -164,10 +164,14 @@ axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
 /-- **Lemma 5.4** (`L²` approximation by a flow map). Any transport map `ψ` is approximated in
 `L²(μ)` by a flow map of the dynamics, to any tolerance, with finitely many switches. AXIOM
 (`math.axiomatised`): the density of attention-flow maps in `L²` rests on the missing
-continuity-equation theory. Combined with the coupling bound (leaf L7) this controls `W₂`. -/
+continuity-equation theory. Combined with the coupling bound (leaf L7) this controls `W₂`. The
+approximant `ψε` is measurable and the displacement is `L²`-integrable -- both implicit in the `∫`
+bound being meaningful, made explicit so the `W₂` map bound (`W2_map_le_L2`) can consume them. -/
 axiom lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
     ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
-      measureFlow θ T μ = μ.map ψε ∧ Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
+      measureFlow θ T μ = μ.map ψε ∧ Measurable ψε ∧
+      Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
+      Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 
 /-- **Lemma B.2** (single ball pair). Mass in `ℬ₀` is pushed into `ℬ₀ ∩ ℬ₁`, retaining a `(1-ε)`
 fraction, with a single parameter switch. AXIOM (`math.axiomatised`): the ReLU-gated transport is the
@@ -252,6 +256,41 @@ theorem exists_atomless_partition (μ : Measure (Eucl d)) [IsProbabilityMeasure 
     Foundations.exists_probability_decomposition μ α hα hα0
   exact ⟨P, hProb, hμeq, S, hsupp, hSdisj⟩
 
+/-- A piece of a convex decomposition inherits the support of the whole: if `∑ αₖ • Pₖ` is supported in
+`S` and every weight is nonzero, each `Pₖ` is supported in `S`. (In `ℝ≥0∞` a sum of nonnegatives
+vanishes iff each term does, and `αₖ ≠ 0` cancels.) -/
+theorem supportedIn_of_sum_smul {M : ℕ} (α : Fin M → ℝ≥0∞) (P : Fin M → Measure (Eucl d))
+    (hα0 : ∀ k, α k ≠ 0) {S : Set (Eucl d)} (h : supportedIn (∑ k, α k • P k) S) (k : Fin M) :
+    supportedIn (P k) S := by
+  have hsum : ∑ j, α j * P j Sᶜ = 0 := by
+    have := h
+    simp only [supportedIn, Measure.coe_finset_sum, Finset.sum_apply, Measure.smul_apply,
+      smul_eq_mul] at this
+    exact this
+  have hk : α k * P k Sᶜ = 0 := (Finset.sum_eq_zero_iff.mp hsum) k (Finset.mem_univ k)
+  exact (mul_eq_zero.mp hk).resolve_left (hα0 k)
+
+/-- The solution map preserves sphere support: pushing a sphere-supported measure forward by `flowMap`
+(which maps the sphere into itself for `t ≥ 0`) keeps the mass on the sphere. -/
+theorem measureFlow_supportedIn_sphere (θ : Params d) {T : ℝ} (hT : 0 ≤ T)
+    {ν : Measure (Eucl d)} (h : supportedIn ν (sphere d)) :
+    supportedIn (measureFlow θ T ν) (sphere d) := by
+  show (ν.map (flowMap θ T)) (sphere d)ᶜ = 0
+  have hms : MeasurableSet (sphere d)ᶜ := (Metric.isClosed_sphere.measurableSet).compl
+  rw [Measure.map_apply (measurable_flowMap θ hT) hms]
+  refine measure_mono_null (fun x hx => ?_) h
+  simp only [Set.mem_preimage, Set.mem_compl_iff] at hx ⊢
+  exact fun hxs => hx (flowMap_mem_sphere θ hT hxs)
+
+/-- A sphere-supported measure is a.e. bounded in norm by any `R ≥ 1` (on the sphere `‖y‖ = 1`). -/
+theorem ae_norm_le_of_supportedIn_sphere {ν : Measure (Eucl d)} {R : ℝ} (hR : 1 ≤ R)
+    (h : supportedIn ν (sphere d)) : ∀ᵐ y ∂ν, ‖y‖ ≤ R := by
+  rw [ae_iff]
+  refine measure_mono_null (fun y hy => ?_) h
+  simp only [Set.mem_setOf_eq, not_le] at hy
+  simp only [sphere, Set.mem_compl_iff, Metric.mem_sphere, dist_zero_right]
+  intro hy1; rw [hy1] at hy; linarith
+
 /-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure can be
 driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` (convex weights,
 `∑ α k = 1`, each `α k ≠ 0`). Needs `0 < d` (a basis direction is used to place each piece in a
@@ -268,12 +307,16 @@ per-piece bounds to the whole measure. The convex-combination bookkeeping is mac
 theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
+    (hμsupp : supportedIn μ (sphere d))
     (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
     ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε := by
   obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα hα0
+  -- each piece is sphere-supported (it inherits `μ`'s support)
+  have hPsupp : ∀ k, supportedIn (P k) (sphere d) :=
+    fun k => supportedIn_of_sum_smul α P hα0 (hμeq ▸ hμsupp) k
   -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
   obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
     refine ⟨EuclideanSpace.single ⟨0, hd⟩ (1 : ℝ), by simp, ?_⟩
@@ -295,8 +338,15 @@ theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
   refine ⟨Θ, ?_⟩
   rw [htgt, hμeq, measureFlow_sum_smul]
   refine Axioms.W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
-    hα ε hε.le (fun k => ?_) (fun k => ?_) hΘ
+    hα ε hε.le (fun k => ?_) (fun k => ?_) (fun k => ?_) hΘ
   · haveI := hPprob k; exact isProbabilityMeasure_measureFlow Θ T (P k)
   · infer_instance
+  · -- finiteness: both measures are supported in the ball of radius `max 1 ‖x k‖`
+    haveI := hPprob k
+    haveI := isProbabilityMeasure_measureFlow Θ T (P k)
+    refine MeasureToMeasure.W2_ne_top_of_ae_norm_le _ _ (R := max 1 ‖x k‖) ?_ ?_
+    · exact ae_norm_le_of_supportedIn_sphere (le_max_left _ _)
+        (measureFlow_supportedIn_sphere Θ hT.le (hPsupp k))
+    · simp only [ae_dirac_eq, Filter.eventually_pure]; exact le_max_right _ _
 
 end MeasureToMeasure.Statements
