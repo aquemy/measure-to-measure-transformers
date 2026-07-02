@@ -18,7 +18,7 @@ variable {d : ℕ}
 /-- L7 (Lemma 5.2): the `W₂` distance between two pushforwards of `μ` is bounded by the `L²(μ)`
 distance of the maps. Rests on the optimal-transport axiom `W2_map_le_L2`. -/
 theorem lemma_5_2 (μ : Measure (Eucl d)) (T₁ T₂ : Eucl d → Eucl d) :
-    W2 (μ.map T₁) (μ.map T₂) ≤ Real.sqrt (∫ x, ‖T₁ x - T₂ x‖ ^ 2 ∂μ) :=
+    Axioms.W2 (μ.map T₁) (μ.map T₂) ≤ Real.sqrt (∫ x, ‖T₁ x - T₂ x‖ ^ 2 ∂μ) :=
   W2_map_le_L2 μ T₁ T₂
 
 end MeasureToMeasure.Leaves
