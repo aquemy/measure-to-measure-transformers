@@ -323,4 +323,54 @@ theorem flowMap_mem_sphere (θ : Params d) {t : ℝ} (ht : 0 ≤ t) :
     rw [flowMap_cons, Function.comp_apply]
     exact ih (b.blockFlow_mem_sphere hx ht)
 
+/-!
+## Time reversal
+
+The reversed schedule must also **negate** each block's field: reversing the *order* alone gives
+flow-for-`2t`, not the identity. `Block.neg` negates the field (and gate); its forward flow is the
+original block's *backward* flow (`blockFlow_neg`), so the reverse-and-negate schedule
+`(θ.map Block.neg).reverse` genuinely inverts `flowMap θ t`.
+-/
+
+/-- The **time-reversed block**: the same data with the field (and radial gate) negated. -/
+def Block.neg (b : Block d) : Block d where
+  field := fun x => -b.field x
+  lipConst := b.lipConst
+  lipschitz := b.lipschitz.neg
+  bound := b.bound
+  field_le := fun x => by rw [norm_neg]; exact b.field_le x
+  gate := fun x => -b.gate x
+  gateBound := b.gateBound
+  gate_le := fun x => by rw [mul_neg, abs_neg]; exact b.gate_le x
+  radial := fun x => by rw [inner_neg_right, b.radial x]; ring
+  dur := b.dur
+  dur_nonneg := b.dur_nonneg
+
+/-- Flowing the reversed block forward for time `t` equals flowing the original block **backward**. -/
+theorem Block.blockFlow_neg (b : Block d) (t : ℝ) (x : Eucl d) :
+    b.neg.blockFlow t x = b.blockFlow (-t) x := by
+  have hcurve : IsIntegralCurve (fun s => b.blockCurve x (-s)) (fun _ => b.neg.field) := by
+    intro s
+    have hf : HasDerivAt (b.blockCurve x) (b.field (b.blockCurve x (-s))) (-s) :=
+      b.blockCurve_isIntegralCurve x (-s)
+    simpa only [Function.comp_def, neg_one_smul, Block.neg] using hf.scomp s (hasDerivAt_neg s)
+  have huniq : b.neg.blockCurve x = fun s => b.blockCurve x (-s) :=
+    integralCurve_unique b.neg.lipschitz (b.neg.blockCurve_isIntegralCurve x) hcurve
+      (by rw [b.neg.blockCurve_zero, neg_zero]; exact (b.blockCurve_zero x).symm)
+  simpa only [Block.blockFlow] using congrFun huniq t
+
+/-- **Time-reversal inverts the flow.** The reverse-and-negate schedule `(θ.map Block.neg).reverse`
+composed after `flowMap θ t` is the identity. -/
+theorem flowMap_reverseNeg_comp (θ : Params d) (t : ℝ) :
+    flowMap ((θ.map Block.neg).reverse) t ∘ flowMap θ t = id := by
+  induction θ with
+  | nil => simp [flowMap]
+  | cons b θ ih =>
+    funext x
+    have hih : flowMap ((θ.map Block.neg).reverse) t (flowMap θ t (b.blockFlow t x))
+        = b.blockFlow t x := by have := congrFun ih (b.blockFlow t x); simpa using this
+    simp only [List.map_cons, List.reverse_cons, flowMap_append, flowMap_cons, flowMap_nil,
+      Function.comp_apply, id_eq]
+    rw [hih, b.blockFlow_neg, b.blockFlow_neg_comp]
+
 end MeasureToMeasure
