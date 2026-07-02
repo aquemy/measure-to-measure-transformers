@@ -36,6 +36,16 @@ This wires the `ckc` commit-message validator and the opt-in `ckc-axiom-check` p
 - Honesty: never claim `math.machine-checked` while a `sorry`/`sorryAx` or a non-standard axiom is
   present. A status advances only by a new commit, never by editing an old one.
 
+## Honesty drift guard
+
+`scripts/audit.sh` is the regenerate-and-compare guard: it runs `axiom-report` (`#print axioms` per
+blueprint node), `claimgraph audit` (the validity gate: fail if a node is shown proved but the kernel
+refutes it), `claimgraph reconcile` (the drift gate: fail on any `stale-blueprint` node whose committed
+status disagrees with the kernel), and an incompleteness sweep for `sorry`/`admit`/`sorryAx`/
+`native_decide`. It runs automatically inside `site/build.py` (fail fast, before the render; set
+`SKIP_AUDIT=1` to skip for a site-only iteration) and in CI (`.github/workflows/verify.yml`, no deploy).
+Run it directly before publishing: `bash scripts/audit.sh` (the project must already `lake build`).
+
 ## Example commits
 
 A kernel-checked leaf:
