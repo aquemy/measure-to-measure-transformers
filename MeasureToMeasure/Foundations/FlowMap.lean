@@ -1,5 +1,6 @@
 import MeasureToMeasure.Foundations.SphereFlow
 import Mathlib.Analysis.ODE.PicardLindelof
+import Mathlib.Analysis.ODE.Gronwall
 
 /-!
 # The mean-field flow map (M3): the per-block characteristic flow
@@ -103,5 +104,81 @@ theorem Block.exists_integralCurveOn (b : Block d) (x₀ : Eucl d) (T : ℝ≥0)
   obtain ⟨α, hα0, hαderiv⟩ :=
     (b.isPicardLindelof x₀ T 0).exists_eq_forall_mem_Icc_hasDerivWithinAt hx
   exact ⟨α, hα0, hαderiv⟩
+
+/-!
+## The global point flow
+
+The interval solutions are glued into a single global integral curve through each point. Two solutions
+of the same autonomous globally-Lipschitz field that agree at one time agree on the whole open interval
+(`ODE_solution_unique_of_mem_Ioo` with `s ≡ univ`), so the family of `[-n, n]` solutions is coherent;
+choosing, for each `t`, a solution on an interval strictly containing `t` gives a total function that
+is locally a genuine solution, hence an `IsIntegralCurve` on all of `ℝ`.
+-/
+
+/-- **Interval uniqueness for a block's field.** Two solutions of `ẋ = field x` on `Ioo a c` that agree
+at a point of the interval agree throughout it. -/
+theorem Block.integralCurve_eqOn (b : Block d) {α β : ℝ → Eucl d} {a c t₀ : ℝ}
+    (hα : ∀ t ∈ Set.Ioo a c, HasDerivAt α (b.field (α t)) t)
+    (hβ : ∀ t ∈ Set.Ioo a c, HasDerivAt β (b.field (β t)) t)
+    (ht₀ : t₀ ∈ Set.Ioo a c) (h0 : α t₀ = β t₀) :
+    Set.EqOn α β (Set.Ioo a c) :=
+  ODE_solution_unique_of_mem_Ioo (v := fun _ => b.field) (s := fun _ => Set.univ)
+    (K := b.lipConst) (fun _ _ => b.lipschitz.lipschitzOnWith) ht₀
+    (fun t ht => ⟨hα t ht, Set.mem_univ _⟩) (fun t ht => ⟨hβ t ht, Set.mem_univ _⟩) h0
+
+/-- **Global integral curve through `x`.** Gluing the interval solutions gives a curve `Φ` with
+`Φ 0 = x` solving `ẋ = field x` for all time -- the point flow of a block. -/
+theorem Block.exists_globalIntegralCurve (b : Block d) (x : Eucl d) :
+    ∃ Φ : ℝ → Eucl d, Φ 0 = x ∧ IsIntegralCurve Φ (fun _ => b.field) := by
+  classical
+  -- interval solutions through `x` on the open interval `(-n, n)`, as genuine `HasDerivAt`
+  have hex : ∀ n : ℕ, ∃ α : ℝ → Eucl d, α 0 = x ∧
+      ∀ t ∈ Set.Ioo (-(n : ℝ)) n, HasDerivAt α (b.field (α t)) t := by
+    intro n
+    obtain ⟨α, h0, hd⟩ := b.exists_integralCurveOn x (n : ℝ≥0)
+    refine ⟨α, h0, fun t ht => ?_⟩
+    have hcoe : ((n : ℝ≥0) : ℝ) = (n : ℝ) := by push_cast; ring
+    have hmem : t ∈ Set.Icc (-((n : ℝ≥0) : ℝ)) ((n : ℝ≥0) : ℝ) := by
+      rw [hcoe]; exact Set.Ioo_subset_Icc_self ht
+    have hnhds : Set.Icc (-((n : ℝ≥0) : ℝ)) ((n : ℝ≥0) : ℝ) ∈ nhds t := by
+      rw [hcoe]; exact Icc_mem_nhds ht.1 ht.2
+    exact (hd t hmem).hasDerivAt hnhds
+  choose α hα0 hαd using hex
+  -- coherence: for `m ≤ n`, the two solutions agree on `(-m, m)`
+  have hcoh : ∀ m n : ℕ, m ≤ n → ∀ t ∈ Set.Ioo (-(m : ℝ)) m, α m t = α n t := by
+    intro m n hmn t ht
+    have hmn' : (m : ℝ) ≤ n := by exact_mod_cast hmn
+    have hmpos : (0 : ℝ) < (m : ℝ) := by linarith [ht.1, ht.2]
+    have hsub : Set.Ioo (-(m : ℝ)) m ⊆ Set.Ioo (-(n : ℝ)) n :=
+      Set.Ioo_subset_Ioo (by linarith) hmn'
+    exact b.integralCurve_eqOn (fun s hs => hαd m s hs) (fun s hs => hαd n s (hsub hs))
+      (Set.mem_Ioo.mpr ⟨by linarith, hmpos⟩) (by rw [hα0 m, hα0 n]) ht
+  -- the total curve: at `t`, use the solution on `(-N t, N t)` with `N t := ⌈|t|⌉₊ + 1 > |t|`
+  set N : ℝ → ℕ := fun t => ⌈|t|⌉₊ + 1 with hN
+  have hNgt : ∀ t : ℝ, |t| < (N t : ℝ) := by
+    intro t
+    have h1 : |t| ≤ (⌈|t|⌉₊ : ℝ) := Nat.le_ceil _
+    have hcast : (N t : ℝ) = (⌈|t|⌉₊ : ℝ) + 1 := by simp only [hN]; push_cast; ring
+    rw [hcast]; linarith
+  have htmem : ∀ t : ℝ, t ∈ Set.Ioo (-(N t : ℝ)) (N t : ℝ) :=
+    fun t => Set.mem_Ioo.mpr (abs_lt.mp (hNgt t))
+  refine ⟨fun t => α (N t) t, hα0 (N 0), ?_⟩
+  rw [isIntegralCurve_iff_isIntegralCurveAt]
+  intro t
+  -- on the open interval `(-(N t), N t)` the total curve agrees with `α (N t)`, by coherence
+  have hUnhds : Set.Ioo (-(N t : ℝ)) (N t) ∈ nhds t := (isOpen_Ioo).mem_nhds (htmem t)
+  have hagree : Set.EqOn (fun u => α (N u) u) (α (N t)) (Set.Ioo (-(N t : ℝ)) (N t)) := by
+    intro s hs
+    rcases le_total (N s) (N t) with h | h
+    · exact hcoh (N s) (N t) h s (htmem s)
+    · exact (hcoh (N t) (N s) h s hs).symm
+  refine IsIntegralCurveOn.isIntegralCurveAt (fun s hs => ?_) hUnhds
+  have hd : HasDerivAt (α (N t)) (b.field (α (N t) s)) s := hαd (N t) s hs
+  have hee : (fun u => α (N u) u) =ᶠ[nhds s] (α (N t)) :=
+    Filter.eventuallyEq_of_mem ((isOpen_Ioo).mem_nhds hs) hagree
+  have key : HasDerivAt (fun u => α (N u) u) (b.field (α (N t) s)) s := hd.congr_of_eventuallyEq hee
+  have hfe : b.field (α (N t) s) = b.field ((fun u => α (N u) u) s) := by rw [hagree hs]
+  rw [hfe] at key
+  exact key.hasDerivWithinAt
 
 end MeasureToMeasure
