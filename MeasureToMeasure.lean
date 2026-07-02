@@ -6,6 +6,7 @@ import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.SphereFlow
+import MeasureToMeasure.Foundations.FlowMap
 import MeasureToMeasure.Foundations.Wasserstein
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
