@@ -218,9 +218,9 @@ paper     = "eq. B.9, p.33"
 created   = "2026-06-30"
 
 [claims.leaf-coupling-bound]
-kind      = "conjecture"
-statement = "L7: the map-induced coupling gives W2^2(T1_# mu, T2_# mu) <= integral ||T1 - T2||^2 d mu (the core of Lemma 5.2)."
-status    = "math.axiomatised"
+kind      = "theorem"
+statement = "L7 (Lemma 5.2): the map-induced coupling gives W2(T1_# mu, T2_# mu) <= sqrt(integral ||T1 - T2||^2 d mu). NOW MACHINE-CHECKED (was axiomatised): with the W2 axiom flip, lemma_5_2 is a thin wrapper over the proved theorem Axioms.W2_map_le_L2, itself discharged from the map coupling (T1,T2)_# mu over the ENNReal Kantorovich cost. Carries measurability + L2-integrability of the displacement (what makes the ENNReal -> R bridge sound; free for the bounded maps on the sphere). #print axioms clean (propext/Classical.choice/Quot.sound)."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Leaves.lemma_5_2"
 paper     = "Lem 5.2, p.24"
 created   = "2026-06-30"
@@ -278,8 +278,8 @@ created   = "2026-06-30"
 
 [claims.meta-axiom-layer]
 kind      = "review"
-statement = "The labeled axiom layer: W2/W1 with the coupling and KR-duality bounds, standing in for the missing Mathlib optimal-transport theory. (The continuity-equation flow map and its Lipschitz/bijective/parked-identity properties, formerly part of this layer, were DE-AXIOMATIZED in milestone M3 -- see flow-axiom-flip; the only continuity-equation content still axiomatised is the paper-level mid-level lemmas, not the flow machinery.)"
-status    = "math.axiomatised"
+statement = "The labeled infrastructure axiom layer is now EMPTY: both the optimal-transport (W1/W2) facts and the continuity-equation flow map have been DE-AXIOMATIZED. W1/W2 are concrete definitions over the ENNReal Kantorovich cost with their metric/convexity/map facts proved (see wasserstein-* and w2-axiom-flip); the flow map is the concrete fold of per-block characteristic flows (see flow-axiom-flip). The only remaining axioms are the PAPER-LEVEL mid-level lemmas (cluster_to_point, exists_disentangling_balls, exists_parked_schedule, lemma_5_4, and the Section 3 / 4 / 5 statements), i.e. genuine mathematical content Mathlib lacks -- not infrastructure standing in for missing Mathlib theory."
+status    = "math.machine-checked"
 paper     = "n/a (infrastructure)"
 created   = "2026-06-30"
 
@@ -481,6 +481,14 @@ statement = "Finiteness of the W2 Wasserstein distance for boundedly-supported p
 status    = "math.machine-checked"
 lean      = "MeasureToMeasure.W2_ne_top_of_ae_norm_le"
 paper     = "Wasserstein W2 finiteness for compactly-supported measures; optimal transport"
+created   = "2026-07-02"
+
+[claims.w2-axiom-flip]
+kind      = "theorem"
+statement = "The W2 optimal-transport axiom flip (milestone M2 COMPLETE). MACHINE-CHECKED. Axioms/Wasserstein.lean formerly axiomatised W2 (opaque R-valued) with W2_nonneg / W2_comm / W2_triangle / W2_map_le_L2 / W2_convexCombo_le. Now Axioms.W2 mu nu := (Foundations.W2 mu nu).toReal is a DEFINITION and all five facts are proved THEOREMS over the ENNReal root Kantorovich cost. Because toReal sends top to 0, the honest R statements carry the hypotheses that make the ENNReal->R bridge sound: triangle/convexity carry per-pair finiteness (Foundations.W2 . . != top), discharged at the call sites from bounded/sphere support via W2_ne_top_of_ae_norm_le; the map bound carries measurability + L2-integrability of the displacement. Threading (contained -- prop_2_2 and lemma_5_2 have no consumers, theorem_1_1 does not use the structural facts): (a) prop_2_2 gains a supportedIn mu (sphere d) hypothesis and discharges convexity finiteness via new support-preservation helpers (supportedIn_of_sum_smul: a decomposition piece inherits the whole's support; measureFlow_supportedIn_sphere: the flow keeps the sphere; ae_norm_le_of_supportedIn_sphere), with the dirac targets bounded automatically (R = max 1 ||x k||); (b) the lemma_5_4 axiom is strengthened to expose Measurable psi_eps + L2-integrability (implicit in its integral bound being meaningful), which theorem_1_2 feeds to the map bound; (c) lemma_5_2 (leaf L7) becomes a thin wrapper and is now itself MACHINE-CHECKED. Effect: #print axioms theorem_1_1 / theorem_1_2 no longer list ANY W2/optimal-transport axiom; combined with the M3 flow flip, the ENTIRE infrastructure axiom layer is gone -- the headline theorems rest only on the paper-level mid-level lemmas (cluster_to_point, exists_disentangling_balls, exists_parked_schedule, lemma_5_4). Full audit passes."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Axioms.W2_map_le_L2"
+paper     = "Wasserstein W2 (Section 5): the optimal-transport axiom layer, discharged"
 created   = "2026-07-02"
 
 # ===========================================================================
