@@ -88,12 +88,118 @@ set carrying full mass). Closes the general-measure residual of F2 with no new a
 $W_2(T^1_\#\mu, T^2_\#\mu) \le \|T^1-T^2\|_{L^2(\mu)}$ (Lemma 5.2). [axiomatised]
 \end{lemma}
 
-\begin{lemma}[Markov bound, L8]\label{lem:markov}\lean{MeasureToMeasure.Leaves.markov_bound}\leanok
+\begin{lemma}[Markov bound, L8]\label{lem:markov}\lean{MeasureToMeasure.Leaves.markov_bound}\uses{found:kr}\leanok
 $W_1(\mu,\delta_{x_0})\le C\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). The
 truncated-distance bump $f=\min(\eta_3,\operatorname{dist}(\cdot,x_0))$ is machine-checked $1$-Lipschitz,
 vanishes at $x_0$, and dominates $\eta_3\,\mathbf 1_{\{\operatorname{dist}\ge\eta_3\}}$; the Markov
 inequality then follows from the $W_1$ Kantorovich-Rubinstein bound, now a proved theorem
 (\texttt{Foundations.ofReal\_integral\_sub\_le\_W1}) rather than an axiom. [machine-checked]
+\end{lemma}
+
+\section{Machine-checked foundations (discharged infrastructure)}
+
+The infrastructure below is the missing-from-Mathlib mathematics the paper's argument rests on, built
+in-repo and kernel-checked. It underlies the axiom layer above (discharging some of it) and the
+downstream results; each node is \texttt{\#print axioms}-clean.
+
+\subsection{Nonatomic splitting (Sierpiński IVT, M8a)}
+
+\begin{lemma}[Sierpiński intermediate-value theorem]\label{found:sierpinski}\lean{MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real}\leanok
+For a finite atomless measure $\mu$ on $\mathbb R$, a measurable set $E$, and any target $r \le \mu E$,
+there is a measurable subset of $E$ of measure exactly $r$. Proved from the continuity of the
+cumulative $t \mapsto \mu(E \cap (-\infty,t])$ (its increment is the Bochner primitive
+$\int \mathbf 1_E$, continuous because $\mu$ is atomless) and the intermediate value theorem; the
+standard-Borel case follows by pushing forward along a measurable embedding into $\mathbb R$. Replaces
+the former nonatomic-splitting axiom. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Atomless prescribed-mass partition]\label{found:atomless}\lean{MeasureToMeasure.Statements.exists_atomless_partition}\uses{found:sierpinski}\leanok
+An atomless probability measure splits into $M$ probability pieces with prescribed positive convex
+weights and pairwise-disjoint supports, $\mu = \sum_k \alpha_k P_k$: normalize the restrictions
+$(\alpha_k)^{-1}\,\mu|_{A_k}$ to a disjoint partition carved by iterating the Sierpiński IVT. Fully
+de-axiomatized (milestone M8a); this is the decomposition behind Proposition 2.2. [machine-checked]
+\end{lemma}
+
+\subsection{Geodesic convexity on the sphere (M5)}
+
+\begin{lemma}[Open hemisphere is geodesically convex]\label{found:gconvex}\lean{MeasureToMeasure.geodesicConvex_open_hemisphere}\leanok
+A subset $s \subseteq \mathbb S^{d-1}$ is geodesically convex when it is closed under normalized
+positive chords $\|a x + b y\|^{-1}(a x + b y)$ ($a,b>0$). An open hemisphere
+$\{x \in \mathbb S^{d-1} : \langle e,x\rangle > 0\}$ is geodesically convex (the orthant confinement
+the paper uses), as is any intersection of hemispheres. Absent from Mathlib; built in-repo.
+[machine-checked]
+\end{lemma}
+
+\begin{lemma}[Geodesic hull is geodesically convex]\label{found:ghull}\lean{MeasureToMeasure.Leaves.geodesicConvex_geodesicHull}\uses{found:gconvex,lem:noncol}\leanok
+If every generator of $s$ lies strictly on $e$'s side of the sphere, then
+$\mathrm{geodesicHull}\,s = \mathrm{cone}(s)\cap\mathbb S^{d-1}$ is geodesically convex and sits inside
+that hemisphere. This is the characterization of $\mathrm{conv}_g$ used in Section 3.3 and in leaf
+L11. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Geodesic hull is the smallest geodesic-convex set]\label{found:ghullmin}\lean{MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex}\uses{found:gconvex}\leanok
+If $C$ is geodesically convex and contains every point of $s$, then
+$\mathrm{geodesicHull}\,s \subseteq C$ -- the universal property justifying the name ``hull''. Proved by
+induction, rebuilding each normalized conical combination as an iterated normalized positive chord that
+stays in $C$. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Separating criterion for hull disjointness]\label{found:ghulldisj}\lean{MeasureToMeasure.Leaves.geodesicHull_disjoint_of_separated}\uses{found:ghull}\leanok
+If a direction $e$ is strictly positive on every generator of $s_1$ and strictly negative on every
+generator of $s_2$, then $\mathrm{geodesicHull}\,s_1$ and $\mathrm{geodesicHull}\,s_2$ are disjoint --
+the clean sufficient condition Section 3.3 uses to keep two clusters' hulls apart. [machine-checked]
+\end{lemma}
+
+\subsection{The layer-normalized flow (M3, Phase 1)}
+
+\begin{lemma}[Sphere invariance of the flow]\label{found:sphereinv}\lean{MeasureToMeasure.sphere_invariant}\uses{def:projector}\leanok
+An integral curve of the tangentially-projected field $\dot x = P_x^\perp(g(t))$ that starts on
+$\mathbb S^{d-1}$ stays on it throughout $[0,T]$ (given a bound on the raw radial drift, automatic for a
+bounded field). The care point: $P_x^\perp g$ is tangent \emph{only on} the sphere, so
+$u(t) = \|x(t)\|^2 - 1$ solves the linear homogeneous ODE $u' = c(t)u$ with $u(0)=0$, and Grönwall
+forces $u \equiv 0$. The geometric well-posedness core the mean-field flow and the LaSalle/Lyapunov
+convergence both rest on. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Flow algebra of an autonomous Lipschitz field]\label{found:flowalg}\lean{MeasureToMeasure.integralCurve_semigroup}\leanok
+Mathlib has local Picard-Lindelöf, global uniqueness, and the Grönwall trajectory bound, but no
+Lipschitz-field-to-\texttt{Flow} constructor. Rather than fabricate the flow object, the flow
+\emph{properties} the paper uses are proved per integral curve of the autonomous field: uniqueness
+(injectivity behind bijectivity), the Lipschitz-in-initial-value estimate (axiom-free), constancy where
+the field vanishes (the parked property), and the semigroup law $\gamma(s+t)$ (concatenation). The
+genuine mathematical content of the flow axioms; only the missing-in-Mathlib global-existence packaging
+remains. [machine-checked]
+\end{lemma}
+
+\subsection{Optimal transport built from scratch (M2)}
+
+\begin{lemma}[Couplings and the $W_1$ Kantorovich cost]\label{found:w1}\lean{MeasureToMeasure.W1_comm}\leanok
+Mathlib has the Lévy-Prokhorov metric but no optimal transport. Built from scratch on
+\texttt{Measure.prod} and its marginals: couplings with fixed marginals, the cost
+$\int \mathrm{edist}(x,y)\,\mathrm d\pi$, and $W_1 = \inf$ over couplings. On the $\overline{\mathbb R}_{\ge 0}$
+lattice the metric facts hold unconditionally: $W_1(\mu,\mu)=0$ and symmetry $W_1(\mu,\nu)=W_1(\nu,\mu)$.
+[machine-checked]
+\end{lemma}
+
+\begin{lemma}[Kantorovich-Rubinstein lower bound]\label{found:kr}\lean{MeasureToMeasure.ofReal_integral_sub_le_W1}\uses{found:w1}\leanok
+For an integrable $1$-Lipschitz test function $f$, $\int f\,\mathrm d\mu - \int f\,\mathrm d\nu \le
+W_1(\mu,\nu)$: push $f$ through both marginals, bound the integrand by $\mathrm{dist}(x,y)$, and integrate.
+This is exactly the content of the former axiom \texttt{W1\_ge\_of\_lipschitz} (the paper's Markov bound,
+Claim 2), now discharged. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[$W_1$ triangle inequality via gluing]\label{found:w1tri}\lean{MeasureToMeasure.W1_triangle}\uses{found:w1}\leanok
+Given a coupling of $(\mu,\nu)$ and one of $(\nu,\rho)$, disintegrate the second and glue to a coupling of
+$(\mu,\rho)$ of cost at most the sum (the gluing lemma), whence $W_1(\mu,\rho)\le W_1(\mu,\nu)+W_1(\nu,\rho)$.
+With symmetry and $W_1(\mu,\mu)=0$ this makes $W_1$ a pseudometric on probability measures. Uses Mathlib's
+disintegration/kernel machinery. [machine-checked]
+\end{lemma}
+
+\begin{lemma}[Quadratic cost and the map-coupling bound]\label{found:w2map}\lean{MeasureToMeasure.W2sq_map_le}\uses{found:w1}\leanok
+The quadratic analogue: $W_2^2(\mu,\nu) = \inf \int \mathrm{edist}(x,y)^2\,\mathrm d\pi$, with
+$W_2^2(T^1_\#\mu, T^2_\#\mu) \le \int \mathrm{edist}(T^1 x, T^2 x)^2\,\mathrm d\mu$ witnessed by the map
+coupling $(T^1,T^2)_\#\mu$ -- the content of the axiom \texttt{W2\_map\_le\_L2} (Lemma 5.2) in squared,
+$\overline{\mathbb R}_{\ge 0}$ form. [machine-checked]
 \end{lemma}
 
 \section{Mass transport and clustering}
@@ -113,7 +219,7 @@ Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. [open]
 A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$. [open]
 \end{proposition}
 
-\begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\lean{MeasureToMeasure.Statements.prop_2_2}\uses{lem:b1,prop:21}
+\begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\lean{MeasureToMeasure.Statements.prop_2_2}\uses{lem:b1,prop:21,found:atomless}
 Disjoint-support atomless measures cluster to $M$ atoms. [open]
 \end{proposition}
 

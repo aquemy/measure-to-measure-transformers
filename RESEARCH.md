@@ -63,10 +63,13 @@ No node is `sorryAx` (zero `sorry` repo-wide). Representative:
 | `MeasureToMeasure.Statements.{prop_2_1,lemma_3_2,3_3,3_4,prop_4_2,lemma_5_1,5_4,lemma_B_2}` | axiom | placeholder mid-level axioms |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_2_2,prop_3_1,prop_4_1,lemma_B_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
-**Coverage gap (open item).** `claimgraph reconcile` reports ~73 machine-checked nodes recorded in the
-CKC history but *absent from* `blueprint/src/content.tex` — the whole `Foundations/Wasserstein` (W1/OT)
-layer, `SphereFlow`, `GeodesicHull*`, and the atomless-partition machinery. These are honest (the audit
-validity gate passes), but the blueprint is a stale curated subset. See *Open questions*.
+**Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
+the CKC history but *absent from* `blueprint/src/content.tex`. The 12 curated foundation results tracked
+in `claims.toml` -- the Sierpiński IVT + atomless partition (M8a), geodesic convexity/hull (M5), sphere
+invariance + flow algebra (M3 Phase 1), and the `W₁`/`W₂` optimal-transport substrate (M2) -- are now
+added to the blueprint as a "Machine-checked foundations" section, each `\leanok` / `[machine-checked]`.
+The remaining ungrounded names are internal helper lemmas that `claims.toml` intentionally does not
+track as separate nodes, so they stay out of the blueprint by design.
 
 ## Experiment campaign (Phase F; `lean-math:numerical-validation`)
 Seven seeded experiments (`experiments/E*`, seed 0), each cross-linked to the claim it tests. Verdicts
@@ -108,9 +111,11 @@ Apache-headed). Preparation only — nothing is contributed to Mathlib. See `For
 - Santambrogio, *Optimal Transport for Applied Mathematicians* — the OT background for M2.
 
 ## Open questions / next step
-- **Blueprint refresh (coverage gap):** add the ~73 machine-checked foundation nodes (`Foundations/
-  Wasserstein`, `SphereFlow`, `GeodesicHull*`, atomless partition) to `blueprint/src/content.tex` so
-  the blueprint reflects the proved content, not just the original curated subset.
+- **Blueprint refresh (done):** the 12 curated machine-checked foundation nodes (M8a Sierpiński + atomless
+  partition, M5 geodesic convexity/hull, M3 sphere invariance + flow algebra, M2 `W₁`/`W₂` substrate) are
+  now in `blueprint/src/content.tex` under a "Machine-checked foundations" section; `claimgraph reconcile`
+  reports no stale-blueprint nodes. The Quarto proofs pages (`site/proofs/_*.qmd`) remain a curated
+  narrative and are a separate, deliberately smaller representation.
 - **`W₂` axiom discharge:** thread integrability through the mid-level assembly, add the `W₂` triangle
   (Minkowski/gluing) and convexity, and take `√` of `W2sq` to recover `W₂`.
 - **M3 mean-field flow:** discharge `flowMap` (global existence + McKean-Vlasov well-posedness), gated
