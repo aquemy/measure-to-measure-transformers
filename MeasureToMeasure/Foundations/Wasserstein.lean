@@ -17,7 +17,7 @@ bound and the triangle inequality (the harder, gluing-based facts) will be built
 
 namespace MeasureToMeasure
 
-open MeasureTheory
+open MeasureTheory ProbabilityTheory
 open scoped ENNReal
 
 variable {d : ℕ}
@@ -170,5 +170,107 @@ theorem ofReal_integral_sub_le_W1 {f : Eucl d → ℝ} (hf : LipschitzWith 1 f)
   calc ENNReal.ofReal (∫ x, f x ∂μ - ∫ x, f x ∂ν)
       ≤ ENNReal.ofReal (transportCost π).toReal := ENNReal.ofReal_le_ofReal hbound
     _ = transportCost π := ENNReal.ofReal_toReal hfin
+
+/-!
+## The triangle inequality via gluing of couplings
+
+`W₁ μ ρ ≤ W₁ μ ν + W₁ ν ρ`. The classical proof glues a plan `π₁` of `(μ, ν)` and a plan `π₂` of
+`(ν, ρ)` along their shared marginal `ν`: disintegrate `π₂ = ν ⊗ₘ κ₂` (its conditional `z | y`), lift
+`κ₂` to a kernel on `X × Y` reading only the `Y`-coordinate, and form the triple
+`T = π₁ ⊗ₘ (κ₂ ∘ snd)` on `(X × Y) × Z`. The `(X, Y)`-marginal of `T` is `π₁` (free from `fst_compProd`),
+the `(Y, Z)`-marginal collapses to `ν ⊗ₘ κ₂ = π₂`, and the `(X, Z)`-marginal `γ` is a coupling of
+`(μ, ρ)` whose cost is bounded by `cost π₁ + cost π₂` via `edist x z ≤ edist x y + edist y z`.
+-/
+
+/-- **Gluing lemma.** Given a coupling `π₁` of `(μ, ν)` and `π₂` of `(ν, ρ)`, there is a coupling `γ`
+of `(μ, ρ)` with `transportCost γ ≤ transportCost π₁ + transportCost π₂`. -/
+theorem exists_coupling_transportCost_le {μ ν ρ : Measure (Eucl d)} [IsProbabilityMeasure ν]
+    {π₁ π₂ : Measure (Eucl d × Eucl d)} [IsProbabilityMeasure π₁] [IsProbabilityMeasure π₂]
+    (h₁ : IsCoupling π₁ μ ν) (h₂ : IsCoupling π₂ ν ρ) :
+    ∃ γ : Measure (Eucl d × Eucl d),
+      IsCoupling γ μ ρ ∧ transportCost γ ≤ transportCost π₁ + transportCost π₂ := by
+  classical
+  -- Disintegrate `π₂ = ν ⊗ₘ κ₂` and lift `κ₂` to a `Y`-reading kernel on `X × Y`.
+  set κ₂ : Kernel (Eucl d) (Eucl d) := π₂.condKernel with hκ₂
+  have hπ₂ : ν ⊗ₘ κ₂ = π₂ := by rw [hκ₂, ← h₂.1]; exact π₂.disintegrate π₂.condKernel
+  set κ : Kernel (Eucl d × Eucl d) (Eucl d) := κ₂.comap Prod.snd measurable_snd with hκ
+  set T : Measure ((Eucl d × Eucl d) × Eucl d) := π₁ ⊗ₘ κ with hT
+  -- The two coordinate projections used to read marginals off the triple `T`.
+  have hg₁ : Measurable (fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2)) := by fun_prop
+  have hg₂ : Measurable (fun q : (Eucl d × Eucl d) × Eucl d => (q.1.2, q.2)) := by fun_prop
+  set γ : Measure (Eucl d × Eucl d) := T.map (fun q => (q.1.1, q.2)) with hγ
+  have hTfst : T.fst = π₁ := by rw [hT]; exact Measure.fst_compProd π₁ κ
+  -- Crux: the `(Y, Z)`-marginal of `T` is `π₂`.
+  have hm : T.map (fun q => (q.1.2, q.2)) = π₂ := by
+    rw [← hπ₂]
+    refine Measure.ext_of_lintegral _ fun F hF => ?_
+    have hFg₂ : Measurable fun q : (Eucl d × Eucl d) × Eucl d => F (q.1.2, q.2) := hF.comp hg₂
+    have hΦ : Measurable fun y => ∫⁻ z, F (y, z) ∂κ₂ y :=
+      Measurable.lintegral_kernel_prod_right (κ := κ₂) (f := fun y z => F (y, z)) hF
+    rw [lintegral_map hF hg₂, hT,
+      Measure.lintegral_compProd hFg₂, Measure.lintegral_compProd hF]
+    simp only [hκ, Kernel.comap_apply]
+    rw [← h₁.2, show (π₁.snd : Measure (Eucl d)) = π₁.map Prod.snd from rfl,
+      lintegral_map hΦ measurable_snd]
+  refine ⟨γ, ⟨?_, ?_⟩, ?_⟩
+  · -- `γ.fst = μ`
+    show γ.map Prod.fst = μ
+    rw [hγ, Measure.map_map measurable_fst hg₁,
+      show (Prod.fst ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
+        = Prod.fst ∘ Prod.fst from rfl, ← Measure.map_map measurable_fst measurable_fst]
+    change (T.fst).map Prod.fst = μ
+    rw [hTfst]; exact h₁.1
+  · -- `γ.snd = ρ`
+    show γ.map Prod.snd = ρ
+    rw [hγ, Measure.map_map measurable_snd hg₁,
+      show (Prod.snd ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
+        = (fun q => q.2) from rfl, ← h₂.2, ← hm]
+    show T.map (fun q => q.2) = (T.map (fun q => (q.1.2, q.2))).map Prod.snd
+    rw [Measure.map_map measurable_snd hg₂]
+    rfl
+  · -- cost bound
+    have hγcost : transportCost γ = ∫⁻ q, edist q.1.1 q.2 ∂T := by
+      rw [transportCost, hγ, lintegral_map (by fun_prop) hg₁]
+    have hT1 : ∫⁻ q, edist q.1.1 q.1.2 ∂T = transportCost π₁ := by
+      rw [transportCost, ← hTfst, show (T.fst : Measure (Eucl d × Eucl d)) = T.map Prod.fst from rfl,
+        lintegral_map (by fun_prop) measurable_fst]
+    have hT2 : ∫⁻ q, edist q.1.2 q.2 ∂T = transportCost π₂ := by
+      rw [transportCost, ← hm, lintegral_map (by fun_prop) hg₂]
+    rw [hγcost]
+    calc ∫⁻ q, edist q.1.1 q.2 ∂T
+        ≤ ∫⁻ q, (edist q.1.1 q.1.2 + edist q.1.2 q.2) ∂T :=
+          lintegral_mono fun q => edist_triangle _ _ _
+      _ = (∫⁻ q, edist q.1.1 q.1.2 ∂T) + ∫⁻ q, edist q.1.2 q.2 ∂T :=
+          lintegral_add_left (by fun_prop) _
+      _ = transportCost π₁ + transportCost π₂ := by rw [hT1, hT2]
+
+/-- **Sub-additivity of `W₁` along a gluing** (probability measures): `W₁ μ ρ` is bounded by the sum
+of the costs of any plan of `(μ, ν)` and any plan of `(ν, ρ)`. The per-coupling triangle inequality,
+immediate from the gluing lemma. -/
+theorem W1_le_transportCost_add {μ ν ρ : Measure (Eucl d)} [IsProbabilityMeasure ν]
+    {π₁ π₂ : Measure (Eucl d × Eucl d)} [IsProbabilityMeasure π₁] [IsProbabilityMeasure π₂]
+    (h₁ : IsCoupling π₁ μ ν) (h₂ : IsCoupling π₂ ν ρ) :
+    W1 μ ρ ≤ transportCost π₁ + transportCost π₂ := by
+  obtain ⟨γ, hγc, hγle⟩ := exists_coupling_transportCost_le h₁ h₂
+  exact (W1_le_transportCost hγc).trans hγle
+
+/-- **Triangle inequality for `W₁`** (probability measures): `W₁ μ ρ ≤ W₁ μ ν + W₁ ν ρ`. Descends from
+the per-coupling gluing bound by distributing `+` through the two infima (`ENNReal.iInf_add` /
+`add_iInf`, valid unconditionally on `ℝ≥0∞`). With `W1_self_eq_zero` and `W1_comm`, this makes `W₁` a
+pseudometric on probability measures. -/
+theorem W1_triangle (μ ν ρ : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    [IsProbabilityMeasure ρ] : W1 μ ρ ≤ W1 μ ν + W1 ν ρ := by
+  have key : ∀ π₁ : Measure (Eucl d × Eucl d), IsCoupling π₁ μ ν →
+      ∀ π₂ : Measure (Eucl d × Eucl d), IsCoupling π₂ ν ρ →
+      W1 μ ρ ≤ transportCost π₁ + transportCost π₂ := by
+    intro π₁ h₁ π₂ h₂
+    have hp₁ : IsProbabilityMeasure π₁ := ⟨by rw [← Measure.fst_univ, h₁.1]; exact measure_univ⟩
+    have hp₂ : IsProbabilityMeasure π₂ := ⟨by rw [← Measure.fst_univ, h₂.1]; exact measure_univ⟩
+    exact W1_le_transportCost_add h₁ h₂
+  have hrw : W1 μ ν + W1 ν ρ = ⨅ π₂, ⨅ (_ : IsCoupling π₂ ν ρ), ⨅ π₁, ⨅ (_ : IsCoupling π₁ μ ν),
+      (transportCost π₁ + transportCost π₂) := by
+    simp only [W1, ENNReal.iInf_add, ENNReal.add_iInf]
+  rw [hrw]
+  exact le_iInf₂ fun π₂ h₂ => le_iInf₂ fun π₁ h₁ => key π₁ h₁ π₂ h₂
 
 end MeasureToMeasure

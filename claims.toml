@@ -395,6 +395,14 @@ lean      = "MeasureToMeasure.ofReal_integral_sub_le_W1"
 paper     = "Kantorovich-Rubinstein duality (W1 form); Claim 2 Markov bound"
 created   = "2026-07-02"
 
+[claims.wasserstein-w1-triangle]
+kind      = "theorem"
+statement = "Triangle inequality for W1 via gluing of couplings (milestone M2). MACHINE-CHECKED. exists_coupling_transportCost_le (gluing lemma): given a coupling pi1 of (mu,nu) and pi2 of (nu,rho) (probability measures), there is a coupling gamma of (mu,rho) with transportCost gamma <= transportCost pi1 + transportCost pi2. Construction: disintegrate pi2 = nu compProd kappa2 (its conditional z|y, via Measure.disintegrate + condKernel), lift kappa2 to a Y-reading kernel kappa on X x Y (Kernel.comap Prod.snd), form the triple T = pi1 compProd kappa on (X x Y) x Z. The (X,Y)-marginal of T is pi1 (Measure.fst_compProd), the (Y,Z)-marginal collapses to nu compProd kappa2 = pi2 (proved by Measure.ext_of_lintegral + lintegral_compProd + the shared marginal pi1.snd = nu = pi2.fst), and the (X,Z)-marginal gamma is a coupling of (mu,rho) whose cost is bounded via edist x z <= edist x y + edist y z (edist_triangle) and Tonelli. W1_le_transportCost_add (per-coupling): W1 mu rho <= transportCost pi1 + transportCost pi2. W1_triangle: W1 mu rho <= W1 mu nu + W1 nu rho, descending through the two infima by distributing + (ENNReal.iInf_add / add_iInf, valid unconditionally on ENNReal). With W1_self_eq_zero and W1_comm this makes W1 a pseudometric on probability measures. Uses Mathlib's disintegration/kernel machinery (condKernel, compProd, lintegral_compProd) which Wasserstein itself is not built on. #print axioms clean. Completes the W1 metric structure; W2 and the axiom rewiring remain."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W1_triangle"
+paper     = "Wasserstein W1 triangle inequality (gluing lemma / optimal transport)"
+created   = "2026-07-02"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
