@@ -375,6 +375,31 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     remaining gap is the (missing-in-Mathlib) global-existence packaging turning "for a given curve" into
     "for the flow map". Kernel-clean; does not yet discharge a paper flow axiom (needs global existence +
     the mean-field coupling, M3 Phase 4, gated on optimal transport M2).
+  - **Optimal transport: couplings and the `W₁` Kantorovich cost** (`Foundations/Wasserstein.lean`),
+    milestone **M2**, Phase 0/2 opening. Mathlib has the Lévy–Prokhorov metric but **no** optimal
+    transport (no couplings, no Wasserstein, no Kantorovich duality; `Axioms/Wasserstein.lean`
+    axiomatizes `W1`/`W2`). Built from scratch on `Measure.prod` / `Measure.fst` / `Measure.snd`:
+    `IsCoupling π μ ν := π.fst = μ ∧ π.snd = ν` (a transport plan with fixed marginals), with
+    `isCoupling_prod` (independent coupling), `isCoupling_diagonal` (the zero-cost diagonal plan), and
+    `IsCoupling.swap` (coordinate swap exchanges marginals). The cost `transportCost π = ∫⁻ edist p.1 p.2 ∂π`
+    (ℝ≥0∞-valued), with `transportCost_swap`/`transportCost_diagonal`. `W1 μ ν = ⨅` over couplings of the
+    cost; on the ℝ≥0∞ lattice the metric facts hold unconditionally: `W1_le_transportCost`,
+    `W1_self_eq_zero`, `W1_comm`. Kernel-clean. The first real slice of M2; the harder facts — the
+    Kantorovich–Rubinstein bound (signed integrals), the triangle inequality (gluing of couplings), and
+    completeness — are deferred, and the `W1`/`W2` axioms are not yet discharged (that is the M2 rewiring
+    once KR + triangle land). This is the gating prerequisite for the mean-field flow (M3 Phase 3–4).
+  - **Kantorovich–Rubinstein lower bound for `W₁`** (`Foundations/Wasserstein.lean`), M2. For a
+    `1`-Lipschitz test function `f`, the dual pairing lower-bounds the transport cost of every coupling,
+    hence lower-bounds `W₁`. `lipschitz_integral_sub_le_transportCost` (per coupling): `∫ f dμ − ∫ f dν ≤
+    ∫ dist(x,y) dπ` — push `f` through both marginals (`integral_map`), bound the integrand by `dist p.1 p.2`
+    (`LipschitzWith.dist_le_mul` + `le_abs_self`), integrate (`integral_mono`). `ofReal_integral_sub_le_W1`
+    (descent): `ENNReal.ofReal (∫ f dμ − ∫ f dν) ≤ W₁ μ ν` for integrable `1`-Lipschitz `f` — per coupling,
+    either the cost is `⊤` (trivial) or finite, whence `dist` is `π`-integrable
+    (`hasFiniteIntegral_iff_ofReal`) with integral `(transportCost π).toReal`
+    (`integral_eq_lintegral_of_nonneg_ae`), and `ofReal(toReal) ≤ id` closes it. This is **exactly the
+    content of the axiom `W1_ge_of_lipschitz`** (the paper's Markov bound, Claim 2); discharging that axiom
+    now reduces to threading the ℝ≥0∞/ℝ bookkeeping at the use sites. Kernel-clean. Requires integrability
+    hypotheses the general axiom elides; the triangle inequality and completeness remain for the full M2.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
