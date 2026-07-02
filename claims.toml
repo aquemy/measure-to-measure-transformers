@@ -419,6 +419,14 @@ lean      = "MeasureToMeasure.W2_triangle"
 paper     = "Wasserstein W2 triangle inequality (Minkowski / gluing lemma); optimal transport"
 created   = "2026-07-02"
 
+[claims.wasserstein-w2-convexity]
+kind      = "theorem"
+statement = "Convexity of the W2 (root) Wasserstein distance under mixtures (milestone M2, W2 discharge slice 2). MACHINE-CHECKED. Two mechanical lemmas plus an epsilon-approximation over the infimum. isCoupling_finset_sum_smul: if pi_k couples (P_k, Q_k) for each k, then the mixture sum_k a_k . pi_k couples (sum_k a_k . P_k, sum_k a_k . Q_k) -- the marginal map Prod.fst/snd is additive over the finite sum (Measure.map_sum via sum_fintype) and ENNReal-homogeneous (Measure.map_smul). sqTransportCost_finset_sum_smul: the squared cost is linear in the mixing measure, sqTransportCost (sum_k a_k . pi_k) = sum_k a_k * sqTransportCost (pi_k) (lintegral_finsetSum_measure + lintegral_smul_measure). W2_convexCombo_le: if sum_k a_k = 1 and every W2 (P_k) (Q_k) <= eps, then W2 (sum_k a_k . P_k) (sum_k a_k . Q_k) <= eps. Proof: ENNReal.le_of_forall_pos_le_add reduces to bounding by eps+eta; since W2 is an infimum, W2 (P_k)(Q_k) <= eps < eps+eta yields (iInf_lt_iff) a coupling pi_k of root cost < eps+eta; mix them, and the mixed squared cost sum_k a_k * sqTransportCost(pi_k) <= (eps+eta)^2 * sum_k a_k = (eps+eta)^2 (Minkowski not needed -- the squared cost is already linear in the mixture), so W2(mixture) <= (eps+eta). #print axioms clean. This is the last standalone W2 fact before the all-or-nothing flip of Axioms.W2 to concrete (threading integrability through L7/Prop 2.2/Thm 1.2)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W2_convexCombo_le"
+paper     = "Wasserstein W2 convexity under mixtures (gluing of couplings); optimal transport"
+created   = "2026-07-02"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================

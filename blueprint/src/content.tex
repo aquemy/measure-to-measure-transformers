@@ -211,6 +211,16 @@ $\mathrm{dist}(x,z) \le \mathrm{dist}(x,y)+\mathrm{dist}(y,z)$. With symmetry an
 makes $W_2$ a pseudometric -- the hard blocker of the $W_2$ axiom discharge. [machine-checked]
 \end{lemma}
 
+\begin{lemma}[$W_2$ convexity under mixtures]\label{found:w2conv}\lean{MeasureToMeasure.W2_convexCombo_le}\uses{found:w2tri}\leanok
+If $\sum_k a_k = 1$ and $W_2(P_k,Q_k)\le\varepsilon$ for every $k$, then the mixtures satisfy
+$W_2\big(\sum_k a_k P_k,\ \sum_k a_k Q_k\big)\le\varepsilon$. A mixture of couplings is a coupling of the
+mixtures (the marginal map is additive over the finite sum and $\mathbb R_{\ge0}^\infty$-homogeneous),
+and the squared cost is linear in the mixing measure, so no Minkowski step is needed. Because $W_2$ is
+an infimum, $W_2(P_k,Q_k)\le\varepsilon$ yields for any slack $\eta>0$ a coupling of root cost
+$<\varepsilon+\eta$; mixing these and using $\sum_k a_k = 1$ bounds the mixed squared cost by
+$(\varepsilon+\eta)^2$. [machine-checked]
+\end{lemma}
+
 \section{Mass transport and clustering}
 
 \begin{lemma}[Single ball pair, B.2]\label{lem:b2}\lean{MeasureToMeasure.Statements.lemma_B_2}\uses{lem:gate}
