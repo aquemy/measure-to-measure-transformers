@@ -99,4 +99,76 @@ theorem W1_comm (μ ν : Measure (Eucl d)) : W1 μ ν = W1 ν μ := by
   calc W1 α β ≤ transportCost (π.map Prod.swap) := W1_le_transportCost hπ.swap
     _ = transportCost π := transportCost_swap π
 
+/-!
+## The Kantorovich-Rubinstein bound (one direction)
+
+For a `1`-Lipschitz test function `f`, the dual pairing `∫ f dμ - ∫ f dν` lower-bounds the transport
+cost of *every* coupling, hence lower-bounds `W₁`. This is the direction of Kantorovich-Rubinstein
+duality the paper uses (the Markov bound, Claim 2). The mechanism: push `f` through both marginals of
+a coupling `π`, so the pairing becomes `∫ (f p.1 - f p.2) dπ`, then bound the integrand by
+`dist p.1 p.2` (Lipschitz) and integrate.
+-/
+
+/-- **Kantorovich-Rubinstein, per coupling.** For a `1`-Lipschitz `f` and a coupling `π` of `μ, ν`
+with finite transport cost, the dual pairing is bounded by the plan's average distance:
+`∫ f dμ - ∫ f dν ≤ ∫ dist(x, y) dπ`. -/
+theorem lipschitz_integral_sub_le_transportCost {f : Eucl d → ℝ} (hf : LipschitzWith 1 f)
+    {π : Measure (Eucl d × Eucl d)} {μ ν : Measure (Eucl d)} (hπ : IsCoupling π μ ν)
+    (hfμ : Integrable f μ) (hfν : Integrable f ν)
+    (hcost : Integrable (fun p => dist p.1 p.2) π) :
+    ∫ x, f x ∂μ - ∫ x, f x ∂ν ≤ ∫ p, dist p.1 p.2 ∂π := by
+  obtain ⟨hfst, hsnd⟩ := hπ
+  have hfst' : π.map Prod.fst = μ := hfst
+  have hsnd' : π.map Prod.snd = ν := hsnd
+  have haem1 : AEStronglyMeasurable f (π.map Prod.fst) := by
+    rw [hfst']; exact hfμ.aestronglyMeasurable
+  have haem2 : AEStronglyMeasurable f (π.map Prod.snd) := by
+    rw [hsnd']; exact hfν.aestronglyMeasurable
+  -- Rewrite each marginal integral as an integral over the coupling.
+  have hμ : ∫ x, f x ∂μ = ∫ p, f p.1 ∂π := by
+    rw [← hfst']; exact integral_map measurable_fst.aemeasurable haem1
+  have hν : ∫ x, f x ∂ν = ∫ p, f p.2 ∂π := by
+    rw [← hsnd']; exact integral_map measurable_snd.aemeasurable haem2
+  -- Integrability of the two pushed-forward test functions against `π`.
+  have hf1 : Integrable (fun p => f p.1) π :=
+    (integrable_map_measure haem1 measurable_fst.aemeasurable).mp (by rw [hfst']; exact hfμ)
+  have hf2 : Integrable (fun p => f p.2) π :=
+    (integrable_map_measure haem2 measurable_snd.aemeasurable).mp (by rw [hsnd']; exact hfν)
+  rw [hμ, hν, ← integral_sub hf1 hf2]
+  refine integral_mono (hf1.sub hf2) hcost (fun p => ?_)
+  -- Pointwise: `f p.1 - f p.2 ≤ |f p.1 - f p.2| = dist (f p.1) (f p.2) ≤ dist p.1 p.2`.
+  have hlip : dist (f p.1) (f p.2) ≤ dist p.1 p.2 := by
+    simpa using hf.dist_le_mul p.1 p.2
+  calc f p.1 - f p.2 ≤ |f p.1 - f p.2| := le_abs_self _
+    _ = dist (f p.1) (f p.2) := (Real.dist_eq _ _).symm
+    _ ≤ dist p.1 p.2 := hlip
+
+/-- **Kantorovich-Rubinstein lower bound for `W₁`.** For an integrable `1`-Lipschitz `f`, the dual
+pairing lower-bounds `W₁`: `ENNReal.ofReal (∫ f dμ - ∫ f dν) ≤ W₁ μ ν`. This is the direction of
+Kantorovich-Rubinstein duality the paper's Markov bound (Claim 2) uses; discharging the axiom
+`W1_ge_of_lipschitz` reduces to this once the ℝ≥0∞/ℝ bookkeeping is threaded at the use sites. -/
+theorem ofReal_integral_sub_le_W1 {f : Eucl d → ℝ} (hf : LipschitzWith 1 f)
+    {μ ν : Measure (Eucl d)} (hfμ : Integrable f μ) (hfν : Integrable f ν) :
+    ENNReal.ofReal (∫ x, f x ∂μ - ∫ x, f x ∂ν) ≤ W1 μ ν := by
+  refine le_iInf₂ fun π hπ => ?_
+  rcases eq_or_ne (transportCost π) ⊤ with hfin | hfin
+  · rw [hfin]; exact le_top
+  -- Finite cost: `dist` is `π`-integrable and its Bochner integral is `(transportCost π).toReal`.
+  have hnonneg : 0 ≤ᵐ[π] fun p => dist p.1 p.2 := ae_of_all _ fun _ => dist_nonneg
+  have haesm : AEStronglyMeasurable (fun p : Eucl d × Eucl d => dist p.1 p.2) π :=
+    continuous_dist.aestronglyMeasurable
+  have hlint : ∫⁻ p, ENNReal.ofReal (dist p.1 p.2) ∂π = transportCost π :=
+    lintegral_congr fun p => (edist_dist p.1 p.2).symm
+  have hcost : Integrable (fun p => dist p.1 p.2) π := by
+    refine ⟨haesm, ?_⟩
+    rw [hasFiniteIntegral_iff_ofReal hnonneg, hlint]
+    exact lt_top_iff_ne_top.mpr hfin
+  have hcost_eq : ∫ p, dist p.1 p.2 ∂π = (transportCost π).toReal := by
+    rw [integral_eq_lintegral_of_nonneg_ae hnonneg haesm, hlint]
+  have hbound := lipschitz_integral_sub_le_transportCost hf hπ hfμ hfν hcost
+  rw [hcost_eq] at hbound
+  calc ENNReal.ofReal (∫ x, f x ∂μ - ∫ x, f x ∂ν)
+      ≤ ENNReal.ofReal (transportCost π).toReal := ENNReal.ofReal_le_ofReal hbound
+    _ = transportCost π := ENNReal.ofReal_toReal hfin
+
 end MeasureToMeasure

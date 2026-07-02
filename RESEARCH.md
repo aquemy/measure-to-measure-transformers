@@ -388,6 +388,18 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     Kantorovich–Rubinstein bound (signed integrals), the triangle inequality (gluing of couplings), and
     completeness — are deferred, and the `W1`/`W2` axioms are not yet discharged (that is the M2 rewiring
     once KR + triangle land). This is the gating prerequisite for the mean-field flow (M3 Phase 3–4).
+  - **Kantorovich–Rubinstein lower bound for `W₁`** (`Foundations/Wasserstein.lean`), M2. For a
+    `1`-Lipschitz test function `f`, the dual pairing lower-bounds the transport cost of every coupling,
+    hence lower-bounds `W₁`. `lipschitz_integral_sub_le_transportCost` (per coupling): `∫ f dμ − ∫ f dν ≤
+    ∫ dist(x,y) dπ` — push `f` through both marginals (`integral_map`), bound the integrand by `dist p.1 p.2`
+    (`LipschitzWith.dist_le_mul` + `le_abs_self`), integrate (`integral_mono`). `ofReal_integral_sub_le_W1`
+    (descent): `ENNReal.ofReal (∫ f dμ − ∫ f dν) ≤ W₁ μ ν` for integrable `1`-Lipschitz `f` — per coupling,
+    either the cost is `⊤` (trivial) or finite, whence `dist` is `π`-integrable
+    (`hasFiniteIntegral_iff_ofReal`) with integral `(transportCost π).toReal`
+    (`integral_eq_lintegral_of_nonneg_ae`), and `ofReal(toReal) ≤ id` closes it. This is **exactly the
+    content of the axiom `W1_ge_of_lipschitz`** (the paper's Markov bound, Claim 2); discharging that axiom
+    now reduces to threading the ℝ≥0∞/ℝ bookkeeping at the use sites. Kernel-clean. Requires integrability
+    hypotheses the general axiom elides; the triangle inequality and completeness remain for the full M2.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
