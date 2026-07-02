@@ -476,4 +476,92 @@ theorem W2_triangle (μ ν ρ : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsP
   rw [hrw]
   exact le_iInf₂ fun π₂ h₂ => le_iInf₂ fun π₁ h₁ => key π₁ h₁ π₂ h₂
 
+/-!
+## Convexity of `W₂` under mixtures
+
+The mixture bound `W₂(∑ aₖ Pₖ, ∑ aₖ Qₖ) ≤ ε` (when every `W₂(Pₖ, Qₖ) ≤ ε` and `∑ aₖ = 1`) rests on two
+mechanical facts -- a mixture of couplings is a coupling of the mixtures, and the squared cost is
+linear in the mixing measure -- plus an `ε`-approximation over the infimum: `W₂` is an infimum
+(possibly unattained), so `W₂(Pₖ, Qₖ) ≤ ε` yields, for any slack `η > 0`, a coupling of root cost
+`< ε + η`, not one achieving `ε` exactly.
+-/
+
+/-- A **mixture of couplings is a coupling of the mixtures**: if `πₖ` couples `(Pₖ, Qₖ)` for each `k`,
+then `∑ aₖ • πₖ` couples `(∑ aₖ • Pₖ, ∑ aₖ • Qₖ)`. The marginal map `Prod.fst`/`Prod.snd` is additive
+(over the finite sum) and `ℝ≥0∞`-homogeneous (`Measure.map_smul`). -/
+theorem isCoupling_finset_sum_smul {M : ℕ} (a : Fin M → ℝ≥0∞)
+    {π : Fin M → Measure (Eucl d × Eucl d)} {P Q : Fin M → Measure (Eucl d)}
+    (h : ∀ k, IsCoupling (π k) (P k) (Q k)) :
+    IsCoupling (∑ k, a k • π k) (∑ k, a k • P k) (∑ k, a k • Q k) := by
+  have hmap : ∀ (g : Eucl d × Eucl d → Eucl d), Measurable g →
+      (∑ k, a k • π k).map g = ∑ k, a k • (π k).map g := by
+    intro g hg
+    rw [← Measure.sum_fintype, Measure.map_sum hg.aemeasurable]
+    simp_rw [Measure.map_smul]
+    rw [Measure.sum_fintype]
+  refine ⟨?_, ?_⟩
+  · show (∑ k, a k • π k).map Prod.fst = ∑ k, a k • P k
+    rw [hmap Prod.fst measurable_fst]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    congr 1; exact (h k).1
+  · show (∑ k, a k • π k).map Prod.snd = ∑ k, a k • Q k
+    rw [hmap Prod.snd measurable_snd]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    congr 1; exact (h k).2
+
+/-- The squared transport cost is **linear in the mixing measure**:
+`sqTransportCost (∑ aₖ • πₖ) = ∑ aₖ · sqTransportCost πₖ` (the lower integral splits over the finite
+sum and pulls out each scalar). -/
+theorem sqTransportCost_finset_sum_smul {M : ℕ} (a : Fin M → ℝ≥0∞)
+    (π : Fin M → Measure (Eucl d × Eucl d)) :
+    sqTransportCost (∑ k, a k • π k) = ∑ k, a k * sqTransportCost (π k) := by
+  rw [sqTransportCost, lintegral_finsetSum_measure]
+  refine Finset.sum_congr rfl fun k _ => ?_
+  rw [lintegral_smul_measure, smul_eq_mul]
+  rfl
+
+/-- **Convexity of `W₂` under mixtures.** If `∑ aₖ = 1` and every component pair is within `ε`
+(`W₂(Pₖ, Qₖ) ≤ ε`), then so is the mixture: `W₂(∑ aₖ • Pₖ, ∑ aₖ • Qₖ) ≤ ε`. Couple each pair near
+optimally, mix the couplings, and bound the mixed squared cost by `ε²` via `∑ aₖ = 1` (Minkowski is
+not needed -- the squared cost is already linear in the mixture). -/
+theorem W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) {P Q : Fin M → Measure (Eucl d)}
+    (ha : ∑ k, a k = 1) {ε : ℝ≥0∞} (hbound : ∀ k, W2 (P k) (Q k) ≤ ε) :
+    W2 (∑ k, a k • P k) (∑ k, a k • Q k) ≤ ε := by
+  refine ENNReal.le_of_forall_pos_le_add fun η hη hε => ?_
+  set B : ℝ≥0∞ := ε + (η : ℝ≥0∞) with hB
+  have hdlt : ε < B := by
+    rw [hB]; exact ENNReal.lt_add_right hε.ne (ENNReal.coe_pos.mpr hη).ne'
+  -- for each component, extract a coupling of root cost `< B` (the ε-approximation)
+  have hk : ∀ k, ∃ πk : Measure (Eucl d × Eucl d),
+      IsCoupling πk (P k) (Q k) ∧ sqTransportCost πk ^ (2⁻¹ : ℝ) < B := by
+    intro k
+    have hlt : W2 (P k) (Q k) < B := lt_of_le_of_lt (hbound k) hdlt
+    rw [W2] at hlt
+    obtain ⟨πk, hπk⟩ := iInf_lt_iff.mp hlt
+    obtain ⟨hcplk, hcostk⟩ := iInf_lt_iff.mp hπk
+    exact ⟨πk, hcplk, hcostk⟩
+  choose π hcpl hcost using hk
+  have hcplγ : IsCoupling (∑ k, a k • π k) (∑ k, a k • P k) (∑ k, a k • Q k) :=
+    isCoupling_finset_sum_smul a hcpl
+  -- root cost `< B` gives squared cost `≤ B²`, summed against the unit weights stays `≤ B²`
+  have hsq : ∀ x : ℝ≥0∞, x ^ (2⁻¹ : ℝ) ≤ B → x ≤ B ^ (2 : ℝ) := by
+    intro x hx
+    calc x = (x ^ (2⁻¹ : ℝ)) ^ (2 : ℝ) := by
+            rw [← ENNReal.rpow_mul, show (2⁻¹ : ℝ) * 2 = 1 by norm_num, ENNReal.rpow_one]
+      _ ≤ B ^ (2 : ℝ) := ENNReal.rpow_le_rpow hx (by norm_num)
+  have hA : ∑ k, a k * sqTransportCost (π k) ≤ B ^ (2 : ℝ) := by
+    calc ∑ k, a k * sqTransportCost (π k)
+        ≤ ∑ k, a k * B ^ (2 : ℝ) :=
+          Finset.sum_le_sum fun k _ => by gcongr; exact hsq _ (hcost k).le
+      _ = (∑ k, a k) * B ^ (2 : ℝ) := by rw [← Finset.sum_mul]
+      _ = B ^ (2 : ℝ) := by rw [ha, one_mul]
+  have hpow : (B ^ (2 : ℝ)) ^ (2⁻¹ : ℝ) = B := by
+    rw [← ENNReal.rpow_mul, show (2 : ℝ) * 2⁻¹ = 1 by norm_num, ENNReal.rpow_one]
+  calc W2 (∑ k, a k • P k) (∑ k, a k • Q k)
+      ≤ sqTransportCost (∑ k, a k • π k) ^ (2⁻¹ : ℝ) := W2_le_rpow_sqTransportCost hcplγ
+    _ = (∑ k, a k * sqTransportCost (π k)) ^ (2⁻¹ : ℝ) := by
+          rw [sqTransportCost_finset_sum_smul]
+    _ ≤ (B ^ (2 : ℝ)) ^ (2⁻¹ : ℝ) := ENNReal.rpow_le_rpow hA (by norm_num)
+    _ = B := hpow
+
 end MeasureToMeasure

@@ -116,11 +116,13 @@ Apache-headed). Preparation only — nothing is contributed to Mathlib. See `For
   now in `blueprint/src/content.tex` under a "Machine-checked foundations" section; `claimgraph reconcile`
   reports no stale-blueprint nodes. The Quarto proofs pages (`site/proofs/_*.qmd`) remain a curated
   narrative and are a separate, deliberately smaller representation.
-- **`W₂` axiom discharge (in progress):** slice 1 done -- the `W₂` (root) distance and its **triangle
-  inequality** (Minkowski + gluing, `W2_triangle`) are machine-checked in `Foundations/Wasserstein.lean`,
-  so `W₂` is now a pseudometric on probability measures. Remaining: `W2_convexCombo_le` (mixture
-  couplings), then the all-or-nothing flip of `Axioms.W2` to a concrete definition, threading
-  integrability through its consumers (L7 / Prop 2.2 / Theorem 1.2).
+- **`W₂` axiom discharge (in progress):** slices 1--2 done. The `W₂` (root) distance is a machine-checked
+  **pseudometric** (`W2_triangle`, Minkowski + gluing) and is **convex under mixtures**
+  (`W2_convexCombo_le`: if `∑ aₖ = 1` and every `W₂(Pₖ,Qₖ) ≤ ε`, so is the mixture), both in
+  `Foundations/Wasserstein.lean`. That exhausts the standalone `W₂` facts the mid-level assembly needs.
+  Remaining (slice 3, invasive): the all-or-nothing flip of `Axioms.W2` to a concrete definition,
+  threading integrability through its consumers (L7 `Coupling.lean` / Prop 2.2 `MidLevel.lean` /
+  Theorem 1.2 `MainResults.lean`).
 - **M3 mean-field flow:** discharge `flowMap` (global existence + McKean-Vlasov well-posedness), gated
   on completing M2.
 
