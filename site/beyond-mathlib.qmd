@@ -150,12 +150,6 @@ kernel.
 
 ## Scale and honesty
 
-The full program is on the order of **5--10 person-years** -- comparable to formalizing a graduate
-monograph plus several flagship Mathlib contributions. Optimal transport (M2) and the mean-field flow
-(M3) are the genuine bottlenecks; M6 is meaningfully de-risked by the reuse above, and M5 by Mathlib's
-incoming geometry. That scale is exactly why the project axiomatizes today -- and says so plainly,
-rather than badging any node above what the kernel certifies.
-
 One honesty subtlety the per-node badges cannot see: a hand-written axiom *layer* must also be
 **jointly consistent**. A per-node `#print axioms` check is blind to a contradiction spread across
 several axioms -- an inconsistent block would let the kernel prove anything while every badge still
