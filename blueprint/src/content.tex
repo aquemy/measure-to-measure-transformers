@@ -5,7 +5,7 @@
 % Status convention used in the text of each node:
 %   [machine-checked]  clean Lean kernel proof (only propext/Classical.choice/Quot.sound)
 %   [axiomatised]      stated in Lean, rests on a labeled axiom (W2 / flow map)
-%   [open]             stated in Lean as a sorry stub
+%   [open]             stated in Lean but not yet proved (a sorry or placeholder-axiom stub)
 %   [informal]         reviewed on paper, not yet stated in Lean
 
 \section{Foundations}
@@ -88,10 +88,12 @@ set carrying full mass). Closes the general-measure residual of F2 with no new a
 $W_2(T^1_\#\mu, T^2_\#\mu) \le \|T^1-T^2\|_{L^2(\mu)}$ (Lemma 5.2). [axiomatised]
 \end{lemma}
 
-\begin{lemma}[Markov bound, L8]\label{lem:markov}\lean{MeasureToMeasure.Leaves.markov_bound}\uses{ax:W2}
-$W_2(\mu,\delta_{x_0})\le\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). The
-truncated-distance bump is machine-checked $1$-Lipschitz; the Markov inequality is derived from it via
-$W_1$ Kantorovich-Rubinstein duality. [axiomatised]
+\begin{lemma}[Markov bound, L8]\label{lem:markov}\lean{MeasureToMeasure.Leaves.markov_bound}\leanok
+$W_1(\mu,\delta_{x_0})\le C\eta_2 \Rightarrow 1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ (Claim 2). The
+truncated-distance bump $f=\min(\eta_3,\operatorname{dist}(\cdot,x_0))$ is machine-checked $1$-Lipschitz,
+vanishes at $x_0$, and dominates $\eta_3\,\mathbf 1_{\{\operatorname{dist}\ge\eta_3\}}$; the Markov
+inequality then follows from the $W_1$ Kantorovich-Rubinstein bound, now a proved theorem
+(\texttt{Foundations.ofReal\_integral\_sub\_le\_W1}) rather than an axiom. [machine-checked]
 \end{lemma}
 
 \section{Mass transport and clustering}

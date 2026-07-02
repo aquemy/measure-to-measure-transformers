@@ -56,6 +56,9 @@ experiments/results/*
 /site/fonts/*.ttf
 /site/experiments-figures/
 
+# Honesty drift guard: regenerated each run by scripts/audit.sh (axiom-report + reconcile output).
+/.cache/
+
 # OS
 .DS_Store
 

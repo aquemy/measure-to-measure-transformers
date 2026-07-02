@@ -123,6 +123,24 @@ def run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(cmd, cwd=str(cwd))
 
 
+def run_audit() -> int:
+    """Kernel-honesty drift guard: refuse to publish a site whose badges have drifted from what
+    ``#print axioms`` certifies (see ``scripts/audit.sh``: axiom-report + claimgraph audit/reconcile
+    + an incompleteness sweep). Set ``SKIP_AUDIT=1`` for a quick site-only iteration when the Lean
+    project is unbuilt or the honesty tools are unavailable."""
+    import os
+
+    if os.environ.get("SKIP_AUDIT"):
+        print("skipping the honesty drift guard (SKIP_AUDIT set).")
+        return 0
+    audit = REPO / "scripts" / "audit.sh"
+    if not audit.exists():
+        print("  warning: scripts/audit.sh missing; skipping the honesty drift guard.")
+        return 0
+    print("running the honesty drift guard (scripts/audit.sh) ...")
+    return subprocess.run(["bash", str(audit)], cwd=str(REPO)).returncode
+
+
 def main() -> int:
     # claimgraph is provisioned at runtime (see the module docstring); fail with an actionable
     # message if the env is not set up, rather than a bare ImportError.
@@ -141,6 +159,13 @@ def main() -> int:
 
     DOCS.mkdir(parents=True, exist_ok=True)
     claims_path = str(CLAIMS) if CLAIMS.exists() else None
+
+    # 0. Kernel-honesty drift guard (fail fast, before the expensive render): never publish a site
+    #    whose badges have drifted from what `#print axioms` certifies.
+    if run_audit() != 0:
+        msg = "honesty drift guard failed; refusing to build the site. Fix the drift, or set SKIP_AUDIT=1 for a quick site-only iteration."
+        print(msg, file=sys.stderr)
+        return 1
 
     # 1-3. ClaimGraph: end-state graph + replay frames -> json, viewer, timeline, commit log.
     print("regenerating the ClaimGraph from git history ...")
