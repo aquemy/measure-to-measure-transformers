@@ -413,6 +413,15 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     With `W1_self_eq_zero` + `W1_comm` this makes `W₁` a **pseudometric** on probability measures. Uses
     Mathlib's disintegration/kernel machinery (`condKernel`, `⊗ₘ`, `lintegral_compProd`) which the paper's
     OT layer is not otherwise built on. Kernel-clean. `W₂` and the `Axioms/Wasserstein.lean` rewiring remain.
+  - **Quadratic Wasserstein cost `W₂²` and the map-coupling bound** (`Foundations/Wasserstein.lean`), M2.
+    Mirrors the `W₁` construction for the quadratic cost: `sqTransportCost π = ∫⁻ edist(x,y)² ∂π`,
+    `W2sq μ ν = ⨅` over couplings (the squared `W₂`, ℝ≥0∞-valued), with the unconditional facts
+    `W2sq_self_eq_zero`, `W2sq_comm`, `W2sq_le_sqTransportCost`. `W2sq_map_le` (**Lemma 5.2, squared form**):
+    `W₂²(T₁_# μ, T₂_# μ) ≤ ∫⁻ edist(T₁ x, T₂ x)² ∂μ`, the squared `W₂` between two pushforwards bounded by
+    the `L²` cost of moving `T₁` to `T₂`, witnessed by the map coupling `(T₁,T₂)_# μ` (marginals via
+    `fst_map_prodMk`/`snd_map_prodMk`, cost via `lintegral_map`). This is the content of the axiom
+    `W2_map_le_L2`, in squared ℝ≥0∞ form. Kernel-clean. Deferred: the square root recovering `W₂`, the `W₂`
+    triangle inequality (Minkowski/gluing), `W2_convexCombo_le`, and the `Axioms/Wasserstein.lean` rewiring.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 

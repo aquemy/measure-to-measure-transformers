@@ -403,6 +403,14 @@ lean      = "MeasureToMeasure.W1_triangle"
 paper     = "Wasserstein W1 triangle inequality (gluing lemma / optimal transport)"
 created   = "2026-07-02"
 
+[claims.wasserstein-w2-map-bound]
+kind      = "theorem"
+statement = "Quadratic Wasserstein cost W2sq and the map-coupling bound (milestone M2). MACHINE-CHECKED. Mirrors the W1 construction for the quadratic cost: sqTransportCost pi = lintegral of edist(x,y)^2, W2sq mu nu = iInf over couplings of sqTransportCost (the squared W2 distance, ENNReal-valued). Unconditional metric facts: W2sq_le_sqTransportCost, W2sq_self_eq_zero (diagonal coupling), W2sq_comm (swap). W2sq_map_le (Lemma 5.2, squared form): W2sq (mu.map T1) (mu.map T2) <= lintegral of edist(T1 x, T2 x)^2 dmu -- the squared W2 between two pushforwards is bounded by the L2 cost of moving T1 to T2, witnessed by the map coupling (T1,T2)_# mu (marginals via fst_map_prodMk/snd_map_prodMk, cost via lintegral_map). This is the content of the axiom W2_map_le_L2 (the OT fact Lemma 5.2 invokes), in squared ENNReal form. #print axioms clean. Deferred: sqrt to recover W2 itself, the W2 triangle inequality (Minkowski/gluing), W2_convexCombo_le, and the Axioms/Wasserstein.lean rewiring."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W2sq_map_le"
+paper     = "Wasserstein W2 map-coupling bound (Lemma 5.2); quadratic Kantorovich cost"
+created   = "2026-07-02"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
