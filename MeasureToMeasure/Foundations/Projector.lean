@@ -19,6 +19,8 @@ open scoped RealInnerProductSpace
 
 variable {d : ℕ}
 
+-- ForMathlib candidate (general tangential-projector identities, not paper-specific): stage +
+-- readiness-check via lean-math:mathlib-ready before any upstreaming (a human decision).
 /-- The tangential projector `P_x^⊥ v = v - ⟪x, v⟫ x`. For `‖x‖ = 1` this is the orthogonal
 projection onto the tangent space `{x}^⊥`. -/
 noncomputable def tangentialProjector (x v : Eucl d) : Eucl d := v - (⟪x, v⟫) • x

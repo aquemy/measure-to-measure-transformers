@@ -46,6 +46,13 @@ Everything above is kernel-clean; the [claim graph](claimgraph.qmd) badges each 
 commit history records every step under the [Conventional Knowledge Commits](history.qmd) discipline
 (each `Status:` footer cross-checked against `#print axioms` by a pre-commit hook).
 
+The leaves are written Mathlib-style from the start (snake_case terms, `UpperCamelCase` types,
+everything namespaced under `MeasureToMeasure.*`), so the clean ones are born re-usable. The status
+the badges read is *regenerated* from `#print axioms` and compared, which is the real drift guard: a
+blueprint `checkdecls` only confirms each `\lean{}` name exists, not that its stated status still
+matches the kernel. The full re-usability discipline is catalogued in the `lean-math` plugin's
+[`reusable-blueprints.md`](https://github.com/aquemy/agent-plugins/blob/main/plugins/lean-math/skills/mathlib-ready/references/reusable-blueprints.md).
+
 ## The build DAG
 
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
@@ -101,6 +108,23 @@ A caveat kept in mind: several "0 `sorry`" AI-generated Lean repos for LaSalle/L
 such artifacts frequently prove weakened statements -- so any reuse is gated on a `#print axioms`
 check and a statement-faithfulness review, the same discipline this project applies to its own claims.
 
+## What we could give back: ForMathlib candidates
+
+The reuse audit runs both ways. Several of the machine-checked leaves are general-purpose spherical
+geometry with no dependence on the paper's specific construction, so they are natural **ForMathlib
+candidates** (marked in the Lean source with a `-- ForMathlib candidate:` comment):
+
+- the **tangential-projector identities** `P_x^⊥ v = v - ⟪x,v⟫ x` (symmetry, idempotence, and the
+  quadratic identity `⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x,v⟫²`);
+- **geodesic distance** `d_g(x,y) = arccos⟪x,y⟫` with its range and `cos`-of-angle facts;
+- the **separating-hyperplane** bound from cosine monotonicity;
+- **barycenter non-colinearity** for disjoint geodesic hulls.
+
+These are *prepared*, not published: staging them ForMathlib-style (minimal imports, generic names,
+an Apache header, passing linters) is a mechanical readiness step, but actually contributing them to
+Mathlib is a deliberate human decision, not something the pipeline does on its own. Optimal transport
+and the mean-field flow, by contrast, are multi-year theory gaps, not quick upstream wins.
+
 ## The first target: M8a — discharged
 
 The chosen first slice was the smallest self-contained win: discharge `exists_atomless_partition` (the
@@ -131,6 +155,14 @@ monograph plus several flagship Mathlib contributions. Optimal transport (M2) an
 (M3) are the genuine bottlenecks; M6 is meaningfully de-risked by the reuse above, and M5 by Mathlib's
 incoming geometry. That scale is exactly why the project axiomatizes today -- and says so plainly,
 rather than badging any node above what the kernel certifies.
+
+One honesty subtlety the per-node badges cannot see: a hand-written axiom *layer* must also be
+**jointly consistent**. A per-node `#print axioms` check is blind to a contradiction spread across
+several axioms -- an inconsistent block would let the kernel prove anything while every badge still
+reads clean. The M8a soundness bug (the `M = 1` hemisphere collapse, above) was exactly such a latent
+inconsistency, caught by reasoning about a model rather than by any single `#print axioms`. So each
+axiom carries the obligation to exhibit -- or, once discharged, to *derive* -- a model that satisfies
+it; discharging the layer is what replaces that argument with a machine-checked one.
 
 The [claim graph](claimgraph.qmd) shows the live per-node status; the
 [repository](https://github.com/aquemy/measure-to-measure-transformers) holds the complete roadmap

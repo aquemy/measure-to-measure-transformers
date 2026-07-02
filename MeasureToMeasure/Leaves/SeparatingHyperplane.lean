@@ -18,6 +18,8 @@ open MeasureToMeasure
 
 variable {d : ℕ}
 
+-- ForMathlib candidate (general spherical-geometry leaf): stage + readiness-check via
+-- lean-math:mathlib-ready before any upstreaming (a human decision, not automated).
 /-- L3 (separating side): if `x` is far from the anchor `ω` (`d_g(ω, x) ≥ π/2`) and
 `τ ∈ (0, 3π/8)`, then `⟪ω, x⟫ < cos(π/8 + τ)`, so `x` lies strictly on the far side of the
 separating hyperplane. -/
