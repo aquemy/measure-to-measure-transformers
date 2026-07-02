@@ -181,4 +181,97 @@ theorem Block.exists_globalIntegralCurve (b : Block d) (x : Eucl d) :
   rw [hfe] at key
   exact key.hasDerivWithinAt
 
+/-!
+## The point flow map of a block
+
+`blockFlow b t x` is the value at time `t` of the (unique) integral curve through `x`. From the
+autonomous-field algebra of `SphereFlow.lean` it is the identity at `t = 0`, a one-parameter group
+(`blockFlow t ∘ blockFlow s = blockFlow (s+t)`), injective at every time, and preserves the sphere.
+-/
+
+/-- The global integral curve through `x` (choice of `exists_globalIntegralCurve`). -/
+noncomputable def Block.blockCurve (b : Block d) (x : Eucl d) : ℝ → Eucl d :=
+  (b.exists_globalIntegralCurve x).choose
+
+theorem Block.blockCurve_zero (b : Block d) (x : Eucl d) : b.blockCurve x 0 = x :=
+  (b.exists_globalIntegralCurve x).choose_spec.1
+
+theorem Block.blockCurve_isIntegralCurve (b : Block d) (x : Eucl d) :
+    IsIntegralCurve (b.blockCurve x) (fun _ => b.field) :=
+  (b.exists_globalIntegralCurve x).choose_spec.2
+
+/-- The **point flow** of a block: `blockFlow b t x` transports `x` along the field for time `t`. -/
+noncomputable def Block.blockFlow (b : Block d) (t : ℝ) (x : Eucl d) : Eucl d := b.blockCurve x t
+
+@[simp] theorem Block.blockFlow_zero (b : Block d) (x : Eucl d) : b.blockFlow 0 x = x :=
+  b.blockCurve_zero x
+
+theorem Block.blockFlow_zero_eq_id (b : Block d) : b.blockFlow 0 = id := by
+  funext x; exact b.blockFlow_zero x
+
+/-- **Semigroup law.** Flowing for `s` and then for `t` equals flowing for `s + t`. -/
+theorem Block.blockFlow_add (b : Block d) (s t : ℝ) (x : Eucl d) :
+    b.blockFlow t (b.blockFlow s x) = b.blockFlow (s + t) x := by
+  have h := integralCurve_semigroup b.lipschitz (b.blockCurve_isIntegralCurve x)
+    (b.blockCurve_isIntegralCurve (b.blockCurve x s)) s (b.blockCurve_zero _)
+  simpa only [Block.blockFlow] using h t
+
+/-- **Injectivity** of the time-`t` point flow: two curves agreeing at time `t` agree at time `0`. -/
+theorem Block.blockFlow_injective (b : Block d) (t : ℝ) : Function.Injective (b.blockFlow t) := by
+  intro x y hxy
+  have hx : IsIntegralCurve (fun s => b.blockCurve x (t + s)) (fun _ => b.field) :=
+    integralCurve_comp_add (b.blockCurve_isIntegralCurve x) t
+  have hy : IsIntegralCurve (fun s => b.blockCurve y (t + s)) (fun _ => b.field) :=
+    integralCurve_comp_add (b.blockCurve_isIntegralCurve y) t
+  have h0 : (fun s => b.blockCurve x (t + s)) 0 = (fun s => b.blockCurve y (t + s)) 0 := by
+    simp only [add_zero]; exact hxy
+  have heq := integralCurve_unique b.lipschitz hx hy h0
+  have := congrFun heq (-t)
+  simpa only [add_neg_cancel, b.blockCurve_zero] using this
+
+/-- **Sphere invariance.** If `x` is on the unit sphere, so is `blockFlow b t x` for all `t ≥ 0`
+(the radial-tangency identity plus the uniform gate bound feed the Grönwall argument). -/
+theorem Block.blockFlow_mem_sphere (b : Block d) {x : Eucl d} (hx : x ∈ sphere d) {t : ℝ}
+    (ht : 0 ≤ t) : b.blockFlow t x ∈ sphere d := by
+  have hnorm := norm_sq_eq_one_of_radial_tangent
+    (x := b.blockCurve x) (v := fun s => b.field (b.blockCurve x s))
+    (c := fun s => b.gate (b.blockCurve x s)) (K := b.gateBound) (T := t)
+    (fun s _ => b.blockCurve_isIntegralCurve x s)
+    (fun s _ => b.radial (b.blockCurve x s))
+    (fun s _ => b.gate_le (b.blockCurve x s))
+    (by rw [b.blockCurve_zero x]; exact norm_eq_one_of_mem_sphere hx)
+  have hb : ‖b.blockCurve x t‖ = 1 := hnorm t ⟨ht, le_refl t⟩
+  simpa only [sphere, Metric.mem_sphere, dist_eq_norm, sub_zero, Block.blockFlow] using hb
+
+/-- **Bijectivity** of the time-`t` point flow, with inverse the time-`(-t)` flow. -/
+theorem Block.blockFlow_bijective (b : Block d) (t : ℝ) : Function.Bijective (b.blockFlow t) :=
+  ⟨b.blockFlow_injective t,
+    fun y => ⟨b.blockFlow (-t) y, by rw [b.blockFlow_add]; simp⟩⟩
+
+/-- The time-`(-t)` flow is a left inverse of the time-`t` flow: `Φ^{-t} ∘ Φ^t = id`. -/
+theorem Block.blockFlow_neg_comp (b : Block d) (t : ℝ) (x : Eucl d) :
+    b.blockFlow (-t) (b.blockFlow t x) = x := by rw [b.blockFlow_add]; simp
+
+/-- **Grönwall dependence on the initial value.** For `t ≥ 0` the point flow spreads distances by at
+most `e^{K t}`: `dist (Φ^t x) (Φ^t y) ≤ dist x y · e^{K t}`. -/
+theorem Block.blockFlow_dist_le (b : Block d) {t : ℝ} (ht : 0 ≤ t) (x y : Eucl d) :
+    dist (b.blockFlow t x) (b.blockFlow t y) ≤ dist x y * Real.exp (b.lipConst * t) := by
+  have h := integralCurve_dist_le b.lipschitz (b.blockCurve_isIntegralCurve x)
+    (b.blockCurve_isIntegralCurve y) ht
+  simpa only [b.blockCurve_zero, Block.blockFlow] using h
+
+/-- The point flow is Lipschitz (hence continuous and measurable) in the initial value, for `t ≥ 0`. -/
+theorem Block.lipschitzWith_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
+    LipschitzWith (Real.exp (b.lipConst * t)).toNNReal (b.blockFlow t) := by
+  apply LipschitzWith.of_dist_le_mul
+  intro x y
+  rw [Real.coe_toNNReal _ (Real.exp_nonneg _), mul_comm]
+  exact b.blockFlow_dist_le ht x y
+
+theorem Block.continuous_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
+    Continuous (b.blockFlow t) := (b.lipschitzWith_blockFlow ht).continuous
+
+theorem Block.measurable_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
+    Measurable (b.blockFlow t) := (b.continuous_blockFlow ht).measurable
+
 end MeasureToMeasure
