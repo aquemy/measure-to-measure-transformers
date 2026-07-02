@@ -564,4 +564,40 @@ theorem W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) {P Q : Fin M → 
     _ ≤ (B ^ (2 : ℝ)) ^ (2⁻¹ : ℝ) := ENNReal.rpow_le_rpow hA (by norm_num)
     _ = B := hpow
 
+/-!
+## Finiteness of `W₂`
+
+The `ℝ`-valued interface (`Axioms.W2 := (W2 · ·).toReal`) is only faithful where `W₂` is finite: `toReal`
+sends `⊤` to `0`, so a hypothesis-free `ℝ` triangle/convexity fact about a possibly-infinite `W₂` would
+be unsound. For the paper's measures -- probability measures on the unit sphere -- `W₂` is finite: the
+product coupling moves mass across a distance at most the support diameter, so its squared cost is
+bounded. This is the finiteness lemma the `W₂` axiom flip needs.
+-/
+
+/-- **`W₂` is finite for boundedly-supported probability measures.** If `μ` and `ν` are probability
+measures a.e.-supported in the ball of radius `R` (in particular any measures on the unit sphere,
+`R = 1`), the product coupling has squared cost at most `(2R)²`, so `W₂ μ ν ≠ ⊤`. -/
+theorem W2_ne_top_of_ae_norm_le (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    [IsProbabilityMeasure ν] {R : ℝ} (hμ : ∀ᵐ x ∂μ, ‖x‖ ≤ R) (hν : ∀ᵐ y ∂ν, ‖y‖ ≤ R) :
+    W2 μ ν ≠ ⊤ := by
+  have hae : ∀ᵐ p ∂(μ.prod ν), edist p.1 p.2 ^ 2 ≤ ENNReal.ofReal ((2 * R) ^ 2) := by
+    have h1 : ∀ᵐ p ∂(μ.prod ν), ‖p.1‖ ≤ R := Measure.quasiMeasurePreserving_fst.ae hμ
+    have h2 : ∀ᵐ p ∂(μ.prod ν), ‖p.2‖ ≤ R := Measure.quasiMeasurePreserving_snd.ae hν
+    filter_upwards [h1, h2] with p hp1 hp2
+    have hdist : dist p.1 p.2 ≤ 2 * R := by
+      rw [dist_eq_norm]
+      calc ‖p.1 - p.2‖ ≤ ‖p.1‖ + ‖p.2‖ := norm_sub_le _ _
+        _ ≤ 2 * R := by linarith
+    rw [edist_dist, ← ENNReal.ofReal_pow dist_nonneg]
+    exact ENNReal.ofReal_le_ofReal (by nlinarith [dist_nonneg (x := p.1) (y := p.2)])
+  have hcost : sqTransportCost (μ.prod ν) ≤ ENNReal.ofReal ((2 * R) ^ 2) := by
+    rw [sqTransportCost]
+    calc ∫⁻ p, edist p.1 p.2 ^ 2 ∂(μ.prod ν)
+        ≤ ∫⁻ _, ENNReal.ofReal ((2 * R) ^ 2) ∂(μ.prod ν) := lintegral_mono_ae hae
+      _ = ENNReal.ofReal ((2 * R) ^ 2) := by rw [lintegral_const, measure_univ, mul_one]
+  have hfin : sqTransportCost (μ.prod ν) ≠ ⊤ := ne_top_of_le_ne_top ENNReal.ofReal_ne_top hcost
+  have hle : W2 μ ν ≤ sqTransportCost (μ.prod ν) ^ (2⁻¹ : ℝ) :=
+    W2_le_rpow_sqTransportCost (isCoupling_prod μ ν)
+  exact ne_top_of_le_ne_top (ENNReal.rpow_ne_top_of_nonneg (by norm_num) hfin) hle
+
 end MeasureToMeasure

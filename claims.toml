@@ -475,6 +475,14 @@ lean      = "MeasureToMeasure.W2_convexCombo_le"
 paper     = "Wasserstein W2 convexity under mixtures (gluing of couplings); optimal transport"
 created   = "2026-07-02"
 
+[claims.wasserstein-w2-finiteness]
+kind      = "theorem"
+statement = "Finiteness of the W2 Wasserstein distance for boundedly-supported probability measures (milestone M2, W2 discharge slice 3: the last foundation blocker before the flip). MACHINE-CHECKED. The ℝ-valued interface Axioms.W2 := (W2 . .).toReal is only faithful where W2 is finite (toReal sends ⊤ to 0, so a hypothesis-free ℝ triangle/convexity fact about a possibly-infinite W2 would be UNSOUND -- exactly the risk the Axioms/Wasserstein.lean comment flags). W2_ne_top_of_ae_norm_le: if mu, nu are probability measures a.e.-supported in the ball of radius R (in particular any measures on the unit sphere, R=1), then W2 mu nu != ⊤. Proof: the product coupling mu.prod nu (isCoupling_prod) moves mass across edist p.1 p.2 = ofReal (dist p.1 p.2) <= ofReal (2R) a.e. (the a.e. norm bounds transported to the product via Measure.quasiMeasurePreserving_fst/snd .ae + filter_upwards + norm_sub_le), so its squared cost is <= ofReal((2R)^2) < ⊤ (lintegral_mono_ae + lintegral_const + measure_univ on the product probability measure), and W2 <= (sqTransportCost)^(1/2) < ⊤ (ENNReal.rpow_ne_top_of_nonneg). #print axioms clean (propext/Classical.choice/Quot.sound). This is the finiteness the ℝ-valued .toReal bridge needs to discharge the W2 triangle/convexity/map axioms honestly; the remaining step is the flip of Axioms.W2 to concrete, threading this finiteness (with the sphere-support facts already in context) through Prop 2.2 / Lemma 5.2 / Thm 1.2."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W2_ne_top_of_ae_norm_le"
+paper     = "Wasserstein W2 finiteness for compactly-supported measures; optimal transport"
+created   = "2026-07-02"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================
