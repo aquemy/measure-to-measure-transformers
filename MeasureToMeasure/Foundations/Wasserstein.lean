@@ -273,4 +273,68 @@ theorem W1_triangle (μ ν ρ : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsP
   rw [hrw]
   exact le_iInf₂ fun π₂ h₂ => le_iInf₂ fun π₁ h₁ => key π₁ h₁ π₂ h₂
 
+/-!
+## The quadratic Wasserstein cost `W₂²`
+
+The paper's Lemma 5.2 controls `W₂` between two pushforwards of a measure by the `L²` distance of the
+maps. We build the quadratic cost in squared form `W₂²` (the infimum of `∫ dist² dπ` over couplings),
+staying in `ℝ≥0∞` as for `W₁`, and prove the map-coupling bound witnessed by `(T₁, T₂)_# μ`, together
+with the unconditional metric facts. Taking square roots to recover `W₂` itself, and the `W₂` triangle
+inequality (Minkowski/gluing), are deferred.
+-/
+
+/-- The **squared transport cost** of a plan `π`: `∫ dist(x, y)² dπ(x, y)` as an `ℝ≥0∞` lower integral. -/
+noncomputable def sqTransportCost (π : Measure (Eucl d × Eucl d)) : ℝ≥0∞ :=
+  ∫⁻ p, edist p.1 p.2 ^ 2 ∂π
+
+/-- The **squared `W₂` Kantorovich cost** between `μ` and `ν`: the infimum of the squared transport
+cost over all couplings. Its square root is the Wasserstein-2 distance. -/
+noncomputable def W2sq (μ ν : Measure (Eucl d)) : ℝ≥0∞ :=
+  ⨅ (π : Measure (Eucl d × Eucl d)) (_ : IsCoupling π μ ν), sqTransportCost π
+
+/-- Every coupling upper-bounds `W₂²`. -/
+theorem W2sq_le_sqTransportCost {π : Measure (Eucl d × Eucl d)} {μ ν : Measure (Eucl d)}
+    (h : IsCoupling π μ ν) : W2sq μ ν ≤ sqTransportCost π :=
+  iInf_le_of_le π (iInf_le_of_le h le_rfl)
+
+/-- The squared transport cost is invariant under swapping coordinates. -/
+theorem sqTransportCost_swap (π : Measure (Eucl d × Eucl d)) :
+    sqTransportCost (π.map Prod.swap) = sqTransportCost π := by
+  rw [sqTransportCost, lintegral_map (by fun_prop) measurable_swap]
+  simp only [Prod.fst_swap, Prod.snd_swap, sqTransportCost]
+  exact lintegral_congr fun p => by rw [edist_comm]
+
+/-- The diagonal coupling has zero squared cost. -/
+theorem sqTransportCost_diagonal (μ : Measure (Eucl d)) :
+    sqTransportCost (μ.map (fun x => (x, x))) = 0 := by
+  rw [sqTransportCost, lintegral_map (by fun_prop) (by fun_prop)]; simp
+
+/-- `W₂²` vanishes on the diagonal: `W₂²(μ, μ) = 0`. -/
+theorem W2sq_self_eq_zero (μ : Measure (Eucl d)) : W2sq μ μ = 0 := by
+  refine le_antisymm ?_ bot_le
+  calc W2sq μ μ ≤ sqTransportCost (μ.map (fun x => (x, x))) :=
+        W2sq_le_sqTransportCost (isCoupling_diagonal μ)
+    _ = 0 := sqTransportCost_diagonal μ
+
+/-- **Symmetry** of `W₂²`. -/
+theorem W2sq_comm (μ ν : Measure (Eucl d)) : W2sq μ ν = W2sq ν μ := by
+  suffices h : ∀ α β : Measure (Eucl d), W2sq α β ≤ W2sq β α from le_antisymm (h μ ν) (h ν μ)
+  intro α β
+  refine le_iInf₂ fun π hπ => ?_
+  calc W2sq α β ≤ sqTransportCost (π.map Prod.swap) := W2sq_le_sqTransportCost hπ.swap
+    _ = sqTransportCost π := sqTransportCost_swap π
+
+/-- **Map-coupling bound (Lemma 5.2, squared form).** The squared `W₂` distance between two
+pushforwards of `μ` is at most the `L²(μ)` cost of moving `T₁` to `T₂`, witnessed by the coupling
+`(T₁, T₂)_# μ`: `W₂²(T₁_# μ, T₂_# μ) ≤ ∫ dist(T₁ x, T₂ x)² dμ`. -/
+theorem W2sq_map_le {μ : Measure (Eucl d)} {T₁ T₂ : Eucl d → Eucl d}
+    (hT₁ : Measurable T₁) (hT₂ : Measurable T₂) :
+    W2sq (μ.map T₁) (μ.map T₂) ≤ ∫⁻ x, edist (T₁ x) (T₂ x) ^ 2 ∂μ := by
+  have hcpl : IsCoupling (μ.map fun x => (T₁ x, T₂ x)) (μ.map T₁) (μ.map T₂) :=
+    ⟨Measure.fst_map_prodMk hT₂, Measure.snd_map_prodMk hT₁⟩
+  calc W2sq (μ.map T₁) (μ.map T₂)
+      ≤ sqTransportCost (μ.map fun x => (T₁ x, T₂ x)) := W2sq_le_sqTransportCost hcpl
+    _ = ∫⁻ x, edist (T₁ x) (T₂ x) ^ 2 ∂μ := by
+        rw [sqTransportCost, lintegral_map (by fun_prop) (by fun_prop)]
+
 end MeasureToMeasure

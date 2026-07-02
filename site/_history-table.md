@@ -84,3 +84,5 @@
 | 82 | 2026-07-02 | `formalize` | formalize(foundations): Kantorovich-Rubinstein lower bound for W1 (M2) | `MeasureToMeasure.lipschitz_integral_sub_le_transportCost` |
 | 83 | 2026-07-02 | `docs` | docs(ledger): record the Kantorovich-Rubinstein W1 bound (M2); refresh ClaimGraph and site | `ledger` |
 | 84 | 2026-07-02 | `formalize` | formalize(foundations): W1 triangle inequality via gluing of couplings (M2) | `MeasureToMeasure.exists_coupling_transportCost_le` |
+| 85 | 2026-07-02 | `docs` | docs(ledger): record the W1 triangle inequality (M2); refresh ClaimGraph and site | `ledger` |
+| 86 | 2026-07-02 | `formalize` | formalize(foundations): quadratic W2 cost and the map-coupling bound (M2) | `MeasureToMeasure.sqTransportCost` |
