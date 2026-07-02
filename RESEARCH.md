@@ -400,6 +400,19 @@ skeleton. Effective status of everything here is `math.axiomatised`.
     content of the axiom `W1_ge_of_lipschitz`** (the paper's Markov bound, Claim 2); discharging that axiom
     now reduces to threading the ℝ≥0∞/ℝ bookkeeping at the use sites. Kernel-clean. Requires integrability
     hypotheses the general axiom elides; the triangle inequality and completeness remain for the full M2.
+  - **Triangle inequality for `W₁` via gluing** (`Foundations/Wasserstein.lean`), M2.
+    `exists_coupling_transportCost_le` (the **gluing lemma**): given a coupling `π₁` of `(μ,ν)` and `π₂`
+    of `(ν,ρ)`, there is a coupling `γ` of `(μ,ρ)` with `cost γ ≤ cost π₁ + cost π₂`. Construction:
+    disintegrate `π₂ = ν ⊗ₘ κ₂` (its conditional `z|y`, via `Measure.disintegrate` + `condKernel`), lift
+    `κ₂` to a `Y`-reading kernel on `X×Y` (`Kernel.comap Prod.snd`), form the triple `T = π₁ ⊗ₘ κ` on
+    `(X×Y)×Z`; the `(X,Y)`-marginal is `π₁` (`fst_compProd`), the `(Y,Z)`-marginal collapses to
+    `ν ⊗ₘ κ₂ = π₂` (`Measure.ext_of_lintegral` + `lintegral_compProd`, using the shared marginal
+    `π₁.snd = ν = π₂.fst`), and the `(X,Z)`-marginal `γ` has cost bounded by `edist x z ≤ edist x y +
+    edist y z` (`edist_triangle`) + Tonelli. `W1_le_transportCost_add` (per coupling) and `W1_triangle`
+    (`W₁ μ ρ ≤ W₁ μ ν + W₁ ν ρ`, descending through the two infima via `ENNReal.iInf_add`/`add_iInf`).
+    With `W1_self_eq_zero` + `W1_comm` this makes `W₁` a **pseudometric** on probability measures. Uses
+    Mathlib's disintegration/kernel machinery (`condKernel`, `⊗ₘ`, `lintegral_compProd`) which the paper's
+    OT layer is not otherwise built on. Kernel-clean. `W₂` and the `Axioms/Wasserstein.lean` rewiring remain.
 - **Axiomatized (faithful, cited):** the irreducible mid-levels `prop_2_1`,
   `lemma_3_2/3.3/3.4`, `prop_4_2`, `lemma_5_1`, `lemma_5_4`, `lemma_B_2`.
 
