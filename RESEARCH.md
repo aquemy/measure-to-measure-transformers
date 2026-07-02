@@ -62,16 +62,20 @@ Mathlib and becomes the kernel-checked leaf set L1-L10.
 | L5 | Lyapunov `Ė=−α sin²θ ≤ 0` (Ex. 6.1) | `lyapunov_hasDerivAt` | machine-checked |
 | L6 | barycenter ODE + strict increase (B.9) | `barycenter_hasDerivAt_inner` | machine-checked |
 | L7 | linearized OT bound (Lemma 5.2) | `lemma_5_2` | axiomatised (over `W2`) |
-| L8 | Markov bound (Claim 2) | `markov_bound` | axiomatised (over `W1`) |
+| L8 | Markov bound (Claim 2) | `markov_bound` | **machine-checked** (W₁ axiom discharged) |
 | L9 | ball-chain retention (Lemma B.1) | `ball_chain_geom` | machine-checked |
 | L10 | pigeonhole (Lemma 3.4 Part 1) | `exists_ne_in_ball` | machine-checked |
 | L11 | disjoint hulls ⟹ non-colinear barycenters (F2) | `barycenter_noncolinear_of_disjoint_hull` | machine-checked |
 | L11′ | F2 general case (any probability measure) | `barycenter_noncolinear_of_disjoint_hull_general` | machine-checked |
 
-L8 is now formalized (`markov_bound`): the truncated-distance bump `min(η₃, d(·,x₀))` is machine-
-checked `1`-Lipschitz (`distBump_lipschitz`), and the Markov inequality `μ.real{d(·,x₀) ≥ η₃} ≤ Cη₂/η₃`
-is derived from it via integral monotonicity and the `W1` Kantorovich-Rubinstein axiom; it is therefore
-`math.axiomatised` (depends on `W1`, `W1_ge_of_lipschitz`, confirmed by `#print axioms`).
+L8 is now **machine-checked** (`markov_bound`): the truncated-distance bump `min(η₃, d(·,x₀))` is
+`1`-Lipschitz (`distBump_lipschitz`), and the Markov inequality `μ.real{d(·,x₀) ≥ η₃} ≤ Cη₂/η₃` is
+derived from it via integral monotonicity and Kantorovich-Rubinstein duality. That duality step
+(formerly the axiom `W1_ge_of_lipschitz`) is now a **proved theorem** discharged from the from-scratch
+optimal-transport development (`ofReal_integral_sub_le_W1`), so `markov_bound`'s `#print axioms` lists
+only `propext`/`Classical.choice`/`Quot.sound` — it no longer rests on any `W₁` axiom. The discharge
+adds the honest hypotheses the earlier axiom elided: integrability of the bump (proved in-lemma) and
+finiteness of `W₁(μ, δ_{x₀})` (automatic for the compactly-supported measures on the sphere).
 
 The mid-level connective lemmas (Props 2.1, 2.2, 4.1, 4.2; Lemmas 3.2-3.4, 5.1, 5.4, B.1, B.2) are now
 present as type-correct Lean statements in `Statements/MidLevel.lean` (`sorry` stubs, `math.open`),
@@ -429,9 +433,12 @@ skeleton. Effective status of everything here is `math.axiomatised`.
 
 Beyond the core `propext` / `Classical.choice` / `Quot.sound`:
 
-- **Wasserstein layer** (`Axioms/Wasserstein.lean`): `W2`/`W1`, `W2_map_le_L2` (L7 coupling),
-  `W1_ge_of_lipschitz` (KR duality), `W2_convexCombo_le` (convexity of `W₂` under probability
-  mixtures).
+- **Wasserstein layer** (`Axioms/Wasserstein.lean`): `W2` and its facts `W2_map_le_L2` (L7 coupling),
+  `W2_triangle`, `W2_convexCombo_le` (convexity of `W₂` under probability mixtures) remain axioms.
+  **Discharged:** `W1` is now a *definition* (`(Foundations.W1 μ ν).toReal`) and `W1_ge_of_lipschitz`
+  (KR duality) is a *proved theorem* (from `Foundations.ofReal_integral_sub_le_W1`), so the Markov
+  bound (L8) no longer rests on any `W₁` axiom. Discharging the `W₂` facts is future work (it needs the
+  integrability hypotheses threaded through the mid-level assembly, plus the `W₂` triangle/convexity).
 - **Continuity-equation layer** (`Axioms/ContinuityEquation.lean`): `Block` (opaque per-block field
   parameter), `flowMap`, `flowMap_lipschitz`, `flowMap_bijective`, `Parked` + `flowMap_id_on_parked`.
   (`Params := List (Block d)`, `switches := List.length`, and `measureFlow := μ.map (flowMap θ t)` are
