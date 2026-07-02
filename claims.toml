@@ -278,15 +278,15 @@ created   = "2026-06-30"
 
 [claims.meta-axiom-layer]
 kind      = "review"
-statement = "The labeled axiom layer: W2/W1 with the coupling and KR-duality bounds, and the continuity-equation flow map with its Lipschitz/bijective/parked-identity properties, standing in for the missing Mathlib theory."
+statement = "The labeled axiom layer: W2/W1 with the coupling and KR-duality bounds, standing in for the missing Mathlib optimal-transport theory. (The continuity-equation flow map and its Lipschitz/bijective/parked-identity properties, formerly part of this layer, were DE-AXIOMATIZED in milestone M3 -- see flow-axiom-flip; the only continuity-equation content still axiomatised is the paper-level mid-level lemmas, not the flow machinery.)"
 status    = "math.axiomatised"
 paper     = "n/a (infrastructure)"
 created   = "2026-06-30"
 
 [claims.axiom-flow-algebra]
 kind      = "review"
-statement = "Structural flow algebra (Axioms/Dynamics.lean). PARTIALLY DE-AXIOMATIZED (M3 pushforward slice): measureFlow is now DEFINED as the pushforward of the point flow map (measureFlow theta t mu := mu.map (flowMap theta t)), so measureFlow_map is definitional (rfl) and the measure-level semigroup laws measureFlow_comp / measureFlow_id / measureFlow_inv are now DERIVED theorems (from Measure.map_map / Measure.map_id plus the point-level flow facts). This removed the opaque measureFlow constant and 4 measure-level axioms, leaving the genuine ODE content isolated in flowMap and the more-primitive point-level axioms flowMap_comp, flowMap_id (flowMap idParams = id), flowMap_inv (flowMap (inv theta) T composed with flowMap theta T = id). Effective status stays axiomatised: it still rests on flowMap and those point-level facts (Mathlib has no continuity-equation solver). SCHEDULE ALGEBRA NOW CONCRETE (second M3 slice): Params d is defined as List (Block d) (Block opaque), so idParams = [], comp = List append, inv = List.reverse, switches = List.length are DEFINITIONS, and switch sub-additivity switches_comp and switches_id are now DERIVED theorems (list-length arithmetic). This removed the opaque Params/comp/idParams/inv/switches constants and the switches_comp/switches_id axioms; the only remaining opacity in the schedule layer is Block and the flowMap facts over it."
-status    = "math.axiomatised"
+statement = "Structural flow algebra (Axioms/Dynamics.lean). FULLY DE-AXIOMATIZED (milestone M3 complete). measureFlow is DEFINED as the pushforward of the point flow map (measureFlow theta t mu := mu.map (flowMap theta t)), so measureFlow_map is definitional (rfl) and the measure-level semigroup laws measureFlow_comp / measureFlow_id / measureFlow_inv are DERIVED. The schedule algebra is concrete: Params d = List (Block d), idParams = [], comp = List.append, switches = List.length, so switches_comp / switches_id are DERIVED. The remaining point-level facts, formerly axioms, are now THEOREMS discharged against the concrete Foundations flowMap (the fold of the per-block characteristic flows): flowMap_id = flowMap_nil, flowMap_comp = flowMap_append, flowMap_inv = flowMap_reverseNeg_comp (with inv corrected to reverse-AND-negate), flowMap_bijective, flowMap_lipschitz, flowMap_id_on_parked. #print axioms on all of these lists only propext/Classical.choice/Quot.sound. Nothing in the flow/continuity-equation machinery is axiomatised any more; see flow-axiom-flip."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Axioms.measureFlow_map"
 paper     = "n/a (structural infrastructure)"
 created   = "2026-06-30"
@@ -417,6 +417,14 @@ statement = "Time-reversal of the schedule flow map (milestone M3, Phase 3, soun
 status    = "math.machine-checked"
 lean      = "MeasureToMeasure.flowMap_reverseNeg_comp"
 paper     = "Continuity equation flow map: time-reversibility (reverse-and-negate inverse)"
+created   = "2026-07-02"
+
+[claims.flow-axiom-flip]
+kind      = "theorem"
+statement = "The continuity-equation flow-axiom flip (milestone M3 COMPLETE). MACHINE-CHECKED. Axioms/ContinuityEquation.lean and Axioms/Dynamics.lean formerly axiomatised the entire flow layer: an opaque Block type, an opaque flowMap, and the structural axioms flowMap_id / flowMap_comp / flowMap_inv / flowMap_lipschitz / flowMap_bijective / Parked / flowMap_id_on_parked. These are now ALL discharged onto the concrete Foundations flowMap (the fold of per-block Picard-Lindelof characteristic flows). Mechanism: `export MeasureToMeasure (Block flowMap Params switches)` makes the Axioms names ALIASES of the concrete Foundations declarations (same underlying decl, so no name collision in consumers that open both namespaces), and each former axiom becomes a theorem -- flowMap_id := flowMap_nil, flowMap_comp := flowMap_append, flowMap_inv := flowMap_reverseNeg_comp (with inv REDEFINED from the unsound List.reverse to reverse-and-negate (theta.map Block.neg).reverse), flowMap_bijective, flowMap_lipschitz (all-t via time-reversal, no 0<=t threading), Parked := every block's field vanishes on S, flowMap_id_on_parked := flowMap_fixed_of_forall_field_zero. Effect on the headline theorems: #print axioms theorem_1_1 / theorem_1_2 no longer lists ANY flow/Block/Parked/continuity-equation axiom -- they now rest only on Axioms.W2 (M2 track) and the still-informal mid-level lemmas (cluster_to_point, exists_disentangling_balls, exists_parked_schedule, lemma_5_4, W2_map_le_L2). #print axioms on every flipped theorem lists only propext/Classical.choice/Quot.sound. The full audit (axiom-report + claimgraph audit + reconcile + sorry-sweep) passes."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Axioms.flowMap_inv"
+paper     = "Continuity equation flow map (Section 2-3): the well-posedness + structural axiom layer, discharged"
 created   = "2026-07-02"
 
 [claims.wasserstein-w1-foundations]

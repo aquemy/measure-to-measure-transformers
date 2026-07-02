@@ -1,13 +1,21 @@
-import MeasureToMeasure.Foundations.Sphere
+import MeasureToMeasure.Foundations.FlowMap
 
 /-!
-# Labeled axioms: the continuity equation and its flow map
+# The continuity equation and its flow map (formerly axiomatised, now discharged)
 
 The paper's central object is the continuity equation (1.3) on the sphere and its solution map
-`Φ_θ^t : 𝒫(𝕊^{d-1}) → 𝒫(𝕊^{d-1})`. Mathlib has Picard-Lindelöf and Grönwall for ODEs, but no
-theory of the continuity equation, weak measure solutions, or mean-field flow maps. We axiomatize
-the well-posedness package and the structural properties (Lipschitz, invertible, time-reversible,
-identity off the support) that the proofs use.
+`Φ_θ^t : 𝒫(𝕊^{d-1}) → 𝒫(𝕊^{d-1})`. Historically this file *axiomatised* the well-posedness package
+(the block type, the point flow map, and its Lipschitz / bijectivity / parked laws), because Mathlib
+has no theory of the continuity equation or mean-field flow maps.
+
+The M3 foundation (`Foundations/FlowMap.lean`) now **builds** that package from Mathlib's
+Picard-Lindelöf and Grönwall: a `Block` is a globally-Lipschitz, globally-bounded, radially-tangent
+velocity field with a duration, and `flowMap θ t` is the fold of the per-block characteristic flows.
+This file therefore no longer introduces axioms: it `export`s the concrete `Block` / `flowMap` into
+the `Axioms` namespace (so every downstream `Axioms.Block` / `Axioms.flowMap` reference is an alias to
+the *same* declaration -- no collision, no re-axiomatisation) and re-derives the structural interface
+as ordinary theorems. The old axiom names survive as theorems with identical signatures, so no
+consumer changes.
 -/
 
 namespace MeasureToMeasure.Axioms
@@ -16,46 +24,48 @@ open MeasureTheory
 
 variable {d : ℕ}
 
-/-- The parameters of a single piecewise-constant block of the velocity field (attention weights +
-duration). Kept opaque -- the per-block ODE content is what `flowMap` axiomatizes. -/
-axiom Block (d : ℕ) : Type
-
-/-- A piecewise-constant parameter schedule `θ` is a finite **list of blocks**. Making the schedule
-type concrete (rather than an opaque axiom) means composition is concatenation, the identity schedule
-is the empty list, time-reversal is `List.reverse`, and the switch count is the block count -- so the
-schedule algebra and the depth/switch budget are *proved*, not assumed. -/
-abbrev Params (d : ℕ) : Type := List (Block d)
-
-/-- AXIOM: the flow map `Φ_θ^t` on points of the sphere induced by the characteristics of the
-continuity equation. Lipschitz-continuous and invertible (see the structural axioms). -/
-axiom flowMap (θ : Params d) (t : ℝ) : Eucl d → Eucl d
+/- Discharged: the block type is the concrete `MeasureToMeasure.Block` -- a globally-Lipschitz,
+globally-bounded, radially-tangent velocity field with a nonnegative duration; `flowMap` is the fold of
+the per-block characteristic flows; `Params` is the block list and `switches` its length. `export`
+(rather than fresh definitions) makes `Axioms.Block` / `Axioms.flowMap` / `Axioms.Params` /
+`Axioms.switches` *aliases* of the Foundations declarations, so the two layers share a single
+declaration each and never collide in a consumer that has both namespaces open. A piecewise-constant
+schedule `θ` is thus a finite list of blocks: composition is concatenation, the identity schedule is
+the empty list, time-reversal reverses (and negates) the blocks, and the switch count is the block
+count -- the schedule algebra is *proved*, not assumed. -/
+export MeasureToMeasure (Block flowMap Params switches)
 
 /-- The solution map `Φ_θ^t : 𝒫(𝕊^{d-1}) → 𝒫(𝕊^{d-1})` of the continuity equation, acting on
 measures. **Defined** as the pushforward of the point flow map `flowMap θ t` -- this is precisely the
-continuity equation's defining property (mass is transported along characteristics), so we take it as
-a *definition* rather than a primitive. With this, `measureFlow_map` is definitional and the semigroup
-laws (`measureFlow_comp`, `_id`, `_inv`) are *derived* from the point-level flow facts plus
-`Measure.map_map` / `Measure.map_id`, isolating the genuine ODE content in `flowMap`. -/
+continuity equation's defining property (mass is transported along characteristics). With this,
+`measureFlow_map` is definitional and the semigroup laws (`measureFlow_comp`, `_id`, `_inv`) are
+*derived* from the point-level flow facts plus `Measure.map_map` / `Measure.map_id`. -/
 noncomputable def measureFlow (θ : Params d) (t : ℝ) (μ : MeasureTheory.Measure (Eucl d)) :
     MeasureTheory.Measure (Eucl d) :=
   μ.map (flowMap θ t)
 
-/-- The number of parameter switches of a piecewise-constant schedule `θ` (the depth proxy discussed in
-Section 1.4.3 and Section 6): the number of blocks, i.e. the list length. -/
-def switches (θ : Params d) : ℕ := θ.length
+/-- The flow map is Lipschitz for **every** time `t` (well-posedness of the characteristic ODE, plus
+time-reversal for `t < 0`). Discharged from `MeasureToMeasure.exists_lipschitzWith_flowMap`. -/
+theorem flowMap_lipschitz (θ : Params d) (t : ℝ) :
+    ∃ K : ℝ, LipschitzWith K.toNNReal (flowMap θ t) := by
+  obtain ⟨K, hK⟩ := MeasureToMeasure.exists_lipschitzWith_flowMap θ t
+  exact ⟨(K : ℝ), by rwa [Real.toNNReal_coe]⟩
 
-/-- AXIOM: the flow map is Lipschitz on `[0, T]` (well-posedness of the characteristic ODE). -/
-axiom flowMap_lipschitz (θ : Params d) (t : ℝ) : ∃ K : ℝ, LipschitzWith K.toNNReal (flowMap θ t)
+/-- The flow map is invertible (the dynamics are time-reversible). Discharged from
+`MeasureToMeasure.flowMap_bijective`. -/
+theorem flowMap_bijective (θ : Params d) (t : ℝ) : Function.Bijective (flowMap θ t) :=
+  MeasureToMeasure.flowMap_bijective θ t
 
-/-- AXIOM: the flow map is invertible (the dynamics are time-reversible). -/
-axiom flowMap_bijective (θ : Params d) (t : ℝ) : Function.Bijective (flowMap θ t)
+/-- **Parked region.** A point is parked when *every* block of the schedule switches its velocity off
+there (the field vanishes). Concrete realisation of the paper's `(B.2)` "act on one measure at a time"
+property. -/
+def Parked (θ : Params d) (S : Set (Eucl d)) : Prop := ∀ b ∈ θ, ∀ x ∈ S, b.field x = 0
 
-/-- AXIOM: a point in a region `S` on which the chosen parameters switch off the velocity is left
-invariant by the flow (the `(B.2)` "act on one measure at a time" property). The predicate `Parked`
-abstracts "the gate is identically zero on `S`". -/
-axiom Parked (θ : Params d) (S : Set (Eucl d)) : Prop
-
-axiom flowMap_id_on_parked (θ : Params d) (t : ℝ) {S : Set (Eucl d)} (hS : Parked θ S)
-    {x : Eucl d} (hx : x ∈ S) : flowMap θ t x = x
+/-- A parked point is left invariant by the flow: where every block's field vanishes, the integral
+curve is constant, so the whole schedule fixes the point. Discharged from
+`MeasureToMeasure.flowMap_fixed_of_forall_field_zero`. -/
+theorem flowMap_id_on_parked (θ : Params d) (t : ℝ) {S : Set (Eucl d)} (hS : Parked θ S)
+    {x : Eucl d} (hx : x ∈ S) : flowMap θ t x = x :=
+  MeasureToMeasure.flowMap_fixed_of_forall_field_zero θ t (fun b hb => hS b hb x hx)
 
 end MeasureToMeasure.Axioms
