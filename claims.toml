@@ -411,6 +411,14 @@ lean      = "MeasureToMeasure.W2sq_map_le"
 paper     = "Wasserstein W2 map-coupling bound (Lemma 5.2); quadratic Kantorovich cost"
 created   = "2026-07-02"
 
+[claims.wasserstein-w2-triangle]
+kind      = "theorem"
+statement = "Triangle inequality for the W2 (root) Wasserstein distance via Minkowski + gluing (milestone M2, W2 discharge slice 1). MACHINE-CHECKED. W2 mu nu := iInf over couplings of (sqTransportCost pi)^(1/2) -- the root cost (inf of roots, not sqrt of the inf, so the triangle descends through the two infima exactly as for W1). Facts: W2_le_rpow_sqTransportCost (every coupling upper-bounds W2), W2_self_eq_zero (diagonal coupling, 0^(1/2)=0), W2_comm (swap). exists_coupling_rpow_sqTransportCost_le (per-coupling Minkowski/gluing): reuse the gluing triple T of a plan of (mu,nu) and (nu,rho), then bound (int edist(x,z)^2 dT)^(1/2) <= (int edist(x,y)^2)^(1/2) + (int edist(y,z)^2)^(1/2) pointwise via edist_triangle and ENNReal.lintegral_Lp_add_le (Minkowski, p=2). W2_triangle: W2 mu rho <= W2 mu nu + W2 nu rho, descending the two infima (ENNReal.iInf_add/add_iInf). With W2_self_eq_zero + W2_comm, W2 is a pseudometric on probability measures. #print axioms clean. This is the hard blocker of the W2 axiom discharge; deferred still: W2_convexCombo_le and the all-or-nothing flip of Axioms.W2 to concrete (threading integrability through L7/Prop 2.2/Thm 1.2)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.W2_triangle"
+paper     = "Wasserstein W2 triangle inequality (Minkowski / gluing lemma); optimal transport"
+created   = "2026-07-02"
+
 # ===========================================================================
 # Numerical validation campaign (science profile)
 # ===========================================================================

@@ -202,6 +202,15 @@ coupling $(T^1,T^2)_\#\mu$ -- the content of the axiom \texttt{W2\_map\_le\_L2} 
 $\overline{\mathbb R}_{\ge 0}$ form. [machine-checked]
 \end{lemma}
 
+\begin{lemma}[$W_2$ triangle inequality via Minkowski + gluing]\label{found:w2tri}\lean{MeasureToMeasure.W2_triangle}\uses{found:w1tri,found:w2map}\leanok
+The root distance $W_2(\mu,\nu) = \inf_\pi \big(\int \mathrm{dist}(x,y)^2\,\mathrm d\pi\big)^{1/2}$ (an
+infimum of roots, so the triangle descends through the two infima as for $W_1$) satisfies
+$W_2(\mu,\rho) \le W_2(\mu,\nu) + W_2(\nu,\rho)$. Per coupling: reuse the gluing triple, then bound the
+root cost by Minkowski's $L^2$ inequality (\texttt{ENNReal.lintegral\_Lp\_add\_le}, $p=2$) applied to
+$\mathrm{dist}(x,z) \le \mathrm{dist}(x,y)+\mathrm{dist}(y,z)$. With symmetry and $W_2(\mu,\mu)=0$ this
+makes $W_2$ a pseudometric -- the hard blocker of the $W_2$ axiom discharge. [machine-checked]
+\end{lemma}
+
 \section{Mass transport and clustering}
 
 \begin{lemma}[Single ball pair, B.2]\label{lem:b2}\lean{MeasureToMeasure.Statements.lemma_B_2}\uses{lem:gate}
