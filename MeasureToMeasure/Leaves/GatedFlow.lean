@@ -1,5 +1,6 @@
 import MeasureToMeasure.Foundations.GatedBlock
 import MeasureToMeasure.Foundations.GeodesicDistance
+import MeasureToMeasure.Foundations.LogisticReach
 import MeasureToMeasure.Leaves.GateODE
 
 /-!
@@ -114,5 +115,72 @@ theorem inner_gatedFlow_mem_Ioo {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : 
     (⟪b.blockFlow t x, ω⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 :=
   inner_mem_Ioo_of_ne (b.blockFlow_mem_sphere hx ht) hω
     (blockFlow_ne_pole hω cosR b hfield hne t) (blockFlow_ne_neg_pole hω cosR b hfield hne' t)
+
+/-!
+## Finite-time reaching for the self-centered gated flow (Lemma B.2, discharge step 3)
+
+For the block centered at its own drift target (`z = ω`), the gated flow *contracts a cap toward
+`ω`*: this is the essential dynamical content of B.7. The coordinate `u(t) = ⟪Φ_t x, ω⟫` is monotone
+non-decreasing (`u' = g(1-u²) ≥ 0`, since the gate is nonnegative and `u ∈ (-1,1)`), so it never falls
+below its start `u(0) > cos R`; hence the gate `g(t) = (u(t) - cos R)₊ ≥ u(0) - cos R =: c₀ > 0` stays
+uniformly positive, with *no circularity*. Feeding this into `logistic_flow_reach` gives: from any
+point strictly inside the cap `B(ω, R)`, the flow reaches any target level `b < 1` once `T` is large
+enough — i.e. drives `x` into the sub-cap `B(ω, arccos b)`.
+-/
+
+/-- The gate scalar is nonnegative (cutoff and ReLU gate are each nonnegative). -/
+theorem gateFactor_nonneg (z : Eucl d) (cosR : ℝ) (x : Eucl d) : 0 ≤ gateFactor z cosR x :=
+  mul_nonneg (normCutoff_nonneg x) (reluGate_nonneg z cosR x)
+
+/-- **Finite-time reaching of the self-centered gated flow (eq. B.7).** For `z = ω`, from a sphere
+point `x` (`x ≠ ±ω`), the gated flow drives the coordinate `⟪Φ_T x, ω⟫` to any target level `b < 1`,
+provided `T` is large enough that the log-odds budget `logOdds b ≤ logOdds ⟪x,ω⟫ + 2·(⟪x,ω⟫ - cos R)·T`
+is met. Equivalently, `Φ_T x` lands in the sub-cap `{ y | b ≤ ⟪y, ω⟫ }` of `ω`. The estimate is
+nontrivial precisely in the active region `cos R < ⟪x, ω⟫` (`x` strictly inside `B(ω, R)`), where the
+gate constant `c₀ = ⟪x,ω⟫ - cos R` is positive and the budget is satisfiable for `b` up to `1`. -/
+theorem gatedBlock_reach {ω : Eucl d} (hω : ‖ω‖ = 1) {cosR : ℝ} (hcosR : -1 ≤ cosR)
+    {T : ℝ} (hT : 0 ≤ T) {x : Eucl d} (hx : x ∈ sphere d) (hne : x ≠ ω) (hne' : x ≠ -ω)
+    {b : ℝ} (hb : b ∈ Set.Ioo (-1 : ℝ) 1)
+    (hreach : logOdds b ≤ logOdds (⟪x, ω⟫ : ℝ) + 2 * ((⟪x, ω⟫ : ℝ) - cosR) * T) :
+    b ≤ (⟪(gatedBlock hω hω hcosR hT).blockFlow T x, ω⟫ : ℝ) := by
+  have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hω]
+  set B := gatedBlock hω hω hcosR hT with hB
+  set u : ℝ → ℝ := fun s => (⟪B.blockFlow s x, ω⟫ : ℝ) with hu_def
+  set g : ℝ → ℝ := fun s => gateFactor ω cosR (B.blockFlow s x) with hg_def
+  have hu0 : u 0 = (⟪x, ω⟫ : ℝ) := by simp [hu_def, B.blockFlow_zero]
+  -- the gate ODE and the range, along the flow
+  have hu_ode : ∀ t ∈ Set.Icc (0 : ℝ) T, HasDerivAt u (g t * (1 - (u t) ^ 2)) t :=
+    fun t ht => gatedBlock_hasDerivAt_inner hω hω hcosR hT hx ht.1
+  have hu_range : ∀ t ∈ Set.Icc (0 : ℝ) T, u t ∈ Set.Ioo (-1 : ℝ) 1 :=
+    fun t ht => inner_gatedFlow_mem_Ioo hωs cosR B rfl hx hne hne' ht.1
+  -- monotonicity: u' = g·(1-u²) ≥ 0
+  have hmono : ∀ t ∈ Set.Icc (0 : ℝ) T, u 0 ≤ u t := by
+    have hcont : ContinuousOn u (Set.Icc 0 T) :=
+      fun t ht => (hu_ode t ht).continuousAt.continuousWithinAt
+    have hdiff : DifferentiableOn ℝ u (interior (Set.Icc 0 T)) := by
+      rw [interior_Icc]; intro t ht
+      exact (hu_ode t ⟨ht.1.le, ht.2.le⟩).differentiableAt.differentiableWithinAt
+    have hmono' : MonotoneOn u (Set.Icc 0 T) := by
+      apply monotoneOn_of_deriv_nonneg (convex_Icc 0 T) hcont hdiff
+      intro t ht
+      rw [interior_Icc] at ht
+      rw [(hu_ode t ⟨ht.1.le, ht.2.le⟩).deriv]
+      have h2 : (0 : ℝ) ≤ 1 - (u t) ^ 2 := by
+        obtain ⟨hl, hr⟩ := hu_range t ⟨ht.1.le, ht.2.le⟩; nlinarith
+      exact mul_nonneg (gateFactor_nonneg ω cosR _) h2
+    exact fun t ht => hmono' (left_mem_Icc.mpr hT) ht ht.1
+  -- gate lower bound: g t ≥ c₀ = ⟪x,ω⟫ - cosR, since u t ≥ u 0 > cosR (self-centered)
+  have hg_lb : ∀ t ∈ Set.Icc (0 : ℝ) T, ((⟪x, ω⟫ : ℝ) - cosR) ≤ g t := by
+    intro t ht
+    have hmem : B.blockFlow t x ∈ sphere d := B.blockFlow_mem_sphere hx ht.1
+    have hgt : g t = reluGate ω cosR (B.blockFlow t x) :=
+      gateFactor_eq_reluGate_of_mem_sphere cosR hmem
+    have hcomm : (⟪ω, B.blockFlow t x⟫ : ℝ) = u t := by rw [real_inner_comm]
+    rw [hgt, reluGate, hcomm]
+    refine le_max_of_le_right ?_
+    have := hmono t ht; rw [hu0] at this; linarith
+  -- assemble via the logistic reaching estimate
+  have hfin := logistic_flow_reach hT hu_ode hu_range hg_lb hb (by rw [hu0]; exact hreach)
+  exact hfin
 
 end MeasureToMeasure
