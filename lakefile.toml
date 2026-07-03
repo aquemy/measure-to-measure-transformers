@@ -1,6 +1,12 @@
 name = "MeasureToMeasure"
 defaultTargets = ["MeasureToMeasure", "ForMathlib"]
 testDriver = ""
+# `lake lint` runs Batteries' environment linters (Mathlib's own pattern: Mathlib declares
+# `lintDriver = "batteries/runLinter"` + `lintDriverArgs = #["Mathlib"]`). Passing the two root
+# modules lints every declaration in both packages in one pass; deliberate exemptions live in
+# scripts/nolints.json (maintained with `lake exe runLinter --update`).
+lintDriver = "batteries/runLinter"
+lintDriverArgs = ["MeasureToMeasure", "ForMathlib"]
 
 [[require]]
 name = "mathlib"

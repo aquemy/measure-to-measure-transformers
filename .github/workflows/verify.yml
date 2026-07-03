@@ -1,6 +1,8 @@
-# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the two
-# invariants that need no private tooling: the project COMPILES (lake build) and carries NO stray
-# `sorry` / `admit` / `sorryAx` / `native_decide`.
+# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the three
+# invariants that need no private tooling: the project COMPILES (lake build), passes the Batteries
+# environment linters (`lake lint` via the lintDriver in lakefile.toml, with deliberate exemptions
+# baselined in scripts/nolints.json), and carries NO stray `sorry` / `admit` / `sorryAx` /
+# `native_decide`.
 #
 # It deliberately does NOT access any private plugin marketplace or the private claimgraph package,
 # and it does NOT deploy anything (docs/ is committed by hand for classic GitHub Pages, served from
@@ -20,11 +22,15 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      # Build with the community Lean action (elan toolchain from lean-toolchain + Mathlib cache).
-      - name: Build (lake)
+      # Build with the community Lean action (elan toolchain from lean-toolchain + Mathlib cache),
+      # then lint: `lint: true` runs `lake lint`, which resolves the package's lintDriver
+      # (`batteries/runLinter`) and runs the Batteries environment linters (unusedArguments,
+      # docBlame, simpNF, defLemma, ...) over every declaration of both root modules.
+      - name: Build and lint (lake)
         uses: leanprover/lean-action@v1
         with:
           build: true
+          lint: true
 
       # Incompleteness / trust-widening sweep: mirror of scripts/audit.sh step 4, with no private
       # dependency. We do NOT gate on `axiom` declarations -- the labeled-axiom layer is the honest,
