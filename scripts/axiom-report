@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# axiom-report: classify Lean declarations by their `#print axioms` dependency, to drive a
+# blueprint's status honestly — \leanok ⇔ axiom-clean, "axiomatised" ⇔ depends on a cited
+# axiom, "open" ⇔ depends on sorryAx.
+#
+# VENDORED from the lean-math plugin (bin/axiom-report) so public CI can run the per-node
+# footprint check with zero private dependencies. scripts/audit.sh prefers this copy when
+# present (override with AXIOM_REPORT=...). Keep in sync with the plugin on upgrades.
+#
+# Usage:
+#   axiom-report [PROJECT_DIR] NAME [NAME ...]
+#   axiom-report [PROJECT_DIR] --tex <blueprint.tex>     # parse \lean{Name} from the .tex
+#
+#   PROJECT_DIR    Lean project root (default: current dir). Must already build (`lake build`).
+#   NAME           fully-qualified declaration, e.g. IGL.fubini_factorization.
+#
+# Classifies each declaration:
+#   clean    — depends only on propext, Classical.choice, Quot.sound (or none)
+#   sorryAx  — depends on sorryAx (NOT actually proven)
+#   axiom    — depends on a cited/added axiom (names listed)
+#
+# Exit: 0 all clean · 1 error · 3 ran fine but found non-clean node(s) · 127 missing tool.
+
+set -uo pipefail
+have() { command -v "$1" >/dev/null 2>&1; }
+warn() { printf 'axiom-report: %s\n' "$*" >&2; }
+die()  { warn "$*"; exit "${2:-1}"; }
+
+export PATH="$HOME/.elan/bin:$HOME/.local/bin:$PATH"
+
+# ── parse args ────────────────────────────────────────────────────────────────
+project="" ; tex="" ; names=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --tex)     tex="${2:-}"; shift ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+    -*)        die "unknown flag: $1" 1 ;;
+    *) if [ -z "$project" ] && [ -d "$1" ] && ls "$1"/lakefile.* >/dev/null 2>&1; then
+         project="$1"; else names+=("$1"); fi ;;
+  esac
+  shift
+done
+project="${project:-$PWD}"
+project="$(cd "$project" 2>/dev/null && pwd)" || die "bad project dir" 1
+ls "$project"/lakefile.* >/dev/null 2>&1 || die "no lakefile in $project" 1
+have lake || die "lake not found (elan); see setup.sh / MANUAL-INSTALL.md" 127
+
+if [ -n "$tex" ]; then
+  [ -f "$tex" ] || die "tex not found: $tex" 1
+  while IFS= read -r n; do [ -n "$n" ] && names+=("$n"); done \
+    < <(grep -oE '\\lean\{[^}]+\}' "$tex" | sed -E 's/\\lean\{([^}]+)\}/\1/')
+fi
+[ "${#names[@]}" -gt 0 ] || die "no declaration names (pass NAME... or --tex <file>)" 1
+
+# root modules to import = top-level *.lean at the project root, but only those with a sibling `X/`
+# module directory (Lake's convention for a library named X). This skips scratch scripts (e.g. a
+# `Final.lean` that just imports the library), which are not importable modules and would abort the
+# import with `unknown module prefix`. Fall back to every stem if none has a sibling directory.
+all_stems=()
+while IFS= read -r r; do [ -n "$r" ] && all_stems+=("$r"); done \
+  < <(cd "$project" && ls ./*.lean 2>/dev/null | sed 's#.*/##; s/\.lean$//')
+[ "${#all_stems[@]}" -gt 0 ] || die "no root module (*.lean at project root) to import" 1
+roots=()
+for r in "${all_stems[@]}"; do [ -d "$project/$r" ] && roots+=("$r"); done
+[ "${#roots[@]}" -gt 0 ] || roots=("${all_stems[@]}")
+
+# ── run #print axioms ─────────────────────────────────────────────────────────
+tmp="$(mktemp -t axrep).lean" || die "mktemp failed" 1
+{ for r in "${roots[@]}"; do echo "import $r"; done
+  for n in "${names[@]}"; do echo "#print axioms $n"; done ; } > "$tmp"
+out="$(cd "$project" && lake env lean "$tmp" 2>&1)"; rc=$?
+rm -f "$tmp"
+
+# `#print axioms` wraps long axiom lists across lines — rejoin them, one decl per line,
+# else a wrapped list like `[propext,\n  …, MyAxiom, …]` is misread as clean.
+out="$(printf '%s\n' "$out" | awk '
+  /depends on axioms:/ { if (b!="") print b; b=$0; if (b ~ /\]/){print b; b=""}; next }
+  /does not depend on any axioms/ { if (b!="") {print b; b=""}; print; next }
+  { if (b!="") { sub(/^[ \t]+/,""); b=b" "$0; if ($0 ~ /\]/){print b; b=""} } }
+  END { if (b!="") print b }')"
+
+# ── classify + print table ────────────────────────────────────────────────────
+STD=" propext Classical.choice Quot.sound "
+sep="$(printf '%.0s-' $(seq 1 52))"
+printf '%-52s  %-9s  %s\n' "DECLARATION" "STATUS" "NON-STANDARD AXIOMS"
+printf '%-52s  %-9s  %s\n' "$sep" "---------" "-------------------"
+nonclean=0
+while IFS= read -r line; do
+  case "$line" in
+    "'"*"' depends on axioms: ["*)
+      name="${line#\'}"; name="${name%%\'*}"
+      ax="${line#*: [}"; ax="${ax%]*}"; ax="${ax//,/ }"
+      status=clean; extra=""
+      for a in $ax; do
+        case "$STD" in *" $a "*) continue ;; esac
+        extra="$extra $a"
+        [ "$a" = sorryAx ] && status=sorryAx
+      done
+      [ "$status" = clean ] && [ -n "$extra" ] && status=axiom
+      [ "$status" != clean ] && nonclean=1
+      printf '%-52s  %-9s  %s\n' "$name" "$status" "${extra# }" ;;
+    "'"*"' does not depend on any axioms")
+      name="${line#\'}"; name="${name%%\'*}"
+      printf '%-52s  %-9s  %s\n' "$name" "clean" "" ;;
+  esac
+done <<< "$out"
+
+if echo "$out" | grep -qiE "error:|unknown (identifier|constant)"; then
+  warn "lean reported errors (name misspelled, or project not built — run \`lake build\`):"
+  echo "$out" | grep -iE "error:|unknown (identifier|constant)" | head -8 >&2
+  exit 1
+fi
+[ "$rc" -ne 0 ] && exit 1
+exit $(( nonclean ? 3 : 0 ))

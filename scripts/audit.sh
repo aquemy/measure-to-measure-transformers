@@ -30,7 +30,13 @@ mkdir -p "$CACHE"
 
 # --- resolve tooling ----------------------------------------------------------------------------
 plugin_bin="$(ls -d "$HOME"/.claude/plugins/cache/aquemy-personal/lean-math/*/bin 2>/dev/null | sort -V | tail -1)"
-AXIOM_REPORT="${AXIOM_REPORT:-$plugin_bin/axiom-report}"
+# Prefer the vendored copy (scripts/axiom-report) so CI and fresh checkouts need no private
+# tooling; the AXIOM_REPORT env override and the plugin fallback are kept.
+if [ -x "scripts/axiom-report" ]; then
+  AXIOM_REPORT="${AXIOM_REPORT:-scripts/axiom-report}"
+else
+  AXIOM_REPORT="${AXIOM_REPORT:-$plugin_bin/axiom-report}"
+fi
 CLAIMGRAPH_SRC="${CLAIMGRAPH_SRC:-/Users/aquemy/projects/hother/claimgraph}"
 
 claimgraph() {
