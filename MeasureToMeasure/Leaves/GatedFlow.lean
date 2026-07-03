@@ -183,4 +183,59 @@ theorem gatedBlock_reach {ω : Eucl d} (hω : ‖ω‖ = 1) {cosR : ℝ} (hcosR 
   have hfin := logistic_flow_reach hT hu_ode hu_range hg_lb hb (by rw [hu0]; exact hreach)
   exact hfin
 
+/-!
+## Uniform cap contraction (Lemma B.2, discharge step 4: the set-level reaching statement)
+
+`gatedBlock_reach` is *pointwise*: its budget `logOdds b ≤ logOdds ⟪x,ω⟫ + 2·(⟪x,ω⟫ - cos R)·T` depends
+on the starting point `x`. To feed the mass-retention bridge `Axioms.le_measureFlow_of_mapsTo` we need a
+`Set.MapsTo`: *every* point of a cap flows into a smaller cap under one uniform duration `T`.
+
+The self-centered flow makes this uniform for free. Because `u = ⟪·,ω⟫` is monotone non-decreasing
+along the flow, both point-dependent terms in the budget are worst at the cap's inner rim `u = m`: the
+gate constant `⟪x,ω⟫ - cos R ≥ m - cos R`, and `logOdds ⟪x,ω⟫ ≥ logOdds m` (monotonicity, `logOdds_le_logOdds`).
+So a single budget `logOdds b ≤ logOdds m + 2·(m - cos R)·T` at the rim implies the pointwise budget
+everywhere on the closed sub-cap `{ x ∈ 𝕊 | m ≤ ⟪x,ω⟫ }`. In the sphere's geodesic terms this is the cap
+`B(ω, arccos m) ⊆ B(ω, R)` (since `⟪x,ω⟫ ≥ c ⟺ geodesicDist ω x ≤ arccos c`); the flow drives it into the
+smaller cap `{ y | b ≤ ⟪y,ω⟫ } = B(ω, arccos b)`.
+-/
+
+/-- **Uniform cap contraction of the self-centered gated flow (eq. B.7, set form).** For `z = ω`, the
+flow at a single uniform time `T` maps the whole closed sub-cap `{ x ∈ 𝕊 | m ≤ ⟪x,ω⟫ }` (with `m` strictly
+inside the active region, `cos R < m < 1`) into the target cap `{ y | b ≤ ⟪y,ω⟫ }`, provided the rim
+budget `logOdds b ≤ logOdds m + 2·(m - cos R)·T` holds. This is the point-to-set upgrade of
+`gatedBlock_reach`, obtained by minimizing the pointwise budget over the cap (monotonicity of both the
+gate constant and `logOdds`). It plugs directly into `Axioms.le_measureFlow_of_mapsTo` to yield a mass
+statement: `μ {x ∈ 𝕊 | m ≤ ⟪x,ω⟫} ≤ measureFlow θ T μ {y | b ≤ ⟪y,ω⟫}`. The pole `x = ω` lies in the
+source cap and is handled separately (it is a fixed point, and `⟪ω,ω⟫ = 1 ≥ b`). -/
+theorem gatedBlock_mapsTo_cap {ω : Eucl d} (hω : ‖ω‖ = 1) {cosR : ℝ} (hcosR : -1 ≤ cosR)
+    {T : ℝ} (hT : 0 ≤ T) {m b : ℝ} (hmR : cosR < m) (hm1 : m < 1)
+    (hb : b ∈ Set.Ioo (-1 : ℝ) 1)
+    (hreach : logOdds b ≤ logOdds m + 2 * (m - cosR) * T) :
+    Set.MapsTo ((gatedBlock hω hω hcosR hT).blockFlow T)
+      {x | x ∈ sphere d ∧ m ≤ (⟪x, ω⟫ : ℝ)} {y | b ≤ (⟪y, ω⟫ : ℝ)} := by
+  have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hω]
+  intro x hx
+  obtain ⟨hxs, hxm⟩ := hx
+  by_cases hxω : x = ω
+  · -- the centre is a fixed point of the flow, and `⟪ω,ω⟫ = 1 ≥ b`
+    have hfix : (gatedBlock hω hω hcosR hT).blockFlow T ω = ω :=
+      (gatedBlock hω hω hcosR hT).blockFlow_fixed (gatedField_pole_eq_zero hωs cosR) T
+    show b ≤ (⟪(gatedBlock hω hω hcosR hT).blockFlow T x, ω⟫ : ℝ)
+    rw [hxω, hfix, inner_self_eq_one_of_mem_sphere hωs]
+    exact hb.2.le
+  · -- off the centre: minimise the pointwise budget over the cap, then apply `gatedBlock_reach`
+    have hxnp : x ≠ -ω := by
+      intro h; subst h
+      rw [inner_neg_left, inner_self_eq_one_of_mem_sphere hωs] at hxm
+      linarith
+    have hp_mem : (⟪x, ω⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 :=
+      inner_mem_Ioo_of_ne hxs hωs hxω hxnp
+    have hm_mem : m ∈ Set.Ioo (-1 : ℝ) 1 := ⟨by linarith, hm1⟩
+    have hreach' : logOdds b ≤ logOdds (⟪x, ω⟫ : ℝ) + 2 * ((⟪x, ω⟫ : ℝ) - cosR) * T := by
+      have h1 : logOdds m ≤ logOdds (⟪x, ω⟫ : ℝ) := logOdds_le_logOdds hm_mem hp_mem hxm
+      have h2 : 2 * (m - cosR) * T ≤ 2 * ((⟪x, ω⟫ : ℝ) - cosR) * T := by
+        nlinarith [mul_nonneg (by linarith : (0 : ℝ) ≤ (⟪x, ω⟫ : ℝ) - m) hT]
+      linarith
+    exact gatedBlock_reach hω hcosR hT hxs hxω hxnp hb hreach'
+
 end MeasureToMeasure
