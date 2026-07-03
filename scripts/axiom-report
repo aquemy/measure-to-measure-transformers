@@ -65,7 +65,10 @@ for r in "${all_stems[@]}"; do [ -d "$project/$r" ] && roots+=("$r"); done
 [ "${#roots[@]}" -gt 0 ] || roots=("${all_stems[@]}")
 
 # ── run #print axioms ─────────────────────────────────────────────────────────
-tmp="$(mktemp -t axrep).lean" || die "mktemp failed" 1
+# Portable mktemp: GNU requires an explicit X-template (BSD's bare `-t prefix` fails on Linux).
+tmp="$(mktemp "${TMPDIR:-/tmp}/axrep.XXXXXXXX")" || die "mktemp failed" 1
+mv "$tmp" "${tmp}.lean" || die "mktemp failed" 1
+tmp="${tmp}.lean"
 { for r in "${roots[@]}"; do echo "import $r"; done
   for n in "${names[@]}"; do echo "#print axioms $n"; done ; } > "$tmp"
 out="$(cd "$project" && lake env lean "$tmp" 2>&1)"; rc=$?
