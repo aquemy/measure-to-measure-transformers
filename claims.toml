@@ -19,7 +19,7 @@
 
 [claims.thm-1-1]
 kind      = "conjecture"
-statement = "Theorem 1.1: for on-sphere Dirac targets and sphere-supported probability inputs sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps). (Sphere hypotheses threaded 2026-07-03, F12; the Lean statement does not yet carry the O(dN) switch budget or norm bound -- deferred to the mean-field restatement, F14.)"
+statement = "Theorem 1.1: for on-sphere Dirac targets and sphere-supported probability inputs sharing a missing direction, a single Transformer steers N inputs to within eps in W2, with O(d N) switches and norm O(dN/T + log 1/eps). (Sphere hypotheses threaded 2026-07-03, F12; the Lean statement does not yet carry the O(dN) switch budget or norm bound -- deferred to the mean-field restatement, F14.) MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow (the self-attention mean-field flow, Foundations/Attention.lean) with horizon clause durationSum = T and the paper's standing assumption Pairwise (mu_0^i != mu_0^j); proved by T/2+T/2 assembly (disentangle, cluster, park) over the mean-field schedule algebra. Footprint now includes exists_meanFieldFlow (correct: the result is about the mean-field dynamics). O(dN) switch and parameter-norm bounds deferred (non-explicit constants)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.theorem_1_1"
 paper     = "Thm 1.1, p.5"
@@ -27,7 +27,7 @@ created   = "2026-06-30"
 
 [claims.thm-1-2]
 kind      = "conjecture"
-statement = "Theorem 1.2: for targets matchable by measurable a.e. sphere-valued transport maps and a shared missing direction, a single Transformer steers N sphere-supported probability inputs to within eps in W2 with piecewise-constant parameters. (Probability/sphere hypotheses and the sphere-valued Matchable clause threaded 2026-07-03, F12.)"
+statement = "Theorem 1.2: for targets matchable by measurable a.e. sphere-valued transport maps and a shared missing direction, a single Transformer steers N sphere-supported probability inputs to within eps in W2 with piecewise-constant parameters. (Probability/sphere hypotheses and the sphere-valued Matchable clause threaded 2026-07-03, F12.) MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T and Pairwise (mu_0^i != mu_0^j); the proof now uses exists_disentangling_balls' per-member flow maps and their on-sphere inverses (S = T^i o Phi_i^{-1}, the paper's B.4 composition) instead of the linear schedule inverse; hmiss_1 retained for statement fidelity though the parking axiom absorbs its use."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.theorem_1_2"
 paper     = "Thm 1.2, p.5"
@@ -39,7 +39,7 @@ created   = "2026-06-30"
 
 [claims.prop-2-1]
 kind      = "conjecture"
-statement = "Proposition 2.1: attention with parameter B clusters a single-hemisphere measure to a point mass; diam(conv_g supp mu(t)) -> 0 with rate O(log 1/eps). SOUNDNESS FIX (2026-07-03, F12): sphere support on mu and the on-sphere location of the cluster point z restored (the paper's P(S^{d-1})); the one-piece budget (attention-only constant parameter (V,B,W)=(I_d,B,0)) is now explicit."
+statement = "Proposition 2.1: attention with parameter B clusters a single-hemisphere measure to a point mass; diam(conv_g supp mu(t)) -> 0 with rate O(log 1/eps). SOUNDNESS FIX (2026-07-03, F12): sphere support on mu and the on-sphere location of the cluster point z restored (the paper's P(S^{d-1})); the one-piece budget (attention-only constant parameter (V,B,W)=(I_d,B,0)) is now explicit. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the clustering IS the self-attention dynamics; one constant piece, (V,B,W) = (I,B,0))."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_2_1"
 paper     = "Prop 2.1, p.11"
@@ -47,7 +47,7 @@ created   = "2026-06-30"
 
 [claims.prop-2-2]
 kind      = "conjecture"
-statement = "Proposition 2.2: an atomless probability measure on the sphere whose support misses a cap can be driven W2-close to a prescribed M-atom discrete measure on the sphere (convex weights), with at most 9M switch pieces. PROVED (needs 3<=d, positive weights alpha_k != 0): partition into probability pieces of mass alpha_k with pairwise disjoint supports (exists_atomless_partition); per piece rotate into the orthant with two pieces (lemma_3_2), which lies in a basis direction's open hemisphere, then cluster to its target point (cluster_to_point, seven pieces) composing the schedules; run all pieces with one parked schedule (exists_parked_schedule, sum of budgets = 9M), then lift per-piece bounds via the convexity of W2 under mixtures (W2_convexCombo_le); the convex-combination bookkeeping is machine-checked. The MissingCap hypothesis is an artifact of the linear-model route via lemma_3_2 (the paper's Section 2 clustering proof does not need it); to be revisited with the mean-field restatement (F14)."
+statement = "Proposition 2.2: an atomless probability measure on the sphere whose support misses a cap can be driven W2-close to a prescribed M-atom discrete measure on the sphere (convex weights), with at most 9M switch pieces. PROVED (needs 3<=d, positive weights alpha_k != 0): partition into probability pieces of mass alpha_k with pairwise disjoint supports (exists_atomless_partition); per piece rotate into the orthant with two pieces (lemma_3_2), which lies in a basis direction's open hemisphere, then cluster to its target point (cluster_to_point, seven pieces) composing the schedules; run all pieces with one parked schedule (exists_parked_schedule, sum of budgets = 9M), then lift per-piece bounds via the convexity of W2 under mixtures (W2_convexCombo_le); the convex-combination bookkeeping is machine-checked. The MissingCap hypothesis is an artifact of the linear-model route via lemma_3_2 (the paper's Section 2 clustering proof does not need it); to be revisited with the mean-field restatement (F14). LAYER FIX (2026-07-03, F14): back to a labeled AXIOM on the LINEAR layer -- the paper's own Section 2.2 proof is a gated perceptron construction (V = 0), so the linear statement is faithful; the former machine-checked assembly (split + attention-cluster + park + mixture linearity) is invalid under mean-field dynamics because a mixture evolves as one system (its flow is not the mixture of its pieces' flows). The MissingCap hypothesis and 9M budget (artifacts of that route) are dropped; honest re-derivation is a future assembly over lemma_B_1 (M4). Depends-On exists_atomless_partition, lemma_B_1."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_2_2"
 paper     = "Prop 2.2, p.11"
@@ -55,7 +55,7 @@ created   = "2026-06-30"
 
 [claims.prop-3-1]
 kind      = "conjecture"
-statement = "Proposition 3.1: a piecewise-constant theta disentangles the supports of N measures (pairwise disjoint, each in a hemisphere). PROVED from exists_disentangling_balls: the disjointness + hemisphere packaging is machine-checked (Metric.ball_disjoint_ball + Cauchy-Schwarz), closing the F2 hand-wave; the dynamical construction is the more primitive axiom."
+statement = "Proposition 3.1: a piecewise-constant theta disentangles the supports of N measures (pairwise disjoint, each in a hemisphere). PROVED from exists_disentangling_balls: the disjointness + hemisphere packaging is machine-checked (Metric.ball_disjoint_ball + Cauchy-Schwarz), closing the F2 hand-wave; the dynamical construction is the more primitive axiom. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T; gains the paper's probability/sphere-support/pairwise-distinct hypotheses; proved from the restated exists_disentangling_balls (geometric packaging unchanged)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_3_1"
 paper     = "Prop 3.1, p.15"
@@ -63,7 +63,7 @@ created   = "2026-06-30"
 
 [claims.axiom-disentangle-balls]
 kind      = "conjecture"
-statement = "Disentanglement dynamics output (Section 3.3): one schedule concentrates each measure into a small ball B(alpha_i, r), r<1, around a unit direction alpha_i, with directions pairwise 2r-separated. The concrete geometric output of Lemmas 3.2-3.4 run as the Section 3.3 induction (leaf L11 the geometric core); rests on the missing continuity-equation theory."
+statement = "Disentanglement dynamics output (Section 3.3): one schedule concentrates each measure into a small ball B(alpha_i, r), r<1, around a unit direction alpha_i, with directions pairwise 2r-separated. The concrete geometric output of Lemmas 3.2-3.4 run as the Section 3.3 induction (leaf L11 the geometric core); rests on the missing continuity-equation theory. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow -- eq. (1.7) proves NO measure-independent flow can disentangle overlapping inputs, and the linear form was kernel-refuted (dense-atoms disproof; two identical Diracs cannot enter disjoint balls under one map). Now requires probability + sphere support + the paper's standing assumption mu_0^i != mu_0^j and the gap-form SharedMissingDirection; the conclusion also exposes per-member measurable flow maps with measurable on-sphere inverses (the paper's Lipschitz-invertible phi^t, eq. B.2). O(dN) switch budget deferred (non-explicit constant). The old refutation no longer typechecks."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.exists_disentangling_balls"
 paper     = "Prop 3.1 / Sec 3.3, p.15-17"
@@ -79,7 +79,7 @@ created   = "2026-06-30"
 
 [claims.lem-3-3]
 kind      = "conjecture"
-statement = "Lemma 3.3 (single-measure core): a sphere-supported probability measure on the orthant can be concentrated into an eps-ball around a unit direction alpha. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure; restored probability + sphere + orthant support (the paper's P(Q_1^{d-1}) context, applied after Lemma 3.2) and alpha on the sphere. The paper's family form (fixing the other measures, O(dN) switches with a non-explicit constant) is deferred to the mean-field restatement (F14)."
+statement = "Lemma 3.3 (single-measure core): a sphere-supported probability measure on the orthant can be concentrated into an eps-ball around a unit direction alpha. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure; restored probability + sphere + orthant support (the paper's P(Q_1^{d-1}) context, applied after Lemma 3.2) and alpha on the sphere. The paper's family form (fixing the other measures, O(dN) switches with a non-explicit constant) is deferred to the mean-field restatement (F14). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the paper's construction switches on the value matrix V, so the field reads the flowing measure's barycenter); alpha now on the sphere."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_3"
 paper     = "Lem 3.3, p.16"
@@ -87,7 +87,7 @@ created   = "2026-06-30"
 
 [claims.lem-3-4]
 kind      = "conjecture"
-statement = "Lemma 3.4: two DISTINCT probability measures on the orthant cap Q_1^{d-1} can be made non-colinear in barycenter, via the perceptron (gamma1=1, equal barycenters: part1) or via attention (gamma1 in (0,1), colinear-but-unequal barycenters: part2). SOUNDNESS FIX (2026-07-03): the original stubs dropped the paper's hypotheses -- part1 kept only equal-barycenters (refutable by mu=nu) and part2 kept NONE (refutable by mu=nu, since SameRay v v always holds); F11 restored mu != nu, IsProbabilityMeasure, orthant support, and part2's gamma in (0,1) colinearity. SECOND FIX (2026-07-03, F12): sphere supports added -- with only the AMBIENT orthant the statements stayed refutable via heavy-tailed orthant measures whose identity is not Bochner-integrable (both barycenters are the junk value 0, and SameRay 0 0 holds); on the sphere the barycenters are genuine. All refutations machine-checked. Orphan axioms (not in the footprint of theorem_1_1/theorem_1_2)."
+statement = "Lemma 3.4: two DISTINCT probability measures on the orthant cap Q_1^{d-1} can be made non-colinear in barycenter, via the perceptron (gamma1=1, equal barycenters: part1) or via attention (gamma1 in (0,1), colinear-but-unequal barycenters: part2). SOUNDNESS FIX (2026-07-03): the original stubs dropped the paper's hypotheses -- part1 kept only equal-barycenters (refutable by mu=nu) and part2 kept NONE (refutable by mu=nu, since SameRay v v always holds); F11 restored mu != nu, IsProbabilityMeasure, orthant support, and part2's gamma in (0,1) colinearity. SECOND FIX (2026-07-03, F12): sphere supports added -- with only the AMBIENT orthant the statements stayed refutable via heavy-tailed orthant measures whose identity is not Bochner-integrable (both barycenters are the junk value 0, and SameRay 0 0 holds); on the sphere the barycenters are genuine. All refutations machine-checked. Orphan axioms (not in the footprint of theorem_1_1/theorem_1_2). LAYER SPLIT (2026-07-03, F14): part1 STAYS LINEAR (the paper's construction has V = 0, measure-independent); part2 moves to AttnSchedule/attnMeasureFlow with durationSum = T (its construction has V != 0, B = 0: barycenter-driven)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
@@ -127,7 +127,7 @@ created   = "2026-06-30"
 
 [claims.lem-5-4]
 kind      = "conjecture"
-statement = "Lemma 5.4: any measurable a.e. sphere-valued psi on a sphere-supported probability measure mu is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over every measure and every psi and was refutable (flow approximants are sphere-valued on sphere mass, so psi = const 3e_1 keeps every approximant at L2 distance >= 2); restored the paper's mu in P(S^{d-1}) and psi in L2(S^{d-1}; S^{d-1})."
+statement = "Lemma 5.4: any measurable a.e. sphere-valued psi on a sphere-supported probability measure mu is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over every measure and every psi and was refutable (flow approximants are sphere-valued on sphere mass, so psi = const 3e_1 keeps every approximant at L2 distance >= 2); restored the paper's mu in P(S^{d-1}) and psi in L2(S^{d-1}; S^{d-1}). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the density argument ranges over the full attention dynamics)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_5_4"
 paper     = "Lem 5.4, p.24"
@@ -293,7 +293,7 @@ created   = "2026-06-30"
 
 [claims.axiom-parking]
 kind      = "conjecture"
-statement = "Parking / simultaneous action (Appendix B): if a family of measures has pairwise disjoint supports and each member can be steered to within eps of its target by some schedule of at most s_i pieces, a single schedule of at most sum s_i pieces steers all of them simultaneously (each gated to its region, parking on the others). SOUNDNESS FIX (2026-07-03, F12): d >= 3 added -- at d = 1 flow maps are monotone homeomorphisms of the line and at d = 2 they preserve the circle's cyclic order, so two Dirac targets cannot be swapped; the switch budget (sum of per-member budgets) matches the gate-and-concatenate construction."
+statement = "Parking / simultaneous action (Appendix B): if a family of measures has pairwise disjoint supports and each member can be steered to within eps of its target by some schedule of at most s_i pieces, a single schedule of at most sum s_i pieces steers all of them simultaneously (each gated to its region, parking on the others). SOUNDNESS FIX (2026-07-03, F12): d >= 3 added -- at d = 1 flow maps are monotone homeomorphisms of the line and at d = 2 they preserve the circle's cyclic order, so two Dirac targets cannot be swapped; the switch budget (sum of per-member budgets) matches the gate-and-concatenate construction. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with horizon clause durationSum = T; the parked family members are SEPARATE mean-field systems sharing one schedule (the paper's family setting). Note the family form does NOT apply to pieces of a single mixture (see prop-2-2's layer fix)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.exists_parked_schedule"
 paper     = "App. B parking, p.31-39"
@@ -301,7 +301,7 @@ created   = "2026-06-30"
 
 [claims.cluster-to-point]
 kind      = "conjecture"
-statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a sphere-supported probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point OF THE SPHERE, by clustering (one piece) then steering the cluster (six pieces), 7 pieces total, for d >= 3. Lifted to a family by disentanglement and parking in Theorem 1.1. SOUNDNESS FIX (2026-07-03, F12): the stub let z range over all of Eucl d and was kernel-refuted with an off-sphere Dirac target (the flow keeps sphere mass on the sphere and W2(delta_p, delta_q) = dist p q, proved exactly over the coupling definition)."
+statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a sphere-supported probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point OF THE SPHERE, by clustering (one piece) then steering the cluster (six pieces), 7 pieces total, for d >= 3. Lifted to a family by disentanglement and parking in Theorem 1.1. SOUNDNESS FIX (2026-07-03, F12): the stub let z range over all of Eucl d and was kernel-refuted with an off-sphere Dirac target (the flow keeps sphere mass on the sphere and W2(delta_p, delta_q) = dist p q, proved exactly over the coupling definition). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (attention clustering + perceptron steering composite; 7 pieces)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.cluster_to_point"
 paper     = "Prop 2.1 + Prop 4.1"

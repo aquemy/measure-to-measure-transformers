@@ -162,6 +162,25 @@ def switches (θ : AttnSchedule d) : ℕ := θ.length
 @[simp] theorem switches_append (θ ψ : AttnSchedule d) :
     switches (θ ++ ψ) = switches θ + switches ψ := List.length_append ..
 
+/-- The total duration of a schedule: the sum of its pieces' durations. The paper's horizon `T`
+is the total duration of the piecewise-constant parameter path `θ : [0, T] → Θ`. -/
+def durationSum (θ : AttnSchedule d) : ℝ := (θ.map AttnParams.duration).sum
+
+@[simp] theorem durationSum_nil : durationSum ([] : AttnSchedule d) = 0 := rfl
+
+@[simp] theorem durationSum_append (θ ψ : AttnSchedule d) :
+    durationSum (θ ++ ψ) = durationSum θ + durationSum ψ := by
+  simp [durationSum]
+
+/-- Durations are nonnegative, hence so is the total. -/
+theorem durationSum_nonneg (θ : AttnSchedule d) : 0 ≤ durationSum θ := by
+  induction θ with
+  | nil => simp
+  | cons p rest ih =>
+    have h : durationSum (p :: rest) = p.duration + durationSum rest := by simp [durationSum]
+    rw [h]
+    exact add_nonneg p.duration_nonneg ih
+
 end AttnSchedule
 
 /-- One block step of the measure-level solution operator: push `μ` forward along the block's

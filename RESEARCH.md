@@ -51,6 +51,7 @@
 | 2026-07-02 | J: mathlib-ready | staged | spherical-geometry cluster staged in `ForMathlib/`, `#print axioms`-clean (#30) |
 | 2026-07-03 | C: sound? (re-audit) | fixed 3 false stubs | F11: `lemma_3_4_part1/part2`, `lemma_5_1` dropped paper hypotheses and were refutable; restored `μ≠ν`/orthant/colinearity and `DisjointSupports`. Orphan axioms, no proved result affected; disproofs machine-checked |
 | 2026-07-03 | C: sound? (full fidelity matrix + refutation harness) | fixed 7 more stubs; 1 structural gap open | F12: sphere/support/dimension hypotheses restored across the axiom layer (4 kernel disproofs, 3 in-system); F13: Lemma 5.1 "invertible ψ" unsatisfiable (paper statement/proof mismatch, E2); F14 OPEN: linear `measureFlow` cannot express disentanglement (eq. 1.7) -- mean-field attention model decided; F15: B.1/B.2 quantifier order (E3); F16: lemma_B_1 docstring corrected |
+| 2026-07-03 | C: sound? (F14 fix) | mean-field restatement landed | F14 FIXED: `Foundations/Attention.lean` (eq. (1.2) field, `IsMeanFieldFlow`, well-posedness axiom pair) + Statements restated per-layer (paper's `V ≡ 0` constructions stay linear; attention-driven results move to `AttnSchedule`); `SharedMissingDirection` gap form; `exists_disentangling_balls` gains `μ₀^i ≢ μ₀^j` + per-member flow maps; `prop_2_2` re-axiomatised (its old assembly needed mixture linearity, invalid for mean-field); all refutation files now fail to typecheck |
 
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
 Of the 30 blueprint nodes: **13 clean** (machine-checked), **17 axiom** (rest on a labeled axiom).
@@ -455,7 +456,7 @@ injection pushes an atomless measure onto an atom. The root cause is in the pape
 invertible. Recorded as erratum candidate E2 in `ERRATA.md`; the Lean conclusion now keeps
 measurability and drops invertibility, which is what the downstream `W₂` argument uses.
 
-### F14 (STRUCTURAL, OPEN) The flow model is a linear continuity equation; disentanglement needs measure dependence
+### F14 (STRUCTURAL, fixed 2026-07-03) The flow model was a linear continuity equation; disentanglement needs measure dependence
 
 `measureFlow θ t μ := μ.map (flowMap θ t)` is a measure-INDEPENDENT pushforward — a linear
 continuity equation. The paper's own eq. (1.7) proves such dynamics cannot interpolate, and its
@@ -476,8 +477,30 @@ docstrings and here.
 **Progress (2026-07-03):** the mean-field interface landed in `Foundations/Attention.lean`
 (`AttnParams`, the concrete field of eq. (1.2) with the softmax average `attnAvg`,
 `IsMeanFieldFlow`, the axiom pair `exists_meanFieldFlow`/`meanFieldFlow_unique`, and the schedule
-operator `attnMeasureFlow` with probability/sphere preservation). The Statements-layer restatement
-over `AttnSchedule` follows.
+operator `attnMeasureFlow` with probability/sphere preservation).
+
+**Fixed (2026-07-03, Statements restatement):** every statement now lives on the layer its own
+paper construction uses. Linear layer (`V ≡ 0`, measure-independent, faithfully): `lemma_3_2`
+(W-only), `lemma_3_4_part1`, `prop_4_2`/`prop_4_1`, `lemma_B_2`/`lemma_B_1`, and `prop_2_2`
+(the §2.2 gated construction; its former machine-checked assembly used the mixture linearity
+`Φ_#(∑ αₖ Pₖ) = ∑ αₖ Φ_# Pₖ` through attention-based steps, which is meaningless for mean-field
+dynamics — a mixture evolves as ONE system — so `prop_2_2` is now a labeled axiom whose honest
+derivation is a future assembly over `lemma_B_1`). Mean-field layer (`AttnSchedule` /
+`attnMeasureFlow`): `prop_2_1`, `lemma_3_3`, `lemma_3_4_part2`, `cluster_to_point`, `lemma_5_4`,
+`exists_parked_schedule`, `exists_disentangling_balls` (now also requiring the paper's standing
+assumption `μ₀^i ≢ μ₀^j` and exposing the per-member flow maps with on-sphere inverses),
+`prop_3_1`, `theorem_1_1`, `theorem_1_2`. `SharedMissingDirection` strengthened to the positive
+cap-gap form (the faithful (1.4)/(1.5)). The dense-atoms kernel disproof of the old
+`exists_disentangling_balls` no longer typechecks; the axiom footprints of the main theorems now
+include `exists_meanFieldFlow` (correct: the results are about the mean-field dynamics).
+
+**Budget-deferral policy:** switch budgets are stated only where the paper is explicit (one piece
+for Prop 2.1, two for Lemma 3.2, six for Prop 4.2, seven for the cluster-and-steer composite, one
+per ball for B.2, sums for parking). Where the paper writes `O(d·N)`/`O(M)` with a non-explicit
+constant (disentanglement, Prop 2.2, the main theorems), the budget clause is deliberately
+DEFERRED rather than invented: a made-up constant would risk a false axiom. Parameter-norm bounds
+(`O(dN/T + log 1/ε)`) are now expressible (AttnParams carries genuine operators) and remain
+future work.
 
 ### F15 (paper erratum candidate) B.1/B.2 print a quantifier order their proofs do not support
 
