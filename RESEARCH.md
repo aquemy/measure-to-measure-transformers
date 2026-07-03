@@ -49,6 +49,7 @@
 | 2026-07-01 | discharge | `W₁` KR bound done | Markov bound (L8) flipped to machine-checked (#27) |
 | 2026-07-02 | I: site & badges honest? | yes | `scripts/audit.sh` (regenerate-and-compare) passes; one stale badge (L8) fixed (#29) |
 | 2026-07-02 | J: mathlib-ready | staged | spherical-geometry cluster staged in `ForMathlib/`, `#print axioms`-clean (#30) |
+| 2026-07-03 | C: sound? (re-audit) | fixed 3 false stubs | F11: `lemma_3_4_part1/part2`, `lemma_5_1` dropped paper hypotheses and were refutable; restored `μ≠ν`/orthant/colinearity and `DisjointSupports`. Orphan axioms, no proved result affected; disproofs machine-checked |
 
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
 Of the 30 blueprint nodes: **13 clean** (machine-checked), **17 axiom** (rest on a labeled axiom).
@@ -370,6 +371,35 @@ selects ball radii by IVT on `f(s,r) = νⁱ(B(γ(s),r))`, valid since `νⁱ` i
 `O((d+M)N)` switch count. Bookkeeping checks out; the constants are uniform in `ε` as claimed
 (dependence on `M,N` is explicit via `≲_{M,N}`). The dense per-symbol details rest on the OT / flow
 axioms and were not re-derived line-by-line.
+
+### F11 (SERIOUS, stub fidelity — fixed 2026-07-03) Three axiom stubs dropped load-bearing hypotheses
+
+A second-pass audit of the *axiom statements themselves* (not the paper math, which F5-F10 covered)
+found three `math.axiomatised` stubs in `Statements/MidLevel.lean` that were **false as written**,
+because the type-correct stub elided hypotheses the paper carries. Each is refutable:
+
+- `lemma_3_4_part1` kept only `barycenter μ = barycenter ν`. Refutable by `μ = ν`: the equal-barycenter
+  hypothesis holds trivially, yet `measureFlow θ T μ = measureFlow θ T ν` for every `θ`, so no `θ`
+  separates the barycenters. (Machine-checked disproof.)
+- `lemma_3_4_part2` kept **no** relation between `μ` and `ν`. Refutable by `μ = ν`: barycenters coincide
+  after any flow and `SameRay ℝ v v` always holds, so `¬ SameRay …` is unsatisfiable. (Machine-checked.)
+- `lemma_5_1` dropped the disentanglement (disjoint-supports) context. Refutable with Diracs:
+  `μ₀ 0 = μ₀ 1 = δ_a` with distinct targets forces one `ψ` to take two values at `a`; a shared target
+  with distinct sources breaks bijectivity.
+
+The paper's hypotheses (Lemma 3.4: "let `μ₀, ν₀ ∈ P(Q₁^{d-1})` be two *different* measures such that
+`ℰ_{μ₀} = γ₁ ℰ_{ν₀}`, `γ₁ ∈ (0,1]`"; Lemma 5.1: measures taken from Proposition 3.1 applied to *both*
+families, i.e. pairwise-disjoint supports) were **restored**: `μ ≠ ν`, `IsProbabilityMeasure`, orthant
+support, and the `γ ∈ (0,1)` colinearity for 3.4; `DisjointSupports μ₀` and `DisjointSupports μ₁` for
+5.1. This is the same class of fix as prop_4_2 (injectivity) and lemma_B_2 (geodesic balls).
+
+**Blast radius: none on proved results.** All three are *orphan* axioms — `#print axioms theorem_1_1`
+= {cluster_to_point, exists_disentangling_balls, exists_parked_schedule} and `theorem_1_2` additionally
+uses only `lemma_5_4`; none reference 3.4/5.1. So no proved theorem ever rested on the false stubs, and
+the layer was never *jointly* inconsistent in a way the kernel could exploit (nothing derived `False`).
+Lesson: a per-node `#print axioms` check cannot see a false-but-unused axiom; axiom statements need
+their own fidelity review against the paper's hypotheses, not just a review of the paper's math (F8
+confirmed the paper's Lemma 3.4 sound but did not audit the stub's hypotheses).
 
 ### Verdict
 

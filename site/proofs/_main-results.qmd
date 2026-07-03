@@ -17,12 +17,14 @@ for some Lipschitz-continuous and invertible maps $\mathsf T^i_{\Phi_1}, \mathsf
 ::: {.our-work}
 **Our formalization.** [open]{.badge .open}
 
-The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow as Lipschitz-invertible maps $\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3}$, and the individual matchings $\psi^i$ can be glued into one global Lipschitz-continuous, invertible $\psi$ that agrees with each $\psi^i$ on the $i$-th (now disjoint) support and realizes $(\psi\circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = \Phi_3(\mu_1^i)$. We give a type-correct Lean **statement** as a `sorry` (open), abstracting the Lipschitz/geodesic bookkeeping into the matchability hypothesis: from a per-index family of transport maps we ask for a single `Bijective` $\psi$ pushing every $\mu_0^i$ to $\mu_1^i$. We do not claim a proof.
+The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow as Lipschitz-invertible maps $\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3}$, and the individual matchings $\psi^i$ can be glued into one global Lipschitz-continuous, invertible $\psi$ that agrees with each $\psi^i$ on the $i$-th (now disjoint) support and realizes $(\psi\circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = \Phi_3(\mu_1^i)$. We give a type-correct Lean **statement** as a `sorry` (open), abstracting the Lipschitz/geodesic bookkeeping into the matchability hypothesis. The **disjoint-supports hypotheses on both families are load-bearing and are kept explicit** (`DisjointSupports μ₀`, `DisjointSupports μ₁`): they are what Proposition 3.1 supplies, and without them the gluing is genuinely impossible — with $\mu_0^0=\mu_0^1=\delta_a$ and distinct targets a single $\psi$ would need two values at $a$, and a shared target with distinct sources breaks bijectivity. We do not claim a proof.
 
 ```lean
-/-- **Lemma 5.1** (transport map after disentanglement). If each disentangled pair is matchable, a
-single bijective map matches them all. Stub (`sorry`): `math.open`. -/
+/-- **Lemma 5.1** (transport map after disentanglement). If both families are disentangled (pairwise
+disjoint supports, as Proposition 3.1 provides) and each pair is matchable, a single bijective map
+matches them all. Stub (`sorry`): `math.open`. -/
 theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
     (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
     ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
   sorry

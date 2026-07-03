@@ -71,18 +71,38 @@ realization as a flow on measures rests on the missing continuity-equation theor
 axiom lemma_3_3 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
     ∃ (θ : Params d) (α : Eucl d), supportedIn (measureFlow θ T μ) (Metric.ball α ε)
 
-/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). If two measures have equal barycenters, a constant
-parameter makes the barycenters differ. AXIOM (`math.axiomatised`). The self-contained pigeonhole
-core (non-constancy over an open ball) is the kernel-checked leaf L10 (`exists_ne_in_ball`). -/
-axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
+/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). For two **distinct** probability measures on the orthant
+`Q₁^{d-1}` with **equal** barycenters, a constant parameter (`V ≡ 0`) makes the barycenters differ.
+AXIOM (`math.axiomatised`). The self-contained pigeonhole core (non-constancy over an open ball) is the
+kernel-checked leaf L10 (`exists_ne_in_ball`).
+
+**Fidelity (soundness):** the hypotheses `μ ≠ ν`, `IsProbabilityMeasure`, and support in the orthant
+are the paper's ("let `μ₀, ν₀ ∈ P(Q₁^{d-1})` be two *different* measures", Lemma 3.4). The original
+stub omitted all of them, which makes the statement **false**: taking `μ = ν` satisfies the equal-
+barycenter hypothesis yet no `θ` can separate the (identical) flowed barycenters. The orthant support
+also guarantees the barycenter is nonzero (all coordinates positive), which the paper's construction
+needs. -/
+axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hbar : barycenter μ = barycenter ν) :
     ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν)
 
-/-- **Lemma 3.4, Part 2** (`γ₁ ≠ 1` case). At most two switches make the barycenters non-colinear
-(not `SameRay`). AXIOM (`math.axiomatised`). The "disjoint geodesic hulls ⟹ non-colinear barycenters"
-implication used alongside this is the machine-checked leaf L11
-(`barycenter_noncolinear_of_disjoint_hull`, review finding F2). -/
-axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) (T : ℝ) (hT : 0 < T) :
+/-- **Lemma 3.4, Part 2** (`γ₁ ∈ (0,1)` case). For two **distinct** probability measures on the orthant
+whose barycenters are **colinear but unequal** (`ℰ_μ = γ·ℰ_ν` for some `γ ∈ (0,1)`), at most two
+switches make the barycenters non-colinear (not `SameRay`). AXIOM (`math.axiomatised`). The "disjoint
+geodesic hulls ⟹ non-colinear barycenters" implication used alongside this is the machine-checked leaf
+L11 (`barycenter_noncolinear_of_disjoint_hull`, review finding F2).
+
+**Fidelity (soundness):** the hypotheses are the paper's (`μ₀, ν₀ ∈ P(Q₁^{d-1})` different, with
+`ℰ_{μ₀} = γ₁ ℰ_{ν₀}`, `γ₁ ∈ (0,1)`). The original stub omitted **every** hypothesis, which makes the
+statement **false**: with no relation between `μ` and `ν`, taking `μ = ν` gives coincident flowed
+barycenters, and `SameRay ℝ v v` always holds, so `¬ SameRay …` is unsatisfiable for every `θ`. The
+orthant support forces the barycenters nonzero, so the initial `γ ∈ (0,1)` colinearity is genuine. -/
+axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
+    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) :
     ∃ θ : Params d, switches θ ≤ 2 ∧
       ¬ SameRay ℝ (barycenter (measureFlow θ T μ)) (barycenter (measureFlow θ T ν))
 
@@ -154,11 +174,22 @@ axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε :
     (z e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
     ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
-/-- **Lemma 5.1** (transport map after disentanglement). If each disentangled pair is matchable, a
+/-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
+source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition
+3.1 achieves for `μ^i₀` and `μ^i₁` in the paper) -- and each pair is individually matchable, then a
 single bijective map matches them all. AXIOM (`math.axiomatised`): gluing the per-pair transport maps
-across disjoint supports rests on the optimal-transport / measurable-selection theory Mathlib
-lacks. -/
+across disjoint supports rests on the optimal-transport / measurable-selection theory Mathlib lacks.
+
+**Fidelity (soundness):** the disjoint-supports hypotheses are load-bearing and are the paper's context
+(Lemma 5.1 takes the measures from Proposition 3.1 applied to both `μ^i₀` and `μ^i₁`, i.e. already
+disentangled into disjoint regions). The original stub omitted them, which makes the statement
+**false**: with `μ₀ 0 = μ₀ 1 = δ_a` and targets `μ₁ 0 = δ_b`, `μ₁ 1 = δ_e` (`b ≠ e`) each pair is
+matchable (`a ↦ b`, `a ↦ e`) but a single `ψ` would need `ψ a = b` and `ψ a = e` at once; symmetrically
+a shared *target* with distinct sources breaks bijectivity. Disjoint supports on both sides rule these
+out, so the per-pair maps glue to one invertible `ψ` (each `ψ` agrees with `ψᵢ` on `supp(μ₀ i)`, which
+is all a pushforward sees). -/
 axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
     (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
     ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
 
