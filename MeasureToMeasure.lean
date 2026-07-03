@@ -18,6 +18,7 @@ import MeasureToMeasure.Leaves.SeparatingHyperplane
 import MeasureToMeasure.Leaves.BallChain
 import MeasureToMeasure.Leaves.Lyapunov
 import MeasureToMeasure.Leaves.GateODE
+import MeasureToMeasure.Leaves.GatedFlow
 import MeasureToMeasure.Leaves.BarycenterODE
 import MeasureToMeasure.Leaves.Pigeonhole
 import MeasureToMeasure.Leaves.Coupling
