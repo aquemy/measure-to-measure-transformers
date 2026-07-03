@@ -99,7 +99,7 @@ the mixture. The gluing-of-couplings estimate `W₂(∑ aₖ Pₖ, ∑ aₖ Qₖ
 lift to the `ℝ≥0∞` bound `Foundations.W2 (P k) (Q k) ≤ ofReal ε` the `ℝ≥0∞` lemma consumes. -/
 theorem W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) (P Q : Fin M → Measure (Eucl d))
     (ha : ∑ k, a k = 1) (ε : ℝ) (hε : 0 ≤ ε)
-    (hP : ∀ k, IsProbabilityMeasure (P k)) (hQ : ∀ k, IsProbabilityMeasure (Q k))
+    (_hP : ∀ k, IsProbabilityMeasure (P k)) (_hQ : ∀ k, IsProbabilityMeasure (Q k))
     (hfin : ∀ k, MeasureToMeasure.W2 (P k) (Q k) ≠ ⊤)
     (hbound : ∀ k, W2 (P k) (Q k) ≤ ε) :
     W2 (∑ k, a k • P k) (∑ k, a k • Q k) ≤ ε := by

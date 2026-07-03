@@ -495,7 +495,7 @@ theorem supportedIn_of_sum_smul {M : ℕ} (α : Fin M → ℝ≥0∞) (P : Fin M
     supportedIn (P k) S := by
   have hsum : ∑ j, α j * P j Sᶜ = 0 := by
     have := h
-    simp only [supportedIn, Measure.coe_finset_sum, Finset.sum_apply, Measure.smul_apply,
+    simp only [supportedIn, Measure.coe_finsetSum, Finset.sum_apply, Measure.smul_apply,
       smul_eq_mul] at this
     exact this
   have hk : α k * P k Sᶜ = 0 := (Finset.sum_eq_zero_iff.mp hsum) k (Finset.mem_univ k)
