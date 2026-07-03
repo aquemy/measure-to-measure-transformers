@@ -1,4 +1,6 @@
 import MeasureToMeasure.Foundations.Sphere
+import Mathlib.Analysis.Normed.Lp.MeasurableSpace
+import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
 import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 
 /-!

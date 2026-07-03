@@ -1,5 +1,8 @@
 import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Foundations.Projector
+import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Analysis.Normed.Lp.MeasurableSpace
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
 # The self-attention mean-field flow interface (eq. (1.2); milestone M3b)

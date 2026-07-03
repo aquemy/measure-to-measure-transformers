@@ -1,5 +1,6 @@
 import MeasureToMeasure.Foundations.Projector
 import MeasureToMeasure.Foundations.GeodesicDistance
+import Mathlib.Analysis.InnerProductSpace.Calculus
 
 /-!
 # Leaf L2: the gate algebra and the gate ODE (eq. B.4-B.5)
