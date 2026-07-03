@@ -25,6 +25,11 @@ lean      = "MeasureToMeasure.Statements.theorem_1_1"
 paper     = "Thm 1.1, p.5"
 created   = "2026-06-30"
 
+[claims.thm-1-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Thm 1.1, p.5, arXiv:2411.04551v3"
+evidence = "F12+F14 fidelity matrix; assembly re-proved over the repaired axiom layer (PR #66/#69); budgets deferred (non-explicit constants)"
+
 [claims.thm-1-2]
 kind      = "conjecture"
 statement = "Theorem 1.2: for targets matchable by measurable a.e. sphere-valued transport maps and a shared missing direction, a single Transformer steers N sphere-supported probability inputs to within eps in W2 with piecewise-constant parameters. (Probability/sphere hypotheses and the sphere-valued Matchable clause threaded 2026-07-03, F12.) MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T and Pairwise (mu_0^i != mu_0^j); the proof now uses exists_disentangling_balls' per-member flow maps and their on-sphere inverses (S = T^i o Phi_i^{-1}, the paper's B.4 composition) instead of the linear schedule inverse; hmiss_1 retained for statement fidelity though the parking axiom absorbs its use."
@@ -32,6 +37,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.theorem_1_2"
 paper     = "Thm 1.2, p.5"
 created   = "2026-06-30"
+
+[claims.thm-1-2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Thm 1.2, p.5, arXiv:2411.04551v3"
+evidence = "F12+F14 fidelity matrix; re-assembled via per-member flow maps (paper B.4 composition); _hmiss1 retained for fidelity"
 
 # ===========================================================================
 # Backbone propositions and lemmas
@@ -45,6 +55,11 @@ lean      = "MeasureToMeasure.Statements.prop_2_1"
 paper     = "Prop 2.1, p.11"
 created   = "2026-06-30"
 
+[claims.prop-2-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 2.1, p.11, arXiv:2411.04551v3"
+evidence = "F12; sphere + on-sphere z + one-piece budget restored; witness Regression/NonVacuity/MidLevel.lean"
+
 [claims.prop-2-2]
 kind      = "conjecture"
 statement = "Proposition 2.2: an atomless probability measure on the sphere whose support misses a cap can be driven W2-close to a prescribed M-atom discrete measure on the sphere (convex weights), with at most 9M switch pieces. PROVED (needs 3<=d, positive weights alpha_k != 0): partition into probability pieces of mass alpha_k with pairwise disjoint supports (exists_atomless_partition); per piece rotate into the orthant with two pieces (lemma_3_2), which lies in a basis direction's open hemisphere, then cluster to its target point (cluster_to_point, seven pieces) composing the schedules; run all pieces with one parked schedule (exists_parked_schedule, sum of budgets = 9M), then lift per-piece bounds via the convexity of W2 under mixtures (W2_convexCombo_le); the convex-combination bookkeeping is machine-checked. The MissingCap hypothesis is an artifact of the linear-model route via lemma_3_2 (the paper's Section 2 clustering proof does not need it); to be revisited with the mean-field restatement (F14). LAYER FIX (2026-07-03, F14): back to a labeled AXIOM on the LINEAR layer -- the paper's own Section 2.2 proof is a gated perceptron construction (V = 0), so the linear statement is faithful; the former machine-checked assembly (split + attention-cluster + park + mixture linearity) is invalid under mean-field dynamics because a mixture evolves as one system (its flow is not the mixture of its pieces' flows). The MissingCap hypothesis and 9M budget (artifacts of that route) are dropped; honest re-derivation is a future assembly over lemma_B_1 (M4). Depends-On exists_atomless_partition, lemma_B_1."
@@ -52,6 +67,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_2_2"
 paper     = "Prop 2.2, p.11"
 created   = "2026-06-30"
+
+[claims.prop-2-2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 2.2, p.11, arXiv:2411.04551v3"
+evidence = "F14 layer fix: re-axiomatised on the linear (V=0) layer, faithful to the paper's Sec 2.2 gated construction; re-derivation over lemma_B_1 tracked (M4)"
 
 [claims.prop-3-1]
 kind      = "conjecture"
@@ -61,6 +81,11 @@ lean      = "MeasureToMeasure.Statements.prop_3_1"
 paper     = "Prop 3.1, p.15"
 created   = "2026-06-30"
 
+[claims.prop-3-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 3.1, p.15, arXiv:2411.04551v3"
+evidence = "F14; proved from the restated exists_disentangling_balls; geometric packaging machine-checked (F2)"
+
 [claims.axiom-disentangle-balls]
 kind      = "conjecture"
 statement = "Disentanglement dynamics output (Section 3.3): one schedule concentrates each measure into a small ball B(alpha_i, r), r<1, around a unit direction alpha_i, with directions pairwise 2r-separated. The concrete geometric output of Lemmas 3.2-3.4 run as the Section 3.3 induction (leaf L11 the geometric core); rests on the missing continuity-equation theory. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow -- eq. (1.7) proves NO measure-independent flow can disentangle overlapping inputs, and the linear form was kernel-refuted (dense-atoms disproof; two identical Diracs cannot enter disjoint balls under one map). Now requires probability + sphere support + the paper's standing assumption mu_0^i != mu_0^j and the gap-form SharedMissingDirection; the conclusion also exposes per-member measurable flow maps with measurable on-sphere inverses (the paper's Lipschitz-invertible phi^t, eq. B.2). O(dN) switch budget deferred (non-explicit constant). The old refutation no longer typechecks."
@@ -68,6 +93,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.exists_disentangling_balls"
 paper     = "Prop 3.1 / Sec 3.3, p.15-17"
 created   = "2026-06-30"
+
+[claims.axiom-disentangle-balls.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 3.1 / Sec 3.3, p.15-17, arXiv:2411.04551v3"
+evidence = "F14 (eq. 1.7 refutes any linear form; kernel disproof); Regression/Refuted/F14_IdenticalInputs.lean; adapter Refutations/F14_exists_disentangling_balls_identical_inputs.lean; witness Regression/NonVacuity/MainResults.lean"
 
 [claims.lem-3-2]
 kind      = "conjecture"
@@ -77,6 +107,11 @@ lean      = "MeasureToMeasure.Statements.lemma_3_2"
 paper     = "Lem 3.2, p.15"
 created   = "2026-06-30"
 
+[claims.lem-3-2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 3.2, p.15, arXiv:2411.04551v3"
+evidence = "F12; disproof Regression/Refuted/F12_Volume.lean; adapter Refutations/F12_lemma_3_2_volume.lean; witness Regression/NonVacuity/MidLevel.lean"
+
 [claims.lem-3-3]
 kind      = "conjecture"
 statement = "Lemma 3.3 (single-measure core): a sphere-supported probability measure on the orthant can be concentrated into an eps-ball around a unit direction alpha. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure; restored probability + sphere + orthant support (the paper's P(Q_1^{d-1}) context, applied after Lemma 3.2) and alpha on the sphere. The paper's family form (fixing the other measures, O(dN) switches with a non-explicit constant) is deferred to the mean-field restatement (F14). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the paper's construction switches on the value matrix V, so the field reads the flowing measure's barycenter); alpha now on the sphere."
@@ -84,6 +119,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_3"
 paper     = "Lem 3.3, p.16"
 created   = "2026-06-30"
+
+[claims.lem-3-3.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 3.3, p.16, arXiv:2411.04551v3"
+evidence = "F12; disproof Regression/Refuted/F12_Volume.lean; adapter Refutations/F12_lemma_3_3_volume.lean; witness Regression/NonVacuity/MidLevel.lean"
 
 [claims.lem-3-4]
 kind      = "conjecture"
@@ -93,6 +133,11 @@ lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
 created   = "2026-06-30"
 
+[claims.lem-3-4.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 3.4, p.16, arXiv:2411.04551v3"
+evidence = "F11 (mu=nu) + F12 (heavy tails); disproofs Regression/Refuted/F11_LemmaThreeFour.lean + F12_HeavyTails.lean; adapters Refutations/F11_*, F12_*heavy_tails.lean; witness WITNESS-TODO"
+
 [claims.prop-4-1]
 kind      = "conjecture"
 statement = "Proposition 4.1: M distinct points of the sphere x_0^i can be steered exactly to distinct on-sphere y^i, using at most 6M switches. PROVED by induction on M over Proposition 4.2 and the structural flow algebra (idParams base case; comp/switches_comp step placing one more point; flowMap_comp); the 6M switch budget is machine-checked. Sphere memberships threaded through the induction via flowMap_mem_sphere (F12)."
@@ -100,6 +145,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.prop_4_1"
 paper     = "Prop 4.1, p.18"
 created   = "2026-06-30"
+
+[claims.prop-4-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 4.1, p.18, arXiv:2411.04551v3"
+evidence = "F12; induction re-proved with on-sphere point threading"
 
 [claims.prop-4-2]
 kind      = "conjecture"
@@ -109,6 +159,11 @@ lean      = "MeasureToMeasure.Statements.prop_4_2"
 paper     = "Prop 4.2, p.18"
 created   = "2026-06-30"
 
+[claims.prop-4-2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 4.2, p.18, arXiv:2411.04551v3"
+evidence = "F12 (off-sphere steer contradicts flowMap_mem_sphere, in-system refutable); sphere hypotheses restored; witness Regression/NonVacuity/MidLevel.lean"
+
 [claims.lem-5-1]
 kind      = "conjecture"
 statement = "Lemma 5.1: after DISENTANGLEMENT (both the source family mu_0 and the target family mu_1 have pairwise disjoint supports, as Proposition 3.1 provides for mu^i_0 and mu^i_1), the per-pair transport maps T^i glue into a single measurable psi with the stated pushforward identity. SOUNDNESS FIX (2026-07-03, F11): the original stub dropped the disjoint-supports context, making it refutable with Diracs. SECOND FIX (2026-07-03, F13): the conclusion's Function.Bijective was unsatisfiable even with disjoint supports (an atomless source with a Dirac target is matchable, and no injection pushes an atomless measure onto an atom); the paper's own proof (B.4) delivers only a non-invertible Lipschitz psi, so 'invertible' in the printed Lemma 5.1 is a statement/proof mismatch (erratum candidate E2). Conclusion now: Measurable psi. Orphan axiom."
@@ -116,6 +171,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_5_1"
 paper     = "Lem 5.1, p.24"
 created   = "2026-06-30"
+
+[claims.lem-5-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 5.1, p.24, arXiv:2411.04551v3"
+evidence = "F11 (shared atom) + F13 (Bijective unsatisfiable, paper erratum E2); disproof Regression/Refuted/F11_LemmaFiveOne.lean; adapter Refutations/F11_lemma_5_1_shared_atom.lean"
 
 [claims.lem-5-2]
 kind      = "conjecture"
@@ -133,6 +193,11 @@ lean      = "MeasureToMeasure.Statements.lemma_5_4"
 paper     = "Lem 5.4, p.24"
 created   = "2026-06-30"
 
+[claims.lem-5-4.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 5.4, p.24, arXiv:2411.04551v3"
+evidence = "F12 (flow approximants are sphere-valued); probability/sphere/measurable/a.e.-sphere hypotheses restored; witness Regression/NonVacuity/MidLevel.lean"
+
 [claims.lem-b-1]
 kind      = "conjecture"
 statement = "Lemma B.1: through a chain of K+1 consecutively overlapping proper geodesic caps (radii in (0, pi), d >= 2), K pieces retain mass mu(T, B_K) >= (1-eps)^K mu(B_0) (the mass starting in the first ball, funneled along the chain). PROVED by induction over Lemma B.2 + the structural flow algebra (the only axioms). The paper's stronger mu(union B_k) form is out of reach NOT because of any K=0 base-case issue (the bounded union at K=0 IS B_0) but because the Lean lemma_B_2 drops the paper's localization clause (flow = Id off B_0) and the |k-k'| >= 2 disjointness hypothesis (F16)."
@@ -141,6 +206,11 @@ lean      = "MeasureToMeasure.Statements.lemma_B_1"
 paper     = "Lem B.1, p.31"
 created   = "2026-06-30"
 
+[claims.lem-b-1.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem B.1, p.31, arXiv:2411.04551v3"
+evidence = "F15/F16; chain restricted to proper caps + hd; docstring K=0 justification corrected (F16)"
+
 [claims.lem-b-2]
 kind      = "conjecture"
 statement = "Lemma B.2: through a single overlapping ball pair (proper geodesic caps, radii in (0, pi), centers on the sphere, d >= 2), one gated piece retains mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0), via the ReLU-gated drift toward an interior anchor. SOUNDNESS FIX (2026-07-03, F12): at d = 1 radial tangency forces the field to vanish at +-1, so both sphere points are fixed and the transport is impossible (with R0 > pi the ball is the whole two-point sphere; a Dirac at 1 refutes retention into B1 = {-1}); Appendix B's balls are proper caps."
@@ -148,6 +218,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_B_2"
 paper     = "Lem B.2, p.31"
 created   = "2026-06-30"
+
+[claims.lem-b-2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem B.2, p.31, arXiv:2411.04551v3"
+evidence = "F12 (d=1 fixed poles; whole-sphere radii; in-system refutable) + F15 (paper quantifier order, erratum E3); hd + Ioo 0 pi radii restored; witness WITNESS-TODO"
 
 [claims.lem-a-1]
 kind      = "conjecture"
@@ -299,6 +374,11 @@ lean      = "MeasureToMeasure.Statements.exists_parked_schedule"
 paper     = "App. B parking, p.31-39"
 created   = "2026-06-30"
 
+[claims.axiom-parking.fidelity]
+reviewed = "2026-07-03"
+paper    = "App. B parking, p.31-39, arXiv:2411.04551v3"
+evidence = "F12 (false at d<=2, monotone/cyclic order obstructions); hd + budget threading restored; witness WITNESS-TODO"
+
 [claims.cluster-to-point]
 kind      = "conjecture"
 statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a sphere-supported probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point OF THE SPHERE, by clustering (one piece) then steering the cluster (six pieces), 7 pieces total, for d >= 3. Lifted to a family by disentanglement and parking in Theorem 1.1. SOUNDNESS FIX (2026-07-03, F12): the stub let z range over all of Eucl d and was kernel-refuted with an off-sphere Dirac target (the flow keeps sphere mass on the sphere and W2(delta_p, delta_q) = dist p q, proved exactly over the coupling definition). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (attention clustering + perceptron steering composite; 7 pieces)."
@@ -307,6 +387,11 @@ lean      = "MeasureToMeasure.Statements.cluster_to_point"
 paper     = "Prop 2.1 + Prop 4.1"
 created   = "2026-06-30"
 
+[claims.cluster-to-point.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 2.1 + Prop 4.1, arXiv:2411.04551v3"
+evidence = "F12; disproof Regression/Refuted/F12_ClusterToPoint.lean; adapter Refutations/F12_cluster_to_point_off_sphere.lean; witness Regression/NonVacuity/MidLevel.lean"
+
 [claims.axiom-w2-convexity]
 kind      = "conjecture"
 statement = "Convexity of W2 under mixtures: for probability measures with shared weights, W2(sum a_k P_k, sum a_k Q_k) is at most the uniform bound on the component distances (gluing of couplings, W2(mix)^2 <= sum a_k W2(P_k,Q_k)^2). Standard optimal-transport fact, absent from Mathlib."
@@ -314,6 +399,11 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Axioms.W2_convexCombo_le"
 paper     = "Prop 2.2 (OT mixture bound)"
 created   = "2026-07-01"
+
+[claims.axiom-w2-convexity.fidelity]
+reviewed = "2026-07-03"
+paper    = "Prop 2.2 (OT mixture bound), arXiv:2411.04551v3"
+evidence = "F12-era discharge review; now a proved theorem over the ENNReal Kantorovich cost with finiteness hypotheses (kernel reading tracks consumers)"
 
 [claims.axiom-atomless-partition]
 kind      = "conjecture"
@@ -571,6 +661,11 @@ lean      = "MeasureToMeasure.Statements.lemma_B_2"
 paper     = "Lemma B.2 / B.1 (geodesic-ball transport); Appendix B"
 created   = "2026-07-03"
 
+[claims.lemma-b2-ball-signature.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lemma B.2 / B.1 (geodesic-ball transport); Appendix B, arXiv:2411.04551v3"
+evidence = "M4 fidelity fix (PR #50): geodesic-ball signature, arbitrary sets refuted by the gated-cap mechanism"
+
 [claims.gated-block]
 kind      = "theorem"
 statement = "The gated cutoff Block instantiation of the ReLU-gated field (milestone M4, lemma_B_2 slice 2 COMPLETE). MACHINE-CHECKED. gatedBlock builds a genuine well-posed Block d from the Appendix B.5 characteristic V(x) = chi(||x||) (<z,x> - cos R)_+ P_x^perp omega, for unit z, omega and threshold cos R >= -1, over any duration T >= 0. Construction: gatedField z omega cosR x = gateFactor z cosR x . tangentialProjector x omega, where gateFactor = normCutoff . reluGate (reluGate x = max 0 (<z,x> - cosR), globally 1-Lipschitz via Cauchy-Schwarz + the 1-Lipschitz clamp max 0, bounded by 3 on the ball of radius 2). All Block obligations discharged: gatedField_lipschitz (globally 32-Lipschitz, via lipschitzWith_smul_of_vanishing with s=gateFactor [Ks=4,Bs=3,vanishing outside ball 2] and V=projector [on-ball Kv=4 via the split <y,omega>y-<x,omega>x = <y,omega>(y-x)+(<y,omega>-<x,omega>)x, on-ball Bv=5]); gatedField_norm_le (bounded by 15); gatedField_radial (<x,V(x)> = c(x)(||x||^2-1) with gate c(x) = -gateFactor x . <x,omega>, holding for ALL x by a global computation since the field is gateFactor.(true projector) everywhere -- the cutoff tames only the Lipschitz estimate, not the algebra, so NO case split); abs_two_gatedGate_le (|2c(x)| <= 12). #print axioms gatedBlock clean (propext/Classical.choice/Quot.sound). Completes lemma_B_2 slice 2; only slice 4 (schedule assembly + measure/preimage + restricting the axiom signature from arbitrary sets to geodesic balls) remains for the M4 discharge."
@@ -654,3 +749,8 @@ status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Foundations.exists_meanFieldFlow"
 paper     = "eq. (1.2)-(1.3), p.2-3; Thm 1.1 well-posedness clause, p.5"
 created   = "2026-07-03"
+
+[claims.attn-meanfield-wellposed.fidelity]
+reviewed = "2026-07-03"
+paper    = "eq. (1.2)-(1.3), p.2-3; Thm 1.1 well-posedness clause, p.5, arXiv:2411.04551v3"
+evidence = "F14; the nonlinear M3 remainder (McKean-Vlasov on the sphere); interface exercised by attnMeasureFlow preservation lemmas + the Statements assemblies"

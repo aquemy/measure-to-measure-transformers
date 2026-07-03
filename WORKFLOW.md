@@ -106,6 +106,40 @@ Closes: claim:exp-eN-name
 The `Depends-On` line is what wires the experiment to the proof in the dependency graph; the
 `Verified-By` line names the script that produced the verdict; `Seed` makes the run reproducible.
 
+## Axiom admission protocol
+
+Kernel checks are honest about the statement *as written*; they say nothing about whether the
+transcription matches the source. Findings F11-F16 (RESEARCH.md) are the case study: eleven of
+twelve axioms admitted as "type-correct stubs" were false as stated, and every mechanical gate
+passed them for ~2.5 days because a false-but-unused axiom is invisible to `#print axioms`,
+`claimgraph audit`, and the sorry sweep. An axiom is therefore ADMITTED, not merely written.
+Before an `axiom` lands in `Statements/` (or `Axioms/`):
+
+1. **Verbatim anchor.** The axiom's docstring quotes the source statement verbatim with a page
+   anchor (e.g. "Lemma 3.2, p.15, arXiv:2411.04551v3").
+2. **Six-axis fidelity diff** in the commit body: objects (measure class: probability?
+   sphere-supported?), hypotheses (each source hypothesis present / strengthened / dropped, with
+   justification for any drop), quantifier order (`∃θ ∀μ` vs `∀μ ∃θ`; family vs single object),
+   conclusion strength, quantitative content (switch counts, rates -- state budgets only where the
+   source gives explicit ones; never invent constants), and model class (see 5).
+3. **Degenerate-instantiation attack**, attempted in a scratch file BEFORE admission: instantiate
+   at the inputs the source's hypotheses exclude -- equal measures (`μ := ν`), the zero measure,
+   an infinite measure (`volume`), off-sphere points, boundary dimensions `d ∈ {0, 1, 2}`. A
+   compiling proof of `False` means the statement is wrong: fix it, then commit the disproof and
+   its must-fail adapter per the regression-suite section below.
+4. **Non-vacuity witness** in `Regression/NonVacuity/`: concrete data satisfying every hypothesis,
+   applied to the axiom -- an over-strengthened (vacuous) axiom breaks `lake build`.
+5. **Model adequacy** (the F14 lesson), one paragraph in the commit: can the formal class the
+   axiom quantifies over express what the source's PROOF uses? A generic class that erases
+   measure-dependence, nonlinearity, or architecture-specific structure makes family-level
+   statements false no matter what pointwise hypotheses are added. The source's own impossibility
+   results (e.g. eq. (1.7)) are the checklist for what the model must not be.
+6. **Footers** (enforced by `ckc-axiom-check` >= v0.2.0 on every `math.axiomatised` commit):
+   `Paper-Ref: <work, statement, page>` and `Refutation-Attempt: <artifact path>` (the scratch
+   attack from step 3, or the committed `Regression/Refuted/` disproof when the attack succeeded).
+   `claims.toml` carries the same record as a `[claims.<slug>.fidelity]` table, gated locally by
+   `claimgraph audit --require-fidelity` in `scripts/audit.sh`.
+
 ## Refutation regression suite
 
 Every axiom admitted into `Statements/` (or `Axioms/`) lands together with two committed

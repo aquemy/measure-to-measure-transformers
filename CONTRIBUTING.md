@@ -35,6 +35,11 @@ This wires the `ckc` commit-message validator and the opt-in `ckc-axiom-check` p
   `OPEN:`, `ASSUMES:`. Add provenance: `Lean:` (declaration id), `Axioms:` (literal `#print axioms`).
 - Honesty: never claim `math.machine-checked` while a `sorry`/`sorryAx` or a non-standard axiom is
   present. A status advances only by a new commit, never by editing an old one.
+- Kernel-honest is not statement-honest: `#print axioms` certifies what a node rests on, not that
+  an axiom's transcription matches the source (findings F11-F16). Every `math.axiomatised` commit
+  therefore also carries `Paper-Ref:` (source anchor with page) and `Refutation-Attempt:` (the
+  degenerate-instantiation artifact) -- required by `ckc-axiom-check` since v0.2.0 -- and follows
+  the axiom admission protocol in `WORKFLOW.md`.
 
 ## Honesty drift guard
 
@@ -66,10 +71,13 @@ A labeled axiom:
 axiomatize~(wasserstein): assume W2 with Kantorovich-Rubinstein duality
 
 CKC honest record: Mathlib lacks a developed optimal-transport / Wasserstein theory, so W2 and
-its duality are introduced as axioms here.
+its duality are introduced as axioms here. Fidelity diff and degenerate attack per the axiom
+admission protocol (WORKFLOW.md); no refutation found.
 Lean: MeasureToMeasure.Axioms.W2
 Status: math.axiomatised
 AXIOM: W2 (no Mathlib optimal-transport theory at v4.31.0)
+Paper-Ref: Villani 2009, Thm 5.10 (Kantorovich duality), p.57
+Refutation-Attempt: Regression/NonVacuity/Wasserstein.lean (witness; attack found no refutation)
 Closes: claim:lem-5-2
 ```
 

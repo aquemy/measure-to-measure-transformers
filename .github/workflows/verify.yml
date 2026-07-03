@@ -1,15 +1,15 @@
-# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the four
+# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the five
 # invariants that need no private tooling: the project COMPILES (lake build, including the
 # Regression witnesses), passes the Batteries environment linters (`lake lint` via the lintDriver
 # in lakefile.toml, with deliberate exemptions baselined in scripts/nolints.json), carries NO
-# stray `sorry` / `admit` / `sorryAx` / `native_decide`, and passes the refutation regression
-# gate (no axiom re-loosened to a kernel-refuted historical shape).
+# stray `sorry` / `admit` / `sorryAx` / `native_decide`, passes the refutation regression
+# gate (no axiom re-loosened to a kernel-refuted historical shape), and has per-node axiom
+# footprints free of sorryAx (scripts/axiom-report, vendored -- `#print axioms` per blueprint node).
 #
 # It deliberately does NOT access any private plugin marketplace or the private claimgraph package,
 # and it does NOT deploy anything (docs/ is committed by hand for classic GitHub Pages, served from
-# main /docs). The FULL kernel-honesty audit -- axiom-report (`#print axioms`) + claimgraph
-# audit/reconcile + blueprint checkdecls, wired in scripts/audit.sh -- depends on the private
-# claimgraph + lean-math tools, so it runs LOCALLY via the pre-commit hooks, not in CI.
+# main /docs). The claimgraph statuses (audit/reconcile/--require-fidelity) still run LOCALLY via
+# scripts/audit.sh + the pre-commit hooks; CI covers everything else.
 name: verify
 
 on:
@@ -53,3 +53,23 @@ jobs:
       # If one compiles, an axiom was re-loosened to a shape already proved false. Public deps only.
       - name: Refutation regression gate
         run: bash scripts/refutation-gate.sh --skip-build
+
+      # Per-node axiom footprints (vendored axiom-report, zero private deps): #print axioms for
+      # every \lean{...} blueprint node. Exit 3 is EXPECTED (the labeled-axiom layer reports
+      # `axiom` rows); the gate here is that no node reports `sorryAx` -- a proof that regressed
+      # to sorry would otherwise hide behind the grep sweep (which only sees source text, not
+      # what a node's dependencies actually rest on).
+      - name: Axiom footprints (vendored axiom-report)
+        run: |
+          rc=0
+          scripts/axiom-report . --tex blueprint/src/content.tex > axiom-report-ci.txt || rc=$?
+          if [ "$rc" != 0 ] && [ "$rc" != 3 ]; then
+            echo "::error::axiom-report errored (exit $rc)"; cat axiom-report-ci.txt; exit 1
+          fi
+          cat axiom-report-ci.txt
+          if grep -qE '\bsorryAx\b' axiom-report-ci.txt; then
+            echo "::error::a blueprint node depends on sorryAx:"
+            grep -E '\bsorryAx\b' axiom-report-ci.txt
+            exit 1
+          fi
+          echo "footprints clean: no blueprint node depends on sorryAx."
