@@ -2,6 +2,7 @@ import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
+import MeasureToMeasure.Leaves.GatedTwoCap
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.Attention
@@ -339,13 +340,21 @@ axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d �
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 
 /-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `ℬ₀ = B(z₀, R₀)` is pushed into
-`ℬ₀ ∩ ℬ₁` (`ℬ₁ = B(z₁, R₁)`), retaining a `(1-ε)` fraction, with a single parameter switch. AXIOM
-(`math.axiomatised`): the ReLU-gated transport is the construction of Appendix B (review finding F1:
-the paper's printed gate parameters have the activation side reversed; the corrected sign is
-`U = +z 1ᵀ, b = -cos(R) 1`, see `ERRATA.md`). The gate algebra and the "active iff inside the ball"
-fact are the kernel-checked leaf L2 (`gate_pos_iff_dist`). Note the `switches θ ≤ 1` bound, which the
-original type-correct stub omitted; it is needed (and true: one switch per ball) for the chain bound
-in `lemma_B_1`.
+`ℬ₀ ∩ ℬ₁` (`ℬ₁ = B(z₁, R₁)`), retaining a `(1-ε)` fraction, with a single parameter switch.
+
+**Proved** (`math.machine-checked`): the M4 discharge. The dynamical core is the amplitude-scaled
+ReLU-gated block of Appendix B (review finding F1: the paper's printed gate parameters have the
+activation side reversed; the corrected sign is `U = +z 1ᵀ, b = -cos(R) 1`, see `ERRATA.md`),
+recentered at a point `ω` of the overlap: the sub-cap of `ℬ₀` carrying the `(1-ε)` fraction
+(eq. B.6, `exists_closed_sublevel_mass_ge`) lies in a cap around `ω` by the geodesic triangle
+inequality, the self-centered gated flow contracts that cap into `B(ω, r) ⊆ ℬ₀ ∩ ℬ₁`
+(`gatedBlock_reach` through `exists_scaledGatedBlock_mapsTo_cap`, the amplitude buying the
+log-odds budget at the fixed horizon `T`), and the pushforward bridge
+(`Axioms.le_measureFlow_of_mapsTo`) turns the point-set contraction into mass retention. The whole
+chain is `Leaves.gated_twoCap_retention`. The `switches θ ≤ 1` bound holds because the schedule is
+a single block. The dimension hypothesis `_hd` is no longer load-bearing -- with sub-hemisphere
+radii the `d = 1` caps collapse to their centres, which the pole case of the contraction handles --
+but is kept for statement stability across the discharge.
 
 **Fidelity (soundness):** the hypotheses are now genuine **geodesic balls** `B(zᵢ, Rᵢ)` with centers
 on the sphere, not arbitrary sets. The gated characteristic funnels a *cap* toward its overlap with
@@ -356,15 +365,24 @@ set into another). This restriction matches Appendix B and is what the eventual 
 
 The dimension and radius bounds are likewise load-bearing (review finding F12): at `d = 1` radial
 tangency forces the field to vanish at `±1`, so both sphere points are fixed and no transport
-happens at all (with `R₀ > π` the ball `ℬ₀` is the whole two-point sphere and a Dirac at `1`
-refutes the retention into `ℬ₁ = {-1}`). Appendix B's balls are proper caps, `R ∈ (0, π)`. -/
-axiom lemma_B_2 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+happens at all. The caps are restricted to **sub-hemisphere radii** `R ∈ (0, π/2)`: for the gated
+field pushing toward `ω ∈ ℬ₀`, the rim derivative is `d/dt ⟪z₀,x⟫ = gate·(⟪z₀,ω⟫ - ⟪ω,x⟫·⟪z₀,x⟫)
+≥ gate·(⟪z₀,ω⟫ - cos R₀) > 0` only because `cos R₀ ≥ 0`; for `R₀ > π/2` a trajectory can stall on
+the rim before reaching the overlap, and adversarial mass concentrated near the antipode `-ω`
+(which a super-hemisphere cap can contain together with `ω`) defeats any single gate. The
+probability hypothesis is equally load-bearing: for an infinite measure stacking mass `c_k → ∞` on
+points approaching the rim from inside, any single finite-amplitude block moves the near-rim atoms
+too slowly to reach the overlap in time `T`, so the transported mass stays finite while
+`(1-ε)·μ(ℬ₀) = ⊤`. The paper has both: `μ₀ ∈ P(S^{d-1})` and small caps (Appendix B chains). -/
+theorem lemma_B_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (_hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
-    (hR₀ : R₀ ∈ Set.Ioo 0 Real.pi) (hR₁ : R₁ ∈ Set.Ioo 0 Real.pi)
+    (hR₀ : R₀ ∈ Set.Ioo 0 (Real.pi / 2)) (hR₁ : R₁ ∈ Set.Ioo 0 (Real.pi / 2))
     (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
     ∃ θ : Params d, switches θ ≤ 1 ∧
       (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
-        (measureFlow θ T μ) (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁)
+        (measureFlow θ T μ) (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁) :=
+  MeasureToMeasure.gated_twoCap_retention μ T ε hT hε z₀ z₁ hz₀ hz₁ R₀ R₁ hR₀ hR₁ hcap
 
 /-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` consecutively overlapping balls, `K`
 switches retain a `(1-ε)^K` fraction of the mass initially in `ℬ₀` into the last ball `ℬ_K`.
@@ -382,11 +400,13 @@ union: the localization clause "the flow is the identity on `S^{d-1} ∖ ℬ₀`
 `|k - k'| ≥ 2` disjointness hypothesis, which together let mass already sitting in later balls stay
 put during earlier legs (review finding F16). The chain-overlap hypothesis `hchain` and the
 per-step switch bound (now in `lemma_B_2`) are required for the bound to hold. The chain is a
-sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere, proper radii),
-matching the faithful `lemma_B_2` signature. -/
-theorem lemma_B_1 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere, sub-hemisphere radii)
+over a probability measure, matching the faithful `lemma_B_2` signature; the probability instance
+is preserved along the chain by `isProbabilityMeasure_measureFlow`. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
-    (hR : ∀ k, R k ∈ Set.Ioo 0 Real.pi)
+    (hR : ∀ k, R k ∈ Set.Ioo 0 (Real.pi / 2))
     (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
       (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
@@ -399,6 +419,7 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < 
     · simp [measureFlow_id]
   | succ k ih =>
     obtain ⟨θ, hsw, hmass⟩ := ih
+    haveI := isProbabilityMeasure_measureFlow θ T μ
     obtain ⟨ψ, hψsw, hψmass⟩ :=
       lemma_B_2 (measureFlow θ T μ) hd T ε hT hε (z k) (z (k + 1)) (hz k) (hz (k + 1))
         (R k) (R (k + 1)) (hR k) (hR (k + 1)) (hchain k)

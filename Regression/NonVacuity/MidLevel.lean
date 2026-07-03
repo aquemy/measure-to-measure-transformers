@@ -12,7 +12,6 @@ Remaining `WITNESS-TODO` markers (harder constructions, tracked for follow-up):
 - WITNESS-TODO(lemma_3_4_part1): two distinct sphere-and-orthant-supported probability measures
   with EQUAL barycenters (rational-point chord-intersection construction).
 - WITNESS-TODO(lemma_3_4_part2): same with `γ`-colinear unequal barycenters.
-- WITNESS-TODO(lemma_B_2): a proper-cap pair with nonempty intersection.
 - WITNESS-TODO(exists_parked_schedule): a disjoint family with per-member schedules (needs a
   per-member `hper` witness, i.e. a cluster_to_point application per piece).
 -/
@@ -140,5 +139,29 @@ example : True := by
   have _h := lemma_5_4 (Measure.dirac (unitE 1 0)) id 1 1 one_pos one_pos
     (dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) measurable_id hψs
   trivial
+
+
+/-! ### lemma_B_2 (now a theorem; the witness doubles as a non-vacuity check of its statement) -/
+
+/-- The centre lies in its own proper cap: `d_g(e₀, e₀) = arccos 1 = 0 < π/4`. -/
+theorem unitE_mem_geodesicBall (d : ℕ) (i : Fin d) :
+    unitE d i ∈ geodesicBall (unitE d i) (Real.pi / 4) := by
+  refine ⟨unitE_mem_sphere d i, ?_⟩
+  have h1 : (⟪unitE d i, unitE d i⟫ : ℝ) = 1 :=
+    inner_self_eq_one_of_mem_sphere (unitE_mem_sphere d i)
+  rw [geodesicDist, h1, Real.arccos_one]
+  positivity
+
+/-- Witness for `lemma_B_2` (statement satisfiable): the Dirac at `e₀` over the coincident
+proper-cap pair `B(e₀, π/4)`, horizon `1`, tolerance `1/2`. -/
+example : ∃ θ : Params 2, switches θ ≤ 1 ∧
+    (1 - ENNReal.ofReal (1/2)) * (Measure.dirac (unitE 2 0)) (geodesicBall (unitE 2 0) (Real.pi/4))
+      ≤ (measureFlow θ 1 (Measure.dirac (unitE 2 0)))
+          (geodesicBall (unitE 2 0) (Real.pi/4) ∩ geodesicBall (unitE 2 0) (Real.pi/4)) :=
+  lemma_B_2 (Measure.dirac (unitE 2 0)) (le_refl 2) 1 (1/2) one_pos (by norm_num)
+    (unitE 2 0) (unitE 2 0) (unitE_mem_sphere 2 0) (unitE_mem_sphere 2 0)
+    (Real.pi/4) (Real.pi/4)
+    ⟨by positivity, by linarith [Real.pi_pos]⟩ ⟨by positivity, by linarith [Real.pi_pos]⟩
+    ⟨unitE 2 0, unitE_mem_geodesicBall 2 0, unitE_mem_geodesicBall 2 0⟩
 
 end Regression.NonVacuity

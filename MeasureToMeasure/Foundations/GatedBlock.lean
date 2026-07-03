@@ -351,4 +351,58 @@ noncomputable def gatedBlock {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω‖ 
   dur := T
   dur_nonneg := hT
 
+
+/-!
+## The amplitude-scaled gated block
+
+`lemma_B_2` must be met at a *fixed* horizon `T`: the paper's remaining freedom is the parameter
+norm (`‖θ‖ ~ C/(T·ε)`, Appendix B), which enters here as a scalar amplitude `A ≥ 0` on the gated
+field. Every `Block` obligation scales linearly in `A`.
+-/
+
+/-- The amplitude-scaled gated field `A • V(x)`. -/
+noncomputable def scaledGatedField (A : ℝ) (z ω : Eucl d) (cosR : ℝ) (x : Eucl d) : Eucl d :=
+  A • gatedField z ω cosR x
+
+/-- The scaled field in the projector-drift shape the gate-ODE leaf consumes: the drift scalar is
+`A · gateFactor`. -/
+theorem scaledGatedField_eq_projector_smul (A : ℝ) (z ω : Eucl d) (cosR : ℝ) (x : Eucl d) :
+    scaledGatedField A z ω cosR x
+      = tangentialProjector x ((A * gateFactor z cosR x) • ω) := by
+  simp only [scaledGatedField, gatedField, tangentialProjector_smul, mul_smul]
+
+/-- **The amplitude-scaled gated `Block`.** The gated cutoff block with its field, gate, and all
+bounds scaled by an amplitude `A ≥ 0`; the amplitude is the formal counterpart of the paper's
+parameter-norm freedom. -/
+noncomputable def scaledGatedBlock {A : ℝ} (hA : 0 ≤ A) {z ω : Eucl d} (hz : ‖z‖ = 1)
+    (hω : ‖ω‖ = 1) {cosR : ℝ} (hcosR : -1 ≤ cosR) {T : ℝ} (hT : 0 ≤ T) : Block d where
+  field := scaledGatedField A z ω cosR
+  lipConst := ‖A‖₊ * 32
+  lipschitz := LipschitzWith.of_dist_le_mul fun x y => by
+    have h := (gatedField_lipschitz hz hω hcosR).dist_le_mul x y
+    simp only [scaledGatedField, dist_eq_norm, ← smul_sub, norm_smul] at *
+    push_cast at h ⊢
+    rw [mul_assoc]
+    exact mul_le_mul_of_nonneg_left h (norm_nonneg A)
+  bound := ‖A‖₊ * 15
+  field_le := fun x => by
+    have h := gatedField_norm_le hz hω hcosR x
+    simp only [scaledGatedField, norm_smul]
+    push_cast
+    exact mul_le_mul_of_nonneg_left h (norm_nonneg A)
+  gate := fun x => A * gatedGate z ω cosR x
+  gateBound := A * 12
+  gate_le := fun x => by
+    have h := abs_two_gatedGate_le hz hω hcosR x
+    have hrw : |2 * (A * gatedGate z ω cosR x)| = A * |2 * gatedGate z ω cosR x| := by
+      rw [show 2 * (A * gatedGate z ω cosR x) = A * (2 * gatedGate z ω cosR x) by ring,
+        abs_mul, abs_of_nonneg hA]
+    rw [hrw]
+    exact mul_le_mul_of_nonneg_left h hA
+  radial := fun x => by
+    simp only [scaledGatedField, real_inner_smul_right, gatedField_radial]
+    ring
+  dur := T
+  dur_nonneg := hT
+
 end MeasureToMeasure
