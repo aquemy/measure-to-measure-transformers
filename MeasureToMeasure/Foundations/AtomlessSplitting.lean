@@ -15,19 +15,20 @@ The paper's Proposition 2.2 needs to split an atomless probability measure into 
 masses with pairwise disjoint supports (`exists_atomless_partition`). Mathlib `v4.31.0` has the
 atomless class `NoAtoms` but not **Sierpiński's intermediate-value theorem** for nonatomic measures
 (the range of `μ` on the measurable subsets of a set `E` is the whole interval `[0, μ E]`), which is
-the analytic core. We take that IVT as a single, standard, clearly-true **labeled axiom**
-(`exists_measurableSet_subset_measure_eq`) and *machine-check* everything built on it: the
-prescribed-mass disjoint partition here, and the probability-measure decomposition in
-`Statements/MidLevel.lean`.
+the analytic core. That IVT is **proved** here (no axiom remains): first on the real line
+(`exists_measurableSet_subset_measure_eq_real`, by continuity of the primitive), then lifted to any
+standard Borel space (`exists_measurableSet_subset_measure_eq`). Everything built on it is
+machine-checked: the prescribed-mass disjoint partition here, and the probability-measure
+decomposition in `Statements/MidLevel.lean`.
 
-The axiom requires a `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. `NoAtoms` (null
+The theorem requires a `[StandardBorelSpace X]` hypothesis, not merely `NoAtoms`. `NoAtoms` (null
 singletons) is the *point-mass* notion and is too weak on its own: on `ℝ` with the
 countable-cocountable σ-algebra and the `0/1` measure, every singleton is null yet no measurable set
 has measure `½`, so the IVT fails. Sierpiński's theorem needs *measure-algebra* atomless-ness (every
 positive set splits), which `NoAtoms` supplies on a standard Borel space (Borel-isomorphic to `ℝ`,
 where an atomless measure has a continuous CDF). `Eucl d` is standard Borel, so the application is
-unaffected. Discharging the axiom itself (a `StandardBorelSpace` + `NoAtoms` proof following Fremlin,
-*Measure Theory* Vol. 2, §215D) is the remaining analytic step.
+unaffected; the Borel-isomorphism transfer is exactly how the general form is derived from the
+real-line case (Fremlin, *Measure Theory* Vol. 2, §215D).
 -/
 
 namespace MeasureToMeasure.Foundations
@@ -157,7 +158,8 @@ theorem exists_measurableSet_subset_measure_eq (μ : Measure X) [StandardBorelSp
   · rw [← he.map_apply, ← hν]; exact hF'μ
 
 /-- Within a set `E` of sufficient measure, carve `M` pairwise-disjoint measurable subsets of
-prescribed measures `α k`. Proved by induction on `M` over the Sierpiński IVT axiom: peel off a
+prescribed measures `α k`. Proved by induction on `M` over the Sierpiński IVT theorem
+(`exists_measurableSet_subset_measure_eq`): peel off a
 subset of measure `α 0` from `E`, then recurse into `E` minus that subset. -/
 theorem exists_disjoint_subset_measure_eq (μ : Measure X) [StandardBorelSpace X]
     [IsFiniteMeasure μ] [NoAtoms μ] :
@@ -211,7 +213,7 @@ theorem exists_disjoint_subset_measure_eq (μ : Measure X) [StandardBorelSpace X
 convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`) and pairwise disjoint supports (carriers `S k`):
 `μ = ∑ k, α k • P k`. Each `P k := (α k)⁻¹ • μ.restrict (A k)` is the normalized restriction to the
 piece `A k` of the prescribed-mass partition. This is the true content of `exists_atomless_partition`;
-here it is proved (over the Sierpiński IVT axiom), removing the bespoke partition axiom. -/
+here it is proved (over the Sierpiński IVT theorem), removing the bespoke partition axiom. -/
 theorem exists_probability_decomposition (μ : Measure X) [StandardBorelSpace X]
     [IsProbabilityMeasure μ] [NoAtoms μ]
     {M : ℕ} (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1) (hα0 : ∀ k, α k ≠ 0) :
