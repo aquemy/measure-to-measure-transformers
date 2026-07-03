@@ -8,12 +8,14 @@ applies it. An over-strengthened (vacuous) axiom -- one whose hypotheses cannot 
 make this file fail to build, which is the dual failure mode to the false-axiom class the
 `Refutations/` gate guards against. The witnesses are Dirac masses at standard basis vectors.
 
-Remaining `WITNESS-TODO` markers (harder constructions, tracked for follow-up):
-- WITNESS-TODO(lemma_3_4_part1): two distinct sphere-and-orthant-supported probability measures
-  with EQUAL barycenters (rational-point chord-intersection construction).
-- WITNESS-TODO(lemma_3_4_part2): same with `γ`-colinear unequal barycenters.
-- WITNESS-TODO(exists_parked_schedule): a disjoint family with per-member schedules (needs a
-  per-member `hper` witness, i.e. a cluster_to_point application per piece).
+The `lemma_3_4` witnesses use the rational chord construction: two-atom measures at Pythagorean
+points of the positive-quadrant unit circle. For part 1, the chords `[(3/5,4/5), (12/13,5/13)]`
+and `[(4/5,3/5), (5/13,12/13)]` interleave in circular order, so they cross; solving the 2x2
+rational system puts the common barycenter at `(11/16, 11/16)` with weights `35/48, 13/48` on
+both chords. For part 2, the diagonal-symmetric pairs have barycenters `(17/26, 17/26)` and
+`(7/10, 7/10)` on the diagonal ray, colinear with ratio `γ = 85/91 ∈ (0, 1)`. The
+`exists_parked_schedule` witness is the singleton family already at its target under the empty
+schedule (horizon `0`).
 -/
 
 set_option autoImplicit false
@@ -21,7 +23,7 @@ set_option autoImplicit false
 namespace Regression.NonVacuity
 
 open MeasureTheory MeasureToMeasure MeasureToMeasure.Axioms MeasureToMeasure.Statements
-open scoped RealInnerProductSpace
+open scoped RealInnerProductSpace ENNReal
 
 /-! ### Shared Dirac witness data -/
 
@@ -163,5 +165,232 @@ example : ∃ θ : Params 2, switches θ ≤ 1 ∧
     (Real.pi/4) (Real.pi/4)
     ⟨by positivity, by linarith [Real.pi_pos]⟩ ⟨by positivity, by linarith [Real.pi_pos]⟩
     ⟨unitE 2 0, unitE_mem_geodesicBall 2 0, unitE_mem_geodesicBall 2 0⟩
+
+/-! ### Two-atom witnesses for `lemma_3_4` (the rational chord construction) -/
+
+/-- A point of the plane `Eucl 2` from two coordinates. -/
+noncomputable def pt (x y : ℝ) : Eucl 2 := WithLp.toLp 2 ![x, y]
+
+theorem pt_apply_zero (x y : ℝ) : pt x y 0 = x := rfl
+
+theorem pt_apply_one (x y : ℝ) : pt x y 1 = y := rfl
+
+/-- Unit-circle membership from the Pythagorean identity. -/
+theorem pt_mem_sphere {x y : ℝ} (h : x ^ 2 + y ^ 2 = 1) :
+    pt x y ∈ MeasureToMeasure.sphere 2 := by
+  have hnorm : ‖pt x y‖ = 1 := by
+    rw [EuclideanSpace.norm_eq]
+    simp only [Fin.sum_univ_two, pt_apply_zero, pt_apply_one, Real.norm_eq_abs, sq_abs]
+    rw [h, Real.sqrt_one]
+  exact mem_sphere_zero_iff_norm.mpr hnorm
+
+/-- Open-quadrant membership. -/
+theorem pt_mem_orthant {x y : ℝ} (hx : 0 < x) (hy : 0 < y) : pt x y ∈ orthant 2 := by
+  intro i
+  fin_cases i
+  · exact hx
+  · exact hy
+
+/-- Distinct first coordinates give distinct points. -/
+theorem pt_ne_of_fst {x y x' y' : ℝ} (h : x ≠ x') : pt x y ≠ pt x' y' := fun hEq =>
+  h (by simpa [pt_apply_zero] using congrFun (congrArg (fun (v : Eucl 2) i => v i) hEq) 0)
+
+/-- The two-atom measure `w • δ_a + w' • δ_b`. -/
+noncomputable def twoAtom (w w' : ℝ≥0∞) (a b : Eucl 2) : Measure (Eucl 2) :=
+  w • Measure.dirac a + w' • Measure.dirac b
+
+theorem isProbabilityMeasure_twoAtom {w w' : ℝ≥0∞} (h : w + w' = 1) (a b : Eucl 2) :
+    IsProbabilityMeasure (twoAtom w w' a b) := by
+  constructor
+  simp [twoAtom, h]
+
+/-- A two-atom measure is supported in any measurable set containing both atoms. -/
+theorem twoAtom_supportedIn {w w' : ℝ≥0∞} {a b : Eucl 2} {S : Set (Eucl 2)}
+    (hS : MeasurableSet S) (ha : a ∈ S) (hb : b ∈ S) : supportedIn (twoAtom w w' a b) S := by
+  show twoAtom w w' a b Sᶜ = 0
+  simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
+  rw [Measure.dirac_apply' _ hS.compl, Measure.dirac_apply' _ hS.compl,
+    Set.indicator_of_notMem (Set.notMem_compl_iff.mpr ha),
+    Set.indicator_of_notMem (Set.notMem_compl_iff.mpr hb)]
+  simp
+
+/-- The atom mass of a two-atom measure at its first atom (when the atoms differ). -/
+theorem twoAtom_apply_fst {w w' : ℝ≥0∞} {a b : Eucl 2} (hab : a ≠ b) :
+    twoAtom w w' a b {a} = w := by
+  simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
+  rw [Measure.dirac_apply' _ (measurableSet_singleton a),
+    Measure.dirac_apply' _ (measurableSet_singleton a),
+    Set.indicator_of_mem (Set.mem_singleton a),
+    Set.indicator_of_notMem (by simpa using hab.symm)]
+  simp
+
+/-- The barycenter of a two-atom measure is the weighted atom average. -/
+theorem twoAtom_barycenter {w w' : ℝ≥0∞} (hw : w ≠ ⊤) (hw' : w' ≠ ⊤) (a b : Eucl 2) :
+    MeasureToMeasure.Leaves.barycenter (twoAtom w w' a b) =
+      w.toReal • a + w'.toReal • b := by
+  have hInt : ∀ (c : Eucl 2), Integrable (fun z : Eucl 2 => z) (Measure.dirac c) :=
+    fun c => integrable_dirac (by simp [enorm_lt_top])
+  rw [MeasureToMeasure.Leaves.barycenter, twoAtom,
+    integral_add_measure ((hInt a).smul_measure hw) ((hInt b).smul_measure hw'),
+    integral_smul_measure, integral_smul_measure, integral_dirac, integral_dirac]
+
+/-- Non-vacuity of `lemma_3_4_part1`: the crossing rational chords
+`(3/5,4/5)–(12/13,5/13)` and `(4/5,3/5)–(5/13,12/13)`, both weighted `35/48, 13/48`, are two
+DISTINCT sphere-and-orthant-supported probability measures with the SAME barycenter
+`(11/16, 11/16)`. -/
+example : True := by
+  have hsum : (35 / 48 : ℝ≥0∞) + 13 / 48 = 1 := by
+    rw [ENNReal.div_add_div_same]
+    norm_num
+    exact ENNReal.div_self (by norm_num) (by norm_num)
+  have hne48 : (35 / 48 : ℝ≥0∞) ≠ ⊤ := by finiteness
+  have hne48' : (13 / 48 : ℝ≥0∞) ≠ ⊤ := by finiteness
+  set a := pt (3/5) (4/5) with ha
+  set b := pt (12/13) (5/13) with hb
+  set c := pt (4/5) (3/5) with hc
+  set e := pt (5/13) (12/13) with he
+  set μ := twoAtom (35/48) (13/48) a b with hμdef
+  set ν := twoAtom (35/48) (13/48) c e with hνdef
+  haveI : IsProbabilityMeasure μ := isProbabilityMeasure_twoAtom hsum a b
+  haveI : IsProbabilityMeasure ν := isProbabilityMeasure_twoAtom hsum c e
+  have hμs : supportedIn μ (MeasureToMeasure.sphere 2) :=
+    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+  have hνs : supportedIn ν (MeasureToMeasure.sphere 2) :=
+    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+  have horthMeas : MeasurableSet (orthant 2) := by
+    have : orthant 2 = ⋂ i : Fin 2, {v : Eucl 2 | 0 < v i} := by
+      ext v; simp [orthant, Set.mem_iInter]
+    rw [this]
+    exact MeasurableSet.iInter fun i =>
+      measurableSet_lt measurable_const (EuclideanSpace.proj (𝕜 := ℝ) i).continuous.measurable
+  have hμo : supportedIn μ (orthant 2) :=
+    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
+      (pt_mem_orthant (by norm_num) (by norm_num))
+  have hνo : supportedIn ν (orthant 2) :=
+    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
+      (pt_mem_orthant (by norm_num) (by norm_num))
+  -- distinctness: μ charges `a`, ν does not.
+  have hne : μ ≠ ν := by
+    intro hEq
+    have hμa : μ {a} = 35 / 48 := twoAtom_apply_fst (pt_ne_of_fst (by norm_num))
+    have hνa : ν {a} = 0 := by
+      show twoAtom (35/48) (13/48) c e {a} = 0
+      simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
+      rw [Measure.dirac_apply' _ (measurableSet_singleton a),
+        Measure.dirac_apply' _ (measurableSet_singleton a),
+        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : c ≠ a)),
+        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : e ≠ a))]
+      simp
+    rw [hEq, hνa] at hμa
+    exact absurd hμa.symm (by norm_num)
+  -- equal barycenters: both chords cross at `(11/16, 11/16)`.
+  have htoReal : (35 / 48 : ℝ≥0∞).toReal = 35 / 48 ∧ (13 / 48 : ℝ≥0∞).toReal = 13 / 48 := by
+    constructor <;> · rw [ENNReal.toReal_div]; norm_num
+  have hbar : MeasureToMeasure.Leaves.barycenter μ = MeasureToMeasure.Leaves.barycenter ν := by
+    rw [twoAtom_barycenter hne48 hne48', twoAtom_barycenter hne48 hne48',
+      htoReal.1, htoReal.2]
+    refine WithLp.ofLp_injective 2 ?_
+    funext i
+    fin_cases i
+    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+        Pi.smul_apply, smul_eq_mul]
+      norm_num
+    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+        Pi.smul_apply, smul_eq_mul]
+      norm_num
+  have _h := lemma_3_4_part1 μ ν 1 one_pos hne hμs hνs hμo hνo hbar
+  trivial
+
+/-- Non-vacuity of `lemma_3_4_part2`: the diagonal-symmetric halves have barycenters
+`(17/26, 17/26)` and `(7/10, 7/10)` on the diagonal ray, colinear with `γ = 85/91 ∈ (0,1)`. -/
+example : True := by
+  have hsum : (1 / 2 : ℝ≥0∞) + 1 / 2 = 1 := ENNReal.add_halves 1
+  have hne2 : (1 / 2 : ℝ≥0∞) ≠ ⊤ := by finiteness
+  set a := pt (5/13) (12/13) with ha
+  set b := pt (12/13) (5/13) with hb
+  set c := pt (3/5) (4/5) with hc
+  set e := pt (4/5) (3/5) with he
+  set μ := twoAtom (1/2) (1/2) a b with hμdef
+  set ν := twoAtom (1/2) (1/2) c e with hνdef
+  haveI : IsProbabilityMeasure μ := isProbabilityMeasure_twoAtom hsum a b
+  haveI : IsProbabilityMeasure ν := isProbabilityMeasure_twoAtom hsum c e
+  have hμs : supportedIn μ (MeasureToMeasure.sphere 2) :=
+    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+  have hνs : supportedIn ν (MeasureToMeasure.sphere 2) :=
+    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+  have horthMeas : MeasurableSet (orthant 2) := by
+    have : orthant 2 = ⋂ i : Fin 2, {v : Eucl 2 | 0 < v i} := by
+      ext v; simp [orthant, Set.mem_iInter]
+    rw [this]
+    exact MeasurableSet.iInter fun i =>
+      measurableSet_lt measurable_const (EuclideanSpace.proj (𝕜 := ℝ) i).continuous.measurable
+  have hμo : supportedIn μ (orthant 2) :=
+    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
+      (pt_mem_orthant (by norm_num) (by norm_num))
+  have hνo : supportedIn ν (orthant 2) :=
+    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
+      (pt_mem_orthant (by norm_num) (by norm_num))
+  have hne : μ ≠ ν := by
+    intro hEq
+    have hμa : μ {a} = 1 / 2 := twoAtom_apply_fst (pt_ne_of_fst (by norm_num))
+    have hνa : ν {a} = 0 := by
+      show twoAtom (1/2) (1/2) c e {a} = 0
+      simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
+      rw [Measure.dirac_apply' _ (measurableSet_singleton a),
+        Measure.dirac_apply' _ (measurableSet_singleton a),
+        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : c ≠ a)),
+        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : e ≠ a))]
+      simp
+    rw [hEq, hνa] at hμa
+    exact absurd hμa.symm (by norm_num)
+  have htoReal : (1 / 2 : ℝ≥0∞).toReal = 1 / 2 := by
+    rw [ENNReal.toReal_div]; norm_num
+  have hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧
+      MeasureToMeasure.Leaves.barycenter μ =
+        γ • MeasureToMeasure.Leaves.barycenter ν := by
+    refine ⟨85 / 91, ⟨by norm_num, by norm_num⟩, ?_⟩
+    rw [twoAtom_barycenter hne2 hne2, twoAtom_barycenter hne2 hne2, htoReal]
+    refine WithLp.ofLp_injective 2 ?_
+    funext i
+    fin_cases i
+    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+        Pi.smul_apply, smul_eq_mul]
+      norm_num
+    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+        Pi.smul_apply, smul_eq_mul]
+      norm_num
+  have _h := lemma_3_4_part2 μ ν 1 one_pos hne hμs hνs hμo hνo hcol
+  trivial
+
+/-! ### exists_parked_schedule -/
+
+/-- Non-vacuity of `exists_parked_schedule`: the singleton family `δ_{e₀}` on `𝕊² ⊂ ℝ³`, already
+at its own target under the empty schedule (horizon `0`, zero switches). -/
+example : True := by
+  have hdisj : DisjointSupports (fun _ : Fin 1 => Measure.dirac (unitE 3 0)) := by
+    refine ⟨fun _ => {unitE 3 0}, fun i => ?_,
+      fun i j hij => absurd (Subsingleton.elim i j) hij⟩
+    show Measure.dirac (unitE 3 0) ({unitE 3 0} : Set (Eucl 3))ᶜ = 0
+    rw [Measure.dirac_apply' _ (measurableSet_singleton _).compl,
+      Set.indicator_of_notMem (Set.notMem_compl_iff.mpr (Set.mem_singleton (unitE 3 0)))]
+  have hper : ∀ i : Fin 1, ∃ θ : Foundations.AttnSchedule 3,
+      Foundations.AttnSchedule.durationSum θ = 0 ∧
+      Foundations.AttnSchedule.switches θ ≤ (fun _ : Fin 1 => 0) i ∧
+      Axioms.W2 (Foundations.attnMeasureFlow θ (Measure.dirac (unitE 3 0)))
+        (Measure.dirac (unitE 3 0)) ≤ 1 := by
+    intro i
+    refine ⟨[], rfl, le_refl 0, ?_⟩
+    rw [Foundations.attnMeasureFlow_nil]
+    show (MeasureToMeasure.W2 (Measure.dirac (unitE 3 0)) (Measure.dirac (unitE 3 0))).toReal ≤ 1
+    rw [MeasureToMeasure.W2_self_eq_zero]
+    norm_num
+  have _h := exists_parked_schedule (le_refl 3)
+    (fun _ : Fin 1 => Measure.dirac (unitE 3 0)) (fun _ => Measure.dirac (unitE 3 0))
+    0 1 (fun _ => 0) hdisj hper
+  trivial
 
 end Regression.NonVacuity
