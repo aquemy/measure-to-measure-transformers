@@ -47,4 +47,12 @@ theorem geodesicDist_mem_Icc (x y : Eucl d) :
     geodesicDist x y ∈ Set.Icc (0 : ℝ) Real.pi :=
   ⟨Real.arccos_nonneg _, Real.arccos_le_pi _⟩
 
+/-- The open **geodesic ball** (spherical cap) `B(z, R) = {x ∈ 𝕊^{d-1} | d_g(z, x) < R}`. This is
+the object Appendix B transports mass between; membership carries `x ∈ sphere d`. -/
+def geodesicBall (z : Eucl d) (R : ℝ) : Set (Eucl d) := {x | x ∈ sphere d ∧ geodesicDist z x < R}
+
+/-- Points of a geodesic ball lie on the sphere. -/
+theorem geodesicBall_subset_sphere (z : Eucl d) (R : ℝ) : geodesicBall z R ⊆ sphere d :=
+  fun _ hx => hx.1
+
 end MeasureToMeasure
