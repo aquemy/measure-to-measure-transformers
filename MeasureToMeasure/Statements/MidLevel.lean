@@ -356,11 +356,19 @@ set into another). This restriction matches Appendix B and is what the eventual 
 
 The dimension and radius bounds are likewise load-bearing (review finding F12): at `d = 1` radial
 tangency forces the field to vanish at `±1`, so both sphere points are fixed and no transport
-happens at all (with `R₀ > π` the ball `ℬ₀` is the whole two-point sphere and a Dirac at `1`
-refutes the retention into `ℬ₁ = {-1}`). Appendix B's balls are proper caps, `R ∈ (0, π)`. -/
-axiom lemma_B_2 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+happens at all. The caps are restricted to **sub-hemisphere radii** `R ∈ (0, π/2)`: for the gated
+field pushing toward `ω ∈ ℬ₀`, the rim derivative is `d/dt ⟪z₀,x⟫ = gate·(⟪z₀,ω⟫ - ⟪ω,x⟫·⟪z₀,x⟫)
+≥ gate·(⟪z₀,ω⟫ - cos R₀) > 0` only because `cos R₀ ≥ 0`; for `R₀ > π/2` a trajectory can stall on
+the rim before reaching the overlap, and adversarial mass concentrated near the antipode `-ω`
+(which a super-hemisphere cap can contain together with `ω`) defeats any single gate. The
+probability hypothesis is equally load-bearing: for an infinite measure stacking mass `c_k → ∞` on
+points approaching the rim from inside, any single finite-amplitude block moves the near-rim atoms
+too slowly to reach the overlap in time `T`, so the transported mass stays finite while
+`(1-ε)·μ(ℬ₀) = ⊤`. The paper has both: `μ₀ ∈ P(S^{d-1})` and small caps (Appendix B chains). -/
+axiom lemma_B_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
-    (hR₀ : R₀ ∈ Set.Ioo 0 Real.pi) (hR₁ : R₁ ∈ Set.Ioo 0 Real.pi)
+    (hR₀ : R₀ ∈ Set.Ioo 0 (Real.pi / 2)) (hR₁ : R₁ ∈ Set.Ioo 0 (Real.pi / 2))
     (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
     ∃ θ : Params d, switches θ ≤ 1 ∧
       (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
@@ -382,11 +390,13 @@ union: the localization clause "the flow is the identity on `S^{d-1} ∖ ℬ₀`
 `|k - k'| ≥ 2` disjointness hypothesis, which together let mass already sitting in later balls stay
 put during earlier legs (review finding F16). The chain-overlap hypothesis `hchain` and the
 per-step switch bound (now in `lemma_B_2`) are required for the bound to hold. The chain is a
-sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere, proper radii),
-matching the faithful `lemma_B_2` signature. -/
-theorem lemma_B_1 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere, sub-hemisphere radii)
+over a probability measure, matching the faithful `lemma_B_2` signature; the probability instance
+is preserved along the chain by `isProbabilityMeasure_measureFlow`. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
-    (hR : ∀ k, R k ∈ Set.Ioo 0 Real.pi)
+    (hR : ∀ k, R k ∈ Set.Ioo 0 (Real.pi / 2))
     (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
       (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
@@ -399,6 +409,7 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < 
     · simp [measureFlow_id]
   | succ k ih =>
     obtain ⟨θ, hsw, hmass⟩ := ih
+    haveI := isProbabilityMeasure_measureFlow θ T μ
     obtain ⟨ψ, hψsw, hψmass⟩ :=
       lemma_B_2 (measureFlow θ T μ) hd T ε hT hε (z k) (z (k + 1)) (hz k) (hz (k + 1))
         (R k) (R (k + 1)) (hR k) (hR (k + 1)) (hchain k)
