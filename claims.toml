@@ -445,6 +445,14 @@ lean      = "MeasureToMeasure.Leaves.geodesicHull_subset_of_geodesicConvex"
 paper     = "Section 3.3 (disentanglement); geodesic-convex hull"
 created   = "2026-07-01"
 
+[claims.separation-transfer-3-3]
+kind      = "theorem"
+statement = "The Section 3.3 separation transfer (milestone M5, complete). MACHINE-CHECKED. The geometry the paper uses without proof in the Proposition 3.1 induction (p. 17: 'the diameter of the convex hull is shrunk until achieving the separation'): clusters shrunk into Euclidean r-balls around unit directions 2r apart have (i) disjoint geodesic hulls -- geodesicHull_disjoint_of_separated_balls: each hull lives in the strict inner cap at level 1 - r^2/2 (geodesicConvex_inner_cap: strict caps at nonnegative level are geodesically convex, closing hull containment via the universal property; inner_cap_of_mem_ball: ball-to-cap polarization), and the caps share no sphere point when the centers are 2r-separated (not_mem_inner_caps_of_separated, triangle inequality via dist_le_of_inner_cap) -- and (ii) non-colinear barycenters -- barycenter_not_sameRay_of_separated_balls: a sphere-supported probability measure carried by the ball has barycenter strictly above the cap level (inner_barycenter_gt, the strict form via the integral-vanishing a.e. argument; integrable_id_of_sphere_support), of norm at most 1 (norm_barycenter_le_one), so its normalization stays in the strict cap, and SameRay barycenters would share a normalization lying in both caps. All footprints propext/Classical.choice/Quot.sound. With this, exists_disentangling_balls owes only mean-field dynamics (M3b) and the family/fixing-clause composition of Lemmas 3.2-3.4 (the M8b assembly path)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.Leaves.barycenter_not_sameRay_of_separated_balls"
+paper     = "Section 3.3, Proposition 3.1 proof, p. 17"
+created   = "2026-07-04"
+
 [claims.geodesic-hull-disjoint]
 kind      = "theorem"
 statement = "Separating-hyperplane criterion for geodesic-hull disjointness (milestone M5). MACHINE-CHECKED. geodesicHull_disjoint_of_separated: if a direction e is strictly positive on every generator of s1 and strictly negative on every generator of s2, then geodesicHull s1 and geodesicHull s2 are disjoint (any common point would have <e,.> both positive and negative). Mirror lemma inner_neg_of_inConicalSpan. Corollary barycenter_noncolinear_of_separated composes this with leaf L11 (barycenter_noncolinear_of_disjoint_hull) to get non-colinear barycenters from a separating hyperplane. This is the clean sufficient condition the Section 3.3 disentanglement uses to make two clusters' hulls disjoint. #print axioms clean."

@@ -81,14 +81,16 @@ a record of it.
   forward along a measurable embedding into `ℝ`. `#print axioms` on `exists_atomless_partition` and the
   IVT lists only `propext` / `Classical.choice` / `Quot.sound` -- no custom axioms, no `sorry`. A
   soundness bug was surfaced and fixed along the way (see below).
-- **M5 -- Geodesic convexity on the sphere: [in progress]{.badge .partial}.** The geometric foundation
-  is machine-checked: a `GeodesicConvex` predicate (closure under normalized great-circle chords), the
-  fact that an **open hemisphere is geodesically convex** (the confinement the paper uses), and the full
-  hull characterization -- `geodesicHull = cone ∩ sphere` *is* geodesically convex and *is* the smallest
-  geodesic-convex set containing its generators. What remains for M5 is the Section 3.3 disentanglement
-  geometry that consumes these facts; the paper axiom `exists_disentangling_balls` (now stated on the
-  mean-field layer, M3b) waits on that geometry *and* on mean-field dynamics facts, so it stays
-  `axiomatised` for now.
+- **M5 -- Geodesic convexity on the sphere: [done]{.badge .ok} (machine-checked).** The full stack:
+  a `GeodesicConvex` predicate (closure under normalized great-circle chords), open hemispheres and
+  **strict spherical caps** are geodesically convex, the hull characterization (`geodesicHull =
+  cone ∩ sphere` is geodesic-convex and minimal), and the **Section 3.3 separation transfer** the
+  paper uses without proof: clusters shrunk into `r`-balls around `2r`-separated unit directions
+  have disjoint geodesic hulls and non-colinear barycenters
+  (`geodesicHull_disjoint_of_separated_balls`, `barycenter_not_sameRay_of_separated_balls`, the
+  strict barycenter-level bound via an a.e. argument). The paper axiom `exists_disentangling_balls`
+  (mean-field layer, M3b) now owes only dynamics facts and the family composition of
+  Lemmas 3.2-3.4, no geometry.
 
 Everything above is kernel-clean; the [claim graph](claimgraph.qmd) badges each node live, and the
 commit history records every step under the [Conventional Knowledge Commits](history.qmd) discipline
@@ -130,7 +132,7 @@ optimal-transport and mean-field *layers*; the measure-theoretic substrate benea
 | Per-block characteristic (linear) flow | absent (`Kernel`, `Measure.map` exist) | **[done]{.badge .ok}** -- built on `IsPicardLindelof` + Grönwall (M3) |
 | Mean-field (McKean-Vlasov) attention flow | absent | **[interface built]{.badge .partial}** -- field + flow predicate defined; well-posedness is the one axiom pair (M3b) |
 | Optimal transport / Wasserstein / Kantorovich | absent | **[done]{.badge .ok}** -- coupling-based `W₂` over the ENNReal cost (M2) |
-| Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[in progress]{.badge .partial}** -- foundation + hull characterization built (M5) |
+| Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[done]{.badge .ok}** -- caps, hulls, and the Section 3.3 separation transfer (M5) |
 | ReLU-gated cap transport (Appendix B) | absent | **[done]{.badge .ok}** -- Lemmas B.1/B.2 machine-checked (M4) |
 | LaSalle / Lyapunov stability | theorems absent (`Flow`, `omegaLimit`, `IsPicardLindelof` exist) | **build** on the flow substrate |
 | Measurable selection (Kuratowski--Ryll-Nardzewski) | absent | **build** on the Polish / analytic-set layer |
