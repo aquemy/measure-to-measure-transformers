@@ -1,3 +1,4 @@
+import ForMathlib.SeparatingHyperplane
 import MeasureToMeasure.Foundations.GeodesicDistance
 
 /-!
@@ -8,7 +9,11 @@ hyperplane `{x : ⟪ω, x⟫ = cos(π/8 + τ)}` then separates the active point 
 for `τ ∈ (0, 3π/8)` one has `⟪ω, x₀ᴹ⟫ = cos d_g(ω, x₀ᴹ) < cos(π/8 + τ)`, because `cos` is strictly
 decreasing on `[0, π]` and `π/8 + τ < π/2 ≤ d_g(ω, x₀ᴹ)`.
 
-This is a self-contained consequence of the monotonicity of cosine, kernel-checked here.
+The cosine-monotonicity core is the constant-free generic
+`InnerProductGeometry.inner_lt_cos_of_lt_angle` (`ForMathlib.SeparatingHyperplane`), applied at
+the threshold `θ = π/8 + τ`; this leaf keeps the paper's constants arithmetic
+(`0 ≤ π/8 + τ` and `π/8 + τ < π/2 ≤ d_g(ω, x)`) and the bridge from `geodesicDist` to
+`InnerProductGeometry.angle`.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -18,8 +23,6 @@ open MeasureToMeasure
 
 variable {d : ℕ}
 
--- ForMathlib candidate (general spherical-geometry leaf): stage + readiness-check via
--- lean-math:mathlib-ready before any upstreaming (a human decision, not automated).
 /-- L3 (separating side): if `x` is far from the anchor `ω` (`d_g(ω, x) ≥ π/2`) and
 `τ ∈ (0, 3π/8)`, then `⟪ω, x⟫ < cos(π/8 + τ)`, so `x` lies strictly on the far side of the
 separating hyperplane. -/
@@ -28,16 +31,15 @@ theorem separating_hyperplane {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω �
     (hfar : Real.pi / 2 ≤ geodesicDist ω x) :
     ⟪ω, x⟫ < Real.cos (Real.pi / 8 + τ) := by
   obtain ⟨hτ0, hτ8⟩ := hτ
-  have hpi := Real.pi_pos
-  -- both angles lie in [0, π]
-  have ha : Real.pi / 8 + τ ∈ Set.Icc (0 : ℝ) Real.pi := by
-    constructor <;> nlinarith [Real.pi_pos]
-  have hb : geodesicDist ω x ∈ Set.Icc (0 : ℝ) Real.pi := geodesicDist_mem_Icc ω x
-  -- the far angle exceeds the cap angle
-  have hab : Real.pi / 8 + τ < geodesicDist ω x := by nlinarith [hfar]
-  -- cosine is strictly decreasing on [0, π]
-  have hcos : Real.cos (geodesicDist ω x) < Real.cos (Real.pi / 8 + τ) :=
-    Real.strictAntiOn_cos ha hb hab
-  rwa [cos_geodesicDist hω hx] at hcos
+  have hnx : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+  have hnω : ‖ω‖ = 1 := norm_eq_one_of_mem_sphere hω
+  -- on the sphere the unoriented angle is the geodesic distance `arccos ⟪ω, x⟫`
+  have hangle : InnerProductGeometry.angle ω x = geodesicDist ω x :=
+    InnerProductGeometry.angle_eq_arccos_inner_of_norm_eq_one hnω hnx
+  -- generic separation at threshold θ = π/8 + τ; the constants arithmetic stays here:
+  -- 0 ≤ π/8 + τ, and π/8 + τ < π/2 ≤ d_g(ω, x) = angle ω x
+  refine InnerProductGeometry.inner_lt_cos_of_lt_angle hnx hnω ?_ ?_
+  · linarith [Real.pi_pos]
+  · rw [hangle]; linarith
 
 end MeasureToMeasure.Leaves

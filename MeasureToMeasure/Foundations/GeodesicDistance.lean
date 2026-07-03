@@ -1,3 +1,4 @@
+import ForMathlib.UnitSphereGeodesic
 import MeasureToMeasure.Foundations.Sphere
 
 /-!
@@ -25,17 +26,15 @@ noncomputable def geodesicDist (x y : Eucl d) : ℝ := Real.arccos (⟪x, y⟫)
 
 /-- For unit vectors the inner product lies in `[-1, 1]` (Cauchy-Schwarz). -/
 theorem inner_le_one {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
-    ⟪x, y⟫ ≤ 1 := by
-  have hb : |⟪x, y⟫| ≤ ‖x‖ * ‖y‖ := abs_real_inner_le_norm x y
-  rw [norm_eq_one_of_mem_sphere hx, norm_eq_one_of_mem_sphere hy, mul_one] at hb
-  exact (abs_le.mp hb).2
+    ⟪x, y⟫ ≤ 1 :=
+  InnerProductGeometry.inner_le_one_of_norm_eq_one
+    (norm_eq_one_of_mem_sphere hx) (norm_eq_one_of_mem_sphere hy)
 
 /-- For unit vectors the inner product is at least `-1` (Cauchy-Schwarz). -/
 theorem neg_one_le_inner {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
-    (-1 : ℝ) ≤ ⟪x, y⟫ := by
-  have hb : |⟪x, y⟫| ≤ ‖x‖ * ‖y‖ := abs_real_inner_le_norm x y
-  rw [norm_eq_one_of_mem_sphere hx, norm_eq_one_of_mem_sphere hy, mul_one] at hb
-  exact (abs_le.mp hb).1
+    (-1 : ℝ) ≤ ⟪x, y⟫ :=
+  InnerProductGeometry.neg_one_le_inner_of_norm_eq_one
+    (norm_eq_one_of_mem_sphere hx) (norm_eq_one_of_mem_sphere hy)
 
 /-- `cos (d_g x y) = ⟪x, y⟫`: the cosine of the geodesic distance is the inner product. -/
 theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
