@@ -200,8 +200,8 @@ evidence = "F12 (flow approximants are sphere-valued); probability/sphere/measur
 
 [claims.lem-b-1]
 kind      = "conjecture"
-statement = "Lemma B.1: through a chain of K+1 consecutively overlapping proper geodesic caps (radii in (0, pi), d >= 2), K pieces retain mass mu(T, B_K) >= (1-eps)^K mu(B_0) (the mass starting in the first ball, funneled along the chain). PROVED by induction over Lemma B.2 + the structural flow algebra (the only axioms). The paper's stronger mu(union B_k) form is out of reach NOT because of any K=0 base-case issue (the bounded union at K=0 IS B_0) but because the Lean lemma_B_2 drops the paper's localization clause (flow = Id off B_0) and the |k-k'| >= 2 disjointness hypothesis (F16)."
-status    = "math.axiomatised"
+statement = "Lemma B.1: through a chain of K+1 consecutively overlapping sub-hemisphere geodesic caps (radii in (0, pi/2)) over a probability measure, K pieces retain mass mu(T, B_K) >= (1-eps)^K mu(B_0) (the mass starting in the first ball, funneled along the chain). MACHINE-CHECKED (M4 discharge, 2026-07-03): induction over the proved lemma_B_2 + the structural flow algebra; #print axioms = propext/Classical.choice/Quot.sound. The paper's stronger mu(union B_k) form remains out of reach NOT because of any K=0 base-case issue (the bounded union at K=0 IS B_0) but because the Lean lemma_B_2 drops the paper's localization clause (flow = Id off B_0) and the |k-k'| >= 2 disjointness hypothesis (F16)."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Statements.lemma_B_1"
 paper     = "Lem B.1, p.31"
 created   = "2026-06-30"
@@ -209,12 +209,12 @@ created   = "2026-06-30"
 [claims.lem-b-1.fidelity]
 reviewed = "2026-07-03"
 paper    = "Lem B.1, p.31, arXiv:2411.04551v3"
-evidence = "F15/F16; chain restricted to proper caps + hd; docstring K=0 justification corrected (F16)"
+evidence = "F15/F16; chain restricted to sub-hemisphere caps over a probability measure; docstring K=0 justification corrected (F16); machine-checked via the lemma_B_2 discharge"
 
 [claims.lem-b-2]
 kind      = "conjecture"
-statement = "Lemma B.2: through a single overlapping ball pair (proper geodesic caps, radii in (0, pi), centers on the sphere, d >= 2), one gated piece retains mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0), via the ReLU-gated drift toward an interior anchor. SOUNDNESS FIX (2026-07-03, F12): at d = 1 radial tangency forces the field to vanish at +-1, so both sphere points are fixed and the transport is impossible (with R0 > pi the ball is the whole two-point sphere; a Dirac at 1 refutes retention into B1 = {-1}); Appendix B's balls are proper caps."
-status    = "math.axiomatised"
+statement = "Lemma B.2: through a single overlapping ball pair (sub-hemisphere geodesic caps, radii in (0, pi/2), centers on the sphere) over a probability measure, one gated piece (one switch) retains mass mu(T, B0 cap B1) >= (1-eps) mu_0(B0). MACHINE-CHECKED (M4 discharge, 2026-07-03): the amplitude-scaled ReLU-gated block recentered at an overlap point omega -- the (1-eps) sub-cap of B0 (eq. B.6) lies in a cap around omega by the geodesic triangle inequality, the self-centered gated flow contracts it into B(omega, r) inside B0 cap B1 (logistic reaching, amplitude buying the log-odds budget at fixed T), and the pushforward bridge turns the contraction into retention (Leaves.gated_twoCap_retention). SOUNDNESS FIXES (2026-07-03): F12 (d=1 fixed poles, whole-sphere radii) and the discharge-time restrictions -- probability measure (infinite rim mass defeats any single finite-amplitude block) and sub-hemisphere radii (rim stalling; a super-hemisphere cap can contain both omega and -omega, where every gated field vanishes)."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Statements.lemma_B_2"
 paper     = "Lem B.2, p.31"
 created   = "2026-06-30"
@@ -222,7 +222,7 @@ created   = "2026-06-30"
 [claims.lem-b-2.fidelity]
 reviewed = "2026-07-03"
 paper    = "Lem B.2, p.31, arXiv:2411.04551v3"
-evidence = "F12 (d=1 fixed poles; whole-sphere radii; in-system refutable) + F15 (paper quantifier order, erratum E3); hd + Ioo 0 pi radii restored; witness WITNESS-TODO"
+evidence = "F12 (d=1 fixed poles; whole-sphere radii) + F15 (paper quantifier order, erratum E3) + discharge-time rim-stall and infinite-rim-mass analyses (probability + Ioo 0 pi/2 radii); witness Regression/NonVacuity/MidLevel.lean; discharged by Leaves.gated_twoCap_retention"
 
 [claims.lem-a-1]
 kind      = "conjecture"
