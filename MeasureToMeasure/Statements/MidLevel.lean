@@ -3,6 +3,7 @@ import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Foundations.AtomlessSplitting
+import MeasureToMeasure.Foundations.GeodesicDistance
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
@@ -173,17 +174,27 @@ axiom lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (h
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 
-/-- **Lemma B.2** (single ball pair). Mass in `ℬ₀` is pushed into `ℬ₀ ∩ ℬ₁`, retaining a `(1-ε)`
-fraction, with a single parameter switch. AXIOM (`math.axiomatised`): the ReLU-gated transport is the
-construction of Appendix B (review finding F1: the paper's printed gate parameters have the
-activation side reversed; the corrected sign is `U = +z 1ᵀ, b = -cos(R) 1`, see `ERRATA.md`). The
-gate algebra and the "active iff inside the ball" fact are the kernel-checked leaf L2
-(`gate_pos_iff_dist`). Note the `switches θ ≤ 1` bound, which the original type-correct stub omitted;
-it is needed (and true: one switch per ball) for the chain bound in `lemma_B_1`. -/
+/-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `ℬ₀ = B(z₀, R₀)` is pushed into
+`ℬ₀ ∩ ℬ₁` (`ℬ₁ = B(z₁, R₁)`), retaining a `(1-ε)` fraction, with a single parameter switch. AXIOM
+(`math.axiomatised`): the ReLU-gated transport is the construction of Appendix B (review finding F1:
+the paper's printed gate parameters have the activation side reversed; the corrected sign is
+`U = +z 1ᵀ, b = -cos(R) 1`, see `ERRATA.md`). The gate algebra and the "active iff inside the ball"
+fact are the kernel-checked leaf L2 (`gate_pos_iff_dist`). Note the `switches θ ≤ 1` bound, which the
+original type-correct stub omitted; it is needed (and true: one switch per ball) for the chain bound
+in `lemma_B_1`.
+
+**Fidelity (soundness):** the hypotheses are now genuine **geodesic balls** `B(zᵢ, Rᵢ)` with centers
+on the sphere, not arbitrary sets. The gated characteristic funnels a *cap* toward its overlap with
+another cap; stated for arbitrary `B₀, B₁` the retention claim is false (nothing steers an arbitrary
+set into another). This restriction matches Appendix B and is what the eventual discharge (via
+`gatedBlock` + the logistic reaching estimate `logistic_flow_reach` + the cap-mass estimate
+`exists_closed_sublevel_mass_ge`) will prove. -/
 axiom lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (B₀ B₁ : Set (Eucl d)) (hcap : (B₀ ∩ B₁).Nonempty) :
+    (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
+    (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
     ∃ θ : Params d, switches θ ≤ 1 ∧
-      (1 - ENNReal.ofReal ε) * μ B₀ ≤ (measureFlow θ T μ) (B₀ ∩ B₁)
+      (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
+        (measureFlow θ T μ) (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁)
 
 /-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` consecutively overlapping balls, `K`
 switches retain a `(1-ε)^K` fraction of the mass initially in `ℬ₀` into the last ball `ℬ_K`.
@@ -196,11 +207,15 @@ forward, `measure_mono` to pass from `ℬ_k ∩ ℬ_{k+1}` to `ℬ_{k+1}`, and `
 The statement is corrected from the original type-correct stub: the retained fraction multiplies
 `μ ℬ₀` (the mass that starts in the first ball, funneled along the chain), not `μ (⋃ ℬ_k)` (the latter
 makes the `K = 0` base case false, since `ℬ₀ ⊆ ⋃ ℬ_k`). The chain-overlap hypothesis `hchain` and the
-per-step switch bound (now in `lemma_B_2`) are likewise required for the bound to hold. -/
+per-step switch bound (now in `lemma_B_2`) are likewise required for the bound to hold. The chain is a
+sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere), matching the faithful
+`lemma_B_2` signature. -/
 theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (K : ℕ) (B : ℕ → Set (Eucl d)) (hchain : ∀ k, (B k ∩ B (k + 1)).Nonempty) :
+    (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
+    (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
-      (1 - ENNReal.ofReal ε) ^ K * μ (B 0) ≤ (measureFlow θ T μ) (B K) := by
+      (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
+        (measureFlow θ T μ) (geodesicBall (z K) (R K)) := by
   set c : ℝ≥0∞ := 1 - ENNReal.ofReal ε with hc
   induction K with
   | zero =>
@@ -210,14 +225,17 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < �
   | succ k ih =>
     obtain ⟨θ, hsw, hmass⟩ := ih
     obtain ⟨ψ, hψsw, hψmass⟩ :=
-      lemma_B_2 (measureFlow θ T μ) T ε hT hε (B k) (B (k + 1)) (hchain k)
+      lemma_B_2 (measureFlow θ T μ) T ε hT hε (z k) (z (k + 1)) (hz k) (hz (k + 1))
+        (R k) (R (k + 1)) (hchain k)
     refine ⟨comp θ ψ, (switches_comp θ ψ).trans (Nat.add_le_add hsw hψsw), ?_⟩
     rw [measureFlow_comp]
-    calc c ^ (k + 1) * μ (B 0)
-        = c * (c ^ k * μ (B 0)) := by rw [pow_succ', mul_assoc]
-      _ ≤ c * (measureFlow θ T μ) (B k) := by gcongr
-      _ ≤ (measureFlow ψ T (measureFlow θ T μ)) (B k ∩ B (k + 1)) := hψmass
-      _ ≤ (measureFlow ψ T (measureFlow θ T μ)) (B (k + 1)) := measure_mono Set.inter_subset_right
+    calc c ^ (k + 1) * μ (geodesicBall (z 0) (R 0))
+        = c * (c ^ k * μ (geodesicBall (z 0) (R 0))) := by rw [pow_succ', mul_assoc]
+      _ ≤ c * (measureFlow θ T μ) (geodesicBall (z k) (R k)) := by gcongr
+      _ ≤ (measureFlow ψ T (measureFlow θ T μ))
+            (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))) := hψmass
+      _ ≤ (measureFlow ψ T (measureFlow θ T μ)) (geodesicBall (z (k + 1)) (R (k + 1))) :=
+          measure_mono Set.inter_subset_right
 
 /-- AXIOM (parking / simultaneous action, Appendix B). If a family of measures has pairwise disjoint
 supports and each member can be steered to within `ε` of its target by *some* schedule, then a
