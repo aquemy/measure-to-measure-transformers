@@ -158,16 +158,20 @@ In the $\gamma_1=1$ (perceptron) case the authors locate a ball $\mathcal B$ on 
 differ in mass, then argue that **some $x^*\in\mathcal B$ makes the barycenters differ** — for if every
 $x^*$ gave equality, $x^*$ would be pinned to one value on the whole ball, which no map can be. That
 "no map is constant on a nonempty open ball" core is our machine-checked leaf **L10**
-(`exists_ne_in_ball`). We state the $\gamma_1=1$ conclusion type-correctly: equal input
-barycenters force the existence of a $\theta$ whose output barycenters differ. `sorry` stub against the
-axiom layer. (The attention case $\gamma_1\ne1$, at most two switches, is the companion stub
-`lemma_3_4_part2`.)
+(`exists_ne_in_ball`). We state the $\gamma_1=1$ conclusion type-correctly, **carrying the paper's
+hypotheses in full**: $\mu,\nu$ are distinct probability measures supported in the orthant with equal
+barycenters. All three are load-bearing — the proof opens with "since $\mu_0\ne\nu_0$", and dropping
+them makes the statement false (e.g. $\mu=\nu$ satisfies equal barycenters but no $\theta$ can separate
+identical measures). `sorry` stub against the axiom layer. (The attention case $\gamma_1\ne1$, at most
+two switches, is the companion stub `lemma_3_4_part2`.)
 
 ```lean
-/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). If two measures have equal barycenters, a constant
-parameter makes the barycenters differ. Stub (`sorry`): `math.open`. The self-contained pigeonhole
-core is leaf L10. -/
-theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
+/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). Two distinct probability measures on the orthant with equal
+barycenters can be driven, by a constant parameter, to differing barycenters. Stub (`sorry`):
+`math.open`. The self-contained pigeonhole core is leaf L10. -/
+theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hbar : barycenter μ = barycenter ν) :
     ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) := by
   sorry

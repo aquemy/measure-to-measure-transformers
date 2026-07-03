@@ -87,7 +87,7 @@ created   = "2026-06-30"
 
 [claims.lem-3-4]
 kind      = "conjecture"
-statement = "Lemma 3.4: two measures can be made non-colinear in barycenter, via the perceptron (gamma1=1) or via attention (gamma1!=1)."
+statement = "Lemma 3.4: two DISTINCT probability measures on the orthant Q_1^{d-1} can be made non-colinear in barycenter, via the perceptron (gamma1=1, equal barycenters: part1) or via attention (gamma1 in (0,1), colinear-but-unequal barycenters: part2). SOUNDNESS FIX (2026-07-03): the original stubs dropped the paper's hypotheses -- part1 kept only equal-barycenters (refutable by mu=nu: no theta separates identical measures) and part2 kept NONE (refutable by mu=nu, since SameRay v v always holds). Restored the paper's full hypotheses (mu != nu, IsProbabilityMeasure, orthant support, and for part2 the initial gamma in (0,1) colinearity), matching 'let mu_0, nu_0 in P(Q_1^{d-1}) be two different measures'. The refutations mu=nu are machine-checked. Orphan axioms (not in the footprint of theorem_1_1/theorem_1_2), so no proved result was affected."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
@@ -111,7 +111,7 @@ created   = "2026-06-30"
 
 [claims.lem-5-1]
 kind      = "conjecture"
-statement = "Lemma 5.1: transport maps T^i are preserved by the disentangling flow maps; there is a Lipschitz invertible psi with the stated pushforward identity."
+statement = "Lemma 5.1: after DISENTANGLEMENT (both the source family mu_0 and the target family mu_1 have pairwise disjoint supports, as Proposition 3.1 provides for mu^i_0 and mu^i_1), the per-pair transport maps T^i glue into a single Lipschitz invertible psi with the stated pushforward identity. SOUNDNESS FIX (2026-07-03): the original stub dropped the disjoint-supports context, making it refutable with Diracs (mu_0 0 = mu_0 1 = delta_a with distinct targets forces a single psi to take two values at a; a shared target with distinct sources breaks bijectivity). Restored DisjointSupports mu_0 and DisjointSupports mu_1 as explicit hypotheses. Orphan axiom (not in the footprint of theorem_1_1/theorem_1_2), so no proved result was affected."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_5_1"
 paper     = "Lem 5.1, p.24"

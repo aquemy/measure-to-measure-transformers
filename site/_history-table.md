@@ -123,3 +123,5 @@
 | 121 | 2026-07-03 | `docs` | docs(site): surface the Appendix-B machinery on the landing page; refresh ClaimGraph | `site` |
 | 122 | 2026-07-03 | `docs` | docs(site): update the Beyond-Mathlib roadmap for the discharged M2/M3 and in-progress M4 | `site` |
 | 123 | 2026-07-03 | `formalize` | formalize(leaves): uniform cap contraction of the self-centered gated flow (B.7, set form) | `leaves` |
+| 124 | 2026-07-03 | `docs` | docs(diagrams): recolor the build DAG to the current milestone status (M1/M2/M3 discharged) | `diagrams` |
+| 125 | 2026-07-03 | `formalize` | formalize(leaves): mass retention of the self-centered gated flow (B.8, measure form) | `leaves` |
