@@ -11,6 +11,7 @@ import MeasureToMeasure.Foundations.Wasserstein
 import MeasureToMeasure.Foundations.SublevelMass
 import MeasureToMeasure.Foundations.LogisticReach
 import MeasureToMeasure.Foundations.GatedBlock
+import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
