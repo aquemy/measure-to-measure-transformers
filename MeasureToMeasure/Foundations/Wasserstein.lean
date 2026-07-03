@@ -122,31 +122,21 @@ theorem lipschitz_integral_sub_le_transportCost {f : Eucl d → ℝ} (hf : Lipsc
     (hfμ : Integrable f μ) (hfν : Integrable f ν)
     (hcost : Integrable (fun p => dist p.1 p.2) π) :
     ∫ x, f x ∂μ - ∫ x, f x ∂ν ≤ ∫ p, dist p.1 p.2 ∂π := by
-  obtain ⟨hfst, hsnd⟩ := hπ
-  have hfst' : π.map Prod.fst = μ := hfst
-  have hsnd' : π.map Prod.snd = ν := hsnd
-  have haem1 : AEStronglyMeasurable f (π.map Prod.fst) := by
-    rw [hfst']; exact hfμ.aestronglyMeasurable
-  have haem2 : AEStronglyMeasurable f (π.map Prod.snd) := by
-    rw [hsnd']; exact hfν.aestronglyMeasurable
-  -- Rewrite each marginal integral as an integral over the coupling.
-  have hμ : ∫ x, f x ∂μ = ∫ p, f p.1 ∂π := by
-    rw [← hfst']; exact integral_map measurable_fst.aemeasurable haem1
-  have hν : ∫ x, f x ∂ν = ∫ p, f p.2 ∂π := by
-    rw [← hsnd']; exact integral_map measurable_snd.aemeasurable haem2
+  -- Substitute the marginals (`π.fst` is *definitionally* `π.map Prod.fst`).
+  obtain ⟨rfl, rfl⟩ := hπ
+  have hμ : ∫ x, f x ∂π.fst = ∫ p, f p.1 ∂π :=
+    integral_map measurable_fst.aemeasurable hfμ.aestronglyMeasurable
+  have hν : ∫ x, f x ∂π.snd = ∫ p, f p.2 ∂π :=
+    integral_map measurable_snd.aemeasurable hfν.aestronglyMeasurable
   -- Integrability of the two pushed-forward test functions against `π`.
   have hf1 : Integrable (fun p => f p.1) π :=
-    (integrable_map_measure haem1 measurable_fst.aemeasurable).mp (by rw [hfst']; exact hfμ)
+    (integrable_map_measure hfμ.aestronglyMeasurable measurable_fst.aemeasurable).mp hfμ
   have hf2 : Integrable (fun p => f p.2) π :=
-    (integrable_map_measure haem2 measurable_snd.aemeasurable).mp (by rw [hsnd']; exact hfν)
+    (integrable_map_measure hfν.aestronglyMeasurable measurable_snd.aemeasurable).mp hfν
   rw [hμ, hν, ← integral_sub hf1 hf2]
-  refine integral_mono (hf1.sub hf2) hcost (fun p => ?_)
-  -- Pointwise: `f p.1 - f p.2 ≤ |f p.1 - f p.2| = dist (f p.1) (f p.2) ≤ dist p.1 p.2`.
-  have hlip : dist (f p.1) (f p.2) ≤ dist p.1 p.2 := by
-    simpa using hf.dist_le_mul p.1 p.2
-  calc f p.1 - f p.2 ≤ |f p.1 - f p.2| := le_abs_self _
-    _ = dist (f p.1) (f p.2) := (Real.dist_eq _ _).symm
-    _ ≤ dist p.1 p.2 := hlip
+  -- Pointwise: `f p.1 - f p.2 ≤ dist (f p.1) (f p.2) ≤ dist p.1 p.2`.
+  refine integral_mono (hf1.sub hf2) hcost fun p =>
+    (Real.sub_le_dist _ _).trans (by simpa using hf.dist_le_mul p.1 p.2)
 
 /-- **Kantorovich-Rubinstein lower bound for `W₁`.** For an integrable `1`-Lipschitz `f`, the dual
 pairing lower-bounds `W₁`: `ENNReal.ofReal (∫ f dμ - ∫ f dν) ≤ W₁ μ ν`. This is the direction of
@@ -168,13 +158,11 @@ theorem ofReal_integral_sub_le_W1 {f : Eucl d → ℝ} (hf : LipschitzWith 1 f)
     refine ⟨haesm, ?_⟩
     rw [hasFiniteIntegral_iff_ofReal hnonneg, hlint]
     exact lt_top_iff_ne_top.mpr hfin
-  have hcost_eq : ∫ p, dist p.1 p.2 ∂π = (transportCost π).toReal := by
-    rw [integral_eq_lintegral_of_nonneg_ae hnonneg haesm, hlint]
-  have hbound := lipschitz_integral_sub_le_transportCost hf hπ hfμ hfν hcost
-  rw [hcost_eq] at hbound
   calc ENNReal.ofReal (∫ x, f x ∂μ - ∫ x, f x ∂ν)
-      ≤ ENNReal.ofReal (transportCost π).toReal := ENNReal.ofReal_le_ofReal hbound
-    _ = transportCost π := ENNReal.ofReal_toReal hfin
+      ≤ ENNReal.ofReal (∫ p, dist p.1 p.2 ∂π) :=
+        ENNReal.ofReal_le_ofReal (lipschitz_integral_sub_le_transportCost hf hπ hfμ hfν hcost)
+    _ = ∫⁻ p, ENNReal.ofReal (dist p.1 p.2) ∂π := ofReal_integral_eq_lintegral_ofReal hcost hnonneg
+    _ = transportCost π := hlint
 
 /-!
 ## The triangle inequality via gluing of couplings
@@ -218,21 +206,14 @@ theorem exists_coupling_transportCost_le {μ ν ρ : Measure (Eucl d)} [IsProbab
     rw [← h₁.2, show (π₁.snd : Measure (Eucl d)) = π₁.map Prod.snd from rfl,
       lintegral_map hΦ measurable_snd]
   refine ⟨γ, ⟨?_, ?_⟩, ?_⟩
-  · -- `γ.fst = μ`
+  · -- `γ.fst = μ` (both sides are the double-`fst` marginal of `T`, by `map_map` twice)
     show γ.map Prod.fst = μ
-    rw [hγ, Measure.map_map measurable_fst hg₁,
-      show (Prod.fst ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
-        = Prod.fst ∘ Prod.fst from rfl, ← Measure.map_map measurable_fst measurable_fst]
-    change (T.fst).map Prod.fst = μ
-    rw [hTfst]; exact h₁.1
-  · -- `γ.snd = ρ`
+    rw [hγ, Measure.map_map measurable_fst hg₁, ← h₁.1, ← hTfst]
+    exact (Measure.map_map measurable_fst measurable_fst).symm
+  · -- `γ.snd = ρ` (both sides are the last-coordinate marginal of `T`)
     show γ.map Prod.snd = ρ
-    rw [hγ, Measure.map_map measurable_snd hg₁,
-      show (Prod.snd ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
-        = (fun q => q.2) from rfl, ← h₂.2, ← hm]
-    show T.map (fun q => q.2) = (T.map (fun q => (q.1.2, q.2))).map Prod.snd
-    rw [Measure.map_map measurable_snd hg₂]
-    rfl
+    rw [hγ, Measure.map_map measurable_snd hg₁, ← h₂.2, ← hm]
+    exact (Measure.map_map measurable_snd hg₂).symm
   · -- cost bound
     have hγcost : transportCost γ = ∫⁻ q, edist q.1.1 q.2 ∂T := by
       rw [transportCost, hγ, lintegral_map (by fun_prop) hg₁]
@@ -241,13 +222,10 @@ theorem exists_coupling_transportCost_le {μ ν ρ : Measure (Eucl d)} [IsProbab
         lintegral_map (by fun_prop) measurable_fst]
     have hT2 : ∫⁻ q, edist q.1.2 q.2 ∂T = transportCost π₂ := by
       rw [transportCost, ← hm, lintegral_map (by fun_prop) hg₂]
-    rw [hγcost]
-    calc ∫⁻ q, edist q.1.1 q.2 ∂T
-        ≤ ∫⁻ q, (edist q.1.1 q.1.2 + edist q.1.2 q.2) ∂T :=
-          lintegral_mono fun q => edist_triangle _ _ _
-      _ = (∫⁻ q, edist q.1.1 q.1.2 ∂T) + ∫⁻ q, edist q.1.2 q.2 ∂T :=
-          lintegral_add_left (by fun_prop) _
-      _ = transportCost π₁ + transportCost π₂ := by rw [hT1, hT2]
+    rw [hγcost, ← hT1, ← hT2,
+      ← lintegral_add_left (f := fun q : (Eucl d × Eucl d) × Eucl d => edist q.1.1 q.1.2)
+        (by fun_prop)]
+    exact lintegral_mono fun q => edist_triangle _ _ _
 
 /-- **Sub-additivity of `W₁` along a gluing** (probability measures): `W₁ μ ρ` is bounded by the sum
 of the costs of any plan of `(μ, ν)` and any plan of `(ν, ρ)`. The per-coupling triangle inequality,
@@ -408,18 +386,11 @@ theorem exists_coupling_rpow_sqTransportCost_le {μ ν ρ : Measure (Eucl d)} [I
   have hcpl : IsCoupling γ μ ρ := by
     refine ⟨?_, ?_⟩
     · show γ.map Prod.fst = μ
-      rw [hγ, Measure.map_map measurable_fst hg₁,
-        show (Prod.fst ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
-          = Prod.fst ∘ Prod.fst from rfl, ← Measure.map_map measurable_fst measurable_fst]
-      change (T.fst).map Prod.fst = μ
-      rw [hTfst]; exact h₁.1
+      rw [hγ, Measure.map_map measurable_fst hg₁, ← h₁.1, ← hTfst]
+      exact (Measure.map_map measurable_fst measurable_fst).symm
     · show γ.map Prod.snd = ρ
-      rw [hγ, Measure.map_map measurable_snd hg₁,
-        show (Prod.snd ∘ fun q : (Eucl d × Eucl d) × Eucl d => (q.1.1, q.2))
-          = (fun q => q.2) from rfl, ← h₂.2, ← hm]
-      show T.map (fun q => q.2) = (T.map (fun q => (q.1.2, q.2))).map Prod.snd
-      rw [Measure.map_map measurable_snd hg₂]
-      rfl
+      rw [hγ, Measure.map_map measurable_snd hg₁, ← h₂.2, ← hm]
+      exact (Measure.map_map measurable_snd hg₂).symm
   refine ⟨γ, hcpl, ?_⟩
   -- Read the three costs off the triple `T`.
   have hγcost : sqTransportCost γ = ∫⁻ q, edist q.1.1 q.2 ^ 2 ∂T := by
@@ -431,27 +402,14 @@ theorem exists_coupling_rpow_sqTransportCost_le {μ ν ρ : Measure (Eucl d)} [I
   have hT2 : ∫⁻ q, edist q.1.2 q.2 ^ 2 ∂T = sqTransportCost π₂ := by
     rw [sqTransportCost, ← hm, lintegral_map (by fun_prop) hg₂]
   -- Minkowski (`p = 2`) applied to `f = edist x y`, `g = edist y z` on `T`.
-  set f : (Eucl d × Eucl d) × Eucl d → ℝ≥0∞ := fun q => edist q.1.1 q.1.2 with hf
-  set g : (Eucl d × Eucl d) × Eucl d → ℝ≥0∞ := fun q => edist q.1.2 q.2 with hg
-  have hfm : AEMeasurable f T := by fun_prop
-  have hgm : AEMeasurable g T := by fun_prop
-  have hmink := ENNReal.lintegral_Lp_add_le hfm hgm (by norm_num : (1 : ℝ) ≤ 2)
-  have hpow : ∀ a : ℝ≥0∞, a ^ (2 : ℕ) = a ^ (2 : ℝ) := fun a => by
-    rw [← ENNReal.rpow_natCast a 2]; norm_num
-  rw [hγcost]
-  have hstep : (∫⁻ q, edist q.1.1 q.2 ^ 2 ∂T) ^ (2⁻¹ : ℝ)
-      ≤ (∫⁻ q, (f q + g q) ^ (2 : ℝ) ∂T) ^ (1 / 2 : ℝ) := by
-    rw [show (2⁻¹ : ℝ) = 1 / 2 by norm_num]
-    refine ENNReal.rpow_le_rpow (lintegral_mono fun q => ?_) (by norm_num)
-    rw [hpow]
-    exact ENNReal.rpow_le_rpow (edist_triangle q.1.1 q.1.2 q.2) (by norm_num)
-  calc (∫⁻ q, edist q.1.1 q.2 ^ 2 ∂T) ^ (2⁻¹ : ℝ)
-      ≤ (∫⁻ q, (f q + g q) ^ (2 : ℝ) ∂T) ^ (1 / 2 : ℝ) := hstep
-    _ ≤ (∫⁻ q, f q ^ (2 : ℝ) ∂T) ^ (1 / 2 : ℝ) + (∫⁻ q, g q ^ (2 : ℝ) ∂T) ^ (1 / 2 : ℝ) := by
-        simpa using hmink
-    _ = sqTransportCost π₁ ^ (2⁻¹ : ℝ) + sqTransportCost π₂ ^ (2⁻¹ : ℝ) := by
-        rw [show (1 / 2 : ℝ) = (2⁻¹ : ℝ) by norm_num]
-        simp only [hf, hg, ← hpow, hT1, hT2]
+  have hmink := ENNReal.lintegral_Lp_add_le (μ := T)
+    (f := fun q => edist q.1.1 q.1.2) (g := fun q => edist q.1.2 q.2)
+    (by fun_prop) (by fun_prop) one_le_two
+  simp only [ENNReal.rpow_ofNat, one_div] at hmink
+  rw [hγcost, ← hT1, ← hT2]
+  refine le_trans ?_ hmink
+  gcongr with q
+  exact edist_triangle q.1.1 q.1.2 q.2
 
 /-- **Sub-additivity of `W₂` along a gluing**: `W₂ μ ρ` is bounded by the sum of the root costs of any
 plan of `(μ, ν)` and any plan of `(ν, ρ)`. -/
@@ -538,36 +496,23 @@ theorem W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) {P Q : Fin M → 
     rw [hB]; exact ENNReal.lt_add_right hε.ne (ENNReal.coe_pos.mpr hη).ne'
   -- for each component, extract a coupling of root cost `< B` (the ε-approximation)
   have hk : ∀ k, ∃ πk : Measure (Eucl d × Eucl d),
-      IsCoupling πk (P k) (Q k) ∧ sqTransportCost πk ^ (2⁻¹ : ℝ) < B := by
-    intro k
-    have hlt : W2 (P k) (Q k) < B := lt_of_le_of_lt (hbound k) hdlt
-    rw [W2] at hlt
-    obtain ⟨πk, hπk⟩ := iInf_lt_iff.mp hlt
-    obtain ⟨hcplk, hcostk⟩ := iInf_lt_iff.mp hπk
-    exact ⟨πk, hcplk, hcostk⟩
+      IsCoupling πk (P k) (Q k) ∧ sqTransportCost πk ^ (2⁻¹ : ℝ) < B := fun k => by
+    simpa only [W2, iInf_lt_iff, exists_prop] using (hbound k).trans_lt hdlt
   choose π hcpl hcost using hk
   have hcplγ : IsCoupling (∑ k, a k • π k) (∑ k, a k • P k) (∑ k, a k • Q k) :=
     isCoupling_finset_sum_smul a hcpl
   -- root cost `< B` gives squared cost `≤ B²`, summed against the unit weights stays `≤ B²`
-  have hsq : ∀ x : ℝ≥0∞, x ^ (2⁻¹ : ℝ) ≤ B → x ≤ B ^ (2 : ℝ) := by
-    intro x hx
-    calc x = (x ^ (2⁻¹ : ℝ)) ^ (2 : ℝ) := by
-            rw [← ENNReal.rpow_mul, show (2⁻¹ : ℝ) * 2 = 1 by norm_num, ENNReal.rpow_one]
-      _ ≤ B ^ (2 : ℝ) := ENNReal.rpow_le_rpow hx (by norm_num)
   have hA : ∑ k, a k * sqTransportCost (π k) ≤ B ^ (2 : ℝ) := by
     calc ∑ k, a k * sqTransportCost (π k)
-        ≤ ∑ k, a k * B ^ (2 : ℝ) :=
-          Finset.sum_le_sum fun k _ => by gcongr; exact hsq _ (hcost k).le
-      _ = (∑ k, a k) * B ^ (2 : ℝ) := by rw [← Finset.sum_mul]
-      _ = B ^ (2 : ℝ) := by rw [ha, one_mul]
-  have hpow : (B ^ (2 : ℝ)) ^ (2⁻¹ : ℝ) = B := by
-    rw [← ENNReal.rpow_mul, show (2 : ℝ) * 2⁻¹ = 1 by norm_num, ENNReal.rpow_one]
+        ≤ ∑ k, a k * B ^ (2 : ℝ) := Finset.sum_le_sum fun k _ => by
+          gcongr; exact (ENNReal.rpow_inv_le_iff two_pos).mp (hcost k).le
+      _ = B ^ (2 : ℝ) := by rw [← Finset.sum_mul, ha, one_mul]
   calc W2 (∑ k, a k • P k) (∑ k, a k • Q k)
       ≤ sqTransportCost (∑ k, a k • π k) ^ (2⁻¹ : ℝ) := W2_le_rpow_sqTransportCost hcplγ
     _ = (∑ k, a k * sqTransportCost (π k)) ^ (2⁻¹ : ℝ) := by
           rw [sqTransportCost_finset_sum_smul]
     _ ≤ (B ^ (2 : ℝ)) ^ (2⁻¹ : ℝ) := ENNReal.rpow_le_rpow hA (by norm_num)
-    _ = B := hpow
+    _ = B := ENNReal.rpow_rpow_inv two_ne_zero B
 
 /-!
 ## Finiteness of `W₂`
