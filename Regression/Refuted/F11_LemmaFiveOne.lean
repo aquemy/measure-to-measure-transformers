@@ -42,7 +42,7 @@ theorem oldLemma51_false (ax : Regression.OldLemma51Sig) : False := by
     (![Measure.dirac p0, Measure.dirac p1]) hmatch
   have h0 := hψ 0
   have h1 := hψ 1
-  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] at h0 h1
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one] at h0 h1
   have hdd : (Measure.dirac p0 : Measure (Eucl 1)) = Measure.dirac p1 := h0.symm.trans h1
   have heval := congrArg (fun m : Measure (Eucl 1) => m {p1}) hdd
   rw [Measure.dirac_apply' _ (measurableSet_singleton _),
