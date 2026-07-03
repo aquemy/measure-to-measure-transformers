@@ -4,7 +4,7 @@
 # Profiles are read from .ckc.toml (proof, science).
 repos:
   - repo: https://github.com/hotherio/ckc-tools
-    rev: v0.2.0
+    rev: v0.3.0
     hooks:
       - id: ckc
         stages: [commit-msg]
