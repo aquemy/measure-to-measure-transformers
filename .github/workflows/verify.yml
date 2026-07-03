@@ -1,8 +1,9 @@
-# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the three
-# invariants that need no private tooling: the project COMPILES (lake build), passes the Batteries
-# environment linters (`lake lint` via the lintDriver in lakefile.toml, with deliberate exemptions
-# baselined in scripts/nolints.json), and carries NO stray `sorry` / `admit` / `sorryAx` /
-# `native_decide`.
+# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the four
+# invariants that need no private tooling: the project COMPILES (lake build, including the
+# Regression witnesses), passes the Batteries environment linters (`lake lint` via the lintDriver
+# in lakefile.toml, with deliberate exemptions baselined in scripts/nolints.json), carries NO
+# stray `sorry` / `admit` / `sorryAx` / `native_decide`, and passes the refutation regression
+# gate (no axiom re-loosened to a kernel-refuted historical shape).
 #
 # It deliberately does NOT access any private plugin marketplace or the private claimgraph package,
 # and it does NOT deploy anything (docs/ is committed by hand for classic GitHub Pages, served from
@@ -38,10 +39,17 @@ jobs:
       - name: Incompleteness sweep (no sorry / admit / sorryAx / native_decide)
         run: |
           hits="$(grep -rnE '\b(sorry|admit|sorryAx|native_decide)\b' MeasureToMeasure ForMathlib \
-                    --include='*.lean' 2>/dev/null || true)"
+                    Regression --include='*.lean' 2>/dev/null || true)"
           if [ -n "$hits" ]; then
             echo "::error::incompleteness/trust-widening markers found:"
             echo "$hits"
             exit 1
           fi
           echo "clean: no sorry/admit/sorryAx/native_decide in the Lean tree."
+
+      # Refutation regression gate: every Refutations/*.lean derives a kernel-refuted OLD axiom
+      # statement from the CURRENT axiom and must FAIL to elaborate (must-fail adapters; the
+      # must-pass half -- Regression witnesses + disproofs -- was built by lean-action above).
+      # If one compiles, an axiom was re-loosened to a shape already proved false. Public deps only.
+      - name: Refutation regression gate
+        run: bash scripts/refutation-gate.sh --skip-build
