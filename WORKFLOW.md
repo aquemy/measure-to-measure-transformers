@@ -134,8 +134,9 @@ Before an `axiom` lands in `Statements/` (or `Axioms/`):
    measure-dependence, nonlinearity, or architecture-specific structure makes family-level
    statements false no matter what pointwise hypotheses are added. The source's own impossibility
    results (e.g. eq. (1.7)) are the checklist for what the model must not be.
-6. **Footers** (enforced by `ckc-axiom-check` >= v0.2.0 on every `math.axiomatised` commit):
-   `Paper-Ref: <work, statement, page>` and `Refutation-Attempt: <artifact path>` (the scratch
+6. **Footers** (enforced by `ckc-axiom-check` since v0.2.0 on every `math.axiomatised` commit;
+   the source token is spelled `Paper-Ref:` before ckc-tools v0.3.0):
+   `Source-Ref: <work, statement, page>` and `Refutation-Attempt: <artifact path>` (the scratch
    attack from step 3, or the committed `Regression/Refuted/` disproof when the attack succeeded).
    `claims.toml` carries the same record as a `[claims.<slug>.fidelity]` table, gated locally by
    `claimgraph audit --require-fidelity` in `scripts/audit.sh`.

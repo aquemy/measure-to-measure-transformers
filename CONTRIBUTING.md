@@ -37,9 +37,9 @@ This wires the `ckc` commit-message validator and the opt-in `ckc-axiom-check` p
   present. A status advances only by a new commit, never by editing an old one.
 - Kernel-honest is not statement-honest: `#print axioms` certifies what a node rests on, not that
   an axiom's transcription matches the source (findings F11-F16). Every `math.axiomatised` commit
-  therefore also carries `Paper-Ref:` (source anchor with page) and `Refutation-Attempt:` (the
-  degenerate-instantiation artifact) -- required by `ckc-axiom-check` since v0.2.0 -- and follows
-  the axiom admission protocol in `WORKFLOW.md`.
+  therefore also carries `Source-Ref:` (source anchor with page) and `Refutation-Attempt:` (the
+  degenerate-instantiation artifact) -- required by `ckc-axiom-check` since v0.2.0, spelled
+  `Paper-Ref:` before ckc-tools v0.3.0 -- and follows the axiom admission protocol in `WORKFLOW.md`.
 
 ## Honesty drift guard
 
@@ -76,7 +76,7 @@ admission protocol (WORKFLOW.md); no refutation found.
 Lean: MeasureToMeasure.Axioms.W2
 Status: math.axiomatised
 AXIOM: W2 (no Mathlib optimal-transport theory at v4.31.0)
-Paper-Ref: Villani 2009, Thm 5.10 (Kantorovich duality), p.57
+Source-Ref: Villani 2009, Thm 5.10 (Kantorovich duality), p.57
 Refutation-Attempt: Regression/NonVacuity/Wasserstein.lean (witness; attack found no refutation)
 Closes: claim:lem-5-2
 ```
