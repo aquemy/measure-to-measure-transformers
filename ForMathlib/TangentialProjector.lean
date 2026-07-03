@@ -32,6 +32,7 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
 projection onto the hyperplane `{x}ᗮ`. -/
 noncomputable def tangentialProjector (x v : E) : E := v - (⟪x, v⟫) • x
 
+/-- Unfolding lemma for `tangentialProjector`; the `@[simp]` normal form. -/
 @[simp] theorem tangentialProjector_apply (x v : E) :
     tangentialProjector x v = v - (⟪x, v⟫) • x := rfl
 
