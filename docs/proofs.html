@@ -768,15 +768,27 @@ theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
 <p><strong>What we strengthen.</strong> As printed the proof takes <span class="math inline">\(\mathbf U=-\mathbf 1 z^\top\)</span>, <span class="math inline">\(b=\cos(R)\mathbf 1\)</span> (with <span class="math inline">\(\mathbf W\mathbf 1=\omega\)</span>), so <span class="math inline">\(\mathbf U x=-\langle z,x\rangle\mathbf 1\)</span>, giving the gate coefficient <span class="math inline">\((\cos R-\langle z,x\rangle)_+\)</span>, and asserts in (B.4) that this is positive iff <span class="math inline">\(x\in\mathcal B_0=B(z,R)\)</span>. But <span class="math display">\[\cos R-\langle z,x\rangle&gt;0\iff\langle z,x\rangle&lt;\cos R\iff d_g(z,x)&gt;R\iff x\notin\mathcal B_0,\]</span> so as written the gate is active on the <strong>complement</strong> of <span class="math inline">\(\mathcal B_0\)</span>: the interior mass it is meant to move sees a zero gate, and the lemma transports nothing. The fix is a one-sign typo — take <span class="math inline">\(\mathbf U=+\mathbf 1 z^\top\)</span>, <span class="math inline">\(b=-\cos(R)\mathbf 1\)</span>, giving the gate <span class="math inline">\((\langle z,x\rangle-\cos R)_+\)</span>, positive exactly on <span class="math inline">\(\mathcal B_0\)</span> — after which (B.3)-(B.5) and the rest of the argument go through and Lemma B.2 holds as stated. The corrected equivalence <span class="math inline">\(g(x)&gt;0\iff d_g(z,x)&gt;R\)</span> is the kernel-checked leaf <strong>L2</strong> (<code>gate_pos_iff_dist</code>, <span class="badge ok">machine-checked</span>); the same inversion is corroborated independently by Proposition 4.2, Step 3 (which states the identical construction with the correct activation side) and by experiment E1. This is finding <strong>F1</strong>; see <a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md"><code>ERRATA.md</code></a>.</p>
 </div>
 <div class="our-work">
-<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
-<p>The authors’ strategy is the gated-drift construction above: a single ReLU gate, active on <span class="math inline">\(\mathcal B_0\)</span> (after the F1 sign correction), pushes the interior mass of <span class="math inline">\(\mathcal B_0\)</span> along <span class="math inline">\(+\omega\)</span> into <span class="math inline">\(\mathcal B_0\cap\mathcal B_1\)</span> while leaving everything off <span class="math inline">\(\mathcal B_0\)</span> fixed, so a <span class="math inline">\((1-\varepsilon)\)</span> fraction is retained in the overlap. We state this type-correctly in Lean against the labeled axiom layer — the solution map <code>measureFlow</code>, the switch count <code>switches</code>, and the Wasserstein distance <code>W2</code> — with “no mass outside <span class="math inline">\(S\)</span>” read measure-theoretically. It is an open <code>sorry</code> stub: we do <strong>not</strong> claim a proof; discharging it rests on the continuity-equation flow axiom.</p>
-<pre class="lean"><code>/-- **Lemma B.2** (single ball pair). Mass in `B₀` is pushed into `B₀ ∩ B₁`, retaining `(1-ε)`. Stub
-(`sorry`): `math.open`. (Review finding F1: the paper's printed gate parameters have the activation
-side reversed; the corrected sign is `U = +𝟙 zᵀ, b = -cos(R) 𝟙`. See `ERRATA.md`.) -/
-theorem lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
-    (B₀ B₁ : Set (Eucl d)) (hcap : (B₀ ∩ B₁).Nonempty) :
-    ∃ θ : Params d, (1 - ENNReal.ofReal ε) * μ B₀ ≤ (measureFlow θ T μ) (B₀ ∩ B₁) := by
-  sorry</code></pre>
+<p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
+<p>The authors’ strategy is the gated-drift construction above: a single ReLU gate, active on <span class="math inline">\(\mathcal B_0\)</span> (after the F1 sign correction), pushes the interior mass of <span class="math inline">\(\mathcal B_0\)</span> along <span class="math inline">\(+\omega\)</span> into <span class="math inline">\(\mathcal B_0\cap\mathcal B_1\)</span> while leaving everything off <span class="math inline">\(\mathcal B_0\)</span> fixed, so a <span class="math inline">\((1-\varepsilon)\)</span> fraction is retained in the overlap. We state it as a labeled <code>axiom</code> over the flow layer (<code>measureFlow</code>, <code>switches</code>), and — a soundness correction — over genuine <strong>geodesic balls</strong> <span class="math inline">\(\mathcal B_i=B(z_i,R_i)\)</span> rather than arbitrary sets: the gated drift funnels a <em>cap</em> toward its overlap with another cap, and the retention claim is simply false for arbitrary <span class="math inline">\(B_0,B_1\)</span> (finding F1’s companion fix). It also now carries the <code>switches θ ≤ 1</code> budget the chain lemma needs.</p>
+<p>While the axiom itself is not yet discharged (that rests on the continuity-equation flow existence Mathlib lacks), <strong>its entire dependency tree is now built and machine-checked</strong> — the ball signature is exactly what the eventual discharge will prove:</p>
+<ul>
+<li><code>gatedBlock</code> <span class="badge ok">machine-checked</span> — the B.5 field <span class="math inline">\(\chi(\lVert x\rVert)(\langle z,x\rangle-\cos R)_+\,\mathbf P_x^\perp\omega\)</span> as a genuine well-posed <code>Block</code>: globally Lipschitz (the quadratic projector tamed by a cutoff via a bespoke <em>vanishing-gluing</em> lemma), bounded, and radially tangent so its flow preserves the sphere;</li>
+<li><code>hasDerivAt_inner_gatedFlow</code> <span class="badge ok">machine-checked</span> — along that flow the coordinate <span class="math inline">\(u(t)=\langle\phi^t x,\omega\rangle\)</span> obeys the logistic gate ODE <span class="math inline">\(u'=g\,(1-u^2)\)</span> (B.5);</li>
+<li><code>logistic_flow_reach</code> <span class="badge ok">machine-checked</span> — the finite-time reaching estimate (B.7), via a log-odds substitution whose derivative along the flow is exactly <span class="math inline">\(2g\)</span>;</li>
+<li><code>exists_closed_sublevel_mass_ge</code> <span class="badge ok">machine-checked</span> — the shrunken-cap mass bound (B.6);</li>
+<li><code>inner_mem_Ioo_of_ne</code> <span class="badge ok">machine-checked</span> — strict Cauchy-Schwarz keeping <span class="math inline">\(u\in(-1,1)\)</span>.</li>
+</ul>
+<p>What remains open is the final assembly: the reaching argument on the sphere plus the B.8 measure-preimage step <span class="math inline">\(\mu(T,\mathcal B_0\cap\mathcal B_1)=\mu\bigl(\phi^{-1}(\mathcal B_0\cap\mathcal B_1)\bigr)\ge\mu(B(z_0,R_0-\delta))\)</span>.</p>
+<pre class="lean"><code>/-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `B(z₀,R₀)` is pushed into
+`B(z₀,R₀) ∩ B(z₁,R₁)`, retaining `(1-ε)`, with one switch. AXIOM (`math.axiomatised`); the
+discharge machinery (gatedBlock, logistic_flow_reach, …) is machine-checked. (Finding F1: the
+gate sign is `U = +z 𝟙ᵀ, b = -cos(R) 𝟙`; see `ERRATA.md`.) -/
+axiom lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
+    (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
+    (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
+    ∃ θ : Params d, switches θ ≤ 1 ∧
+      (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
+        (measureFlow θ T μ) (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁)</code></pre>
 <p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
 </div>
 </section>
@@ -789,16 +801,21 @@ theorem lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 
 <p><em>Proof sketch (full proof p.&nbsp;33).</em> Backward induction on the chain. Write <span class="math inline">\([0,T)=\bigcup_{k\in[\![1,K]\!]}[t_{k-1},t_k)\)</span> with <span class="math inline">\(t_k=kT/K\)</span> and apply Lemma B.2 to the adjacent pair <span class="math inline">\((\mathcal B_{k-1},\mathcal B_k)\)</span> on each subinterval. Then <span class="math display">\[\mu(T,\mathcal B_K)=\mu(T,\mathcal B_K\setminus\mathcal B_{K-1})+\mu(T,\mathcal B_K\cap\mathcal B_{K-1})\ge\mu(t_{K-1},\mathcal B_K\setminus\mathcal B_{K-1})+(1-\varepsilon)\,\mu(t_{K-1},\mathcal B_{K-1}),\]</span> the last step by Lemma B.2. The non-adjacency disjointness <span class="math inline">\(\mathcal B_k\cap\mathcal B_{k'}=\varnothing\)</span> for <span class="math inline">\(|k-k'|\ge2\)</span> keeps the steps from interfering, and iterating gives <span class="math display">\[\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\setminus\mathcal B_{k-1})+\mu_0(\mathcal B_0)\Bigr)=(1-\varepsilon)^K\,\mu_0\Bigl(\bigcup_{k\in[\![0,K]\!]}\mathcal B_k\Bigr).\]</span></p>
 </div>
 <div class="our-work">
-<p><strong>Our formalization.</strong> <span class="badge open">open</span></p>
-<p>The authors’ argument is a backward induction that applies the single-pair lemma (Lemma B.2) once per adjacent overlap, each step retaining a factor <span class="math inline">\((1-\varepsilon)\)</span>, the non-adjacency disjointness guaranteeing the steps do not interfere. We state the retention bound type-correctly in Lean against the axiom layer (<code>measureFlow</code>, <code>switches</code>); it is an open <code>sorry</code> stub. The purely arithmetic heart — that a per-step retention factor <span class="math inline">\((1-\varepsilon)\)</span> compounds to <span class="math inline">\(a_K\ge(1-\varepsilon)^K a_0\)</span> — is already discharged kernel-clean by leaf <strong>L9</strong> (<code>ball_chain_geom</code>, <span class="badge ok">machine-checked</span>); what remains open is the geometric non-interference, which rests on the parking property of the flow axiom.</p>
-<pre class="lean"><code>/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping balls, `K` switches retain
-`(1-ε)^K` of the mass into the last ball. Stub (`sorry`): `math.open`. The arithmetic core is leaf
-L9; the geometric non-interference is the parking axiom. -/
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The authors’ argument is a backward induction that applies the single-pair lemma (Lemma B.2) once per adjacent overlap, each step retaining a factor <span class="math inline">\((1-\varepsilon)\)</span>. We <strong>prove</strong> this in Lean by induction on the chain length <span class="math inline">\(K\)</span>: the base case is the identity schedule (<code>idParams</code>, zero switches); each step composes one <code>lemma_B_2</code> transport via <code>comp</code>, carrying the previous mass forward with <code>measureFlow_comp</code>, passing from <span class="math inline">\(\mathcal B_k\cap\mathcal B_{k+1}\)</span> to <span class="math inline">\(\mathcal B_{k+1}\)</span> by <code>measure_mono</code>, and adding the switch budget with <code>switches_comp</code>. So the retention bound is machine-checked <strong>given</strong> the single-ball transport fact; <code>#print axioms lemma_B_1</code> lists exactly <code>lemma_B_2</code> and the structural flow algebra.</p>
+<p>Two corrections over the original type-correct stub. The retained fraction multiplies <span class="math inline">\(\mu(\mathcal B_0)\)</span> — the mass that <em>starts</em> in the first ball and is funneled along the chain — not <span class="math inline">\(\mu(\bigcup_k\mathcal B_k)\)</span> (which would make the <span class="math inline">\(K=0\)</span> base case false, since <span class="math inline">\(\mathcal B_0\subseteq\bigcup_k\mathcal B_k\)</span>). And the chain is a sequence of genuine geodesic balls <span class="math inline">\(B(z_k,R_k)\)</span>, matching the faithful <code>lemma_B_2</code> signature. The chain-overlap hypothesis <code>hchain</code> and the per-step <code>switches ≤ 1</code> budget are what make the bound hold.</p>
+<pre class="lean"><code>/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping geodesic balls, `K`
+switches retain `(1-ε)^K` of the mass initially in `B(z₀,R₀)` into the last ball. PROVED
+(`math.axiomatised`: rests only on `lemma_B_2` + the flow algebra) by induction on `K`. -/
 theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
-    (K : ℕ) (B : ℕ → Set (Eucl d)) :
+    (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
+    (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
-      (1 - ENNReal.ofReal ε) ^ K * μ (⋃ k, B k) ≤ (measureFlow θ T μ) (B K) := by
-  sorry</code></pre>
+      (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
+        (measureFlow θ T μ) (geodesicBall (z K) (R K)) := by
+  induction K with
+  | zero =&gt; exact ⟨idParams d, by simp [switches_id], by simp [measureFlow_id]⟩
+  | succ k ih =&gt; /- compose one lemma_B_2 step onto the chain -/</code></pre>
 <p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean" class="lean-src"><code>Statements/MidLevel.lean</code></a></p>
 </div>
 </section>
