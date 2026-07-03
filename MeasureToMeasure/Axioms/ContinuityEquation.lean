@@ -44,6 +44,18 @@ noncomputable def measureFlow (θ : Params d) (t : ℝ) (μ : MeasureTheory.Meas
     MeasureTheory.Measure (Eucl d) :=
   μ.map (flowMap θ t)
 
+/-- **Mass retention under a set-mapping (the measure-theoretic half of B.8).** If the flow at time
+`T ≥ 0` maps `S` into a measurable set `A`, then the transported measure of `A` is at least the
+original measure of `S`: `μ S ≤ measureFlow θ T μ A`. This turns a *point-level* reaching statement
+(every point of `S` flows into `A`) into a *mass* statement, via the pushforward
+`measureFlow = μ.map (flowMap θ T)` and `measure_mono` on the preimage `S ⊆ (flowMap θ T)⁻¹ A`. -/
+theorem le_measureFlow_of_mapsTo (θ : Params d) {T : ℝ} (hT : 0 ≤ T)
+    (μ : MeasureTheory.Measure (Eucl d)) {S A : Set (Eucl d)} (hA : MeasurableSet A)
+    (hmaps : Set.MapsTo (flowMap θ T) S A) :
+    μ S ≤ measureFlow θ T μ A := by
+  rw [measureFlow, Measure.map_apply (MeasureToMeasure.measurable_flowMap θ hT) hA]
+  exact measure_mono (fun x hx => hmaps hx)
+
 /-- The flow map is Lipschitz for **every** time `t` (well-posedness of the characteristic ODE, plus
 time-reversal for `t < 0`). Discharged from `MeasureToMeasure.exists_lipschitzWith_flowMap`. -/
 theorem flowMap_lipschitz (θ : Params d) (t : ℝ) :
