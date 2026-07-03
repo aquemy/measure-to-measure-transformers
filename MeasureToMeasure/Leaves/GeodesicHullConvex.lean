@@ -20,7 +20,10 @@ Section 3.3 disentanglement (disjoint hulls inside a common hemisphere).
 
 The two supporting facts `inConicalSpan.add` (the cone is closed under addition) and
 `inner_pos_of_inConicalSpan` (a nonzero conical point in `e`'s hemisphere has `0 < ⟪e, ·⟫`) are proved
-here as well. Everything is kernel-checked.
+here as well. The final section machine-checks the **Section 3.3 separation transfer** (milestone M5,
+complete): clusters shrunk into `r`-balls around `2r`-separated unit directions have disjoint geodesic
+hulls (`geodesicHull_disjoint_of_separated_balls`) and non-colinear barycenters
+(`barycenter_not_sameRay_of_separated_balls`). Everything is kernel-checked.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -194,5 +197,206 @@ theorem barycenter_noncolinear_of_separated {s₁ s₂ : Finset (Eucl d)} {e : E
     ¬ SameRay ℝ (∑ p ∈ s₁, w₁ p • p) (∑ p ∈ s₂, w₂ p • p) :=
   barycenter_noncolinear_of_disjoint_hull hw₁ hw₂ hb0 hc0
     (geodesicHull_disjoint_of_separated h₁ h₂)
+
+/-!
+## The Section 3.3 separation transfer (milestone M5, disentanglement geometry)
+
+The paper's Section 3.3 induction shrinks each cluster into a small ball around a unit direction
+(Lemma 3.3) and makes the directions pairwise separated (Lemma 3.4); it then uses, without proof,
+that this yields pairwise-disjoint geodesic hulls and non-colinear barycenters ("choosing `ε` small
+enough [...] the diameter of the convex hull is shrunk until achieving the separation", p. 17).
+This section machine-checks that geometry: hull containment in strict spherical caps
+(`geodesicHull_subset_inner_cap`), quantitative barycenter location for ball-supported measures
+(`inner_barycenter_gt`, `norm_barycenter_le_one`), and the two headline transfers -
+`geodesicHull_disjoint_of_separated_balls` (hull form) and
+`barycenter_not_sameRay_of_separated_balls` (measure form). All kernel-clean.
+-/
+
+section SeparationTransfer
+
+open MeasureTheory
+
+/-- Hull-in-cap: if every generator lies in the strict inner cap `{x ∈ 𝕊 | c < ⟪α, x⟫}` (`c ≥ 0`),
+so does the whole geodesic hull - the cap is geodesically convex and the hull is minimal. -/
+theorem geodesicHull_subset_inner_cap {s : Finset (Eucl d)} {α : Eucl d} {c : ℝ} (hc : 0 ≤ c)
+    (hs : ∀ p ∈ s, p ∈ sphere d ∧ c < ⟪α, p⟫) :
+    geodesicHull s ⊆ {x : Eucl d | x ∈ sphere d ∧ c < ⟪α, x⟫} :=
+  geodesicHull_subset_of_geodesicConvex (geodesicConvex_inner_cap α hc) (fun p hp => hs p hp)
+
+/-- **Separated small balls give disjoint geodesic hulls.** Two finite sets of sphere points inside
+Euclidean balls of radius `r` around unit directions `2r` apart have disjoint geodesic hulls: each
+hull lives in the strict inner cap at level `1 - r²/2`, and those caps share no sphere point. This
+is the hull half of the Section 3.3 separation transfer. -/
+theorem geodesicHull_disjoint_of_separated_balls {s₁ s₂ : Finset (Eucl d)} {α₁ α₂ : Eucl d}
+    (hα₁ : ‖α₁‖ = 1) (hα₂ : ‖α₂‖ = 1) {r : ℝ} (hr : 0 < r) (hsep : 2 * r ≤ dist α₁ α₂)
+    (hs₁ : ∀ p ∈ s₁, p ∈ sphere d ∧ dist p α₁ < r)
+    (hs₂ : ∀ p ∈ s₂, p ∈ sphere d ∧ dist p α₂ < r) :
+    Disjoint (geodesicHull s₁) (geodesicHull s₂) := by
+  -- The level `c = 1 - r²/2` is nonnegative because `2r ≤ dist α₁ α₂ ≤ 2` forces `r ≤ 1`.
+  have hd2 : dist α₁ α₂ ≤ 2 := by
+    rw [dist_eq_norm]
+    calc ‖α₁ - α₂‖ ≤ ‖α₁‖ + ‖α₂‖ := norm_sub_le _ _
+      _ = 2 := by rw [hα₁, hα₂]; norm_num
+  have hr1 : r ≤ 1 := by linarith
+  have hc : (0 : ℝ) ≤ 1 - r ^ 2 / 2 := by nlinarith
+  have hsub₁ := geodesicHull_subset_inner_cap hc
+    (fun p hp => ⟨(hs₁ p hp).1, inner_cap_of_mem_ball hα₁ (hs₁ p hp).1 (hs₁ p hp).2⟩)
+  have hsub₂ := geodesicHull_subset_inner_cap hc
+    (fun p hp => ⟨(hs₂ p hp).1, inner_cap_of_mem_ball hα₂ (hs₂ p hp).1 (hs₂ p hp).2⟩)
+  rw [Set.disjoint_left]
+  intro x hx₁ hx₂
+  exact not_mem_inner_caps_of_separated hα₁ hα₂ hr hsep (hsub₁ hx₁).1
+    (hsub₁ hx₁).2 (hsub₂ hx₂).2.le
+
+/-- A sphere-supported measure has an integrable identity map: the norm is a.e. `1 ≤ 1`. -/
+theorem integrable_id_of_sphere_support {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hs : μ (sphere d)ᶜ = 0) : Integrable (fun x : Eucl d => x) μ := by
+  refine Integrable.mono' (integrable_const (1 : ℝ)) aestronglyMeasurable_id ?_
+  rw [ae_iff]
+  refine measure_mono_null (fun x hx => ?_) hs
+  simp only [Set.mem_setOf_eq, not_le] at hx
+  simp only [sphere, Set.mem_compl_iff, Metric.mem_sphere, dist_zero_right]
+  intro h1; rw [h1] at hx; linarith
+
+/-- Barycenter level bound, non-strict form: full mass in the closed cap `{c ≤ ⟪α, ·⟫}` puts the
+barycenter's `⟪α, ·⟫` at least at `c`. -/
+theorem inner_barycenter_ge {μ : Measure (Eucl d)} [IsProbabilityMeasure μ] {α : Eucl d} {c : ℝ}
+    (hint : Integrable (fun x : Eucl d => x) μ)
+    (hsupp : μ {x : Eucl d | c ≤ ⟪α, x⟫}ᶜ = 0) : c ≤ ⟪α, barycenter μ⟫ := by
+  have hae : ∀ᵐ x ∂μ, c ≤ ⟪α, x⟫ := by
+    rw [ae_iff]
+    exact measure_mono_null (fun x hx => by simpa using hx) hsupp
+  have hii : Integrable (fun x : Eucl d => ⟪α, x⟫) μ := by
+    simpa using (innerSL ℝ α).integrable_comp hint
+  have hib : ∫ x, ⟪α, x⟫ ∂μ = ⟪α, barycenter μ⟫ := by
+    simpa [barycenter] using (innerSL ℝ α).integral_comp_comm hint
+  calc c = ∫ _, c ∂μ := by simp
+    _ ≤ ∫ x, ⟪α, x⟫ ∂μ := integral_mono_ae (integrable_const c) hii hae
+    _ = ⟪α, barycenter μ⟫ := hib
+
+/-- Barycenter level bound, strict form: full mass in the *strict* cap `{c < ⟪α, ·⟫}` puts the
+barycenter strictly above the level. If equality held, the nonnegative integrand
+`⟪α, x⟫ - c` would have zero integral, hence vanish a.e., contradicting a.e. strictness on a
+probability measure. -/
+theorem inner_barycenter_gt {μ : Measure (Eucl d)} [IsProbabilityMeasure μ] {α : Eucl d} {c : ℝ}
+    (hint : Integrable (fun x : Eucl d => x) μ)
+    (hsupp : μ {x : Eucl d | c < ⟪α, x⟫}ᶜ = 0) : c < ⟪α, barycenter μ⟫ := by
+  have haestrict : ∀ᵐ x ∂μ, c < ⟪α, x⟫ := by
+    rw [ae_iff]
+    exact measure_mono_null (fun x hx => by simpa using hx) hsupp
+  have hge : c ≤ ⟪α, barycenter μ⟫ := by
+    have hsub : {x : Eucl d | c ≤ ⟪α, x⟫}ᶜ ⊆ {x : Eucl d | c < ⟪α, x⟫}ᶜ :=
+      Set.compl_subset_compl.mpr fun x hx => Set.mem_setOf.mpr (le_of_lt (Set.mem_setOf.mp hx))
+    exact inner_barycenter_ge hint (measure_mono_null hsub hsupp)
+  rcases eq_or_lt_of_le hge with heq | h
+  · exfalso
+    have hii : Integrable (fun x : Eucl d => ⟪α, x⟫) μ := by
+      simpa using (innerSL ℝ α).integrable_comp hint
+    have hib : ∫ x, ⟪α, x⟫ ∂μ = ⟪α, barycenter μ⟫ := by
+      simpa [barycenter] using (innerSL ℝ α).integral_comp_comm hint
+    have hzero : ∫ x, (⟪α, x⟫ - c) ∂μ = 0 := by
+      rw [integral_sub hii (integrable_const c), hib, integral_const]
+      simp [← heq]
+    have hnn : 0 ≤ᵐ[μ] fun x : Eucl d => ⟪α, x⟫ - c :=
+      haestrict.mono fun x hx => by simp only [Pi.zero_apply]; linarith
+    have hvanish : (fun x : Eucl d => ⟪α, x⟫ - c) =ᵐ[μ] 0 :=
+      (integral_eq_zero_iff_of_nonneg_ae hnn (hii.sub (integrable_const c))).mp hzero
+    have hfalse : ∀ᵐ _x ∂μ, False := by
+      filter_upwards [haestrict, hvanish] with x hx hv
+      simp only [Pi.zero_apply] at hv
+      linarith
+    exact (IsProbabilityMeasure.ne_zero μ)
+      (ae_eq_bot.mp (Filter.eventually_false_iff_eq_bot.mp hfalse))
+  · exact h
+
+/-- A sphere-supported probability measure has barycenter of norm at most `1`. -/
+theorem norm_barycenter_le_one {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hs : μ (sphere d)ᶜ = 0) (hint : Integrable (fun x : Eucl d => x) μ) :
+    ‖barycenter μ‖ ≤ 1 := by
+  have hae : ∀ᵐ x ∂μ, ‖x‖ ≤ 1 := by
+    rw [ae_iff]
+    refine measure_mono_null (fun x hx => ?_) hs
+    simp only [Set.mem_setOf_eq, not_le] at hx
+    simp only [sphere, Set.mem_compl_iff, Metric.mem_sphere, dist_zero_right]
+    intro h1; rw [h1] at hx; linarith
+  calc ‖barycenter μ‖ ≤ ∫ x, ‖x‖ ∂μ := norm_integral_le_integral_norm _
+    _ ≤ ∫ _, (1 : ℝ) ∂μ := integral_mono_ae hint.norm (integrable_const 1) hae
+    _ = 1 := by simp
+
+/-- **Separated small balls give non-colinear barycenters (measure form).** Two sphere-supported
+probability measures carried by Euclidean balls of radius `r` around unit directions `2r` apart
+have non-`SameRay` barycenters: each normalized barycenter is a sphere point strictly inside its
+cap at level `1 - r²/2` (strict via `inner_barycenter_gt`, and normalization only increases the
+level since `‖barycenter‖ ≤ 1`), and a common normalization would lie in both caps. This is the
+measure half of the Section 3.3 separation transfer, the quantitative form of "shrink until the
+barycenter directions separate". -/
+theorem barycenter_not_sameRay_of_separated_balls {μ ν : Measure (Eucl d)}
+    [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] {α₁ α₂ : Eucl d}
+    (hα₁ : ‖α₁‖ = 1) (hα₂ : ‖α₂‖ = 1) {r : ℝ} (hr : 0 < r) (hsep : 2 * r ≤ dist α₁ α₂)
+    (hμs : μ (sphere d)ᶜ = 0) (hνs : ν (sphere d)ᶜ = 0)
+    (hμb : μ (Metric.ball α₁ r)ᶜ = 0) (hνb : ν (Metric.ball α₂ r)ᶜ = 0) :
+    ¬ SameRay ℝ (barycenter μ) (barycenter ν) := by
+  intro hray
+  set c : ℝ := 1 - r ^ 2 / 2 with hcdef
+  have hd2 : dist α₁ α₂ ≤ 2 := by
+    rw [dist_eq_norm]
+    calc ‖α₁ - α₂‖ ≤ ‖α₁‖ + ‖α₂‖ := norm_sub_le _ _
+      _ = 2 := by rw [hα₁, hα₂]; norm_num
+  have hr1 : r ≤ 1 := by linarith
+  have hc0 : (0 : ℝ) ≤ c := by rw [hcdef]; nlinarith
+  have hμint := integrable_id_of_sphere_support hμs
+  have hνint := integrable_id_of_sphere_support hνs
+  -- Full mass of each measure in its strict cap.
+  have hμcap : μ {x : Eucl d | c < ⟪α₁, x⟫}ᶜ = 0 := by
+    refine measure_mono_null (fun x hx => ?_) (measure_union_null hμs hμb)
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt] at hx
+    by_contra hmem
+    simp only [Set.mem_union, Set.mem_compl_iff, not_or, not_not] at hmem
+    exact absurd (inner_cap_of_mem_ball hα₁ hmem.1 (Metric.mem_ball.mp hmem.2)) (not_lt.mpr hx)
+  have hνcap : ν {x : Eucl d | c < ⟪α₂, x⟫}ᶜ = 0 := by
+    refine measure_mono_null (fun x hx => ?_) (measure_union_null hνs hνb)
+    simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_lt] at hx
+    by_contra hmem
+    simp only [Set.mem_union, Set.mem_compl_iff, not_or, not_not] at hmem
+    exact absurd (inner_cap_of_mem_ball hα₂ hmem.1 (Metric.mem_ball.mp hmem.2)) (not_lt.mpr hx)
+  -- Strict barycenter levels; in particular both barycenters are nonzero.
+  have hbμ : c < ⟪α₁, barycenter μ⟫ := inner_barycenter_gt hμint hμcap
+  have hbν : c < ⟪α₂, barycenter ν⟫ := inner_barycenter_gt hνint hνcap
+  have hbμpos : 0 < ⟪α₁, barycenter μ⟫ := lt_of_le_of_lt hc0 hbμ
+  have hbνpos : 0 < ⟪α₂, barycenter ν⟫ := lt_of_le_of_lt hc0 hbν
+  have hbμ0 : barycenter μ ≠ 0 := fun h => by simp [h] at hbμpos
+  have hbν0 : barycenter ν ≠ 0 := fun h => by simp [h] at hbνpos
+  -- SameRay nonzero vectors share their normalization.
+  have hnorm : ‖barycenter μ‖ • barycenter ν = ‖barycenter ν‖ • barycenter μ :=
+    hray.norm_smul_eq
+  set u : Eucl d := ‖barycenter μ‖⁻¹ • barycenter μ with hudef
+  have hbμn : 0 < ‖barycenter μ‖ := norm_pos_iff.mpr hbμ0
+  have hbνn : 0 < ‖barycenter ν‖ := norm_pos_iff.mpr hbν0
+  have huv : u = ‖barycenter ν‖⁻¹ • barycenter ν := by
+    have h2 := congrArg
+      (fun w : Eucl d => (‖barycenter μ‖⁻¹ * ‖barycenter ν‖⁻¹) • w) hnorm
+    simp only [smul_smul] at h2
+    have e1 : ‖barycenter μ‖⁻¹ * ‖barycenter ν‖⁻¹ * ‖barycenter μ‖ = ‖barycenter ν‖⁻¹ := by
+      field_simp
+    have e2 : ‖barycenter μ‖⁻¹ * ‖barycenter ν‖⁻¹ * ‖barycenter ν‖ = ‖barycenter μ‖⁻¹ := by
+      field_simp
+    rw [e1, e2] at h2
+    rw [hudef]
+    exact h2.symm
+  have husphere : u ∈ sphere d := normalize_mem_sphere hbμ0
+  -- The common normalization clears both levels: `‖b‖ ≤ 1` so dividing only increases `⟪α, ·⟫`.
+  have hle1μ : ‖barycenter μ‖ ≤ 1 := norm_barycenter_le_one hμs hμint
+  have hle1ν : ‖barycenter ν‖ ≤ 1 := norm_barycenter_le_one hνs hνint
+  have hu₁ : c < ⟪α₁, u⟫ := by
+    rw [hudef, real_inner_smul_right]
+    have hinv : (1 : ℝ) ≤ ‖barycenter μ‖⁻¹ := (one_le_inv₀ hbμn).mpr hle1μ
+    nlinarith [mul_le_mul_of_nonneg_right hinv hbμpos.le]
+  have hu₂ : c < ⟪α₂, u⟫ := by
+    rw [huv, real_inner_smul_right]
+    have hinv : (1 : ℝ) ≤ ‖barycenter ν‖⁻¹ := (one_le_inv₀ hbνn).mpr hle1ν
+    nlinarith [mul_le_mul_of_nonneg_right hinv hbνpos.le]
+  exact not_mem_inner_caps_of_separated hα₁ hα₂ hr hsep husphere hu₁ hu₂.le
+
+end SeparationTransfer
 
 end MeasureToMeasure.Leaves
