@@ -120,3 +120,4 @@
 | 118 | 2026-07-03 | `formalize` | formalize(leaves): finite-time reaching of the self-centered gated flow (M4 discharge step 3) | `leaves` |
 | 119 | 2026-07-03 | `formalize` | formalize(axioms): mass retention under a set-mapping (M4 discharge step 4, B.8 core) | `axioms` |
 | 120 | 2026-07-03 | `ci` | ci: stop accessing the private plugin marketplace; public-only build + sorry gate | -- |
+| 121 | 2026-07-03 | `docs` | docs(site): surface the Appendix-B machinery on the landing page; refresh ClaimGraph | `site` |
