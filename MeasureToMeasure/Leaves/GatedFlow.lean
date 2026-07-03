@@ -1,4 +1,5 @@
 import MeasureToMeasure.Foundations.GatedBlock
+import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Leaves.GateODE
 
 /-!
@@ -63,5 +64,55 @@ theorem gatedBlock_hasDerivAt_inner {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : �
         * (1 - ⟪(gatedBlock hz hω hcosR hT).blockFlow t x, ω⟫ ^ 2)) t := by
   have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hω]
   exact hasDerivAt_inner_gatedFlow hωs cosR (gatedBlock hz hω hcosR hT) rfl hx ht
+
+/-!
+## The flow avoids the poles `±ω`
+
+The poles `±ω` are fixed points of the gated field (`tangentialProjector` annihilates `±ω`), so the
+flow from any other point never reaches them. This keeps the logistic coordinate `u = ⟪Φ_t x, ω⟫`
+strictly inside `(-1, 1)` along the whole trajectory -- the range hypothesis `logistic_flow_reach`
+needs, now supplied for every `t ≥ 0` rather than assumed.
+-/
+
+/-- `ω` is a fixed point of the gated field: the tangential projector annihilates `ω`. -/
+theorem gatedField_pole_eq_zero {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ) :
+    gatedField z ω cosR ω = 0 := by
+  rw [gatedField, tangentialProjector_self hω, smul_zero]
+
+/-- `-ω` is a fixed point of the gated field: `P_{-ω}^⊥ ω = ω - ⟪-ω,ω⟫(-ω) = ω - ω = 0`. -/
+theorem gatedField_neg_pole_eq_zero {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ) :
+    gatedField z ω cosR (-ω) = 0 := by
+  have hproj : tangentialProjector (-ω) ω = 0 := by
+    rw [tangentialProjector, inner_neg_left, inner_self_eq_one_of_mem_sphere hω]; module
+  rw [gatedField, hproj, smul_zero]
+
+/-- The flow from `x ≠ ω` never reaches the pole `ω` (uniqueness: `ω` is fixed, and `blockFlow t` is
+injective). -/
+theorem blockFlow_ne_pole {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ)
+    (b : Block d) (hfield : b.field = gatedField z ω cosR)
+    {x : Eucl d} (hx : x ≠ ω) (t : ℝ) : b.blockFlow t x ≠ ω := by
+  intro hcontra
+  have hfix : b.blockFlow t ω = ω :=
+    b.blockFlow_fixed (by rw [hfield]; exact gatedField_pole_eq_zero hω cosR) t
+  exact hx (b.blockFlow_injective t (hcontra.trans hfix.symm))
+
+/-- The flow from `x ≠ -ω` never reaches the pole `-ω`. -/
+theorem blockFlow_ne_neg_pole {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ)
+    (b : Block d) (hfield : b.field = gatedField z ω cosR)
+    {x : Eucl d} (hx : x ≠ -ω) (t : ℝ) : b.blockFlow t x ≠ -ω := by
+  intro hcontra
+  have hfix : b.blockFlow t (-ω) = -ω :=
+    b.blockFlow_fixed (by rw [hfield]; exact gatedField_neg_pole_eq_zero hω cosR) t
+  exact hx (b.blockFlow_injective t (hcontra.trans hfix.symm))
+
+/-- **The logistic coordinate stays in `(-1, 1)` along the flow.** For `x` on the sphere with
+`x ≠ ±ω`, the flow avoids the poles, so `u(t) = ⟪Φ_t x, ω⟫ ∈ (-1, 1)` for every `t ≥ 0` -- exactly the
+range hypothesis `logistic_flow_reach` requires along the trajectory. -/
+theorem inner_gatedFlow_mem_Ioo {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ)
+    (b : Block d) (hfield : b.field = gatedField z ω cosR)
+    {x : Eucl d} (hx : x ∈ sphere d) (hne : x ≠ ω) (hne' : x ≠ -ω) {t : ℝ} (ht : 0 ≤ t) :
+    (⟪b.blockFlow t x, ω⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 :=
+  inner_mem_Ioo_of_ne (b.blockFlow_mem_sphere hx ht) hω
+    (blockFlow_ne_pole hω cosR b hfield hne t) (blockFlow_ne_neg_pole hω cosR b hfield hne' t)
 
 end MeasureToMeasure
