@@ -115,3 +115,8 @@
 | 113 | 2026-07-03 | `fix` | fix(statements): restrict lemma_B_2 to geodesic balls, not arbitrary sets (M4 fidelity) | `statements` |
 | 114 | 2026-07-03 | `formalize` | formalize(leaves): the gated flow satisfies the logistic gate ODE (M4 discharge step 1) | `leaves` |
 | 115 | 2026-07-03 | `formalize` | formalize(foundations): strict Cauchy-Schwarz on the sphere (M4 discharge prerequisite) | `foundations` |
+| 116 | 2026-07-03 | `docs` | docs(site): refresh for the M4 gated-Block work; correct the Appendix-B prose | `site` |
+| 117 | 2026-07-03 | `formalize` | formalize(leaves): the gated flow avoids the poles, so u stays in (-1,1) (M4 discharge step 2) | `leaves` |
+| 118 | 2026-07-03 | `formalize` | formalize(leaves): finite-time reaching of the self-centered gated flow (M4 discharge step 3) | `leaves` |
+| 119 | 2026-07-03 | `formalize` | formalize(axioms): mass retention under a set-mapping (M4 discharge step 4, B.8 core) | `axioms` |
+| 120 | 2026-07-03 | `ci` | ci: stop accessing the private plugin marketplace; public-only build + sorry gate | -- |
