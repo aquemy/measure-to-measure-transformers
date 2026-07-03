@@ -483,6 +483,14 @@ lean      = "MeasureToMeasure.W2_ne_top_of_ae_norm_le"
 paper     = "Wasserstein W2 finiteness for compactly-supported measures; optimal transport"
 created   = "2026-07-02"
 
+[claims.logistic-reach]
+kind      = "theorem"
+statement = "The finite-time logistic reaching estimate (milestone M4, lemma_B_2 slice 3: eq. B.5-B.7, the ODE crux). MACHINE-CHECKED. The gated characteristic obeys the scalar logistic ODE u' = g(1-u^2) (u = <x,omega>, gate g >= 0, leaf L2 gate_hasDerivAt_inner); on the active region g >= c0 > 0 the flow drives u toward 1 (x toward omega). Key device: the log-odds substitution logOdds s = log((1+s)/(1-s)) whose derivative along the flow is EXACTLY 2g (hasDerivAt_logOdds gives logOdds' = 2/(1-s^2); composed with u' = g(1-u^2) the 1-u^2 cancels), so logOdds(u) grows at rate >= 2c0. logistic_flow_logOdds_le: logOdds(u T) >= logOdds(u 0) + 2c0 T (monotoneOn_of_deriv_nonneg applied to F = logOdds(u) - 2c0 t). logistic_flow_reach: since logOdds is increasing on (-1,1), for any target b < 1 with logOdds b <= logOdds(u 0) + 2c0 T we get u T >= b -- the flow reaches the cap. The range u in (-1,1) is a hypothesis (supplied by the geometry, strict Cauchy-Schwarz for distinct unit vectors, not the ODE). #print axioms clean (propext/Classical.choice/Quot.sound). This is the make-or-break dynamical core of lemma_B_2 (B.7); it de-risks the whole M4 discharge. Remaining: the cutoff Block instantiation (slice 2) and the measure/preimage assembly (slice 4)."
+status    = "math.machine-checked"
+lean      = "MeasureToMeasure.logistic_flow_reach"
+paper     = "Lemma B.2 eq. B.5-B.7 (logistic reaching of the gated flow); Appendix B"
+created   = "2026-07-02"
+
 [claims.ball-mass-continuity]
 kind      = "theorem"
 statement = "Measure continuity along a shrinking sublevel set (milestone M4, lemma_B_2 slice 1: eq. B.6). MACHINE-CHECKED. exists_closed_sublevel_mass_ge: for a continuous f and a measure with finite mass on the open sublevel {f < R}, any fraction 1-eps < 1 of that mass is already carried by a closed sublevel {f <= r} with r < R. Applied to f = d_g(z, .) this is the cap estimate the B.2 retention argument needs, mu(B(z,r)) >= (1-eps) mu(B(z,R)). Proof: continuity of measure from below (tendsto_measure_iUnion_atTop) along the increasing closed sublevels A n = {f <= R - 1/(n+1)}, whose union is the open sublevel; the target fraction is strictly below the finite limit (ENNReal.mul_lt_mul_right + ENNReal.sub_lt_self), hence eventually attained. #print axioms clean (propext/Classical.choice/Quot.sound). First slice of the lemma_B_2 discharge (M4); the hard cores -- the cutoff Block instantiation of the ReLU-gated field and the finite-time logistic reaching estimate (B.7) -- remain. Also flags a fidelity issue: the lemma_B_2 axiom is stated for arbitrary sets B0/B1, but B.2 requires geodesic balls, so a faithful discharge must restrict the signature."

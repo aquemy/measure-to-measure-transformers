@@ -9,6 +9,7 @@ import MeasureToMeasure.Foundations.SphereFlow
 import MeasureToMeasure.Foundations.FlowMap
 import MeasureToMeasure.Foundations.Wasserstein
 import MeasureToMeasure.Foundations.SublevelMass
+import MeasureToMeasure.Foundations.LogisticReach
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
