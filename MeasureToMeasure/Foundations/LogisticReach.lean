@@ -44,6 +44,22 @@ theorem hasDerivAt_logOdds {s : ℝ} (hs : s ∈ Ioo (-1 : ℝ) 1) :
   field_simp
   ring
 
+/-- **Monotonicity of the log-odds on `(-1,1)`.** Since `s ↦ (1+s)/(1-s)` is increasing on `(-1,1)`
+(cross-multiplying, the inequality reduces to `s ≤ t`) and `Real.log` is monotone on positives,
+`logOdds` is monotone. This is what turns the *pointwise* reaching estimate (whose hypothesis depends
+on the starting log-odds `logOdds ⟪x,ω⟫`) into a *uniform* one over a whole sub-cap `{⟪·,ω⟫ ≥ m}`:
+the worst starting log-odds on that cap is `logOdds m`. -/
+theorem logOdds_le_logOdds {s t : ℝ} (hs : s ∈ Ioo (-1 : ℝ) 1) (ht : t ∈ Ioo (-1 : ℝ) 1)
+    (hst : s ≤ t) : logOdds s ≤ logOdds t := by
+  obtain ⟨hs1, hs2⟩ := hs
+  obtain ⟨ht1, ht2⟩ := ht
+  have hms : (0 : ℝ) < 1 - s := by linarith
+  have hmt : (0 : ℝ) < 1 - t := by linarith
+  have hps : (0 : ℝ) < (1 + s) / (1 - s) := div_pos (by linarith) hms
+  have hle : (1 + s) / (1 - s) ≤ (1 + t) / (1 - t) := by
+    rw [div_le_div_iff₀ hms hmt]; nlinarith
+  exact Real.log_le_log hps hle
+
 /-- Along the logistic flow `u' = g·(1-u²)` with `u ∈ (-1,1)`, the log-odds derivative is `2g`. -/
 theorem hasDerivAt_logOdds_comp {t : ℝ} (hu : HasDerivAt u (g t * (1 - (u t) ^ 2)) t)
     (hur : u t ∈ Ioo (-1 : ℝ) 1) :
