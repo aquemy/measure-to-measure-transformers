@@ -1,12 +1,12 @@
-# Kernel-honesty CI for this Lean blueprint project. Enforces on every push/PR the invariants the
-# lean-math skills advertise: it compiles, no stray `sorry`, no node badged above its
-# `#print axioms` status, every `\lean{}` name exists, and the committed status feed has not drifted
-# from the kernel. This workflow does NOT deploy anything -- docs/ is committed by hand for classic
-# GitHub Pages. Scaffolded by lean-math:scaffold-ci, then wired to scripts/audit.sh.
+# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the two
+# invariants that need no private tooling: the project COMPILES (lake build) and carries NO stray
+# `sorry` / `admit` / `sorryAx` / `native_decide`.
 #
-# TODOs before enabling (see the two `repository:`/`ref:` placeholders below):
-#   - point the "Vendor honesty scripts" checkout at a fork/tag of the agent-plugins repo you trust;
-#   - point the "Checkout claimgraph" step at the claimgraph repo and pin a ref for reproducibility.
+# It deliberately does NOT access any private plugin marketplace or the private claimgraph package,
+# and it does NOT deploy anything (docs/ is committed by hand for classic GitHub Pages, served from
+# main /docs). The FULL kernel-honesty audit -- axiom-report (`#print axioms`) + claimgraph
+# audit/reconcile + blueprint checkdecls, wired in scripts/audit.sh -- depends on the private
+# claimgraph + lean-math tools, so it runs LOCALLY via the pre-commit hooks, not in CI.
 name: verify
 
 on:
@@ -20,51 +20,22 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      # Vendor the honesty scripts from the CANONICAL agent-plugins repo (pinned), not the
-      # installed marketplace copy. TODO: set the repo/ref to a fork or tag you trust.
-      - name: Vendor honesty scripts (lean-math bin)
-        uses: actions/checkout@v4
-        with:
-          repository: aquemy/agent-plugins   # AGENT_PLUGINS_REPO
-          ref: main                          # AGENT_PLUGINS_REF -- pin to a tag/sha for reproducibility
-          path: .ci-tools
-      - name: Expose bin on PATH
-        run: |
-          BIN="$GITHUB_WORKSPACE/.ci-tools/plugins/lean-math/bin"
-          echo "AXIOM_REPORT=$BIN/axiom-report" >> "$GITHUB_ENV"
-          chmod +x "$BIN/"* || true
-
-      # The ClaimGraph package supplies `claimgraph audit`/`reconcile` used by scripts/audit.sh.
-      # TODO: point at the claimgraph repo and pin a ref.
-      - name: Checkout claimgraph
-        uses: actions/checkout@v4
-        with:
-          repository: aquemy/claimgraph       # TODO: confirm repo path
-          ref: main                           # TODO: pin to a tag/sha
-          path: .ci-claimgraph
-      - name: Expose claimgraph source
-        run: echo "CLAIMGRAPH_SRC=$GITHUB_WORKSPACE/.ci-claimgraph" >> "$GITHUB_ENV"
-
-      - name: Install uv (provisions claimgraph for audit.sh)
-        uses: astral-sh/setup-uv@v5
-
       # Build with the community Lean action (elan toolchain from lean-toolchain + Mathlib cache).
       - name: Build (lake)
         uses: leanprover/lean-action@v1
         with:
           build: true
 
-      # checkdecls verifies each \lean{} NAME EXISTS/COMPILES (not a status guarantee -- audit.sh
-      # provides the status/drift guarantee below).
-      - name: Blueprint checkdecls (name existence)
+      # Incompleteness / trust-widening sweep: mirror of scripts/audit.sh step 4, with no private
+      # dependency. We do NOT gate on `axiom` declarations -- the labeled-axiom layer is the honest,
+      # reviewed, kernel-visible infrastructure (its status is grounded locally by axiom-report).
+      - name: Incompleteness sweep (no sorry / admit / sorryAx / native_decide)
         run: |
-          if command -v leanblueprint >/dev/null 2>&1; then
-            leanblueprint checkdecls
-          else
-            echo "leanblueprint not installed in CI -- skipping name-existence check (TODO: add it)."
+          hits="$(grep -rnE '\b(sorry|admit|sorryAx|native_decide)\b' MeasureToMeasure ForMathlib \
+                    --include='*.lean' 2>/dev/null || true)"
+          if [ -n "$hits" ]; then
+            echo "::error::incompleteness/trust-widening markers found:"
+            echo "$hits"
+            exit 1
           fi
-
-      # The real honesty gate: axiom-report (#print axioms) + claimgraph audit (validity) +
-      # reconcile (stale-blueprint drift) + lean-sorry-gate sweep. Fails the build on any drift.
-      - name: Honesty drift guard (scripts/audit.sh)
-        run: bash scripts/audit.sh
+          echo "clean: no sorry/admit/sorryAx/native_decide in the Lean tree."
