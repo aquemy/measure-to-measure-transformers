@@ -4,6 +4,7 @@ import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
+import MeasureToMeasure.Foundations.Attention
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
@@ -26,9 +27,28 @@ Soundness of this posture requires each axiom's STATEMENT to be true -- somethin
 review: candidate stubs are attacked with kernel refutation attempts, and every dropped hypothesis
 found this way is restored to the paper's form before the axiom is trusted (findings F11-F16 in
 `RESEARCH.md`; earlier instances: `prop_4_2`'s injectivity, `lemma_B_1`/`lemma_B_2`'s geodesic
-balls). One known gap remains open by design: the family-level disentanglement axiom
-(`exists_disentangling_balls` in `MainResults.lean`) is still refutable in the current
-measure-independent flow model and awaits the mean-field attention restatement (finding F14).
+balls).
+
+## The two dynamics layers (finding F14)
+
+The paper's velocity field (1.2) is *measure-dependent* through self-attention, and eq. (1.7)
+shows measure dependence is essential for the family-level results. Each statement below therefore
+lives on the layer its own paper construction uses:
+
+* **Linear layer** (`Params d` / `measureFlow`, the measure-independent characteristic flow of
+  `Foundations/FlowMap.lean`): statements whose paper proofs use only perceptron parameters
+  (`V ≡ 0`, so the field never reads the measure) -- `lemma_3_2` (W-only rotation),
+  `lemma_3_4_part1` (V ≡ 0), `prop_4_2`/`prop_4_1` (eq. (4.1)), `lemma_B_2`/`lemma_B_1`
+  (Appendix B gates), and `prop_2_2` (the Section 2.2 gated construction).
+* **Mean-field layer** (`AttnSchedule d` / `attnMeasureFlow`, the self-attention flow interface of
+  `Foundations/Attention.lean`): statements whose paper constructions switch on attention
+  (`V ≠ 0`) -- `prop_2_1` (attention clustering), `lemma_3_3`, `lemma_3_4_part2`,
+  `cluster_to_point`, `lemma_5_4`, `exists_parked_schedule`, and the disentanglement/main results
+  in `MainResults.lean`.
+
+The horizon convention on the mean-field layer: a schedule spans `[0, T]` through its pieces'
+durations (`AttnSchedule.durationSum θ = T`); `AttnSchedule.switches` counts pieces, exactly like
+the linear `switches`.
 
 `lemma_B_1` is **proved** (not axiomatized): it is a genuine assembly of `lemma_B_2` and the
 structural flow algebra (`Axioms/Dynamics.lean`) by induction on the length of the ball chain, so its
@@ -39,6 +59,7 @@ namespace MeasureToMeasure.Statements
 
 open MeasureTheory MeasureToMeasure.Axioms
 open MeasureToMeasure.Leaves (barycenter)
+open MeasureToMeasure.Foundations (AttnSchedule attnMeasureFlow)
 open scoped RealInnerProductSpace ENNReal
 
 variable {d : ℕ}
@@ -74,12 +95,14 @@ the LaSalle invariance principle and Hartman-Grobman linearization for the atten
 (`μ₀ ∈ P(S^{d-1})`, the cluster point is a limit of sphere points); without sphere support the
 `W₂ ≤ ε` conclusion held only through the `⊤.toReal = 0` collapse for infinite-cost pairs. The
 one-piece budget is the paper's parameter choice `(V, B, W) ≡ (I_d, B, 0)` -- attention-only,
-one constant piece (Lean's `switches` counts constant pieces). -/
+one constant piece (`switches` counts constant pieces). Stated on the mean-field layer (F14): the
+clustering IS the self-attention dynamics, so the linear model cannot host it faithfully. -/
 axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (e : Eucl d) (he : ‖e‖ = 1)
     (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ (θ : Params d) (z : Eucl d), z ∈ sphere d ∧ switches θ ≤ 1 ∧
-      Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    ∃ (θ : AttnSchedule d) (z : Eucl d), AttnSchedule.durationSum θ = T ∧
+      AttnSchedule.switches θ ≤ 1 ∧ z ∈ sphere d ∧
+      Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
 
 /-- **Lemma 3.2** (transport into the orthant). Two constant parameter pieces move a
 sphere-supported probability measure whose support misses a cap into `Q₁^{d-1}`. AXIOM
@@ -95,7 +118,10 @@ missing-cap gap is what `MissingCap` encodes.
 
 Budget convention: Lean's `switches` counts constant PIECES of the schedule; the paper's "at most
 one switch" counts discontinuities. The paper's proof runs two constant phases (`W ≡ W₁` pushing
-off `-ω`, then `W ≡ W₂` pulling toward `α`), hence `switches θ ≤ 2` here. -/
+off `-ω`, then `W ≡ W₂` pulling toward `α`), hence `switches θ ≤ 2` here.
+
+Layer (F14): stays on the LINEAR layer faithfully -- the paper's construction sets
+`V ≡ B ≡ U ≡ 0, b = 1` (p.15), so the field `P_x^⊥ (W 1)` never reads the measure. -/
 axiom lemma_3_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T : ℝ) (hT : 0 < T)
     (hμs : supportedIn μ (sphere d)) (hgap : MissingCap μ) :
     ∃ θ : Params d, switches θ ≤ 2 ∧ supportedIn (measureFlow θ T μ) (orthant d)
@@ -112,10 +138,14 @@ with a non-explicit constant (deferred to the mean-field restatement, F14). The 
 `P(Q₁^{d-1})`, hence the probability, sphere, and orthant hypotheses. The original stub quantified
 over EVERY measure and was kernel-refuted with the Lebesgue measure (no bijection supports an
 open-positive infinite measure inside a bounded ball; review finding F12); on-sphere full-support
-measures are equally impossible (a homeomorphism preserves the support's density). -/
+measures are equally impossible (a homeomorphism preserves the support's density).
+
+Layer (F14): mean-field -- the paper's construction (B.2, p.33) switches on the value matrix
+(`V(t) = ∑ α_k α_k^⊤` pieces with `W ≡ 0`), so the field reads the flowing measure's barycenter. -/
 axiom lemma_3_3 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hμo : supportedIn μ (orthant d)) :
-    ∃ (θ : Params d) (α : Eucl d), α ∈ sphere d ∧ supportedIn (measureFlow θ T μ) (Metric.ball α ε)
+    ∃ (θ : AttnSchedule d) (α : Eucl d), AttnSchedule.durationSum θ = T ∧ α ∈ sphere d ∧
+      supportedIn (attnMeasureFlow θ μ) (Metric.ball α ε)
 
 /-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). For two **distinct** probability measures on the orthant
 `Q₁^{d-1}` with **equal** barycenters, a constant parameter (`V ≡ 0`) makes the barycenters differ.
@@ -130,7 +160,10 @@ is also the paper's (`Q₁^{d-1} = S^{d-1} ∩ (ℝ_{>0})^d`, while `orthant d` 
 orthant): without it the statement remained refutable by heavy-tailed orthant measures whose
 identity map is not Bochner-integrable, so both barycenters are the junk value `0` and no flow can
 separate them (review finding F12). On the sphere the identity is bounded, hence integrable, and
-the orthant support makes the barycenter genuinely nonzero. -/
+the orthant support makes the barycenter genuinely nonzero.
+
+Layer (F14): stays on the LINEAR layer faithfully -- the paper's part-1 construction sets `V ≡ 0`
+(perceptron only, §B.3), so the field never reads the measure. -/
 axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
@@ -151,14 +184,19 @@ barycenters, and `SameRay ℝ v v` always holds, so `¬ SameRay …` is unsatisf
 sphere support is likewise required (F12): heavy-tailed orthant measures have junk-zero Bochner
 barycenters, `0 = γ • 0` satisfies the colinearity, and `SameRay ℝ 0 0` always holds. On the sphere
 the barycenters are genuine and the orthant support forces them nonzero, so the initial
-`γ ∈ (0,1)` colinearity has content. -/
+`γ ∈ (0,1)` colinearity has content.
+
+Layer (F14): mean-field -- the paper's part-2 construction (§B.3) switches on the value matrix
+(`B ≡ 0` but `V ≠ 0`), so the field reads the flowing measures' barycenters. The conclusion pairs
+the two flows of the SAME schedule applied to the two measures (two separate mean-field systems
+sharing the parameters, as in the paper). -/
 axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) :
-    ∃ θ : Params d, switches θ ≤ 2 ∧
-      ¬ SameRay ℝ (barycenter (measureFlow θ T μ)) (barycenter (measureFlow θ T ν))
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
+      ¬ SameRay ℝ (barycenter (attnMeasureFlow θ μ)) (barycenter (attnMeasureFlow θ ν))
 
 /-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, distinct inputs/targets, and the
 inactive points (the first `M-1`) already at their targets, at most `6` switches move every input to
@@ -239,12 +277,17 @@ controllability fact that Theorem 1.1 lifts to a family by disentanglement and p
 kernel-refuted: the flow keeps sphere mass on the sphere, so no flowed Dirac can `W₂`-approach an
 off-sphere target (`W₂(δ_p, δ_q) = dist p q`, and the distance from the sphere to `3 • e` is at
 least `2`; review finding F12). The sphere support, `d ≥ 3` (inherited from Proposition 4.1's
-steering), and the `1 + 6` switch budget are the paper's. -/
+steering), and the `1 + 6` switch budget are the paper's.
+
+Layer (F14): mean-field -- the clustering half is the attention dynamics (Proposition 2.1); the
+steering half (Proposition 4.1) is a perceptron tail, so the composite schedule lives on the
+mean-field layer. -/
 axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d) (T ε : ℝ)
     (hT : 0 < T) (hε : 0 < ε)
     (z e : Eucl d) (hz : z ∈ sphere d) (he : ‖e‖ = 1)
     (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ θ : Params d, switches θ ≤ 7 ∧ Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 7 ∧
+      Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
 
 /-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
 source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition
@@ -282,13 +325,16 @@ so the `W₂` map bound (`W2_map_le_L2`) can consume them.
 `ψ ∈ L²(S^{d-1}; S^{d-1})` -- the map is sphere-valued. The original stub quantified over every
 measure and every `ψ` and was refutable: flow approximants are sphere-valued on sphere mass, so
 `ψ = const (3 • e₁)` on `μ = δ_{e₁}` keeps every approximant at `L²` distance at least `2`
-(review finding F12). Sphere-valued `ψ` on sphere-supported `μ` is automatically `L²`. -/
+(review finding F12). Sphere-valued `ψ` on sphere-supported `μ` is automatically `L²`.
+
+Layer (F14): mean-field -- the paper's density argument ranges over the full attention dynamics. -/
 axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d → Eucl d) (T ε : ℝ)
     (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
-    ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
-      measureFlow θ T μ = μ.map ψε ∧ Measurable ψε ∧
+    ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
+      AttnSchedule.durationSum θ = T ∧
+      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 
@@ -377,14 +423,21 @@ this, so it is a labeled structural axiom.
 every flow map is an increasing homeomorphism of the line, so two Dirac targets cannot be swapped,
 and at `d = 2` the cyclic order of the circle gives the same obstruction; the paper's gating
 construction needs room to route around parked regions, available from `d ≥ 3`. The switch budget
-is the sum of the per-member budgets, matching the gate-and-concatenate construction. -/
+is the sum of the per-member budgets, matching the gate-and-concatenate construction.
+
+Layer (F14): mean-field -- the parked family members are SEPARATE mean-field systems sharing one
+schedule (each `ν i` evolves under its own self-attention field), which is exactly the paper's
+family setting. Note this family form does NOT apply to pieces of a single mixture: a mixture
+evolves as one system and its flow is not the mixture of its pieces' flows (that distinction is
+why `prop_2_2` lives on the linear layer, where its paper construction is). -/
 axiom exists_parked_schedule {N : ℕ} (hd : 3 ≤ d) (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
     (s : Fin N → ℕ)
     (hdisj : DisjointSupports ν)
-    (hper : ∀ i, ∃ θ : Params d, switches θ ≤ s i ∧
-      Axioms.W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
-    ∃ Θ : Params d, switches Θ ≤ ∑ i, s i ∧
-      ∀ i, Axioms.W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
+    (hper : ∀ i, ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      AttnSchedule.switches θ ≤ s i ∧
+      Axioms.W2 (attnMeasureFlow θ (ν i)) (target i) ≤ ε) :
+    ∃ Θ : AttnSchedule d, AttnSchedule.durationSum Θ = T ∧ AttnSchedule.switches Θ ≤ ∑ i, s i ∧
+      ∀ i, Axioms.W2 (attnMeasureFlow Θ (ν i)) (target i) ≤ ε
 
 /-- Atomless decomposition (Sierpiński/Lyapunov splitting). An atomless probability measure splits
 into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`)
@@ -449,81 +502,38 @@ theorem ae_norm_le_of_supportedIn_sphere {ν : Measure (Eucl d)} {R : ℝ} (hR :
   intro hy1; rw [hy1] at hy; linarith
 
 /-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure on the
-sphere whose support misses a cap can be driven `W₂`-close to a prescribed `M`-atom discrete
-measure `∑ α k • δ_{x k}` on the sphere (convex weights, `∑ α k = 1`, each `α k ≠ 0`), with at most
-`9 M` switch pieces.
+sphere can be driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` on the
+sphere (convex weights, `∑ α k = 1`, each `α k ≠ 0`). AXIOM (`math.axiomatised`): the paper's own
+proof (Section 2.2 and Remark 2.3) is a GATED PERCEPTRON construction -- prescribed-mass splitting
+(machine-checked here as `exists_atomless_partition`) followed by ball-chain transport of each
+piece (Lemmas B.1/B.2), all with `V ≡ 0` parameters -- so the statement lives faithfully on the
+linear layer, and its honest Lean derivation is a future assembly over `lemma_B_1` and the
+Appendix-B gated machinery (milestone M4). `Depends-On exists_atomless_partition`,
+`Depends-On lemma_B_1`.
 
-**Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass `α k`
-with pairwise disjoint supports (`exists_atomless_partition`); for each piece, rotate it into the
-orthant with two pieces (`lemma_3_2`) -- the orthant lies in the open hemisphere `{x | 0 < ⟪e_j, x⟫}`
-of a basis direction `e_j` -- then cluster it to its target point `x k` (`cluster_to_point`, seven
-pieces), composing the two schedules (`measureFlow_comp`). A single parked schedule `Θ` runs all
-pieces at once (`exists_parked_schedule`, `∑ 9 = 9 M` switches); the solution map distributes over
-the convex combination (`measureFlow_sum_smul`), and convexity of `W₂` under mixtures
-(`W2_convexCombo_le`) lifts the per-piece bounds to the whole measure. The convex-combination
-bookkeeping is machine-checked.
+History (F14): an earlier machine-checked assembly routed each piece through `lemma_3_2` and the
+attention-based `cluster_to_point`, then parked the pieces and used the linearity
+`measureFlow Θ (∑ αₖ • Pₖ) = ∑ αₖ • measureFlow Θ (Pₖ)`. That route is valid ONLY in the
+measure-independent model: under the mean-field dynamics a mixture evolves as one system, and its
+flow is NOT the mixture of its pieces' flows. With `cluster_to_point` restated on the mean-field
+layer (where it belongs), the old route is no longer meaningful, and the earlier `MissingCap`
+hypothesis (an artifact of the `lemma_3_2` rotation step) and the `9 M` budget (an artifact of the
+composite) are dropped; the paper's own switch count for this regime is `O(M)` with a non-explicit
+constant (§1.4.3), deferred rather than invented.
 
-The `MissingCap` hypothesis is an artifact of this linear-model route via Lemma 3.2 (each piece
-inherits the cap gap); the paper's own proof of Proposition 2.2 goes through the Section 2
-attention clustering and does not need it. To be revisited with the mean-field restatement (F14). -/
-theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d)
+**Fidelity (soundness):** probability, atomless, sphere support, and on-sphere targets are the
+paper's hypotheses (`μ₀ ∈ P(S^{d-1})` atomless, targets `δ_{x_k}` with `x_k ∈ S^{d-1}`); `d ≥ 3`
+matches the ball-chain construction's room requirement (cf. `lemma_B_2`'s `d ≥ 2` plus the
+routing/parking obstruction at `d = 2`, finding F12). -/
+axiom prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
-    (hμsupp : supportedIn μ (sphere d)) (hgap : MissingCap μ)
+    (hμsupp : supportedIn μ (sphere d))
     (M : ℕ) (x : Fin M → Eucl d) (hx : ∀ k, x k ∈ sphere d)
     (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
-    ∃ θ : Params d, switches θ ≤ 9 * M ∧ Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε := by
-  obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα hα0
-  -- each piece is sphere-supported (it inherits `μ`'s support)
-  have hPsupp : ∀ k, supportedIn (P k) (sphere d) :=
-    fun k => supportedIn_of_sum_smul α P hα0 (hμeq ▸ hμsupp) k
-  -- each piece inherits the missing cap (the cap set is fixed across pieces)
-  obtain ⟨ω, hω, δ, hδ, hcapμ⟩ := hgap
-  have hPgap : ∀ k, MissingCap (P k) :=
-    fun k => ⟨ω, hω, δ, hδ, supportedIn_of_sum_smul α P hα0 (hμeq ▸ hcapμ) k⟩
-  have hd0 : 0 < d := by omega
-  -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
-  obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
-    refine ⟨EuclideanSpace.single ⟨0, hd0⟩ (1 : ℝ), by simp, ?_⟩
-    intro y hy
-    have hinner : ⟪EuclideanSpace.single (⟨0, hd0⟩ : Fin d) (1 : ℝ), y⟫ = y ⟨0, hd0⟩ := by
-      simp [EuclideanSpace.inner_single_left]
-    simpa [Set.mem_setOf_eq, hinner] using hy ⟨0, hd0⟩
-  -- Each piece: rotate into the orthant (Lemma 3.2), then cluster to its target (Prop 2.1 + 4.1),
-  -- within a budget of 2 + 7 = 9 switch pieces.
-  have hper : ∀ k, ∃ θ : Params d, switches θ ≤ 9 ∧
-      Axioms.W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
-    intro k
-    haveI := hPprob k
-    obtain ⟨θ₁, hsw₁, horth⟩ := lemma_3_2 (P k) T hT (hPsupp k) (hPgap k)
-    haveI := isProbabilityMeasure_measureFlow θ₁ T (P k)
-    have hsupp : supportedIn (measureFlow θ₁ T (P k)) {y : Eucl d | 0 < ⟪e, y⟫} :=
-      measure_mono_null (Set.compl_subset_compl.mpr hsub) horth
-    obtain ⟨θ₂, hsw₂, hθ₂⟩ := cluster_to_point (measureFlow θ₁ T (P k)) hd T ε hT hε
-      (x k) e (hx k) he (measureFlow_supportedIn_sphere θ₁ hT.le (hPsupp k)) hsupp
-    refine ⟨comp θ₁ θ₂, ?_, by rw [measureFlow_comp]; exact hθ₂⟩
-    calc switches (comp θ₁ θ₂) ≤ switches θ₁ + switches θ₂ := switches_comp θ₁ θ₂
-      _ ≤ 2 + 7 := Nat.add_le_add hsw₁ hsw₂
-      _ = 9 := rfl
-  obtain ⟨Θ, hΘsw, hΘ⟩ := exists_parked_schedule hd P (fun k => Measure.dirac (x k)) T ε
-    (fun _ => 9) hdisj hper
-  refine ⟨Θ, ?_, ?_⟩
-  · calc switches Θ ≤ ∑ _i : Fin M, 9 := hΘsw
-      _ = 9 * M := by simp [Finset.sum_const, Finset.card_univ, mul_comm]
-  rw [htgt, hμeq, measureFlow_sum_smul]
-  refine Axioms.W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
-    hα ε hε.le (fun k => ?_) (fun k => ?_) (fun k => ?_) hΘ
-  · haveI := hPprob k; exact isProbabilityMeasure_measureFlow Θ T (P k)
-  · infer_instance
-  · -- finiteness: both measures are supported in the ball of radius `max 1 ‖x k‖`
-    haveI := hPprob k
-    haveI := isProbabilityMeasure_measureFlow Θ T (P k)
-    refine MeasureToMeasure.W2_ne_top_of_ae_norm_le _ _ (R := max 1 ‖x k‖) ?_ ?_
-    · exact ae_norm_le_of_supportedIn_sphere (le_max_left _ _)
-        (measureFlow_supportedIn_sphere Θ hT.le (hPsupp k))
-    · simp only [ae_dirac_eq, Filter.eventually_pure]; exact le_max_right _ _
+    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε
 
 end MeasureToMeasure.Statements
