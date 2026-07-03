@@ -55,10 +55,13 @@ drift size $\|\mathbf W\|\asymp(T\varepsilon)^{-1}$ gives total time $T$ and $\|
 The authors' construction (pp. 18-23) realises the matching of one point as the gather / corridor /
 restore composition $(\psi_1)^{-1}\circ\psi_2\circ\psi_1$, a $6$-interval piecewise-constant control
 whose middle phase steers the active $x_0^M$ to $y^M$ while a gate parked on the cap $B(\omega,3\pi/16)$
-freezes the inactive points. We record a type-correct Lean **statement** of this proposition as a
-`sorry` (open): with $d\geqslant 3$, the inactive points already at their targets (`hfix`), at most
-$6$ switches drive every input to its target while keeping the inactive ones fixed. We do **not**
-claim a proof. Two of the construction's cores are however discharged as kernel-checked leaves: the
+freezes the inactive points. We state this as a labeled `axiom` over the linear flow layer (the
+paper's own dynamics here has $\mathbf V\equiv0$, so the layer is faithful): with $d\geqslant 3$,
+points and targets **on the sphere**, **injective** inputs and targets (both restored fidelity
+hypotheses: the flow map is a bijection, so colliding targets are unreachable, and off-sphere points
+contradict the kernel-checked sphere invariance), and the inactive points already at their targets
+(`hfix`), at most $6$ switches drive every input to its target while keeping the inactive ones
+fixed. Two of the construction's cores are discharged as kernel-checked leaves: the
 separating-hyperplane estimate of Step 1 is leaf **L3**
 ([`Leaves/SeparatingHyperplane.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/SeparatingHyperplane.lean){.lean-src},
 `separating_hyperplane`), and the geodesic-gradient identity driving the gather and corridor flows is
@@ -67,14 +70,15 @@ leaf **L4** ([`Leaves/GeodesicGradient.lean`](https://github.com/aquemy/measure-
 points stay fixed — is validated numerically by experiment **E4**.
 
 ```lean
-/-- **Proposition 4.2** (steer one active point). With `d ≥ 3` and the inactive points already at
-their targets, at most `6` switches move every input to its target, keeping the inactive ones fixed
-(`x₀ i = y i` is preserved by `flowMap θ T (x₀ i) = y i`). Stub (`sorry`): `math.open`. Step 1 is
-leaf L3, the geodesic gradient is leaf L4. -/
-theorem prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+/-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, on-sphere injective inputs and
+targets, and the inactive points already at their targets, at most `6` switches move every input
+to its target, keeping the inactive ones fixed. AXIOM (`math.axiomatised`): the
+gather/corridor/restore construction is a geodesic gradient flow (leaves L3, L4). -/
+axiom prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀s : ∀ i, x₀ i ∈ sphere d) (hys : ∀ i, y i ∈ sphere d)
+    (hx₀ : Function.Injective x₀) (hy : Function.Injective y)
     (hfix : ∀ i : Fin M, (i : ℕ) < M - 1 → x₀ i = y i) :
-    ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
-  sorry
+    ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -106,24 +110,26 @@ $6M$ switches and the norm bound accumulates to $C\cdot M / (T\min_i\varepsilon_
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
 The authors obtain Proposition 4.1 by induction over the $M$ pairs, each step being one application
 of Proposition 4.2 (the active point reaches its target; the previously matched points are inactive
 and stay fixed), giving the $\leqslant 6M$-switch budget and the $O\!\big(CM/(T\min_i\varepsilon_i)\big)$
-norm. We record a type-correct Lean **statement** as a `sorry` (open): with $d\geqslant 3$ and
-injective inputs/targets, at most $6M$ switches steer every $x_0^i$ to $y^i$. We do **not** claim a
-proof; the discharge would be the $M$-fold composition of `prop_4_2`. (Validated numerically by
-experiment **E4**, alongside Proposition 4.2.)
+norm. We **prove** exactly that induction in Lean: base case the identity schedule; each step
+composes one `prop_4_2` application via `comp`/`flowMap_comp`, the sphere membership of the moved
+points carried by the kernel-checked `flowMap_mem_sphere`, the budget by `switches_comp`. The badge
+is `axiomatised` because the effective status inherits `prop_4_2`; `#print axioms prop_4_1` lists
+exactly `prop_4_2` and nothing else. (Validated numerically by experiment **E4**.)
 
 ```lean
-/-- **Proposition 4.1** (match an ensemble). With `d ≥ 3` and distinct inputs/targets, at most `6M`
-switches steer every `x₀ i` to `y i`. Stub (`sorry`): `math.open`. Follows from Proposition 4.2 by
-induction. -/
+/-- **Proposition 4.1** (match an ensemble). With `d ≥ 3` and distinct on-sphere inputs/targets,
+at most `6M` switches steer every `x₀ i` to `y i`. PROVED by induction over `prop_4_2`
+(effective `math.axiomatised`: its only axiom is `prop_4_2`). -/
 theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀s : ∀ i, x₀ i ∈ sphere d) (hys : ∀ i, y i ∈ sphere d)
     (hx₀ : Function.Injective x₀) (hy : Function.Injective y) :
     ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
-  sorry
+  induction M with /- identity schedule; then one prop_4_2 step per pair -/
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}

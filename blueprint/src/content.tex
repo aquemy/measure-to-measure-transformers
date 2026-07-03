@@ -223,15 +223,18 @@ $(\varepsilon+\eta)^2$. [machine-checked]
 
 \section{Mass transport and clustering}
 
-\begin{lemma}[Single ball pair, B.2]\label{lem:b2}\lean{MeasureToMeasure.Statements.lemma_B_2}\uses{lem:gate}
-Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$. [open]
+\begin{lemma}[Single ball pair, B.2]\label{lem:b2}\lean{MeasureToMeasure.Statements.lemma_B_2}\uses{lem:gate}\leanok
+Mass $\mu(T,\mathcal B_0\cap\mathcal B_1)\ge(1-\varepsilon)\mu_0(\mathcal B_0)$, for a probability
+measure and sub-hemisphere caps, with one switch. Proved by recentring the self-centered gated flow
+at a point of the overlap, with an amplitude-scaled gate.
 Caveat (F1): the printed parameters $U=-\mathbf 1 z^\top,\ b=\cos(R)\mathbf 1$ make the gate active on
 the complement of $\mathcal B_0$, so the lemma transports nothing as written; the sign must be flipped
 to $U=+\mathbf 1 z^\top,\ b=-\cos(R)\mathbf 1$. True once corrected.
 \end{lemma}
 
-\begin{lemma}[Ball chain, B.1]\label{lem:b1}\lean{MeasureToMeasure.Statements.lemma_B_1}\uses{lem:b2,lem:chain}
-Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. [open]
+\begin{lemma}[Ball chain, B.1]\label{lem:b1}\lean{MeasureToMeasure.Statements.lemma_B_1}\uses{lem:b2,lem:chain}\leanok
+Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. Proved by induction over the discharged
+single-pair lemma.
 \end{lemma}
 
 \begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\lean{MeasureToMeasure.Statements.prop_2_1}\uses{def:projector,ax:flow}

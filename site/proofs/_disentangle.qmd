@@ -41,29 +41,31 @@ norm bound follows by time-rescaling the two phases. $\square$
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-The authors' construction (attributed to them) is the one switch above: a first phase
+The authors' construction (attributed to them) is the two-phase control above: a first phase
 $\mathbf W_1\mathbf 1=-\omega$ contracts every support toward $-\omega$ through the gate-free dynamics
 $\frac{d}{dt}\langle x,\omega\rangle=-(1-\langle x,\omega\rangle^2)$ — the projector identity of leaf
 **L1** — and a second phase $\mathbf W_2\mathbf 1=\alpha\in\mathbb Q_1^{d-1}$ drives them into a small
-cap inside the orthant. We give a **type-correct Lean statement against the axiom layer**
-(`measureFlow`, `switches`), expressing "support inside $\mathbb Q_1^{d-1}$" measure-theoretically as
-`μ (orthant d)ᶜ = 0`. It is a `sorry` stub: we state it, we do **not** claim a proof; its discharge
-rests on the continuity-equation flow axiom.
+cap inside the orthant. The dynamics here is pure perceptron ($\mathbf V\equiv0$), so the statement
+lives faithfully on the linear flow layer, as a labeled `axiom` carrying the paper's hypotheses in
+full: a **probability** measure, **sphere-supported**, with a **missing cap** (`MissingCap`, the
+positive-gap encoding of $\bigcup\operatorname{supp}\subsetneq\mathbb S^{d-1}$; without it a
+dense-support measure refutes the statement — a homeomorphism preserves density). The budget is
+`switches θ ≤ 2` in the formal pieces convention (the paper's "one switch" counts the single
+discontinuity between the two constant phases).
 
 ```lean
-/-- The open positive orthant `Q₁^{d-1} = 𝕊^{d-1} ∩ (ℝ_{>0})^d`, as a subset of `ℝ^d`. -/
-def orthant (d : ℕ) : Set (Eucl d) := {x | ∀ i, 0 < x i}
+/-- The support misses a spherical cap: some unit `ω` has a positive gap `δ` with
+`⟪ω, x⟫ ≤ 1 - δ` on the full mass of `μ` (the faithful encoding of `supp μ ⊊ S^{d-1}`). -/
+def MissingCap (μ : Measure (Eucl d)) : Prop :=
+  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ supportedIn μ {x | ⟪ω, x⟫ ≤ 1 - δ}
 
-/-- "The support of `μ` is contained in `S`", expressed measure-theoretically as `μ(Sᶜ) = 0`. -/
-def supportedIn (μ : Measure (Eucl d)) (S : Set (Eucl d)) : Prop := μ Sᶜ = 0
-
-/-- **Lemma 3.2** (transport into the orthant). One parameter switch moves the measure into
-`Q₁^{d-1}`. Stub (`sorry`): `math.open`. -/
-theorem lemma_3_2 (μ : Measure (Eucl d)) (T : ℝ) (hT : 0 < T) :
-    ∃ θ : Params d, switches θ ≤ 1 ∧ supportedIn (measureFlow θ T μ) (orthant d) := by
-  sorry
+/-- **Lemma 3.2** (transport into the orthant). Two constant phases move a sphere-supported
+probability measure with a missing cap into `Q₁^{d-1}`. AXIOM (`math.axiomatised`). -/
+axiom lemma_3_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T : ℝ) (hT : 0 < T)
+    (hμs : supportedIn μ (sphere d)) (hgap : MissingCap μ) :
+    ∃ θ : Params d, switches θ ≤ 2 ∧ supportedIn (measureFlow θ T μ) (orthant d)
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -98,24 +100,26 @@ itself for $i\le N-1$ and clusters $\nu,\mu^N$ within $B(\,\cdot\,,C_T\delta)$; 
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
 The authors' three-step argument (App. B.2) hinges on the **barycenter ODE (B.9)**, which is exactly
 our machine-checked leaf **L6** (`barycenter_hasDerivAt_inner`): along the attention field,
 $\frac{d}{dt}\langle x,\alpha\rangle = c\,(1-\langle x,\alpha\rangle^2)$ with strict increase for $c>0$,
 which is what drives each point to $\pm\alpha$ and lets the support be concentrated into an
-$\varepsilon$-ball around the barycenter direction. We state the conclusion type-correctly against the
-axiom layer: some $\theta$ concentrates the flow into `Metric.ball α ε`. It is a `sorry` stub stated
-against `measureFlow`; the analytic content (the three flows $\Psi_1,\Psi_2,\Psi_1^{-1}$) lives in the
-flow axiom.
+$\varepsilon$-ball around the barycenter direction. The drift is barycentric attention
+($\mathbf V\ne0$), i.e. genuinely **measure-dependent**, so the statement lives on the mean-field
+attention layer (`AttnSchedule`, `attnMeasureFlow`; the F14 restatement) as a labeled `axiom`,
+carrying the paper's context in full: a probability measure supported on the sphere inside the
+orthant (where Lemma 3.2 has placed it), concentrated to a ball around a unit direction.
 
 ```lean
-/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). For any tolerance the
-measure can be concentrated into a small ball around some direction `α`, with `O(dN)` switches.
-Stub (`sorry`): `math.open`. -/
-theorem lemma_3_3 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
-    ∃ (θ : Params d) (α : Eucl d), supportedIn (measureFlow θ T μ) (Metric.ball α ε) := by
-  sorry
+/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). A sphere-supported
+probability measure inside the orthant can be concentrated into an `ε`-ball around a unit
+direction by the barycentric-attention dynamics. AXIOM (`math.axiomatised`). -/
+axiom lemma_3_3 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hμs : supportedIn μ (sphere d)) (hμo : supportedIn μ (orthant d)) :
+    ∃ (θ : AttnSchedule d) (α : Eucl d), AttnSchedule.durationSum θ = T ∧ α ∈ sphere d ∧
+      supportedIn (attnMeasureFlow θ μ) (Metric.ball α ε)
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -158,23 +162,25 @@ In the $\gamma_1=1$ (perceptron) case the authors locate a ball $\mathcal B$ on 
 differ in mass, then argue that **some $x^*\in\mathcal B$ makes the barycenters differ** — for if every
 $x^*$ gave equality, $x^*$ would be pinned to one value on the whole ball, which no map can be. That
 "no map is constant on a nonempty open ball" core is our machine-checked leaf **L10**
-(`exists_ne_in_ball`). We state the $\gamma_1=1$ conclusion type-correctly, **carrying the paper's
-hypotheses in full**: $\mu,\nu$ are distinct probability measures supported in the orthant with equal
-barycenters. All three are load-bearing — the proof opens with "since $\mu_0\ne\nu_0$", and dropping
-them makes the statement false (e.g. $\mu=\nu$ satisfies equal barycenters but no $\theta$ can separate
-identical measures). `sorry` stub against the axiom layer. (The attention case $\gamma_1\ne1$, at most
-two switches, is the companion stub `lemma_3_4_part2`.)
+(`exists_ne_in_ball`). We state the $\gamma_1=1$ conclusion as a labeled `axiom` on the linear
+layer (the paper sets $\mathbf V\equiv0$ here), **carrying the paper's hypotheses in full**:
+$\mu,\nu$ are distinct probability measures, supported on the sphere inside the orthant, with equal
+barycenters. Every hypothesis is load-bearing: the proof opens with "since $\mu_0\ne\nu_0$"
+($\mu=\nu$ refutes the bare statement — finding F11), and without sphere support a heavy-tailed
+orthant measure has the junk Bochner barycenter $0$, satisfying the hypotheses vacuously (finding
+F12). (The attention case $\gamma_1\ne1$, at most two switches, is the companion axiom
+`lemma_3_4_part2`, on the same layer with a genuine $\gamma\in(0,1)$ colinearity hypothesis.)
 
 ```lean
-/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). Two distinct probability measures on the orthant with equal
-barycenters can be driven, by a constant parameter, to differing barycenters. Stub (`sorry`):
-`math.open`. The self-contained pigeonhole core is leaf L10. -/
-theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). Two distinct sphere-supported probability measures on
+the orthant with equal barycenters can be driven, by a constant parameter, to differing
+barycenters. AXIOM (`math.axiomatised`); the pigeonhole core is leaf L10. -/
+axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hbar : barycenter μ = barycenter ν) :
-    ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) := by
-  sorry
+    ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν)
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -204,23 +210,39 @@ all $N$ measures, separates them. Total $O(d\cdot N)$ switches. $\square$
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-We state the headline controllability conclusion of the authors' induction type-correctly against the
-axiom layer: there is a $\theta$ whose solution map renders the family's supports pairwise disjoint,
-recorded by the opaque predicate `DisjointSupports`. It is a `sorry` stub — the four-phase induction,
-the $O(dN)$ switch count, and the geodesic-hull nesting all rest on the flow / $\operatorname{conv}_g$
-axioms, so we do not claim a proof.
+Disentanglement is where the measure dependence of self-attention is **essential**: the paper's own
+eq. (1.7) proves a measure-independent (linear) flow cannot separate overlapping inputs — two equal
+measures are carried to the same image by any single map. The fidelity audit (finding F14) showed
+the earlier linear statement of this node was refutable for exactly that reason, so the dynamical
+content now lives on the mean-field attention layer as the axiom `exists_disentangling_balls`:
+under a **shared missing direction** (the positive-gap form of (1.4)) and **pairwise distinct**
+inputs (the paper's standing assumption), one attention schedule concentrates each measure into its
+own ball around a unit direction, `2r`-separated, together with the per-member transport-map form
+of (B.2). `prop_3_1` is then **proved** from it: the carrier balls are pairwise disjoint
+(`Metric.ball_disjoint_ball`) and each lies in an open hemisphere (Cauchy-Schwarz) — the geometric
+packaging the paper leaves implicit. Its badge is `axiomatised` because the effective status
+inherits the axiom: `#print axioms prop_3_1` lists exactly `exists_disentangling_balls` and the
+mean-field well-posedness axiom `exists_meanFieldFlow`.
 
 ```lean
-/-- The measures in the family have pairwise disjoint (geodesic-convex-hull) supports. -/
-axiom DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop
+/-- Shared missing direction (eq. 1.4, positive-gap form): one unit `ω` and one gap `δ > 0`
+work for every member of the family. -/
+def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
+  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i, supportedIn (μ i) {x | ⟪ω, x⟫ ≤ 1 - δ}
 
-/-- **Proposition 3.1** (disentanglement). There is a piecewise-constant `θ` whose solution map
-renders the supports of the family pairwise disjoint. Stub (`sorry`): status `math.open`. -/
-theorem prop_3_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 < T) :
-    ∃ θ : Params d, DisjointSupports (fun i => measureFlow θ T (μ₀ i)) := by
-  sorry
+/-- **Proposition 3.1** (disentanglement). Under a shared missing direction and pairwise distinct
+inputs, one attention schedule renders the supports pairwise disjoint, each in an open
+hemisphere. PROVED over `exists_disentangling_balls` (effective `math.axiomatised`). -/
+theorem prop_3_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (hne : Pairwise fun i j => μ₀ i ≠ μ₀ j)
+    (hmiss : SharedMissingDirection μ₀) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      DisjointSupports (fun i => attnMeasureFlow θ (μ₀ i)) ∧
+      ∀ i, ∃ e : Eucl d, ‖e‖ = 1 ∧ supportedIn (attnMeasureFlow θ (μ₀ i)) {x | 0 < ⟪e, x⟫}
 ```
 
 [`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}
@@ -237,8 +259,8 @@ Theorem 1.2, and **L11$'$** (`barycenter_noncolinear_of_disjoint_hull_general`) 
 probability measures via Mathlib's `Convex.integral_mem`. The barycenter, a nonnegative average of
 support points, lies in $\operatorname{cone}(\operatorname{supp})$; colinearity would put a common
 normalized direction in *both* hulls, contradicting disjointness. The headline `prop_3_1` stays
-`[open]{.badge .open}` only because it still rests on the flow / $\operatorname{conv}_g$-nesting
-axioms — not on this step. (Validated numerically by experiment E3.)
+`[axiomatised]{.badge .axiom}` only because it rests on the disentangling-dynamics axiom — not on
+this step, which is machine-checked. (Validated numerically by experiment E3.)
 
 [`Leaves/BarycenterNonColinear.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/BarycenterNonColinear.lean){.lean-src}
 :::

@@ -73,8 +73,8 @@ Claim `claim:exp-e1-mass-transport`. It validates:
 | --- | --- | --- |
 | `leaf-gate-ode` | eq. B.4-B.5, p.32 | math.machine-checked |
 | `leaf-ball-chain-induction` | Lem B.1 proof, p.33 | math.machine-checked |
-| `lem-b-2` | Lem B.2, p.31 | math.axiomatised |
-| `lem-b-1` | Lem B.1, p.31 | math.axiomatised |
+| `lem-b-2` | Lem B.2, p.31 | math.machine-checked |
+| `lem-b-1` | Lem B.1, p.31 | math.machine-checked |
 
 **Pass criterion.** single ball: fraction in inner cap >= 1-eps=0.95; chain of K=4: fraction >= (1-eps)^K=0.8145
 

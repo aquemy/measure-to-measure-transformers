@@ -54,44 +54,54 @@ $g(x)>0\iff d_g(z,x)>R$ is the kernel-checked leaf **L2** (`gate_pos_iff_dist`,
 [machine-checked]{.badge .ok}); the same inversion is corroborated independently by Proposition 4.2,
 Step 3 (which states the identical construction with the correct activation side) and by experiment
 E1. This is finding **F1**; see [`ERRATA.md`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/ERRATA.md).
+
+Two further hypotheses turned out to be load-bearing and are restored in the formal statement
+(finding **F12** and the M4 discharge review): the measure must be a **probability measure** (an
+infinite measure can stack unbounded mass arbitrarily close to the cap rim, where any single gated
+block moves it arbitrarily slowly, refuting the uniform $(1-\varepsilon)$ retention), and the caps
+must be **sub-hemisphere** ($R_i<\pi/2$: a larger cap can contain both $\omega$ and $-\omega$, where
+every field of the form $g\,\mathbf P_x^\perp\omega$ vanishes, so mass near $-\omega$ stalls). The
+paper's printed quantifier order — parameters first, "for any $\mu_0$" second — is also refutable
+(a Dirac slid to the rim defeats any fixed gate); the formal statement quantifies $\forall\mu\,
+\exists\theta$, which is the order the paper's own proof establishes. That is erratum candidate
+**E3** in `ERRATA.md`.
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 The authors' strategy is the gated-drift construction above: a single ReLU gate, active on
 $\mathcal B_0$ (after the F1 sign correction), pushes the interior mass of $\mathcal B_0$ along
 $+\omega$ into $\mathcal B_0\cap\mathcal B_1$ while leaving everything off $\mathcal B_0$ fixed, so a
-$(1-\varepsilon)$ fraction is retained in the overlap. We state it as a labeled `axiom` over the flow
-layer (`measureFlow`, `switches`), and — a soundness correction — over genuine **geodesic balls**
-$\mathcal B_i=B(z_i,R_i)$ rather than arbitrary sets: the gated drift funnels a *cap* toward its
-overlap with another cap, and the retention claim is simply false for arbitrary $B_0,B_1$
-(finding F1's companion fix). It also now carries the `switches θ ≤ 1` budget the chain lemma needs.
+$(1-\varepsilon)$ fraction is retained in the overlap. This is now a **proved theorem**:
+`#print axioms lemma_B_2` lists only `propext`, `Classical.choice`, `Quot.sound`.
 
-While the axiom itself is not yet discharged (that rests on the continuity-equation flow existence
-Mathlib lacks), **its entire dependency tree is now built and machine-checked** — the ball signature
-is exactly what the eventual discharge will prove:
+The proof *recenters* the construction at a point $\omega$ of the open overlap instead of analyzing
+an off-center gate: the geodesic triangle inequality (Mathlib's `angle_le_angle_add_angle`) places
+the shrunken cap $B(z_0,R_0-\delta)$ inside a cap around $\omega$ and a small target cap around
+$\omega$ inside $\mathcal B_0\cap\mathcal B_1$, so the already-verified self-centered machinery
+applies verbatim. An **amplitude-scaled gated block** (`scaledGatedBlock`) realizes the paper's
+$\lVert\theta\rVert\sim C/(T\varepsilon)$ parameter freedom, buying the logistic reaching budget at
+any fixed horizon $T$ with one switch. The chain, all machine-checked:
 
-- `gatedBlock` [machine-checked]{.badge .ok} — the B.5 field $\chi(\lVert x\rVert)(\langle z,x\rangle-\cos R)_+\,\mathbf P_x^\perp\omega$
-  as a genuine well-posed `Block`: globally Lipschitz (the quadratic projector tamed by a cutoff via a
-  bespoke *vanishing-gluing* lemma), bounded, and radially tangent so its flow preserves the sphere;
-- `hasDerivAt_inner_gatedFlow` [machine-checked]{.badge .ok} — along that flow the coordinate
-  $u(t)=\langle\phi^t x,\omega\rangle$ obeys the logistic gate ODE $u'=g\,(1-u^2)$ (B.5);
-- `logistic_flow_reach` [machine-checked]{.badge .ok} — the finite-time reaching estimate (B.7), via a
-  log-odds substitution whose derivative along the flow is exactly $2g$;
-- `exists_closed_sublevel_mass_ge` [machine-checked]{.badge .ok} — the shrunken-cap mass bound (B.6);
-- `inner_mem_Ioo_of_ne` [machine-checked]{.badge .ok} — strict Cauchy-Schwarz keeping $u\in(-1,1)$.
-
-What remains open is the final assembly: the reaching argument on the sphere plus the B.8
-measure-preimage step $\mu(T,\mathcal B_0\cap\mathcal B_1)=\mu\bigl(\phi^{-1}(\mathcal B_0\cap\mathcal B_1)\bigr)\ge\mu(B(z_0,R_0-\delta))$.
+- `gatedBlock` / `scaledGatedBlock` — the B.5 field
+  $A\,\chi(\lVert x\rVert)(\langle z,x\rangle-\cos R)_+\,\mathbf P_x^\perp\omega$ as a genuine
+  well-posed `Block` (globally Lipschitz via a *vanishing-gluing* lemma, bounded, radially tangent);
+- `hasDerivAt_inner_gatedFlow` — the logistic gate ODE $u'=g\,(1-u^2)$ (B.5) along the flow;
+- `logistic_flow_reach` — the finite-time reaching estimate (B.7) via the log-odds substitution;
+- `exists_closed_sublevel_mass_ge` — the shrunken-cap mass bound (B.6);
+- `le_measureFlow_of_mapsTo` — the B.8 pushforward step turning the point-set contraction into mass
+  retention in $\mathcal B_0\cap\mathcal B_1$.
 
 ```lean
 /-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `B(z₀,R₀)` is pushed into
-`B(z₀,R₀) ∩ B(z₁,R₁)`, retaining `(1-ε)`, with one switch. AXIOM (`math.axiomatised`); the
-discharge machinery (gatedBlock, logistic_flow_reach, …) is machine-checked. (Finding F1: the
+`B(z₀,R₀) ∩ B(z₁,R₁)`, retaining `(1-ε)`, with one switch. PROVED (`math.machine-checked`)
+by recentring the self-centered gated flow at a point of the overlap. (Finding F1: the
 gate sign is `U = +z 𝟙ᵀ, b = -cos(R) 𝟙`; see `ERRATA.md`.) -/
-axiom lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+theorem lemma_B_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (_hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
+    (hR₀ : R₀ ∈ Set.Ioo 0 (Real.pi / 2)) (hR₁ : R₁ ∈ Set.Ioo 0 (Real.pi / 2))
     (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
     ∃ θ : Params d, switches θ ≤ 1 ∧
       (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
@@ -138,23 +148,26 @@ adjacent overlap, each step retaining a factor $(1-\varepsilon)$. We **prove** t
 induction on the chain length $K$: the base case is the identity schedule (`idParams`, zero switches);
 each step composes one `lemma_B_2` transport via `comp`, carrying the previous mass forward with
 `measureFlow_comp`, passing from $\mathcal B_k\cap\mathcal B_{k+1}$ to $\mathcal B_{k+1}$ by
-`measure_mono`, and adding the switch budget with `switches_comp`. So the retention bound is
-machine-checked **given** the single-ball transport fact; `#print axioms lemma_B_1` lists exactly
-`lemma_B_2` and the structural flow algebra.
+`measure_mono`, and adding the switch budget with `switches_comp`. With Lemma B.2 itself now
+discharged, **the whole Appendix-B chain is machine-checked end to end**:
+`#print axioms lemma_B_1` lists only `propext`, `Classical.choice`, `Quot.sound`.
 
-Two corrections over the original type-correct stub. The retained fraction multiplies
+Corrections over the original type-correct stub. The retained fraction multiplies
 $\mu(\mathcal B_0)$ — the mass that *starts* in the first ball and is funneled along the chain — not
 $\mu(\bigcup_k\mathcal B_k)$ (which would make the $K=0$ base case false, since
-$\mathcal B_0\subseteq\bigcup_k\mathcal B_k$). And the chain is a sequence of genuine geodesic balls
-$B(z_k,R_k)$, matching the faithful `lemma_B_2` signature. The chain-overlap hypothesis `hchain` and
-the per-step `switches ≤ 1` budget are what make the bound hold.
+$\mathcal B_0\subseteq\bigcup_k\mathcal B_k$). The chain is a sequence of genuine sub-hemisphere
+geodesic balls $B(z_k,R_k)$, $R_k<\pi/2$, over a probability measure, matching the faithful
+`lemma_B_2` signature. The chain-overlap hypothesis `hchain` and the per-step `switches ≤ 1` budget
+are what make the bound hold.
 
 ```lean
 /-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping geodesic balls, `K`
 switches retain `(1-ε)^K` of the mass initially in `B(z₀,R₀)` into the last ball. PROVED
-(`math.axiomatised`: rests only on `lemma_B_2` + the flow algebra) by induction on `K`. -/
-theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+(`math.machine-checked`) by induction on `K` over the discharged `lemma_B_2`. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 2 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
+    (hR : ∀ k, R k ∈ Set.Ioo 0 (Real.pi / 2))
     (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
       (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
@@ -197,25 +210,32 @@ the logarithmic rate follows from [CLPR25, Theorem 2.3].
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
 The authors' strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure
 self-attention drift ($\mathbf W=0$, $\mathbf V=I_d$) the hull's diameter is strictly decreasing while
-its mass stays inside it, so the measure contracts to a single Dirac, the exponential
-contraction giving the $O(\log\tfrac1\varepsilon)$ time. We state this type-correctly in Lean — the
-open hemisphere is `supportedIn μ {x | 0 < ⟪e, x⟫}` for a unit `e`, the target a `Measure.dirac z`,
-closeness measured in `W2` — as an open `sorry` stub. We do **not** claim a proof: the diameter
-monotonicity, the LaSalle/Hartman-Grobman convergence, and the rate live in the continuity-equation
-flow axiom. The conclusion is validated numerically by experiment **E2**.
+its mass stays inside it, so the measure contracts to a single Dirac, the exponential contraction
+giving the $O(\log\tfrac1\varepsilon)$ time. Because the drift is genuinely **measure-dependent**
+(self-attention averages against the evolving measure), the statement lives on the mean-field
+attention layer (`AttnSchedule`, `attnMeasureFlow`) introduced by the F14 restatement — a
+statement over the measure-independent linear flow would be about the wrong dynamics. It is a
+labeled `axiom`: the diameter monotonicity and the LaSalle/Hartman-Grobman convergence are the
+milestone-M6 build, on top of the single mean-field well-posedness axiom
+(`exists_meanFieldFlow`). The clustering itself carries a one-piece (`switches θ ≤ 1`) budget,
+the paper's single constant parameter $(\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)$.
+The conclusion is validated numerically by experiment **E2**.
 
 ```lean
-/-- **Proposition 2.1** (clustering to a point). A measure supported in an open hemisphere can be
-driven arbitrarily `W₂`-close to a Dirac mass. Stub (`sorry`): `math.open`. The rate
-`O(log 1/ε)` and the LaSalle/Hartman-Grobman convergence are in the axiom layer. -/
-theorem prop_2_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ (θ : Params d) (z : Eucl d), W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε := by
-  sorry
+/-- **Proposition 2.1** (clustering to a point). A sphere-supported probability measure in an open
+hemisphere can be driven arbitrarily `W₂`-close to a Dirac mass at a sphere point, with one
+constant attention piece. AXIOM (`math.axiomatised`): the LaSalle/Hartman-Grobman convergence
+is the M6 build over the mean-field flow. -/
+axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (e : Eucl d) (he : ‖e‖ = 1)
+    (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
+    ∃ (θ : AttnSchedule d) (z : Eucl d), AttnSchedule.durationSum θ = T ∧
+      AttnSchedule.switches θ ≤ 1 ∧ z ∈ sphere d ∧
+      Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -249,27 +269,34 @@ $x_k^i$, so $W_2(\mu^i(T),\mu_1^i)\le\varepsilon$ while the disjoint supports re
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
 The authors' strategy chains the two preceding results: partition each atomless support into $M$
 prescribed-mass pieces, then use the ball-chain transport (Lemma B.1) to drive each piece into a small
 ball about its target atom $x_k^i$, handling the disjoint families one at a time so that — by the
-off-support identity (B.2) — the others stay fixed. We state the single-family conclusion
-type-correctly in Lean against the axiom layer: the target is a genuine $M$-atom combination
-`∑ k, α k • Measure.dirac (x k)`, atomlessness is `∀ x, μ {x} = 0`, and closeness is in `W2`. It is an
-open `sorry` stub — not a claimed proof — resting on the flow and optimal-transport axioms together
-with the (open) Lemma B.1 and Proposition 2.1.
+off-support identity (B.2) — the others stay fixed. Note the paper's proof uses only the
+**perceptron drift** ($\mathbf V\equiv0$), so the statement honestly lives on the linear flow layer
+(`measureFlow`). It is a labeled `axiom`: an earlier proved assembly (partition + rotate + cluster
+per piece) was retired by the F14 restatement because it distributed a *mean-field* flow over the
+mixture — mixture linearity is meaningless for measure-dependent dynamics — and the faithful,
+paper-route proof through the now-discharged Lemma B.1 chain plus the atomless splitting
+(`exists_atomless_partition`, [machine-checked]{.badge .ok}) is the natural next discharge target.
 
 ```lean
-/-- **Proposition 2.2** (clustering to a discrete measure). An atomless measure whose support lies in
-a region `S` disjoint from the others can be driven `W₂`-close to a prescribed `M`-atom empirical
-measure. Stub (`sorry`): `math.open`. -/
-theorem prop_2_2 (μ ν_target : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+/-- **Proposition 2.2** (clustering to a discrete measure). An atomless sphere-supported
+probability measure can be driven `W₂`-close to a prescribed `M`-atom discrete measure.
+AXIOM (`math.axiomatised`): the paper's V ≡ 0 gated route through Lemma B.1 is the
+discharge target now that the chain is machine-checked. -/
+axiom prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
-    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞)
+    (hμsupp : supportedIn μ (sphere d))
+    (M : ℕ) (x : Fin M → Eucl d) (hx : ∀ k, x k ∈ sphere d)
+    (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
+    (hα0 : ∀ k, α k ≠ 0)
+    (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
-    ∃ θ : Params d, W2 (measureFlow θ T μ) ν_target ≤ ε := by
-  sorry
+    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
