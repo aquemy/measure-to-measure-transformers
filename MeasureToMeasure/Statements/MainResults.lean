@@ -38,11 +38,14 @@ variable {d : ℕ}
 def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
   ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∀ i, supportedIn (μ i) {x | ⟪ω, x⟫ < 1}
 
-/-- Each input/target pair is matchable by some *measurable* transport map (the minimal assumption of
-Theorem 1.2). Measurability is part of "transport map" and is needed for the pushforward to be the
-target rather than the zero measure. -/
+/-- Each input/target pair is matchable by some *measurable, a.e. sphere-valued* transport map (the
+minimal assumption of Theorem 1.2). Measurability is part of "transport map" and is needed for the
+pushforward to be the target rather than the zero measure; the sphere-valued clause is the paper's
+`T^i : S^{d-1} → S^{d-1}` (data (D), p.3), required because flow maps keep sphere mass on the
+sphere, so off-sphere targets are unreachable. -/
 def Matchable {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d)) : Prop :=
-  ∀ i, ∃ T : Eucl d → Eucl d, Measurable T ∧ (μ₀ i).map T = μ₁ i
+  ∀ i, ∃ T : Eucl d → Eucl d, Measurable T ∧ (∀ᵐ x ∂(μ₀ i), T x ∈ sphere d) ∧
+    (μ₀ i).map T = μ₁ i
 
 /-- AXIOM (geometric output of the disentanglement dynamics, Section 3.3). Under a shared missing
 direction, one schedule concentrates each measure of the family into a small ball
@@ -107,24 +110,29 @@ tolerance a single piecewise-constant `θ` steers each input to within `ε` of i
 **Proved** by assembly: disentangle the family (`prop_3_1`), cluster each disentangled measure to its
 target point in its hemisphere (`cluster_to_point`), combine the per-member schedules into one with
 the parking construction (`exists_parked_schedule`), and pre-compose with the disentangler
-(`comp`, `measureFlow_comp`). Effective status `math.axiomatised`. -/
+(`comp`, `measureFlow_comp`). Effective status `math.axiomatised`.
+
+The sphere-supported inputs and on-sphere targets are the paper's data (D) (`μ₀^i ∈ P(S^{d-1})`,
+`x^i ∈ S^{d-1}`); they thread the repaired `cluster_to_point` (F12). -/
 theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀)
-    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) :
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hx : ∀ i, x i ∈ sphere d) :
     ∃ θ : Params d, ∀ i, Axioms.W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
   obtain ⟨θ₁, hdisj, hhemi⟩ := prop_3_1 hd μ₀ T hT hmiss
-  -- Each disentangled measure can be clustered to its prescribed target point.
-  have hper : ∀ i, ∃ θ : Params d,
+  -- Each disentangled measure can be clustered to its prescribed target point (7 pieces).
+  have hper : ∀ i, ∃ θ : Params d, switches θ ≤ 7 ∧
       Axioms.W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (Measure.dirac (x i)) ≤ ε := by
     intro i
     obtain ⟨e, he, hsupp⟩ := hhemi i
     haveI := hμ i
     haveI := isProbabilityMeasure_measureFlow θ₁ T (μ₀ i)
-    exact cluster_to_point (measureFlow θ₁ T (μ₀ i)) T ε hT hε (x i) e he hsupp
+    exact cluster_to_point (measureFlow θ₁ T (μ₀ i)) hd T ε hT hε (x i) e (hx i) he
+      (measureFlow_supportedIn_sphere θ₁ hT.le (hμs i)) hsupp
   -- Park the per-member schedules into a single schedule acting on the disjoint family.
-  obtain ⟨Θ, hΘ⟩ :=
-    exists_parked_schedule (fun i => measureFlow θ₁ T (μ₀ i)) (fun i => Measure.dirac (x i))
-      T ε hdisj hper
+  obtain ⟨Θ, _hΘsw, hΘ⟩ :=
+    exists_parked_schedule hd (fun i => measureFlow θ₁ T (μ₀ i)) (fun i => Measure.dirac (x i))
+      T ε (fun _ => 7) hdisj hper
   refine ⟨comp θ₁ Θ, fun i => ?_⟩
   rw [measureFlow_comp]
   exact hΘ i
@@ -138,18 +146,29 @@ matchable to `μ₁ i` by `Ti ∘ (Φ_{θ₁}⁻¹)` (using `measureFlow_inv`/`m
 transport map by a flow (`lemma_5_4`) and bound `W₂` by the `L²` map distance (the coupling axiom L7,
 `W2_map_le_L2`); finally park the per-member schedules into one (`exists_parked_schedule`) and
 pre-compose with the disentangler. Effective status `math.axiomatised`; the `W₂` bookkeeping is
-machine-checked. -/
+machine-checked.
+
+The probability and sphere-support hypotheses on the inputs are the paper's data (D); they feed the
+repaired `lemma_5_4` (F12), whose a.e. sphere-valued transport requirement is met through the new
+sphere-valued clause of `Matchable` pulled back along the inverse flow. -/
 theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hmiss₀ : SharedMissingDirection μ₀) (_hmiss₁ : SharedMissingDirection μ₁)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμ₀s : ∀ i, supportedIn (μ₀ i) (sphere d))
     (hmatch : Matchable μ₀ μ₁) :
     ∃ θ : Params d, ∀ i, Axioms.W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
   obtain ⟨θ₁, hdisj, _⟩ := prop_3_1 hd μ₀ T hT hmiss₀
   have hper : ∀ i, ∃ θ : Params d,
       Axioms.W2 (measureFlow θ T (measureFlow θ₁ T (μ₀ i))) (μ₁ i) ≤ ε := by
     intro i
-    obtain ⟨Ti, hTim, hTi⟩ := hmatch i
+    obtain ⟨Ti, hTim, hTis, hTi⟩ := hmatch i
+    haveI := hμ i
+    haveI : IsProbabilityMeasure (measureFlow θ₁ T (μ₀ i)) :=
+      isProbabilityMeasure_measureFlow θ₁ T (μ₀ i)
     set ν : Measure (Eucl d) := measureFlow θ₁ T (μ₀ i) with hν
+    have hνs : supportedIn ν (sphere d) :=
+      measureFlow_supportedIn_sphere θ₁ hT.le (hμ₀s i)
     -- ν is matchable to μ₁ i via S = Ti ∘ (Φ_{θ₁}⁻¹).
     set S : Eucl d → Eucl d := Ti ∘ flowMap (inv θ₁) T with hS
     have hSmeas : Measurable S := hTim.comp (measurable_flowMap (inv θ₁) hT.le)
@@ -157,7 +176,18 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
       rw [hS, ← Measure.map_map hTim (flowMap_measurable (inv θ₁) T), ← measureFlow_map,
         hν, measureFlow_inv]
       exact hTi
-    obtain ⟨θ₂, ψε, hflow, hψεmeas, hint, hL2⟩ := lemma_5_4 ν S T ε hT hε
+    -- S is a.e. sphere-valued on ν: pull the a.e. statement back through the pushforward and
+    -- cancel the flow with its reverse-and-negate inverse.
+    have hSs : ∀ᵐ y ∂ν, S y ∈ sphere d := by
+      have hmeas : MeasurableSet {y : Eucl d | S y ∈ sphere d} :=
+        hSmeas Metric.isClosed_sphere.measurableSet
+      rw [hν]
+      show ∀ᵐ y ∂((μ₀ i).map (flowMap θ₁ T)), S y ∈ sphere d
+      rw [MeasureTheory.ae_map_iff (flowMap_measurable θ₁ T).aemeasurable hmeas]
+      filter_upwards [hTis] with w hw
+      have hinv : flowMap (inv θ₁) T (flowMap θ₁ T w) = w := congrFun (flowMap_inv θ₁ T) w
+      simpa [hS, Function.comp_apply, hinv] using hw
+    obtain ⟨θ₂, ψε, hflow, hψεmeas, hint, hL2⟩ := lemma_5_4 ν S T ε hT hε hνs hSmeas hSs
     have hfe : (fun x => ‖S x - ψε x‖ ^ 2) = (fun x => ‖ψε x - S x‖ ^ 2) := by
       funext x; rw [norm_sub_rev]
     have hint' : Integrable (fun x => ‖ψε x - S x‖ ^ 2) ν := hfe ▸ hint
@@ -167,8 +197,12 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
         ≤ Real.sqrt (∫ x, ‖ψε x - S x‖ ^ 2 ∂ν) := W2_map_le_L2 ν ψε S hψεmeas hSmeas hint'
       _ = Real.sqrt (∫ x, ‖S x - ψε x‖ ^ 2 ∂ν) := by simp_rw [norm_sub_rev]
       _ ≤ ε := hL2
-  obtain ⟨Θ, hΘ⟩ :=
-    exists_parked_schedule (fun i => measureFlow θ₁ T (μ₀ i)) μ₁ T ε hdisj hper
+  -- Extract the per-member schedules to obtain explicit switch budgets for the parking axiom
+  -- (Lemma 5.4 states no bound, so each member's budget is its own schedule's count).
+  choose θs hθs using hper
+  obtain ⟨Θ, _hΘsw, hΘ⟩ :=
+    exists_parked_schedule hd (fun i => measureFlow θ₁ T (μ₀ i)) μ₁ T ε
+      (fun i => switches (θs i)) hdisj (fun i => ⟨θs i, le_rfl, hθs i⟩)
   refine ⟨comp θ₁ Θ, fun i => ?_⟩
   rw [measureFlow_comp]
   exact hΘ i

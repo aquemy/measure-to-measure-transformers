@@ -50,6 +50,7 @@
 | 2026-07-02 | I: site & badges honest? | yes | `scripts/audit.sh` (regenerate-and-compare) passes; one stale badge (L8) fixed (#29) |
 | 2026-07-02 | J: mathlib-ready | staged | spherical-geometry cluster staged in `ForMathlib/`, `#print axioms`-clean (#30) |
 | 2026-07-03 | C: sound? (re-audit) | fixed 3 false stubs | F11: `lemma_3_4_part1/part2`, `lemma_5_1` dropped paper hypotheses and were refutable; restored `μ≠ν`/orthant/colinearity and `DisjointSupports`. Orphan axioms, no proved result affected; disproofs machine-checked |
+| 2026-07-03 | C: sound? (full fidelity matrix + refutation harness) | fixed 7 more stubs; 1 structural gap open | F12: sphere/support/dimension hypotheses restored across the axiom layer (4 kernel disproofs, 3 in-system); F13: Lemma 5.1 "invertible ψ" unsatisfiable (paper statement/proof mismatch, E2); F14 OPEN: linear `measureFlow` cannot express disentanglement (eq. 1.7) -- mean-field attention model decided; F15: B.1/B.2 quantifier order (E3); F16: lemma_B_1 docstring corrected |
 
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
 Of the 30 blueprint nodes: **13 clean** (machine-checked), **17 axiom** (rest on a labeled axiom).
@@ -400,6 +401,95 @@ the layer was never *jointly* inconsistent in a way the kernel could exploit (no
 Lesson: a per-node `#print axioms` check cannot see a false-but-unused axiom; axiom statements need
 their own fidelity review against the paper's hypotheses, not just a review of the paper's math (F8
 confirmed the paper's Lemma 3.4 sound but did not audit the stub's hypotheses).
+
+### F12 (SERIOUS, stub fidelity — fixed 2026-07-03) Per-measure axioms dropped sphere/support hypotheses
+
+A third-pass audit (full fidelity matrix against the paper plus a kernel refutation harness) found
+that most remaining axiom stubs quantified over objects far beyond the paper's `P(S^{d-1})` data
+and were **false as written**. Kernel-refuted (compiling `False` scratch proofs, each depending on
+exactly the target axiom plus Lean's three standard axioms):
+
+- `lemma_3_2` and `lemma_3_3`: quantified over EVERY measure; refuted with the Lebesgue measure
+  (`flowMap` is a Lipschitz bijection, so the pushforward of an open-positive infinite measure
+  cannot be annihilated off the orthant or inside a bounded ball).
+- `cluster_to_point`: the target `z` ranged over all of `Eucl d`; refuted with an off-sphere Dirac
+  target (the flow keeps sphere mass on the sphere; `W₂(δ_p, δ_q) = dist p q` was proved exactly
+  over the coupling definition, no `toReal` collapse).
+- `lemma_3_4_part1/part2` (post-F11): `orthant d` is the AMBIENT positive orthant, so heavy-tailed
+  orthant probability measures were admissible; their identity map is not Bochner-integrable, both
+  barycenters are the junk value `0`, and no flow separates them (`SameRay ℝ 0 0` always holds).
+
+In-system refutable (mechanism verified against kernel-checked theorems, disproofs not filed):
+
+- `prop_4_2`: no sphere membership on the points; steering `e₁` to `2 • e₁` contradicts
+  `flowMap_mem_sphere`.
+- `lemma_B_2` at `d = 1`: radial tangency forces the field to vanish at `±1`, so both sphere
+  points are fixed; with `R₀ > π` the ball is the whole two-point sphere and a Dirac at `1`
+  refutes retention into `ℬ₁ = {-1}`.
+- `exists_parked_schedule` at `d = 1, 2`: flow maps are monotone (resp. cyclic-order-preserving)
+  homeomorphisms, so two Dirac targets cannot be swapped.
+
+**Fixes** (this commit): probability + sphere support + `MissingCap` (the paper's
+`⋃ supp ⊊ S^{d-1}` as a positive cap gap) for `lemma_3_2`; probability + sphere + orthant support
+and an on-sphere `α` for `lemma_3_3`; sphere supports for `lemma_3_4_part1/part2`; on-sphere
+points for `prop_4_2` (threaded through `prop_4_1`); `d ≥ 3`, on-sphere target, sphere support and
+a `1 + 6` piece budget for `cluster_to_point`; probability, sphere support, measurable and a.e.
+sphere-valued `ψ` for `lemma_5_4` (with the sphere-valued clause added to `Matchable`); `d ≥ 2`
+and proper cap radii `R ∈ (0, π)` for `lemma_B_2` (threaded through `lemma_B_1`); `d ≥ 3` and
+summed switch budgets for `exists_parked_schedule`. `prop_2_2` and `theorem_1_1/1_2` re-proved
+with the threaded hypotheses; `prop_2_2` now carries an explicit `9 M` piece budget. Switch-count
+convention recorded: Lean's `switches` counts constant PIECES; the paper counts discontinuities.
+
+**Blast radius: statements only.** `#print axioms` footprints of all assembled results are
+unchanged. The refutation scratch files fail to typecheck against the repaired statements
+(regression evidence), and the untouched `exists_disentangling_balls` refutation still compiles
+(see F14).
+
+### F13 (paper statement/proof mismatch — fixed 2026-07-03) Lemma 5.1's "invertible ψ" is unsatisfiable
+
+Even with F11's disjoint-supports repair, `lemma_5_1`'s conclusion `Function.Bijective ψ` is
+unsatisfiable WITHIN a single pair: an atomless source with a Dirac target is matchable, but no
+injection pushes an atomless measure onto an atom. The root cause is in the paper: Lemma 5.1
+(p.24) prints "Lipschitz-continuous and invertible `ψ`", but its own proof (B.4, p.37) builds
+`ψ^i = T^i_{Φ₃} ∘ T^i ∘ (T^i_{Φ₁})^{-1}` where the per-pair transport `T^i` need not be
+invertible. Recorded as erratum candidate E2 in `ERRATA.md`; the Lean conclusion now keeps
+measurability and drops invertibility, which is what the downstream `W₂` argument uses.
+
+### F14 (STRUCTURAL, OPEN) The flow model is a linear continuity equation; disentanglement needs measure dependence
+
+`measureFlow θ t μ := μ.map (flowMap θ t)` is a measure-INDEPENDENT pushforward — a linear
+continuity equation. The paper's own eq. (1.7) proves such dynamics cannot interpolate, and its
+central point (p.6) is that the measure dependence of self-attention is what makes disentanglement
+possible. Consequently `exists_disentangling_balls` is refutable in the current model no matter
+what per-measure hypotheses are added: two inputs with EQUAL supports (e.g. identical measures, or
+interleaved dense atoms) cannot be sent into disjoint balls by ONE map (a kernel disproof via
+dense-in-sphere atoms compiles; a two-identical-Diracs disproof is a ten-liner). No hypothesis
+short of "already disentangled" fixes this linearly.
+
+**Decision (2026-07-03):** build the full attention-field model — the concrete self-attention
+velocity `v[μ]` with the paper's parameters, a mean-field-flow predicate, and a single
+well-posedness axiom (the true M3 completion) — then restate the family-level axioms and
+Theorems 1.1/1.2 over transformer schedules. Until that lands, `exists_disentangling_balls` (and
+hence the assembled `prop_3_1`, `theorem_1_1`, `theorem_1_2`) remain honest about this in their
+docstrings and here.
+
+### F15 (paper erratum candidate) B.1/B.2 print a quantifier order their proofs do not support
+
+Paper Lemmas B.1/B.2 (p.31) are printed "there exist parameters such that for all
+`μ₀ ∈ P(S^{d-1})` …", but the proof of B.2 chooses `δ` (hence the parameters' time budget) AFTER
+`μ₀` ("small enough so that `μ₀(B(z, R−δ)) ≥ (1−ε) μ₀(ℬ₀)`", p.32), and the uniform order looks
+refutable outright: for fixed parameters and horizon, a Dirac slid close enough to the rim of
+`ℬ₀` has an arbitrarily small gate and cannot reach `ℬ₀ ∩ ℬ₁` in time `T`. The Lean statements'
+`∀ μ ∃ θ` order is the provable one. Recorded as erratum candidate E3 in `ERRATA.md`.
+
+### F16 (internal, docs — fixed 2026-07-03) lemma_B_1's K = 0 justification was wrong
+
+The docstring justified retaining `μ ℬ₀` instead of the paper's `μ (⋃ ℬ_k)` by claiming the union
+makes the `K = 0` base case false. It does not: the paper's union is bounded (`k ∈ [0, K]`), so at
+`K = 0` the union IS `ℬ₀` and the paper's base case is true. The real obstruction is that the Lean
+`lemma_B_2` drops the paper's localization clause (flow = Id on `S^{d-1} ∖ ℬ₀`) and the
+`|k − k'| ≥ 2` disjointness hypothesis, which the union form needs so that mass already sitting in
+later balls stays put during earlier legs. Docstring corrected.
 
 ### Verdict
 

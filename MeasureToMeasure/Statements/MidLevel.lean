@@ -19,9 +19,16 @@ Each mid-level result rests on machinery Mathlib does not have (continuity-equat
 LaSalle / Hartman-Grobman, optimal transport, geodesic convexity). Those are **irreducible analytic
 facts**: we state them as clearly labeled `axiom`s (status `math.axiomatised`), each citing the paper
 section and the classical theorem it encodes, and each `Depends-On` the kernel-checked geometric leaf
-that supplies its self-contained core. This is sound only because every axiom is a *true*, standard
-statement; where the original type-correct stub was a loose transcription we correct it to the
-faithful form first (see `lemma_B_1` / `lemma_B_2`).
+that supplies its self-contained core.
+
+Soundness of this posture requires each axiom's STATEMENT to be true -- something no per-node
+`#print axioms` check can see. Statement fidelity is therefore enforced by its own adversarial
+review: candidate stubs are attacked with kernel refutation attempts, and every dropped hypothesis
+found this way is restored to the paper's form before the axiom is trusted (findings F11-F16 in
+`RESEARCH.md`; earlier instances: `prop_4_2`'s injectivity, `lemma_B_1`/`lemma_B_2`'s geodesic
+balls). One known gap remains open by design: the family-level disentanglement axiom
+(`exists_disentangling_balls` in `MainResults.lean`) is still refutable in the current
+measure-independent flow model and awaits the mean-field attention restatement (finding F14).
 
 `lemma_B_1` is **proved** (not axiomatized): it is a genuine assembly of `lemma_B_2` and the
 structural flow algebra (`Axioms/Dynamics.lean`) by induction on the length of the ball chain, so its
@@ -50,26 +57,65 @@ def DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop :=
   ∃ S : Fin N → Set (Eucl d), (∀ i, supportedIn (ν i) (S i)) ∧
     Pairwise (fun i j => Disjoint (S i) (S j))
 
-/-- **Proposition 2.1** (clustering to a point). A measure supported in an open hemisphere can be
-driven arbitrarily `W₂`-close to a Dirac mass. AXIOM (`math.axiomatised`): the convergence rests on
+/-- The support misses a spherical cap: some unit direction `ω` has a positive gap `δ` with
+`⟪ω, x⟫ ≤ 1 - δ` on the full mass of `μ`. This is the faithful encoding of the paper's
+`supp μ ⊊ S^{d-1}` hypothesis (eq. 1.4, Lemma 3.2): a closed support avoiding `ω` leaves a
+mass-free open cap around `ω`. -/
+def MissingCap (μ : Measure (Eucl d)) : Prop :=
+  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ supportedIn μ {x | ⟪ω, x⟫ ≤ 1 - δ}
+
+/-- **Proposition 2.1** (clustering to a point). A sphere-supported probability measure in an open
+hemisphere can be driven arbitrarily `W₂`-close to a Dirac mass at some point `z` of the sphere,
+with a single constant parameter (one switch). AXIOM (`math.axiomatised`): the convergence rests on
 the LaSalle invariance principle and Hartman-Grobman linearization for the attention flow
-(Section 2.1), which Mathlib lacks. `Depends-On` the barycenter ODE leaf L6. -/
+(Section 2.1), which Mathlib lacks. `Depends-On` the barycenter ODE leaf L6.
+
+**Fidelity (soundness):** the sphere support and the on-sphere location of `z` are the paper's
+(`μ₀ ∈ P(S^{d-1})`, the cluster point is a limit of sphere points); without sphere support the
+`W₂ ≤ ε` conclusion held only through the `⊤.toReal = 0` collapse for infinite-cost pairs. The
+one-piece budget is the paper's parameter choice `(V, B, W) ≡ (I_d, B, 0)` -- attention-only,
+one constant piece (Lean's `switches` counts constant pieces). -/
 axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ (θ : Params d) (z : Eucl d), Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    (e : Eucl d) (he : ‖e‖ = 1)
+    (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
+    ∃ (θ : Params d) (z : Eucl d), z ∈ sphere d ∧ switches θ ≤ 1 ∧
+      Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
-/-- **Lemma 3.2** (transport into the orthant). One parameter switch moves the measure into
-`Q₁^{d-1}`. AXIOM (`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
-continuity-equation flow existence. `Depends-On` the separating-hyperplane leaf L3. -/
-axiom lemma_3_2 (μ : Measure (Eucl d)) (T : ℝ) (hT : 0 < T) :
-    ∃ θ : Params d, switches θ ≤ 1 ∧ supportedIn (measureFlow θ T μ) (orthant d)
+/-- **Lemma 3.2** (transport into the orthant). Two constant parameter pieces move a
+sphere-supported probability measure whose support misses a cap into `Q₁^{d-1}`. AXIOM
+(`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
+continuity-equation flow existence. `Depends-On` the separating-hyperplane leaf L3.
 
-/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). For any tolerance the
-measure can be concentrated into a small ball around some direction `α`. AXIOM
-(`math.axiomatised`): the contraction is driven by the barycenter dynamics (leaf L6) but its
-realization as a flow on measures rests on the missing continuity-equation theory. -/
-axiom lemma_3_3 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
-    ∃ (θ : Params d) (α : Eucl d), supportedIn (measureFlow θ T μ) (Metric.ball α ε)
+**Fidelity (soundness):** the paper's hypotheses (Lemma 3.2, p.15) are `μ₀^i ∈ P(S^{d-1})` with
+`⋃_i supp μ₀^i ⊊ S^{d-1}`; the missing direction `ω` is where the rotation field `-P_x^⊥ ω` pushes
+mass away from. The original stub quantified over EVERY measure and was kernel-refuted with the
+Lebesgue measure: `flowMap` is a Lipschitz bijection of `Eucl d`, so the pushforward of an
+open-positive infinite measure cannot be annihilated off the orthant (review finding F12). The
+missing-cap gap is what `MissingCap` encodes.
+
+Budget convention: Lean's `switches` counts constant PIECES of the schedule; the paper's "at most
+one switch" counts discontinuities. The paper's proof runs two constant phases (`W ≡ W₁` pushing
+off `-ω`, then `W ≡ W₂` pulling toward `α`), hence `switches θ ≤ 2` here. -/
+axiom lemma_3_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T : ℝ) (hT : 0 < T)
+    (hμs : supportedIn μ (sphere d)) (hgap : MissingCap μ) :
+    ∃ θ : Params d, switches θ ≤ 2 ∧ supportedIn (measureFlow θ T μ) (orthant d)
+
+/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). For any tolerance a
+sphere-supported probability measure on the orthant can be concentrated into a small ball around
+some unit direction `α`. AXIOM (`math.axiomatised`): the contraction is driven by the barycenter
+dynamics (leaf L6) but its realization as a flow on measures rests on the missing
+continuity-equation theory.
+
+**Fidelity (soundness):** this is the single-measure core of the paper's Lemma 3.3 (p.16), whose
+family form concentrates one measure while FIXING the others and carries an `O(d·N)` switch budget
+with a non-explicit constant (deferred to the mean-field restatement, F14). The paper works over
+`P(Q₁^{d-1})`, hence the probability, sphere, and orthant hypotheses. The original stub quantified
+over EVERY measure and was kernel-refuted with the Lebesgue measure (no bijection supports an
+open-positive infinite measure inside a bounded ball; review finding F12); on-sphere full-support
+measures are equally impossible (a homeomorphism preserves the support's density). -/
+axiom lemma_3_3 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hμs : supportedIn μ (sphere d)) (hμo : supportedIn μ (orthant d)) :
+    ∃ (θ : Params d) (α : Eucl d), α ∈ sphere d ∧ supportedIn (measureFlow θ T μ) (Metric.ball α ε)
 
 /-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). For two **distinct** probability measures on the orthant
 `Q₁^{d-1}` with **equal** barycenters, a constant parameter (`V ≡ 0`) makes the barycenters differ.
@@ -79,11 +125,15 @@ kernel-checked leaf L10 (`exists_ne_in_ball`).
 **Fidelity (soundness):** the hypotheses `μ ≠ ν`, `IsProbabilityMeasure`, and support in the orthant
 are the paper's ("let `μ₀, ν₀ ∈ P(Q₁^{d-1})` be two *different* measures", Lemma 3.4). The original
 stub omitted all of them, which makes the statement **false**: taking `μ = ν` satisfies the equal-
-barycenter hypothesis yet no `θ` can separate the (identical) flowed barycenters. The orthant support
-also guarantees the barycenter is nonzero (all coordinates positive), which the paper's construction
-needs. -/
+barycenter hypothesis yet no `θ` can separate the (identical) flowed barycenters. The sphere support
+is also the paper's (`Q₁^{d-1} = S^{d-1} ∩ (ℝ_{>0})^d`, while `orthant d` is only the ambient
+orthant): without it the statement remained refutable by heavy-tailed orthant measures whose
+identity map is not Bochner-integrable, so both barycenters are the junk value `0` and no flow can
+separate them (review finding F12). On the sphere the identity is bounded, hence integrable, and
+the orthant support makes the barycenter genuinely nonzero. -/
 axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hbar : barycenter μ = barycenter ν) :
     ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν)
@@ -98,9 +148,13 @@ L11 (`barycenter_noncolinear_of_disjoint_hull`, review finding F2).
 `ℰ_{μ₀} = γ₁ ℰ_{ν₀}`, `γ₁ ∈ (0,1)`). The original stub omitted **every** hypothesis, which makes the
 statement **false**: with no relation between `μ` and `ν`, taking `μ = ν` gives coincident flowed
 barycenters, and `SameRay ℝ v v` always holds, so `¬ SameRay …` is unsatisfiable for every `θ`. The
-orthant support forces the barycenters nonzero, so the initial `γ ∈ (0,1)` colinearity is genuine. -/
+sphere support is likewise required (F12): heavy-tailed orthant measures have junk-zero Bochner
+barycenters, `0 = γ • 0` satisfies the colinearity, and `SameRay ℝ 0 0` always holds. On the sphere
+the barycenters are genuine and the orthant support forces them nonzero, so the initial
+`γ ∈ (0,1)` colinearity has content. -/
 axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) :
     ∃ θ : Params d, switches θ ≤ 2 ∧
@@ -114,8 +168,14 @@ construction is a geodesic gradient flow. Step 1 is leaf L3, the geodesic gradie
 The injectivity hypotheses are required for soundness: the flow map is bijective
 (`flowMap_bijective`), so steering `x₀ (M-1)` to `y (M-1)` while fixing the inactive points is
 possible only if the targets (and inputs) are distinct -- otherwise the map would need two preimages
-for one point. The original stub omitted them. -/
+for one point. The original stub omitted them.
+
+**Fidelity (soundness):** the sphere memberships are the paper's (Proposition 4.2 steers points of
+`S^{d-1}`). Without them the axiom contradicts the kernel-checked `flowMap_mem_sphere`: it would
+steer `e₁` (on the sphere) to `2 • e₁` (off it), an in-system proof of `False` (review finding
+F12). -/
 axiom prop_4_2 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀s : ∀ i, x₀ i ∈ sphere d) (hys : ∀ i, y i ∈ sphere d)
     (hx₀ : Function.Injective x₀) (hy : Function.Injective y)
     (hfix : ∀ i : Fin M, (i : ℕ) < M - 1 → x₀ i = y i) :
     ∃ θ : Params d, switches θ ≤ 6 ∧ ∀ i, flowMap θ T (x₀ i) = y i
@@ -133,6 +193,7 @@ holds -- stay fixed (`≤ 6` switches); compose with `comp`. The switch budget i
 needed for the Proposition 4.2 step is exactly `flowMap φ T ∘ x₀` injective (bijective flow composed
 with injective `x₀`) and `y` injective. `Depends-On prop_4_2`. -/
 theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) (hT : 0 < T)
+    (hx₀s : ∀ i, x₀ i ∈ sphere d) (hys : ∀ i, y i ∈ sphere d)
     (hx₀ : Function.Injective x₀) (hy : Function.Injective y) :
     ∃ θ : Params d, switches θ ≤ 6 * M ∧ ∀ i, flowMap θ T (x₀ i) = y i := by
   induction M with
@@ -141,11 +202,14 @@ theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) 
     -- Place the first k points by the induction hypothesis on the castSucc subfamily.
     have hx₀' : Function.Injective (x₀ ∘ Fin.castSucc) := hx₀.comp (Fin.castSucc_injective k)
     have hy' : Function.Injective (y ∘ Fin.castSucc) := hy.comp (Fin.castSucc_injective k)
-    obtain ⟨φ, hφsw, hφ⟩ := ih (x₀ ∘ Fin.castSucc) (y ∘ Fin.castSucc) hx₀' hy'
+    obtain ⟨φ, hφsw, hφ⟩ := ih (x₀ ∘ Fin.castSucc) (y ∘ Fin.castSucc)
+      (fun i => hx₀s _) (fun i => hys _) hx₀' hy'
     simp only [Function.comp_apply] at hφ
     -- Current positions of all k+1 points after φ.
     set p : Fin (k + 1) → Eucl d := fun i => flowMap φ T (x₀ i) with hp
     have hpinj : Function.Injective p := (flowMap_bijective φ T).injective.comp hx₀
+    -- The flow keeps every point on the sphere.
+    have hps : ∀ i, p i ∈ sphere d := fun i => flowMap_mem_sphere φ hT.le (hx₀s i)
     -- The first k points already sit at their targets, so prop_4_2's hypothesis holds.
     have hfix : ∀ i : Fin (k + 1), (i : ℕ) < (k + 1) - 1 → p i = y i := by
       intro i hi
@@ -154,7 +218,7 @@ theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) 
                 rw [Fin.castSucc_castLT]
         _ = y (Fin.castSucc (Fin.castLT i hlt)) := hφ (Fin.castLT i hlt)
         _ = y i := by rw [Fin.castSucc_castLT]
-    obtain ⟨ψ, hψsw, hψ⟩ := prop_4_2 hd (k + 1) p y T hT hpinj hy hfix
+    obtain ⟨ψ, hψsw, hψ⟩ := prop_4_2 hd (k + 1) p y T hT hps hys hpinj hy hfix
     refine ⟨comp φ ψ, ?_, ?_⟩
     · calc switches (comp φ ψ) ≤ switches φ + switches ψ := switches_comp φ ψ
         _ ≤ 6 * k + 6 := Nat.add_le_add hφsw hψsw
@@ -163,16 +227,24 @@ theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) 
       rw [flowMap_comp]
       exact hψ i
 
-/-- **Clustering to a prescribed point** (Proposition 2.1 followed by Proposition 4.1). A measure in
-an open hemisphere can be driven `W₂`-close to the Dirac mass at *any chosen* point `z`: first cluster
-it to a point (Proposition 2.1), then steer that point to `z` (Proposition 4.1, here with a single
-active point). AXIOM (`math.axiomatised`): a combination of the two axiomatized propositions; it is
-the single-measure controllability fact that Theorem 1.1 lifts to a family by disentanglement and
-parking. `Depends-On prop_2_1`, `Depends-On prop_4_1`. -/
-axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ)
+/-- **Clustering to a prescribed point** (Proposition 2.1 followed by Proposition 4.1). A
+sphere-supported measure in an open hemisphere can be driven `W₂`-close to the Dirac mass at *any
+chosen* point `z` of the sphere: first cluster it to a point (Proposition 2.1, one switch), then
+steer that point to `z` (Proposition 4.2 with a single active point, six switches). AXIOM
+(`math.axiomatised`): a combination of the two axiomatized propositions; it is the single-measure
+controllability fact that Theorem 1.1 lifts to a family by disentanglement and parking.
+`Depends-On prop_2_1`, `Depends-On prop_4_1`.
+
+**Fidelity (soundness):** the original stub let `z` range over ALL of `Eucl d` and was
+kernel-refuted: the flow keeps sphere mass on the sphere, so no flowed Dirac can `W₂`-approach an
+off-sphere target (`W₂(δ_p, δ_q) = dist p q`, and the distance from the sphere to `3 • e` is at
+least `2`; review finding F12). The sphere support, `d ≥ 3` (inherited from Proposition 4.1's
+steering), and the `1 + 6` switch budget are the paper's. -/
+axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d) (T ε : ℝ)
     (hT : 0 < T) (hε : 0 < ε)
-    (z e : Eucl d) (he : ‖e‖ = 1) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
+    (z e : Eucl d) (hz : z ∈ sphere d) (he : ‖e‖ = 1)
+    (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
+    ∃ θ : Params d, switches θ ≤ 7 ∧ Axioms.W2 (measureFlow θ T μ) (Measure.dirac z) ≤ ε
 
 /-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
 source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition
@@ -184,22 +256,37 @@ across disjoint supports rests on the optimal-transport / measurable-selection t
 (Lemma 5.1 takes the measures from Proposition 3.1 applied to both `μ^i₀` and `μ^i₁`, i.e. already
 disentangled into disjoint regions). The original stub omitted them, which makes the statement
 **false**: with `μ₀ 0 = μ₀ 1 = δ_a` and targets `μ₁ 0 = δ_b`, `μ₁ 1 = δ_e` (`b ≠ e`) each pair is
-matchable (`a ↦ b`, `a ↦ e`) but a single `ψ` would need `ψ a = b` and `ψ a = e` at once; symmetrically
-a shared *target* with distinct sources breaks bijectivity. Disjoint supports on both sides rule these
-out, so the per-pair maps glue to one invertible `ψ` (each `ψ` agrees with `ψᵢ` on `supp(μ₀ i)`, which
-is all a pushforward sees). -/
+matchable (`a ↦ b`, `a ↦ e`) but a single `ψ` would need `ψ a = b` and `ψ a = e` at once.
+
+The earlier conclusion additionally claimed `Function.Bijective ψ`, which is unsatisfiable even
+WITH disjoint supports: within one pair an atomless source with a Dirac target is matchable, but no
+injection pushes an atomless measure onto an atom (review finding F13). The paper's Lemma 5.1
+(p.24) does print "invertible", but its own proof (B.4) composes `ψ^i = T^i_{Φ₃} ∘ T^i ∘
+(T^i_{Φ₁})^{-1}` where the per-pair transport `T^i` need not be invertible -- a statement/proof
+mismatch recorded as erratum candidate E2 in `ERRATA.md`. The faithful conclusion keeps
+measurability (required for the pushforward to be meaningful) and drops invertibility. -/
 axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
     (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
-    ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
+    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
 
-/-- **Lemma 5.4** (`L²` approximation by a flow map). Any transport map `ψ` is approximated in
-`L²(μ)` by a flow map of the dynamics, to any tolerance, with finitely many switches. AXIOM
-(`math.axiomatised`): the density of attention-flow maps in `L²` rests on the missing
-continuity-equation theory. Combined with the coupling bound (leaf L7) this controls `W₂`. The
-approximant `ψε` is measurable and the displacement is `L²`-integrable -- both implicit in the `∫`
-bound being meaningful, made explicit so the `W₂` map bound (`W2_map_le_L2`) can consume them. -/
-axiom lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
+/-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
+map `ψ` of a sphere-supported probability measure is approximated in `L²(μ)` by a flow map of the
+dynamics, to any tolerance, with finitely many switches. AXIOM (`math.axiomatised`): the density of
+attention-flow maps in `L²` rests on the missing continuity-equation theory. Combined with the
+coupling bound (leaf L7) this controls `W₂`. The approximant `ψε` is measurable and the
+displacement is `L²`-integrable -- both implicit in the `∫` bound being meaningful, made explicit
+so the `W₂` map bound (`W2_map_le_L2`) can consume them.
+
+**Fidelity (soundness):** the paper's Lemma 5.4 (p.24) has `μ ∈ P(S^{d-1})` and
+`ψ ∈ L²(S^{d-1}; S^{d-1})` -- the map is sphere-valued. The original stub quantified over every
+measure and every `ψ` and was refutable: flow approximants are sphere-valued on sphere mass, so
+`ψ = const (3 • e₁)` on `μ = δ_{e₁}` keeps every approximant at `L²` distance at least `2`
+(review finding F12). Sphere-valued `ψ` on sphere-supported `μ` is automatically `L²`. -/
+axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d → Eucl d) (T ε : ℝ)
+    (hT : 0 < T) (hε : 0 < ε)
+    (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
+    (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
     ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
       measureFlow θ T μ = μ.map ψε ∧ Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
@@ -219,9 +306,15 @@ on the sphere, not arbitrary sets. The gated characteristic funnels a *cap* towa
 another cap; stated for arbitrary `B₀, B₁` the retention claim is false (nothing steers an arbitrary
 set into another). This restriction matches Appendix B and is what the eventual discharge (via
 `gatedBlock` + the logistic reaching estimate `logistic_flow_reach` + the cap-mass estimate
-`exists_closed_sublevel_mass_ge`) will prove. -/
-axiom lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+`exists_closed_sublevel_mass_ge`) will prove.
+
+The dimension and radius bounds are likewise load-bearing (review finding F12): at `d = 1` radial
+tangency forces the field to vanish at `±1`, so both sphere points are fixed and no transport
+happens at all (with `R₀ > π` the ball `ℬ₀` is the whole two-point sphere and a Dirac at `1`
+refutes the retention into `ℬ₁ = {-1}`). Appendix B's balls are proper caps, `R ∈ (0, π)`. -/
+axiom lemma_B_2 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
+    (hR₀ : R₀ ∈ Set.Ioo 0 Real.pi) (hR₁ : R₁ ∈ Set.Ioo 0 Real.pi)
     (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
     ∃ θ : Params d, switches θ ≤ 1 ∧
       (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
@@ -235,14 +328,19 @@ genuine induction on `K`. The base case is the identity schedule (`idParams`); e
 single-ball `lemma_B_2` transport via `comp`, using `measureFlow_comp` to carry the previous mass
 forward, `measure_mono` to pass from `ℬ_k ∩ ℬ_{k+1}` to `ℬ_{k+1}`, and `switches_comp` for the budget.
 
-The statement is corrected from the original type-correct stub: the retained fraction multiplies
-`μ ℬ₀` (the mass that starts in the first ball, funneled along the chain), not `μ (⋃ ℬ_k)` (the latter
-makes the `K = 0` base case false, since `ℬ₀ ⊆ ⋃ ℬ_k`). The chain-overlap hypothesis `hchain` and the
-per-step switch bound (now in `lemma_B_2`) are likewise required for the bound to hold. The chain is a
-sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere), matching the faithful
-`lemma_B_2` signature. -/
-theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+The statement keeps the retained fraction on `μ ℬ₀` (the mass that starts in the first ball,
+funneled along the chain) rather than the paper's `μ (⋃ ℬ_k)`. The union form is out of reach here
+NOT because of any base-case issue (at `K = 0` the paper's bounded union IS `ℬ₀`, and its base case
+is true) but because the Lean `lemma_B_2` drops two clauses the paper's B.1 induction needs for the
+union: the localization clause "the flow is the identity on `S^{d-1} ∖ ℬ₀`" and the
+`|k - k'| ≥ 2` disjointness hypothesis, which together let mass already sitting in later balls stay
+put during earlier legs (review finding F16). The chain-overlap hypothesis `hchain` and the
+per-step switch bound (now in `lemma_B_2`) are required for the bound to hold. The chain is a
+sequence of genuine **geodesic balls** `B(z_k, R_k)` (centers on the sphere, proper radii),
+matching the faithful `lemma_B_2` signature. -/
+theorem lemma_B_1 (μ : Measure (Eucl d)) (hd : 2 ≤ d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
+    (hR : ∀ k, R k ∈ Set.Ioo 0 Real.pi)
     (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
       (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
@@ -256,8 +354,8 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < �
   | succ k ih =>
     obtain ⟨θ, hsw, hmass⟩ := ih
     obtain ⟨ψ, hψsw, hψmass⟩ :=
-      lemma_B_2 (measureFlow θ T μ) T ε hT hε (z k) (z (k + 1)) (hz k) (hz (k + 1))
-        (R k) (R (k + 1)) (hchain k)
+      lemma_B_2 (measureFlow θ T μ) hd T ε hT hε (z k) (z (k + 1)) (hz k) (hz (k + 1))
+        (R k) (R (k + 1)) (hR k) (hR (k + 1)) (hchain k)
     refine ⟨comp θ ψ, (switches_comp θ ψ).trans (Nat.add_le_add hsw hψsw), ?_⟩
     rw [measureFlow_comp]
     calc c ^ (k + 1) * μ (geodesicBall (z 0) (R 0))
@@ -269,14 +367,24 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < �
           measure_mono Set.inter_subset_right
 
 /-- AXIOM (parking / simultaneous action, Appendix B). If a family of measures has pairwise disjoint
-supports and each member can be steered to within `ε` of its target by *some* schedule, then a
-*single* schedule steers all of them simultaneously to within `ε`: each member's schedule is gated to
-its (disjoint) support region and parks on the others (`flowMap_id_on_parked`). Mathlib has no
-continuity-equation theory to derive this, so it is a labeled structural axiom. -/
-axiom exists_parked_schedule {N : ℕ} (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
+supports and each member can be steered to within `ε` of its target by *some* schedule of at most
+`s i` switches, then a *single* schedule of at most `∑ s i` switches steers all of them
+simultaneously to within `ε`: each member's schedule is gated to its (disjoint) support region and
+parks on the others (`flowMap_id_on_parked`). Mathlib has no continuity-equation theory to derive
+this, so it is a labeled structural axiom.
+
+**Fidelity (soundness):** the dimension hypothesis is load-bearing (review finding F12): at `d = 1`
+every flow map is an increasing homeomorphism of the line, so two Dirac targets cannot be swapped,
+and at `d = 2` the cyclic order of the circle gives the same obstruction; the paper's gating
+construction needs room to route around parked regions, available from `d ≥ 3`. The switch budget
+is the sum of the per-member budgets, matching the gate-and-concatenate construction. -/
+axiom exists_parked_schedule {N : ℕ} (hd : 3 ≤ d) (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
+    (s : Fin N → ℕ)
     (hdisj : DisjointSupports ν)
-    (hper : ∀ i, ∃ θ : Params d, Axioms.W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
-    ∃ Θ : Params d, ∀ i, Axioms.W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
+    (hper : ∀ i, ∃ θ : Params d, switches θ ≤ s i ∧
+      Axioms.W2 (measureFlow θ T (ν i)) (target i) ≤ ε) :
+    ∃ Θ : Params d, switches Θ ≤ ∑ i, s i ∧
+      ∀ i, Axioms.W2 (measureFlow Θ T (ν i)) (target i) ≤ ε
 
 /-- Atomless decomposition (Sierpiński/Lyapunov splitting). An atomless probability measure splits
 into `M` probability measures `P k` with prescribed convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`)
@@ -340,51 +448,71 @@ theorem ae_norm_le_of_supportedIn_sphere {ν : Measure (Eucl d)} {R : ℝ} (hR :
   simp only [sphere, Set.mem_compl_iff, Metric.mem_sphere, dist_zero_right]
   intro hy1; rw [hy1] at hy; linarith
 
-/-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure can be
-driven `W₂`-close to a prescribed `M`-atom discrete measure `∑ α k • δ_{x k}` (convex weights,
-`∑ α k = 1`, each `α k ≠ 0`). Needs `0 < d` (a basis direction is used to place each piece in a
-hemisphere).
+/-- **Proposition 2.2** (clustering to a discrete measure). An atomless probability measure on the
+sphere whose support misses a cap can be driven `W₂`-close to a prescribed `M`-atom discrete
+measure `∑ α k • δ_{x k}` on the sphere (convex weights, `∑ α k = 1`, each `α k ≠ 0`), with at most
+`9 M` switch pieces.
 
 **Proved** (effective `math.axiomatised`): partition `μ` into probability pieces `P k` of mass `α k`
 with pairwise disjoint supports (`exists_atomless_partition`); for each piece, rotate it into the
-orthant with one switch (`lemma_3_2`) -- the orthant lies in the open hemisphere `{x | 0 < ⟪e_j, x⟫}`
-of a basis direction `e_j` -- then cluster it to its target point `x k` (`cluster_to_point`),
-composing the two schedules (`measureFlow_comp`). A single parked schedule `Θ` runs all pieces at once
-(`exists_parked_schedule`); the solution map distributes over the convex combination
-(`measureFlow_sum_smul`), and convexity of `W₂` under mixtures (`W2_convexCombo_le`) lifts the
-per-piece bounds to the whole measure. The convex-combination bookkeeping is machine-checked. -/
-theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 0 < d)
+orthant with two pieces (`lemma_3_2`) -- the orthant lies in the open hemisphere `{x | 0 < ⟪e_j, x⟫}`
+of a basis direction `e_j` -- then cluster it to its target point `x k` (`cluster_to_point`, seven
+pieces), composing the two schedules (`measureFlow_comp`). A single parked schedule `Θ` runs all
+pieces at once (`exists_parked_schedule`, `∑ 9 = 9 M` switches); the solution map distributes over
+the convex combination (`measureFlow_sum_smul`), and convexity of `W₂` under mixtures
+(`W2_convexCombo_le`) lifts the per-piece bounds to the whole measure. The convex-combination
+bookkeeping is machine-checked.
+
+The `MissingCap` hypothesis is an artifact of this linear-model route via Lemma 3.2 (each piece
+inherits the cap gap); the paper's own proof of Proposition 2.2 goes through the Section 2
+attention clustering and does not need it. To be revisited with the mean-field restatement (F14). -/
+theorem prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
-    (hμsupp : supportedIn μ (sphere d))
-    (M : ℕ) (x : Fin M → Eucl d) (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
+    (hμsupp : supportedIn μ (sphere d)) (hgap : MissingCap μ)
+    (M : ℕ) (x : Fin M → Eucl d) (hx : ∀ k, x k ∈ sphere d)
+    (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
     (htgt : ν_target = ∑ k : Fin M, α k • Measure.dirac (x k)) :
-    ∃ θ : Params d, Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε := by
+    ∃ θ : Params d, switches θ ≤ 9 * M ∧ Axioms.W2 (measureFlow θ T μ) ν_target ≤ ε := by
   obtain ⟨P, hPprob, hμeq, hdisj⟩ := exists_atomless_partition μ hatomless α hα hα0
   -- each piece is sphere-supported (it inherits `μ`'s support)
   have hPsupp : ∀ k, supportedIn (P k) (sphere d) :=
     fun k => supportedIn_of_sum_smul α P hα0 (hμeq ▸ hμsupp) k
+  -- each piece inherits the missing cap (the cap set is fixed across pieces)
+  obtain ⟨ω, hω, δ, hδ, hcapμ⟩ := hgap
+  have hPgap : ∀ k, MissingCap (P k) :=
+    fun k => ⟨ω, hω, δ, hδ, supportedIn_of_sum_smul α P hα0 (hμeq ▸ hcapμ) k⟩
+  have hd0 : 0 < d := by omega
   -- A basis direction `e_j` whose open half-space contains the orthant (`⟪e_j, y⟫ = y j > 0` there).
   obtain ⟨e, he, hsub⟩ : ∃ e : Eucl d, ‖e‖ = 1 ∧ orthant d ⊆ {y : Eucl d | 0 < ⟪e, y⟫} := by
-    refine ⟨EuclideanSpace.single ⟨0, hd⟩ (1 : ℝ), by simp, ?_⟩
+    refine ⟨EuclideanSpace.single ⟨0, hd0⟩ (1 : ℝ), by simp, ?_⟩
     intro y hy
-    have hinner : ⟪EuclideanSpace.single (⟨0, hd⟩ : Fin d) (1 : ℝ), y⟫ = y ⟨0, hd⟩ := by
+    have hinner : ⟪EuclideanSpace.single (⟨0, hd0⟩ : Fin d) (1 : ℝ), y⟫ = y ⟨0, hd0⟩ := by
       simp [EuclideanSpace.inner_single_left]
-    simpa [Set.mem_setOf_eq, hinner] using hy ⟨0, hd⟩
-  -- Each piece: rotate into the orthant (Lemma 3.2), then cluster to its target (Prop 2.1 + 4.1).
-  have hper : ∀ k, ∃ θ : Params d, Axioms.W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
+    simpa [Set.mem_setOf_eq, hinner] using hy ⟨0, hd0⟩
+  -- Each piece: rotate into the orthant (Lemma 3.2), then cluster to its target (Prop 2.1 + 4.1),
+  -- within a budget of 2 + 7 = 9 switch pieces.
+  have hper : ∀ k, ∃ θ : Params d, switches θ ≤ 9 ∧
+      Axioms.W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≤ ε := by
     intro k
     haveI := hPprob k
-    obtain ⟨θ₁, _hsw, horth⟩ := lemma_3_2 (P k) T hT
+    obtain ⟨θ₁, hsw₁, horth⟩ := lemma_3_2 (P k) T hT (hPsupp k) (hPgap k)
     haveI := isProbabilityMeasure_measureFlow θ₁ T (P k)
     have hsupp : supportedIn (measureFlow θ₁ T (P k)) {y : Eucl d | 0 < ⟪e, y⟫} :=
       measure_mono_null (Set.compl_subset_compl.mpr hsub) horth
-    obtain ⟨θ₂, hθ₂⟩ := cluster_to_point (measureFlow θ₁ T (P k)) T ε hT hε (x k) e he hsupp
-    exact ⟨comp θ₁ θ₂, by rw [measureFlow_comp]; exact hθ₂⟩
-  obtain ⟨Θ, hΘ⟩ := exists_parked_schedule P (fun k => Measure.dirac (x k)) T ε hdisj hper
-  refine ⟨Θ, ?_⟩
+    obtain ⟨θ₂, hsw₂, hθ₂⟩ := cluster_to_point (measureFlow θ₁ T (P k)) hd T ε hT hε
+      (x k) e (hx k) he (measureFlow_supportedIn_sphere θ₁ hT.le (hPsupp k)) hsupp
+    refine ⟨comp θ₁ θ₂, ?_, by rw [measureFlow_comp]; exact hθ₂⟩
+    calc switches (comp θ₁ θ₂) ≤ switches θ₁ + switches θ₂ := switches_comp θ₁ θ₂
+      _ ≤ 2 + 7 := Nat.add_le_add hsw₁ hsw₂
+      _ = 9 := rfl
+  obtain ⟨Θ, hΘsw, hΘ⟩ := exists_parked_schedule hd P (fun k => Measure.dirac (x k)) T ε
+    (fun _ => 9) hdisj hper
+  refine ⟨Θ, ?_, ?_⟩
+  · calc switches Θ ≤ ∑ _i : Fin M, 9 := hΘsw
+      _ = 9 * M := by simp [Finset.sum_const, Finset.card_univ, mul_comm]
   rw [htgt, hμeq, measureFlow_sum_smul]
   refine Axioms.W2_convexCombo_le α (fun k => measureFlow Θ T (P k)) (fun k => Measure.dirac (x k))
     hα ε hε.le (fun k => ?_) (fun k => ?_) (fun k => ?_) hΘ

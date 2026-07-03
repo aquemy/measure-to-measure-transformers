@@ -67,3 +67,37 @@ result changes.
 Typographical, recoverable. The statement of Lemma B.2 is true after the sign flip, and no theorem
 that uses it (Prop 2.2, Theorems 1.1 and 1.2) is affected. We flag it only because reproducing the
 construction requires the corrected sign.
+
+---
+
+# Statement-level erratum candidates (added 2026-07-03)
+
+Two further candidates surfaced by the axiom-statement fidelity audit (RESEARCH.md findings F13 and
+F15). Both are statement-level: in each case the paper's PROOF is the correct object and the printed
+STATEMENT overstates it. Neither affects the main theorems.
+
+## E2. Lemma 5.1 (p.24): "invertible" is not delivered by its own proof
+
+The lemma is printed as producing a "Lipschitz-continuous and invertible" map `ψ` with
+`ψ_# μ₀^i = μ₁^i` for all `i`. The proof (Appendix B.4, p.37) builds
+`ψ^i = T^i_{Φ₃} ∘ T^i ∘ (T^i_{Φ₁})^{-1}` and glues over the disentangled supports: the flow maps
+`T^i_{Φ₁}, T^i_{Φ₃}` are invertible, but the per-pair transport `T^i` is an arbitrary transport map
+and need not be. Invertibility is in fact unsatisfiable in general: an atomless `μ₀^i` with a
+discrete `μ₁^i` is matchable, and no injective map pushes an atomless measure onto an atom.
+
+**Severity:** statement-level, recoverable. The downstream use (Theorem 1.2 via Lemma 5.4 and the
+`W₂`-vs-`L²` bound) only needs `ψ` measurable (Lipschitz, as constructed); dropping "invertible"
+restores agreement between statement and proof.
+
+## E3. Lemmas B.1/B.2 (p.31): the printed quantifier order is not supported by the proof
+
+Both lemmas are printed as "there exist parameters `(W, U, b)` (and a time horizon) such that for
+all `μ₀ ∈ P(S^{d-1})` the retention bound holds". The proof of B.2 chooses `δ` -- and with it the
+effective time budget -- AFTER `μ₀` ("small enough so that `μ₀(B(z, R−δ)) ≥ (1−ε) μ₀(ℬ₀)`", p.32),
+i.e. it proves the `∀ μ₀, ∃ parameters` order. The uniform order moreover looks false as printed:
+for fixed parameters and horizon, a Dirac placed close enough to the rim of `ℬ₀` sees an
+arbitrarily small gate and cannot reach `ℬ₀ ∩ ℬ₁` within the fixed time, violating the uniform
+`(1−ε)` retention.
+
+**Severity:** statement-level, recoverable. Every use of B.1/B.2 in the paper instantiates them at
+a specific measure, so the `∀ μ₀, ∃ parameters` order (which the formalization states) suffices.
