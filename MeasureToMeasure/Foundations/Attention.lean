@@ -1,5 +1,6 @@
 import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Foundations.Projector
+import MeasureToMeasure.Foundations.FlowMap
 import Mathlib.Analysis.Calculus.Deriv.Basic
 import Mathlib.Analysis.Normed.Lp.MeasurableSpace
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -39,11 +40,11 @@ This file provides the faithful interface:
 * `AttnSchedule`, `attnMeasureFlow` -- the solution operator of a schedule, by folding the
   per-block flow; composition over `++` is definitional (`attnMeasureFlow_append`).
 
-**Planned bridge (deferred to the Statements restatement):** for a block with `V = 0` the field is
-measure-independent (`AttnParams.field_of_V_eq_zero`) and coincides with the perceptron/gated
-fields of `Foundations/GatedBlock.lean` in the rank-one case, so by `meanFieldFlow_unique` the
-mean-field flow *is* the linear `Block` flow there -- the Appendix-B gated machinery (M4) transfers
-unchanged.
+**The linear bridge (`attnStep_eq_map_blockFlow`):** for a block with `V = 0` the field is
+measure-independent (`AttnParams.field_of_V_eq_zero`); any linear `Block` whose field agrees with
+it on the sphere realizes a mean-field flow (`isMeanFieldFlow_blockFlow`), so by `meanFieldFlow_unique`
+the attention step *is* the linear pushforward -- the Appendix-B gated machinery (M4) transfers
+unchanged to this interface.
 -/
 
 namespace MeasureToMeasure.Foundations
@@ -254,5 +255,66 @@ theorem attnMeasureFlow_supportedIn_sphere (θ : AttnSchedule d) (μ : Measure (
     [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
     (attnMeasureFlow θ μ) (sphere d)ᶜ = 0 :=
   (attnMeasureFlow_prob_supportedIn_sphere θ μ ‹_› hs).2
+
+/-! ### The linear bridge: measure-independent blocks realize the mean-field flow
+
+For `V = 0` the field ignores the measure, so the McKean-Vlasov system degenerates to the plain
+characteristic ODE that `Foundations/FlowMap.lean` already solves by Picard-Lindelöf. The two
+lemmas below make that identification kernel-checked *relative to the well-posedness interface*:
+the linear `Block` flow satisfies `IsMeanFieldFlow`, and by `meanFieldFlow_unique` the attention
+step of a `V = 0` block IS the linear pushforward. This is what transfers the Appendix-B gated
+results (milestone M4, e.g. `gated_twoCap_retention`) to the mean-field layer. -/
+
+/-- A linear `Block` whose field agrees on the sphere with the (measure-independent) perceptron
+field of a `V = 0` attention block realizes a mean-field flow of that block, from every initial
+measure. The predicate only constrains trajectories on the sphere, which the block flow preserves;
+uniform Lipschitzness over the duration comes from the Grönwall spread bound. -/
+theorem isMeanFieldFlow_blockFlow (b : Block d) (p : AttnParams d) (hV : p.V = 0)
+    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
+    (μ₀ : Measure (Eucl d)) :
+    IsMeanFieldFlow p μ₀ (fun t => b.blockFlow t) where
+  init := b.blockFlow_zero_eq_id
+  measurable := fun _ ht => b.measurable_blockFlow ht.1
+  lipschitz := by
+    refine ⟨(Real.exp (b.lipConst * p.duration)).toNNReal, fun t ht => ?_⟩
+    refine (b.lipschitzWith_blockFlow ht.1).weaken ?_
+    have hle : b.lipConst * t ≤ b.lipConst * p.duration :=
+      mul_le_mul_of_nonneg_left ht.2 b.lipConst.coe_nonneg
+    exact Real.toNNReal_mono (Real.exp_le_exp.mpr hle)
+  sphere_bijOn := fun t ht => by
+    refine ⟨fun x hx => b.blockFlow_mem_sphere hx ht.1, (b.blockFlow_injective t).injOn,
+      fun y hy => ⟨b.neg.blockFlow t y, b.neg.blockFlow_mem_sphere hy ht.1, ?_⟩⟩
+    rw [b.blockFlow_neg t y, b.blockFlow_add]
+    simp
+  deriv := fun x hx t ht => by
+    rw [p.field_of_V_eq_zero hV, ← hagree _ (b.blockFlow_mem_sphere hx ht.1)]
+    exact b.blockCurve_isIntegralCurve x t
+
+/-- **The linear bridge.** The attention step of a `V = 0` block coincides with the linear
+pushforward along any `Block` whose field matches on the sphere: the block flow is a mean-field
+flow (`isMeanFieldFlow_blockFlow`), uniqueness pins the chosen flow to it on the sphere, and sphere
+support upgrades the pointwise agreement to equality of pushforwards. First consumer of
+`meanFieldFlow_unique`. -/
+theorem attnStep_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0) (b : Block d)
+    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
+    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
+    attnStep p μ₀ = μ₀.map (b.blockFlow p.duration) := by
+  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ₀›, hs⟩]
+  have hΦ := (@exists_meanFieldFlow d p μ₀ ‹_› hs).choose_spec
+  have heq := meanFieldFlow_unique hΦ (isMeanFieldFlow_blockFlow b p hV hagree μ₀)
+    p.duration ⟨p.duration_nonneg, le_rfl⟩
+  refine Measure.map_congr ?_
+  rw [Filter.EventuallyEq, ae_iff]
+  refine measure_mono_null (fun x hx => ?_) hs
+  simp only [Set.mem_setOf_eq, Set.mem_compl_iff] at hx ⊢
+  exact fun hxs => hx (heq x hxs)
+
+/-- The singleton-schedule form of the bridge: one `V = 0` piece is the linear block flow. -/
+theorem attnMeasureFlow_singleton_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0)
+    (b : Block d)
+    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
+    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
+    attnMeasureFlow [p] μ₀ = μ₀.map (b.blockFlow p.duration) :=
+  attnStep_eq_map_blockFlow p hV b hagree μ₀ hs
 
 end MeasureToMeasure.Foundations
