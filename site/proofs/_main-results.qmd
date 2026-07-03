@@ -1,6 +1,6 @@
 # Main results {#sec-main-results}
 
-The paper assembles its leaves and mid-level propositions into one solution map $\Phi^T_{\mathrm{fin}}$ by a three-stage recipe: **disentangle** the $N$ supports until they are pairwise disjoint (Proposition 3.1), **cluster** each measure — to a single point (Proposition 2.1) or to an $M$-atom empirical measure (Proposition 2.2) — and **match** each cluster to its prescribed target (Propositions 4.1/4.2). Theorem 1.1 is the Dirac-target case, steering each input to a point mass $\delta_{x^i}$ with $O(d\,N)$ switches and an explicit norm bound, while Theorem 1.2 is the general case, reaching any $L^2$ transport-matchable targets by interposing the map-transfer Lemma 5.1, the flow-approximation Lemma 5.4, and the coupling bound Lemma 5.2. Every node here is stated type-correctly in Lean against the axiom layer and left as a `sorry` (status open), except Proposition 6.2 — the generic $O(1)$-switch disentanglement heuristic — which we reviewed on paper only.
+The paper assembles its leaves and mid-level propositions into one solution map $\Phi^T_{\mathrm{fin}}$ by a three-stage recipe: **disentangle** the $N$ supports until they are pairwise disjoint (Proposition 3.1), **cluster** each measure — to a single point (Proposition 2.1) or to an $M$-atom empirical measure (Proposition 2.2) — and **match** each cluster to its prescribed target (Propositions 4.1/4.2). Theorem 1.1 is the Dirac-target case, steering each input to a point mass $\delta_{x^i}$ with $O(d\,N)$ switches and an explicit norm bound, while Theorem 1.2 is the general case, reaching any $L^2$ transport-matchable targets by interposing the map-transfer Lemma 5.1, the flow-approximation Lemma 5.4, and the coupling bound Lemma 5.2. Both theorems are **proved by assembly** in Lean over the labeled axiom layer, on the mean-field attention dynamics (`AttnSchedule`, `attnMeasureFlow`) that the F14 fidelity finding showed is the honest home for measure-dependent statements; their effective status is `axiomatised`, the minimum over their documented axiom surface. Proposition 6.2 — the generic $O(1)$-switch disentanglement heuristic — is reviewed on paper only.
 
 ## Lemma 5.1 — transport maps preserved by disentanglement {#node-lemma-5-1}
 
@@ -15,19 +15,18 @@ for some Lipschitz-continuous and invertible maps $\mathsf T^i_{\Phi_1}, \mathsf
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow as Lipschitz-invertible maps $\mathsf T^i_{\Phi_1}, \mathsf T^i_{\Phi_3}$, and the individual matchings $\psi^i$ can be glued into one global Lipschitz-continuous, invertible $\psi$ that agrees with each $\psi^i$ on the $i$-th (now disjoint) support and realizes $(\psi\circ \mathsf T^i_{\Phi_1})_\#\mu_0^i = \Phi_3(\mu_1^i)$. We give a type-correct Lean **statement** as a `sorry` (open), abstracting the Lipschitz/geodesic bookkeeping into the matchability hypothesis. The **disjoint-supports hypotheses on both families are load-bearing and are kept explicit** (`DisjointSupports μ₀`, `DisjointSupports μ₁`): they are what Proposition 3.1 supplies, and without them the gluing is genuinely impossible — with $\mu_0^0=\mu_0^1=\delta_a$ and distinct targets a single $\psi$ would need two values at $a$, and a shared target with distinct sources breaks bijectivity. We do not claim a proof.
+The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow and the individual matchings $\psi^i$ are glued into one global $\psi$ agreeing with each $\psi^i$ on the $i$-th (now disjoint) support. It is a labeled `axiom`. The **disjoint-supports hypotheses on both families are load-bearing and kept explicit** (`DisjointSupports μ₀`, `DisjointSupports μ₁`): without them the gluing is genuinely impossible — with $\mu_0^0=\mu_0^1=\delta_a$ and distinct targets a single $\psi$ would need two values at $a$ (finding F11). The conclusion asserts a **measurable** $\psi$, not the paper's "invertible" one: invertibility is unsatisfiable even per pair (no injection pushes an atomless measure onto an atom), and the paper's own proof builds $\psi^i=\mathsf T^i_{\Phi_3}\circ\mathsf T^i\circ(\mathsf T^i_{\Phi_1})^{-1}$ from the non-invertible transport $\mathsf T^i$ — a statement/proof mismatch recorded as erratum candidate **E2** (finding F13).
 
 ```lean
 /-- **Lemma 5.1** (transport map after disentanglement). If both families are disentangled (pairwise
-disjoint supports, as Proposition 3.1 provides) and each pair is matchable, a single bijective map
-matches them all. Stub (`sorry`): `math.open`. -/
-theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+disjoint supports, as Proposition 3.1 provides) and each pair is matchable, a single measurable map
+matches them all. AXIOM (`math.axiomatised`); the paper's "invertible" is erratum candidate E2. -/
+axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
     (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
-    ∃ ψ : Eucl d → Eucl d, Function.Bijective ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
-  sorry
+    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -44,18 +43,23 @@ The proof of Lemma 5.4 is involved, so we postpone it to Appendix B.5.
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p. 38) shows any $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ is approximated in $L^2(\mu)$, to any tolerance, by a flow map $\psi_\varepsilon$ of the continuity equation (B.1) with piecewise-constant control and finitely many switches; chained with the coupling bound $W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}$ (Lemma 5.2, leaf L7) this converts $L^2$ control of the map into $W_2$ control of the pushforward. We give a type-correct Lean **statement** as a `sorry` (open): for any $\psi$ and $\varepsilon$, a parameter $\theta$ and a map $\psi_\varepsilon$ with `measureFlow θ T μ = μ.map ψε` and $\sqrt{\int \|\psi-\psi_\varepsilon\|^2\,\mathrm d\mu} \le \varepsilon$. We do not claim a proof.
+The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p. 38) shows any $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ is approximated in $L^2(\mu)$, to any tolerance, by a flow map $\psi_\varepsilon$ of the continuity equation with piecewise-constant control and finitely many switches; chained with the coupling bound $W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}$ (Lemma 5.2, leaf L7) this converts $L^2$ control of the map into $W_2$ control of the pushforward. It is a labeled `axiom` on the mean-field layer, carrying the paper's hypotheses in full: a **probability** measure on the **sphere**, a **measurable, a.e. sphere-valued** $\psi$ (the paper's $L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ — without sphere-valuedness the statement is refutable, since flow approximants are sphere-valued and cannot $L^2$-approach an off-sphere target; finding F12). The measurability and integrability of the displacement are made explicit so the `W₂` map bound can consume them.
 
 ```lean
-/-- **Lemma 5.4** (`L²` approximation by a flow map). Any transport map `ψ` is approximated in
-`L²(μ)` by a flow map of the dynamics, to any tolerance, with finitely many switches. Stub
-(`sorry`): `math.open`. Combined with the coupling bound (leaf L7) this controls `W₂`. -/
-theorem lemma_5_4 (μ : Measure (Eucl d)) (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) :
-    ∃ (θ : Params d) (ψε : Eucl d → Eucl d),
-      measureFlow θ T μ = μ.map ψε ∧ Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
-  sorry
+/-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
+map `ψ` is approximated in `L²(μ)` by a mean-field flow map, to any tolerance. AXIOM
+(`math.axiomatised`). Combined with the coupling bound (leaf L7) this controls `W₂`. -/
+axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d → Eucl d) (T ε : ℝ)
+    (hT : 0 < T) (hε : 0 < ε)
+    (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
+    (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
+    ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
+      AttnSchedule.durationSum θ = T ∧
+      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
+      Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
+      Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -81,21 +85,25 @@ Moreover, $\theta$ can be chosen piecewise constant.
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single $\psi$ by Lemma 5.1, approximate $\psi$ by a flow map by Lemma 5.4, and bound the resulting $W_2$ error by the coupling Lemma 5.2. We give a type-correct Lean **statement** as a `sorry` (open). The hypothesis (1.5) — a shared missing direction off every input support and off every target support — and the $L^2$-matchability of the pairs are recorded as the opaque predicates `SharedMissingDirection` and `Matchable`, so the statement stays faithful without re-deriving the absent support / optimal-transport API; the conclusion is the controllability core, a single piecewise-constant $\theta$ with `W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε` for every $i$. We do not claim a proof.
+The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single $\psi$ by Lemma 5.1, approximate $\psi$ by a flow map by Lemma 5.4, and bound the resulting $W_2$ error by the coupling Lemma 5.2. We **prove** the theorem by assembly over the mean-field axiom layer: disentangle the inputs (`prop_3_1`), match each disentangled measure to its target through the per-member transport-map form of `exists_disentangling_balls`, approximate by `lemma_5_4`, bound with the machine-checked coupling lemma, and combine the per-member schedules with `exists_parked_schedule`. The `W₂` bookkeeping is machine-checked; `#print axioms theorem_1_2` lists exactly `exists_meanFieldFlow`, `exists_disentangling_balls`, `exists_parked_schedule`, `lemma_5_4`. The target missing direction (`_hmiss₁`, the second half of (1.5)) is retained in the statement for fidelity even though this assembly absorbs the target-disentanglement step into the parking axiom.
 
 ```lean
-/-- **Theorem 1.2** (general targets). If every input/target pair is matchable by a transport map
-and the families share a missing direction, then for any horizon `T` and tolerance `ε` there is a
-piecewise-constant parameter `θ` whose solution map steers each input measure to within `ε` of its
-target in `W₂`. Stub (`sorry`): status `math.open`. -/
+/-- **Theorem 1.2** (general targets). If every input/target pair is matchable by a measurable
+sphere-valued transport map and the families share missing directions, a single attention schedule
+steers each input to within `ε` of its target in `W₂`. PROVED by assembly (effective
+`math.axiomatised`; footprint: exists_meanFieldFlow, exists_disentangling_balls,
+exists_parked_schedule, lemma_5_4). -/
 theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (hmiss₀ : SharedMissingDirection μ₀) (hmiss₁ : SharedMissingDirection μ₁)
+    (hmiss₀ : SharedMissingDirection μ₀) (_hmiss₁ : SharedMissingDirection μ₁)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμ₀s : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (hne : Pairwise fun i j => μ₀ i ≠ μ₀ j)
     (hmatch : Matchable μ₀ μ₁) :
-    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (μ₁ i) ≤ ε := by
-  sorry
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      ∀ i, Axioms.W2 (attnMeasureFlow θ (μ₀ i)) (μ₁ i) ≤ ε
 ```
 
 [`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}
@@ -122,19 +130,23 @@ $$\|\theta\|_{L^\infty((0,T);\Theta)} = O\!\left(\frac{d\cdot N}{T} + \log\frac1
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
-The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 ($\|\theta_1\| \lesssim dN/T$), cluster each now-disjoint single-hemisphere measure to within $\delta$ of a point by Proposition 2.1 ($T_\delta = O(\log 1/\delta)$, $\|\theta_2\| \lesssim \log 1/\delta$), then match the ensemble of cluster atoms $x_0^i$ to the targets $y^i$ by Proposition 4.1 ($\|\theta_3\| \lesssim N/T$); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment **E6**, while the negative control **E7** shows that a single *linear* continuity equation cannot achieve it — motivating the measure-dependent vector field. We give a type-correct Lean **statement** as a `sorry` (open): a shared missing direction and Dirac targets $\delta_{x^i}$ yield a single piecewise-constant $\theta$ with `W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε` for every $i$. The $O(d\,N)$ switch count and the norm bound $O(dN/T + \log 1/\varepsilon)$ are documented in this blueprint prose, not encoded in the Lean type. We do not claim a proof.
+The paper's proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 ($\|\theta_1\| \lesssim dN/T$), cluster each now-disjoint single-hemisphere measure to within $\delta$ of a point by Proposition 2.1 ($T_\delta = O(\log 1/\delta)$, $\|\theta_2\| \lesssim \log 1/\delta$), then match the ensemble of cluster atoms $x_0^i$ to the targets $y^i$ by Proposition 4.1 ($\|\theta_3\| \lesssim N/T$); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment **E6**, while the negative control **E7** shows that a single *linear* continuity equation cannot achieve it — the same obstruction that finding F14 turned into a kernel refutation of the earlier linear statement of this very node, and the reason the theorem now lives on the mean-field attention layer. We **prove** it by assembly: disentangle (`prop_3_1`), cluster each disentangled measure to its on-sphere target (`cluster_to_point`), and combine the per-member schedules (`exists_parked_schedule`); `#print axioms theorem_1_1` lists exactly `exists_meanFieldFlow`, `cluster_to_point`, `exists_disentangling_balls`, `exists_parked_schedule`. The paper's standing assumption of pairwise distinct inputs is the explicit hypothesis `hne` — with identical inputs no single flow can separate them. The $O(d\,N)$ switch count is deliberately deferred (the paper's constant is unspecified; inventing one risks a false axiom) and the norm bound is now *expressible* (attention blocks carry genuine operators) but not yet threaded — both documented in the roadmap, not silently encoded.
 
 ```lean
-/-- **Theorem 1.1** (Dirac targets). If the targets are point masses `δ_{x i}` and the inputs share
-a missing direction, then for any horizon and tolerance a single piecewise-constant `θ` steers each
-input to within `ε` of its target in `W₂`. Stub (`sorry`): status `math.open`. The proof also gives
-`O(d N)` switches and the stated norm bound (see the blueprint). -/
+/-- **Theorem 1.1** (Dirac targets). If the targets are on-sphere point masses `δ_{x i}` and the
+pairwise-distinct sphere-supported inputs share a missing direction, a single attention schedule
+steers each input to within `ε` of its target in `W₂`. PROVED by assembly (effective
+`math.axiomatised`; footprint: exists_meanFieldFlow, cluster_to_point,
+exists_disentangling_balls, exists_parked_schedule). -/
 theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
-    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀) :
-    ∃ θ : Params d, ∀ i, W2 (measureFlow θ T (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
-  sorry
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hx : ∀ i, x i ∈ sphere d)
+    (hne : Pairwise fun i j => μ₀ i ≠ μ₀ j) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      ∀ i, Axioms.W2 (attnMeasureFlow θ (μ₀ i)) (Measure.dirac (x i)) ≤ ε
 ```
 
 [`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}

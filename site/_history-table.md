@@ -125,3 +125,27 @@
 | 123 | 2026-07-03 | `formalize` | formalize(leaves): uniform cap contraction of the self-centered gated flow (B.7, set form) | `leaves` |
 | 124 | 2026-07-03 | `docs` | docs(diagrams): recolor the build DAG to the current milestone status (M1/M2/M3 discharged) | `diagrams` |
 | 125 | 2026-07-03 | `formalize` | formalize(leaves): mass retention of the self-centered gated flow (B.8, measure form) | `leaves` |
+| 126 | 2026-07-03 | `fix` | fix(statements): restore dropped hypotheses in three false axiom stubs (soundness, F11) | `statements` |
+| 127 | 2026-07-03 | `chore` | chore: add the Apache-2.0 LICENSE file referenced by the source headers | -- |
+| 128 | 2026-07-03 | `fix` | fix(statements): restore sphere and support hypotheses across the axiom layer (soundness, F12-F16) | `statements` |
+| 129 | 2026-07-03 | `docs` | docs: retire the stale Sierpinski-axiom wording and document tangentialProjector_apply | -- |
+| 130 | 2026-07-03 | `formalize` | formalize(foundations): the self-attention mean-field flow interface (F14, M3b) | `MeasureToMeasure.Foundations.exists_meanFieldFlow` |
+| 131 | 2026-07-03 | `fix` | fix(statements)!: restate the measure-level results over the attention mean-field flow (F14) | `statements` |
+| 132 | 2026-07-03 | `refactor` | refactor: scope Sphere.lean to targeted Mathlib imports | -- |
+| 133 | 2026-07-03 | `ci` | ci: wire lake lint (Batteries runLinter) into the verify workflow | -- |
+| 134 | 2026-07-03 | `chore` | chore: baseline nolints.json for the linter (empty: tree is lint-clean) | -- |
+| 135 | 2026-07-03 | `refactor` | refactor(foundations): simplify the Wasserstein proofs (no statement changes) | `foundations` |
+| 136 | 2026-07-03 | `refactor` | refactor(foundations): simplify the flow-map proofs (no statement changes) | `foundations` |
+| 137 | 2026-07-03 | `refactor` | refactor(foundations): simplify the gated-block Lipschitz proofs (no statement changes) | `foundations` |
+| 138 | 2026-07-03 | `refactor` | refactor(foundations): simplify the atomless-splitting proofs (no statement changes) | `foundations` |
+| 139 | 2026-07-03 | `port` | port(formathlib): generalize the separating bound and bridge the projector to starProjection | `InnerProductGeometry.inner_lt_cos_of_lt_angle` |
+| 140 | 2026-07-03 | `refactor` | refactor: derive the projector, geodesic, and separating-hyperplane facts from the ForMathlib generics | -- |
+| 141 | 2026-07-03 | `test` | test: add the refutation regression suite (Regression lib + must-fail gate) | -- |
+| 142 | 2026-07-03 | `ci` | ci: vendor axiom-report and check per-node footprints in CI | -- |
+| 143 | 2026-07-03 | `docs` | docs: the axiom admission protocol + strict fidelity hooks | -- |
+| 144 | 2026-07-03 | `chore` | chore: fidelity records for the axiom layer | -- |
+| 145 | 2026-07-03 | `fix` | fix(ci): portable mktemp in the vendored axiom-report | `ci` |
+| 146 | 2026-07-03 | `chore` | chore: adopt ckc-tools v0.3.0 and the Source-Ref vocabulary | -- |
+| 147 | 2026-07-03 | `fix` | fix(statements): probability and sub-hemisphere hypotheses for lemma_B_2/B_1 (gated-construction fidelity) | `MeasureToMeasure.Statements.lemma_B_2` |
+| 148 | 2026-07-03 | `formalize` | formalize(leaves): two-cap retention of the amplitude-scaled gated flow (M4) | `MeasureToMeasure.gated_twoCap_retention` |
+| 149 | 2026-07-03 | `formalize` | formalize(statements): discharge lemma_B_2; the Appendix-B chain is machine-checked (M4) | `MeasureToMeasure.Statements.lemma_B_2` |

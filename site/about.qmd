@@ -59,16 +59,23 @@ arbitrary probability measures, with no new axioms.
 Every node carries a status badge driven by the Lean kernel (`#print axioms`, via `bin/axiom-report`):
 
 - [machine-checked]{.badge .ok} -- clean kernel proof (`propext`, `Classical.choice`, `Quot.sound` only);
-- [axiomatised]{.badge .axiom} -- rests on a labeled axiom standing in for optimal-transport / flow theory missing from Mathlib;
+- [axiomatised]{.badge .axiom} -- rests on a labeled axiom standing in for mean-field / dynamical theory missing from Mathlib;
 - [open]{.badge .open} -- stated in Lean as a `sorry`;
 - [informal]{.badge .informal} -- reviewed on paper, not yet stated in Lean.
 
-A node is never badged above its true kernel status. The mid-level connective lemmas and the two
-headline theorems are now **proved by assembling** the mid-level results over the axiom layer (zero
-`sorry`), so their effective status is [axiomatised]{.badge .axiom} -- clean on their own logic, but
-resting on the labeled optimal-transport / flow axioms. The self-contained leaves carry the
-machine-checked load; see **[Beyond Mathlib](beyond-mathlib.qmd)** for the plan to discharge those
-axioms and lift the headline results to [machine-checked]{.badge .ok}.
+A node is never badged above its true kernel status. The two headline theorems are **proved by
+assembling** the mid-level results over the axiom layer (zero `sorry`), so their effective status is
+[axiomatised]{.badge .axiom} -- clean on their own logic, but resting on the labeled mean-field /
+dynamical axioms. Kernel honesty is necessary but not sufficient: the kernel checks each statement
+*as written*, never that it faithfully transcribes the paper. So every axiom additionally passes a
+statement-fidelity admission protocol (verbatim source anchor, hypothesis-parity diff, adversarial
+refutation attempt, model-adequacy check; `Source-Ref:` / `Refutation-Attempt:` commit footers per
+CKC spec v0.2.0, enforced by the pre-commit hook) and is guarded by a committed **refutation
+regression suite**: the disproofs of previously-refuted draft statements are kernel-checked
+theorems, paired with must-fail adapters that CI compiles on every push. The self-contained leaves
+and the whole Appendix-B transport chain carry the machine-checked load; see
+**[Beyond Mathlib](beyond-mathlib.qmd)** for the plan to discharge the remaining axioms and lift
+the headline results to [machine-checked]{.badge .ok}.
 
 ## Licensing
 

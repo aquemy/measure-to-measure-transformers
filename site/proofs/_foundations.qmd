@@ -70,3 +70,53 @@ theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere
 
 [`Foundations/GeodesicDistance.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/GeodesicDistance.lean){.lean-src}
 :::
+
+## The mean-field attention layer (M3b) {#node-meanfield}
+
+::: {.from-paper}
+**From the original paper** (Geshkovski, Rigollet, Ruiz-Balet, eq. (1.2), pp. 2-3).
+
+$$\mathsf v[\mu](t,x) = \mathbf P_x^\perp\big(\mathbf V(t)\,\mathscr A_{\mathbf B}[\mu](t,x) + \mathbf W(t)(\mathbf U(t)x + b(t))_+\big),\qquad
+\mathscr A_{\mathbf B}[\mu](t,x) := \frac{\int e^{\langle\mathbf B(t)x,\,x'\rangle}\,x'\,\mu(\mathrm dx')}{\int e^{\langle\mathbf B(t)x,\,\zeta\rangle}\,\mu(\mathrm d\zeta)}.$$
+
+The self-attention average $\mathscr A_{\mathbf B}[\mu]$ integrates against the *evolving* measure:
+the velocity field depends on $\mu(t)$ itself, which is precisely what eq. (1.7) shows a linear
+continuity equation cannot replicate.
+:::
+
+::: {.our-work}
+**Our formalization.** [axiomatised]{.badge .axiom}
+
+The field (1.2) is a concrete **definition**: `AttnParams` packages the five parameters
+$(\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)$ of one constant piece, `attnAvg` is the softmax
+average $\mathscr A_{\mathbf B}$, and `AttnParams.field` assembles the projected velocity. A
+mean-field flow is the predicate `IsMeanFieldFlow` (initial condition, measurability, Lipschitz
+regularity, sphere bijectivity, and the characteristic ODE against the *pushforward-evolved*
+measure), and schedules compose by list concatenation (`AttnSchedule`, `attnMeasureFlow`,
+`durationSum`, `switches` counting constant pieces). Exactly one axiom pair remains -- existence
+and uniqueness of the mean-field flow for sphere-supported probability data
+(`exists_meanFieldFlow`, `meanFieldFlow_unique`): McKean-Vlasov well-posedness on the sphere,
+the honest remaining M3 gap. Every measure-dependent statement of the paper is stated over this
+layer; the linear `Block` flow hosts the paper's $\mathbf V\equiv0$ sections.
+
+```lean
+/-- One constant-in-time Transformer block (paper eq. (1.2)). -/
+structure AttnParams (d : ℕ) where
+  V B W U : Eucl d →L[ℝ] Eucl d
+  b : Eucl d
+  duration : ℝ
+  duration_nonneg : 0 ≤ duration
+
+/-- The measure-valued softmax average `A_B[μ](x)`. -/
+noncomputable def attnAvg (B : Eucl d →L[ℝ] Eucl d) (μ : Measure (Eucl d)) (x : Eucl d) : Eucl d :=
+  (∫ z, Real.exp ⟪B x, z⟫ ∂μ)⁻¹ • ∫ z, Real.exp ⟪B x, z⟫ • z ∂μ
+
+/-- Mean-field well-posedness (McKean-Vlasov on the sphere): the single remaining
+infrastructure axiom. -/
+axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
+    [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
+    ∃ Φ, IsMeanFieldFlow p μ₀ Φ
+```
+
+[`Foundations/Attention.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/Attention.lean){.lean-src}
+:::
