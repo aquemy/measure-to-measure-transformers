@@ -48,24 +48,16 @@ theorem lipschitzWith_smul {f : Eucl d → ℝ} {V : Eucl d → Eucl d}
     LipschitzWith (Bf * KV + Kf * BV) (fun x => f x • V x) := by
   apply LipschitzWith.of_dist_le_mul
   intro x y
-  -- split `f x • V x - f y • V y = f x • (V x - V y) + (f x - f y) • V y`
-  have hsplit : f x • V x - f y • V y = f x • (V x - V y) + (f x - f y) • V y := by
-    rw [smul_sub, sub_smul]; abel
-  rw [dist_eq_norm, hsplit]
-  refine le_trans (norm_add_le _ _) ?_
-  have h1 : ‖f x • (V x - V y)‖ ≤ (Bf : ℝ) * (KV * dist x y) := by
-    rw [norm_smul]
-    apply mul_le_mul (hfb x) _ (norm_nonneg _) (by positivity)
-    rw [← dist_eq_norm]
-    exact hV.dist_le_mul x y
-  have h2 : ‖(f x - f y) • V y‖ ≤ (Kf : ℝ) * dist x y * BV := by
-    rw [norm_smul]
-    apply mul_le_mul _ (hVb y) (norm_nonneg _) (by positivity)
-    rw [Real.norm_eq_abs, ← Real.dist_eq]
-    exact hf.dist_le_mul x y
   push_cast
-  calc ‖f x • (V x - V y)‖ + ‖(f x - f y) • V y‖
-      ≤ (Bf : ℝ) * (KV * dist x y) + (Kf : ℝ) * dist x y * BV := add_le_add h1 h2
+  -- go through the mid-point `f x • V y` (`dist_smul_pair` / `dist_pair_smul`)
+  calc dist (f x • V x) (f y • V y)
+      ≤ dist (f x • V x) (f x • V y) + dist (f x • V y) (f y • V y) := dist_triangle _ _ _
+    _ ≤ ‖f x‖ * dist (V x) (V y) + dist (f x) (f y) * ‖V y‖ := by
+        rw [← dist_zero_right (f x), ← dist_zero_right (V y)]
+        exact add_le_add (dist_smul_pair _ _ _) (dist_pair_smul _ _ _)
+    _ ≤ (Bf : ℝ) * (KV * dist x y) + (Kf : ℝ) * dist x y * BV := add_le_add
+        (mul_le_mul (hfb x) (hV.dist_le_mul x y) dist_nonneg Bf.coe_nonneg)
+        (mul_le_mul (hf.dist_le_mul x y) (hVb y) (norm_nonneg _) (by positivity))
     _ = ((Bf : ℝ) * KV + (Kf : ℝ) * BV) * dist x y := by ring
 
 /-- The explicit **norm cutoff** `χ(x) = max 0 (min 1 (2 - ‖x‖))`: it equals `1` on the closed unit
@@ -105,44 +97,42 @@ theorem lipschitzWith_smul_of_vanishing {F : Type*} [NormedAddCommGroup F] [Norm
     (hVL : ∀ x y, ‖x‖ ≤ (R : ℝ) → ‖y‖ ≤ (R : ℝ) → ‖V x - V y‖ ≤ (Kv : ℝ) * ‖x - y‖)
     (hVB : ∀ x, ‖x‖ ≤ (R : ℝ) → ‖V x‖ ≤ (Bv : ℝ)) :
     LipschitzWith (Bs * Kv + Ks * Bv) (fun x => s x • V x) := by
+  have hsd : ∀ x y : Eucl d, |s x - s y| ≤ (Ks : ℝ) * ‖x - y‖ := fun x y => by
+    simpa only [dist_eq_norm, Real.norm_eq_abs] using hsL.dist_le_mul x y
+  -- one-sided collapse: when the far point is outside the support the difference has a single
+  -- term, whose coefficient `|s x| = |s x - s y|` is Lipschitz-controlled
+  have key : ∀ x y : Eucl d, ‖x‖ ≤ (R : ℝ) → (R : ℝ) < ‖y‖ →
+      ‖s x • V x - s y • V y‖ ≤ ((Bs : ℝ) * Kv + (Ks : ℝ) * Bv) * ‖x - y‖ := by
+    intro x y hx hy
+    have hsy : s y = 0 := hvanish y hy.le
+    rw [hsy, zero_smul, sub_zero, norm_smul, Real.norm_eq_abs]
+    have hsx : |s x| ≤ (Ks : ℝ) * ‖x - y‖ := by simpa [hsy] using hsd x y
+    calc |s x| * ‖V x‖ ≤ ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) :=
+          mul_le_mul hsx (hVB x hx) (norm_nonneg _) (by positivity)
+      _ ≤ ((Bs : ℝ) * Kv + Ks * Bv) * ‖x - y‖ := by
+          nlinarith [mul_nonneg (mul_nonneg Bs.coe_nonneg Kv.coe_nonneg) (norm_nonneg (x - y))]
   apply LipschitzWith.of_dist_le_mul
   intro x y
   simp only [dist_eq_norm]
-  have hsd : |s x - s y| ≤ (Ks : ℝ) * ‖x - y‖ := by
-    have := hsL.dist_le_mul x y
-    rwa [Real.dist_eq, dist_eq_norm] at this
   push_cast
   rcases le_or_gt ‖x‖ (R : ℝ) with hx | hx <;> rcases le_or_gt ‖y‖ (R : ℝ) with hy | hy
   · -- both inside: telescoping split
     have hsplit : s x • V x - s y • V y = s x • (V x - V y) + (s x - s y) • V y := by
       rw [smul_sub, sub_smul]; abel
-    rw [hsplit]
-    refine le_trans (norm_add_le _ _) ?_
-    have h1 : ‖s x • (V x - V y)‖ ≤ (Bs : ℝ) * ((Kv : ℝ) * ‖x - y‖) := by
-      rw [norm_smul, Real.norm_eq_abs]
-      exact mul_le_mul (hsB x) (hVL x y hx hy) (norm_nonneg _) (by positivity)
-    have h2 : ‖(s x - s y) • V y‖ ≤ ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) := by
-      rw [norm_smul, Real.norm_eq_abs]
-      exact mul_le_mul hsd (hVB y hy) (norm_nonneg _) (by positivity)
-    calc ‖s x • (V x - V y)‖ + ‖(s x - s y) • V y‖
-        ≤ (Bs : ℝ) * ((Kv : ℝ) * ‖x - y‖) + ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) := add_le_add h1 h2
+    calc ‖s x • V x - s y • V y‖
+        ≤ |s x| * ‖V x - V y‖ + |s x - s y| * ‖V y‖ := by
+          rw [hsplit]
+          exact (norm_add_le _ _).trans_eq (by rw [norm_smul, norm_smul, Real.norm_eq_abs,
+            Real.norm_eq_abs])
+      _ ≤ (Bs : ℝ) * ((Kv : ℝ) * ‖x - y‖) + ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) := add_le_add
+          (mul_le_mul (hsB x) (hVL x y hx hy) (norm_nonneg _) Bs.coe_nonneg)
+          (mul_le_mul (hsd x y) (hVB y hy) (norm_nonneg _) (by positivity))
       _ = ((Bs : ℝ) * Kv + Ks * Bv) * ‖x - y‖ := by ring
-  · -- x inside, y outside: s y = 0
-    have hsy : s y = 0 := hvanish y hy.le
-    rw [hsy, zero_smul, sub_zero, norm_smul, Real.norm_eq_abs]
-    have hsx : |s x| ≤ (Ks : ℝ) * ‖x - y‖ := by simpa [hsy] using hsd
-    calc |s x| * ‖V x‖ ≤ ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) :=
-          mul_le_mul hsx (hVB x hx) (norm_nonneg _) (by positivity)
-      _ ≤ ((Bs : ℝ) * Kv + Ks * Bv) * ‖x - y‖ := by
-          nlinarith [mul_nonneg (mul_nonneg Bs.coe_nonneg Kv.coe_nonneg) (norm_nonneg (x - y))]
-  · -- x outside, y inside: s x = 0
-    have hsx : s x = 0 := hvanish x hx.le
-    rw [hsx, zero_smul, zero_sub, norm_neg, norm_smul, Real.norm_eq_abs]
-    have hsy : |s y| ≤ (Ks : ℝ) * ‖x - y‖ := by simpa [hsx] using hsd
-    calc |s y| * ‖V y‖ ≤ ((Ks : ℝ) * ‖x - y‖) * (Bv : ℝ) :=
-          mul_le_mul hsy (hVB y hy) (norm_nonneg _) (by positivity)
-      _ ≤ ((Bs : ℝ) * Kv + Ks * Bv) * ‖x - y‖ := by
-          nlinarith [mul_nonneg (mul_nonneg Bs.coe_nonneg Kv.coe_nonneg) (norm_nonneg (x - y))]
+  · -- x inside, y outside
+    exact key x y hx hy
+  · -- x outside, y inside: the mirror image of the previous case
+    rw [norm_sub_rev (s x • V x), norm_sub_rev x y]
+    exact key y x hy hx
   · -- both outside: s x = s y = 0
     rw [hvanish x hx.le, hvanish y hy.le, zero_smul, zero_smul, sub_zero, norm_zero]
     positivity
@@ -267,21 +257,17 @@ theorem tangentialProjector_lipschitz_onBall {ω : Eucl d} (hω : ‖ω‖ = 1)
     {x y : Eucl d} (hx : ‖x‖ ≤ 2) (hy : ‖y‖ ≤ 2) :
     ‖tangentialProjector x ω - tangentialProjector y ω‖ ≤ 4 * ‖x - y‖ := by
   have hexp : tangentialProjector x ω - tangentialProjector y ω
-      = ⟪y, ω⟫ • (y - x) + (⟪y, ω⟫ - ⟪x, ω⟫) • x := by
-    simp only [tangentialProjector]; module
-  have hcy : |⟪y, ω⟫| ≤ 2 := by
-    calc |⟪y, ω⟫| ≤ ‖y‖ * ‖ω‖ := abs_real_inner_le_norm y ω
-      _ ≤ 2 := by rw [hω]; nlinarith [hy, norm_nonneg y]
-  have hcd : |⟪y, ω⟫ - ⟪x, ω⟫| ≤ ‖x - y‖ := by
-    have heq : ⟪y, ω⟫ - ⟪x, ω⟫ = ⟪y - x, ω⟫ := by rw [inner_sub_left]
-    rw [heq]
-    calc |⟪y - x, ω⟫| ≤ ‖y - x‖ * ‖ω‖ := abs_real_inner_le_norm _ _
-      _ = ‖x - y‖ := by rw [hω, mul_one, norm_sub_rev]
-  rw [hexp]
-  calc ‖⟪y, ω⟫ • (y - x) + (⟪y, ω⟫ - ⟪x, ω⟫) • x‖
-      ≤ ‖⟪y, ω⟫ • (y - x)‖ + ‖(⟪y, ω⟫ - ⟪x, ω⟫) • x‖ := norm_add_le _ _
-    _ = |⟪y, ω⟫| * ‖y - x‖ + |⟪y, ω⟫ - ⟪x, ω⟫| * ‖x‖ := by
-        rw [norm_smul, norm_smul, Real.norm_eq_abs, Real.norm_eq_abs]
+      = ⟪y, ω⟫ • (y - x) + ⟪y - x, ω⟫ • x := by
+    simp only [tangentialProjector, inner_sub_left]; module
+  have hcy : |⟪y, ω⟫| ≤ 2 :=
+    (abs_real_inner_le_norm y ω).trans (by rw [hω, mul_one]; exact hy)
+  have hcd : |⟪y - x, ω⟫| ≤ ‖x - y‖ :=
+    (abs_real_inner_le_norm _ ω).trans (le_of_eq (by rw [hω, mul_one, norm_sub_rev]))
+  calc ‖tangentialProjector x ω - tangentialProjector y ω‖
+      ≤ |⟪y, ω⟫| * ‖y - x‖ + |⟪y - x, ω⟫| * ‖x‖ := by
+        rw [hexp]
+        exact (norm_add_le _ _).trans_eq (by rw [norm_smul, norm_smul, Real.norm_eq_abs,
+          Real.norm_eq_abs])
     _ ≤ 2 * ‖x - y‖ + ‖x - y‖ * 2 := by
         rw [norm_sub_rev y x]
         exact add_le_add (mul_le_mul_of_nonneg_right hcy (norm_nonneg _))

@@ -79,24 +79,15 @@ theorem exists_measurableSet_subset_measure_eq_real (μ : Measure ℝ) [IsFinite
     intro t
     rcases le_total (0 : ℝ) t with h0t | ht0
     · exact key 0 t h0t
-    · have hk := key t 0 ht0
-      have hsym : (∫ x in (0 : ℝ)..t, E.indicator (fun _ => (1 : ℝ)) x ∂μ)
-          = -∫ x in t..(0 : ℝ), E.indicator (fun _ => (1 : ℝ)) x ∂μ := intervalIntegral.integral_symm t 0
-      rw [hsym]; linarith [hk]
+    · rw [intervalIntegral.integral_symm t 0]; linarith [key t 0 ht0]
   have hcont : Continuous (fun t : ℝ => (μ (E ∩ Set.Iic t)).toReal) := by
-    have hfe : (fun t : ℝ => (μ (E ∩ Set.Iic t)).toReal)
-        = fun t => (μ (E ∩ Set.Iic (0 : ℝ))).toReal
-            + ∫ x in (0 : ℝ)..t, E.indicator (fun _ => (1 : ℝ)) x ∂μ := funext hfeq
-    rw [hfe]
+    rw [funext hfeq]
     exact continuous_const.add (hint.continuous_primitive 0)
   -- The cumulative reaches above `r` (union to `+∞`) and below `r` (intersection to `-∞`).
   obtain ⟨b, hb⟩ : ∃ b : ℝ, r < μ (E ∩ Set.Iic b) := by
-    have hUnion : ⋃ t : ℝ, E ∩ Set.Iic t = E := by
-      rw [← Set.inter_iUnion]
-      exact Set.inter_eq_left.mpr fun x _ => Set.mem_iUnion.mpr ⟨x, Set.mem_Iic.mpr le_rfl⟩
     have htend : Filter.Tendsto (fun t : ℝ => μ (E ∩ Set.Iic t)) Filter.atTop (nhds (μ E)) := by
       have h := tendsto_measure_iUnion_atTop (μ := μ) (s := fun t : ℝ => E ∩ Set.Iic t) hmonoS
-      rwa [hUnion] at h
+      rwa [← Set.inter_iUnion, Set.iUnion_Iic, Set.inter_univ] at h
     exact (htend.eventually (eventually_gt_nhds hrE)).exists
   obtain ⟨a, ha⟩ : ∃ a : ℝ, μ (E ∩ Set.Iic a) < r := by
     have hInter : ⋂ t : ℝ, E ∩ Set.Iic t = ∅ := by
@@ -108,10 +99,8 @@ theorem exists_measurableSet_subset_measure_eq_real (μ : Measure ℝ) [IsFinite
         (fun t => (hE.inter measurableSet_Iic).nullMeasurableSet) hmonoS ⟨0, measure_ne_top _ _⟩
       rwa [hInter, measure_empty] at h
     exact (htend.eventually (eventually_lt_nhds hr0)).exists
-  have hab : a ≤ b := by
-    by_contra h
-    rw [not_le] at h
-    exact absurd (hmono h.le) (not_le.mpr (ha.trans hb))
+  have hab : a ≤ b :=
+    le_of_not_gt fun h => absurd (hmono h.le) (not_le.mpr (ha.trans hb))
   have hfa : (μ (E ∩ Set.Iic a)).toReal ≤ r.toReal :=
     (ENNReal.toReal_le_toReal (measure_ne_top _ _) hrtop).mpr ha.le
   have hfb : r.toReal ≤ (μ (E ∩ Set.Iic b)).toReal :=
@@ -183,31 +172,20 @@ theorem exists_disjoint_subset_measure_eq (μ : Measure X) [StandardBorelSpace X
       have htaille : ∑ i : Fin M, α i.succ ≤ μ (E \ F) := by
         rw [hμE', ENNReal.le_sub_iff_add_le_left hα0top h0le, hsum]; exact hle
       obtain ⟨A', hA'meas, hA'sub, hA'disj, hA'μ⟩ := ih (fun i => α i.succ) hE'meas htaille
-      refine ⟨Fin.cons F A', ?_, ?_, ?_, ?_⟩
-      · intro k; refine Fin.cases ?_ ?_ k
-        · simpa using hFmeas
-        · intro i; simpa using hA'meas i
-      · intro k; refine Fin.cases ?_ ?_ k
-        · simpa using hFsub
-        · intro i; simpa using (hA'sub i).trans Set.sdiff_subset
-      · intro a b
-        refine Fin.cases ?_ ?_ a
-        · refine Fin.cases ?_ ?_ b
-          · intro hab; exact absurd rfl hab
-          · intro j _
-            simp only [Fin.cons_zero, Fin.cons_succ]
-            exact Set.disjoint_of_subset_right (hA'sub j) Set.disjoint_sdiff_left.symm
-        · intro i
-          refine Fin.cases ?_ ?_ b
-          · intro _
-            simp only [Fin.cons_zero, Fin.cons_succ]
-            exact Set.disjoint_of_subset_left (hA'sub i) Set.disjoint_sdiff_left
-          · intro j hab
-            simp only [Fin.cons_succ]
-            exact hA'disj (fun h => hab (congrArg Fin.succ h))
-      · intro k; refine Fin.cases ?_ ?_ k
-        · simpa using hFμ
-        · intro i; simpa using hA'μ i
+      -- `Fin.cons` computes definitionally at `0` and `i.succ`, so each componentwise
+      -- obligation is a term-mode `Fin.cases`.
+      refine ⟨Fin.cons F A', Fin.cases hFmeas hA'meas,
+        Fin.cases hFsub fun i => (hA'sub i).trans Set.sdiff_subset, ?_, Fin.cases hFμ hA'μ⟩
+      have h0 : ∀ j, Disjoint F (A' j) := fun j =>
+        Set.disjoint_of_subset_right (hA'sub j) Set.disjoint_sdiff_left.symm
+      intro a b hab
+      induction a using Fin.cases with
+      | zero => induction b using Fin.cases with
+        | zero => exact absurd rfl hab
+        | succ j => exact h0 j
+      | succ i => induction b using Fin.cases with
+        | zero => exact (h0 i).symm
+        | succ j => exact hA'disj fun h => hab (congrArg Fin.succ h)
 
 /-- Decompose an atomless probability measure into `M` probability measures `P k` with prescribed
 convex weights `α k` (`∑ α k = 1`, each `α k ≠ 0`) and pairwise disjoint supports (carriers `S k`):
