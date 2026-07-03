@@ -137,49 +137,32 @@ theorem Block.exists_globalIntegralCurve (b : Block d) (x : Eucl d) :
       ∀ t ∈ Set.Ioo (-(n : ℝ)) n, HasDerivAt α (b.field (α t)) t := by
     intro n
     obtain ⟨α, h0, hd⟩ := b.exists_integralCurveOn x (n : ℝ≥0)
-    refine ⟨α, h0, fun t ht => ?_⟩
-    have hcoe : ((n : ℝ≥0) : ℝ) = (n : ℝ) := by push_cast; ring
-    have hmem : t ∈ Set.Icc (-((n : ℝ≥0) : ℝ)) ((n : ℝ≥0) : ℝ) := by
-      rw [hcoe]; exact Set.Ioo_subset_Icc_self ht
-    have hnhds : Set.Icc (-((n : ℝ≥0) : ℝ)) ((n : ℝ≥0) : ℝ) ∈ nhds t := by
-      rw [hcoe]; exact Icc_mem_nhds ht.1 ht.2
-    exact (hd t hmem).hasDerivAt hnhds
+    simp only [NNReal.coe_natCast] at hd
+    exact ⟨α, h0, fun t ht =>
+      (hd t (Set.Ioo_subset_Icc_self ht)).hasDerivAt (Icc_mem_nhds ht.1 ht.2)⟩
   choose α hα0 hαd using hex
   -- coherence: for `m ≤ n`, the two solutions agree on `(-m, m)`
   have hcoh : ∀ m n : ℕ, m ≤ n → ∀ t ∈ Set.Ioo (-(m : ℝ)) m, α m t = α n t := by
     intro m n hmn t ht
     have hmn' : (m : ℝ) ≤ n := by exact_mod_cast hmn
     have hmpos : (0 : ℝ) < (m : ℝ) := by linarith [ht.1, ht.2]
-    have hsub : Set.Ioo (-(m : ℝ)) m ⊆ Set.Ioo (-(n : ℝ)) n :=
-      Set.Ioo_subset_Ioo (by linarith) hmn'
-    exact b.integralCurve_eqOn (fun s hs => hαd m s hs) (fun s hs => hαd n s (hsub hs))
+    exact b.integralCurve_eqOn (hαd m)
+      (fun s hs => hαd n s (Set.Ioo_subset_Ioo (by linarith) hmn' hs))
       (Set.mem_Ioo.mpr ⟨by linarith, hmpos⟩) (by rw [hα0 m, hα0 n]) ht
   -- the total curve: at `t`, use the solution on `(-N t, N t)` with `N t := ⌈|t|⌉₊ + 1 > |t|`
   set N : ℝ → ℕ := fun t => ⌈|t|⌉₊ + 1 with hN
-  have hNgt : ∀ t : ℝ, |t| < (N t : ℝ) := by
-    intro t
-    have h1 : |t| ≤ (⌈|t|⌉₊ : ℝ) := Nat.le_ceil _
-    have hcast : (N t : ℝ) = (⌈|t|⌉₊ : ℝ) + 1 := by simp only [hN]; push_cast; ring
-    rw [hcast]; linarith
-  have htmem : ∀ t : ℝ, t ∈ Set.Ioo (-(N t : ℝ)) (N t : ℝ) :=
-    fun t => Set.mem_Ioo.mpr (abs_lt.mp (hNgt t))
+  have htmem : ∀ t : ℝ, t ∈ Set.Ioo (-(N t : ℝ)) (N t : ℝ) := fun t =>
+    Set.mem_Ioo.mpr (abs_lt.mp (by simp only [hN]; push_cast; linarith [Nat.le_ceil |t|]))
   refine ⟨fun t => α (N t) t, hα0 (N 0), ?_⟩
   rw [isIntegralCurve_iff_isIntegralCurveAt]
   intro t
   -- on the open interval `(-(N t), N t)` the total curve agrees with `α (N t)`, by coherence
-  have hUnhds : Set.Ioo (-(N t : ℝ)) (N t) ∈ nhds t := (isOpen_Ioo).mem_nhds (htmem t)
-  have hagree : Set.EqOn (fun u => α (N u) u) (α (N t)) (Set.Ioo (-(N t : ℝ)) (N t)) := by
-    intro s hs
-    rcases le_total (N s) (N t) with h | h
-    · exact hcoh (N s) (N t) h s (htmem s)
-    · exact (hcoh (N t) (N s) h s hs).symm
-  refine IsIntegralCurveOn.isIntegralCurveAt (fun s hs => ?_) hUnhds
-  have hd : HasDerivAt (α (N t)) (b.field (α (N t) s)) s := hαd (N t) s hs
-  have hee : (fun u => α (N u) u) =ᶠ[nhds s] (α (N t)) :=
-    Filter.eventuallyEq_of_mem ((isOpen_Ioo).mem_nhds hs) hagree
-  have key : HasDerivAt (fun u => α (N u) u) (b.field (α (N t) s)) s := hd.congr_of_eventuallyEq hee
-  have hfe : b.field (α (N t) s) = b.field ((fun u => α (N u) u) s) := by rw [hagree hs]
-  rw [hfe] at key
+  have hagree : Set.EqOn (fun u => α (N u) u) (α (N t)) (Set.Ioo (-(N t : ℝ)) (N t)) := fun s hs =>
+    (le_total (N s) (N t)).elim (fun h => hcoh _ _ h s (htmem s)) fun h => (hcoh _ _ h s hs).symm
+  refine IsIntegralCurveOn.isIntegralCurveAt (fun s hs => ?_) (isOpen_Ioo.mem_nhds (htmem t))
+  have key := (hαd (N t) s hs).congr_of_eventuallyEq
+    (Filter.eventuallyEq_of_mem (isOpen_Ioo.mem_nhds hs) hagree)
+  rw [← hagree hs] at key
   exact key.hasDerivWithinAt
 
 /-!
@@ -368,11 +351,10 @@ theorem flowMap_reverseNeg_comp (θ : Params d) (t : ℝ) :
   | nil => simp [flowMap]
   | cons b θ ih =>
     funext x
-    have hih : flowMap ((θ.map Block.neg).reverse) t (flowMap θ t (b.blockFlow t x))
-        = b.blockFlow t x := by have := congrFun ih (b.blockFlow t x); simpa using this
     simp only [List.map_cons, List.reverse_cons, flowMap_append, flowMap_cons, flowMap_nil,
       Function.comp_apply, id_eq]
-    rw [hih, b.blockFlow_neg, b.blockFlow_neg_comp]
+    rw [show flowMap ((θ.map Block.neg).reverse) t (flowMap θ t (b.blockFlow t x))
+        = b.blockFlow t x from congrFun ih _, b.blockFlow_neg, b.blockFlow_neg_comp]
 
 /-!
 ## Lipschitz for every time, and the parked identity
