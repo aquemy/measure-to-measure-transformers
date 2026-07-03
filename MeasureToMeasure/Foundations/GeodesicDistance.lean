@@ -47,6 +47,22 @@ theorem geodesicDist_mem_Icc (x y : Eucl d) :
     geodesicDist x y ∈ Set.Icc (0 : ℝ) Real.pi :=
   ⟨Real.arccos_nonneg _, Real.arccos_le_pi _⟩
 
+/-- **Strict Cauchy-Schwarz on the sphere.** For distinct unit vectors (`x ≠ ω` and `x ≠ -ω`) the
+inner product lies in the *open* interval `(-1, 1)`. This is the range hypothesis the logistic
+reaching estimate (`logistic_flow_reach`) needs: `u = ⟪x, ω⟫` never hits the ODE's fixed points `±1`
+as long as `x` avoids the poles `±ω`. -/
+theorem inner_mem_Ioo_of_ne {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d)
+    (hne : x ≠ ω) (hne' : x ≠ -ω) : (⟪x, ω⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := by
+  have hnx : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+  have hnω : ‖ω‖ = 1 := norm_eq_one_of_mem_sphere hω
+  refine ⟨?_, ?_⟩
+  · have h := (inner_lt_norm_mul_iff_real (x := x) (y := -ω)).mpr ?_
+    · rw [inner_neg_right, hnx, norm_neg, hnω, mul_one] at h; linarith
+    · rw [hnx, norm_neg, hnω, one_smul, one_smul]; exact hne'
+  · have h := (inner_lt_norm_mul_iff_real (x := x) (y := ω)).mpr ?_
+    · rwa [hnx, hnω, mul_one] at h
+    · rw [hnx, hnω, one_smul, one_smul]; exact hne
+
 /-- The open **geodesic ball** (spherical cap) `B(z, R) = {x ∈ 𝕊^{d-1} | d_g(z, x) < R}`. This is
 the object Appendix B transports mass between; membership carries `x ∈ sphere d`. -/
 def geodesicBall (z : Eucl d) (R : ℝ) : Set (Eucl d) := {x | x ∈ sphere d ∧ geodesicDist z x < R}
