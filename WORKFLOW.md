@@ -105,3 +105,25 @@ Closes: claim:exp-eN-name
 
 The `Depends-On` line is what wires the experiment to the proof in the dependency graph; the
 `Verified-By` line names the script that produced the verdict; `Seed` makes the run reproducible.
+
+## Refutation regression suite
+
+Every axiom admitted into `Statements/` (or `Axioms/`) lands together with two committed
+artifacts. First, a *witness*: an `example` in `Regression/NonVacuity/` that instantiates every
+hypothesis with concrete data (a Dirac at a unit vector, a cap-avoiding measure) and applies the
+axiom -- an over-strengthened or vacuous axiom then breaks `lake build`. Second, whenever the
+admission audit kernel-refuted a looser draft, a *refutation pair*: the refuted signature is
+transcribed as an `abbrev ...Sig` in `Regression/OldStatements.lean` (weakened to what the
+disproof uses), the disproof is committed as `theorem ..._false : ...Sig -> False` in
+`Regression/Refuted/` (kernel-checked forever), and a short must-fail adapter
+`example : ...Sig := fun ... => current_axiom ...` goes in
+`Refutations/F<nn>_<axiom>_<exploit>.lean`. `scripts/refutation-gate.sh` (run by
+`scripts/audit.sh` step 5 and by CI) asserts every `Refutations/` file still fails for an
+expected reason; if one compiles, the axiom has been re-loosened to a shape the kernel already
+refuted -- composing the adapter with the committed disproof would literally prove `False`. On a
+Lean/Mathlib bump, message drift cannot green-wash the gate: the proof machinery lives in the
+`Regression` lib, so renames surface as ordinary build failures; if an adapter then fails with a
+drift signature (unknown identifier/constant/module), the gate reports FAILED-WRONG-REASON and
+only the adapter's plumbing is repaired -- never the old signature or the disproof. A deliberate
+re-statement of an axiom requires re-deriving its adapters and re-running the gate before merge,
+and gets a fresh `RESEARCH.md` finding id.

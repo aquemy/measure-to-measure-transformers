@@ -1,5 +1,5 @@
 name = "MeasureToMeasure"
-defaultTargets = ["MeasureToMeasure", "ForMathlib"]
+defaultTargets = ["MeasureToMeasure", "ForMathlib", "Regression"]
 testDriver = ""
 # `lake lint` runs Batteries' environment linters (Mathlib's own pattern: Mathlib declares
 # `lintDriver = "batteries/runLinter"` + `lintDriverArgs = #["Mathlib"]`). Passing the two root
@@ -18,3 +18,10 @@ name = "MeasureToMeasure"
 
 [[lean_lib]]
 name = "ForMathlib"
+
+# The refutation regression suite's MUST-PASS half: kernel-checked disproofs of historical
+# false axiom statements (Regression/Refuted/) and per-axiom non-vacuity witnesses
+# (Regression/NonVacuity/). The MUST-FAIL half lives in Refutations/, which is deliberately
+# NOT a build target (those files must fail to elaborate); scripts/refutation-gate.sh checks it.
+[[lean_lib]]
+name = "Regression"

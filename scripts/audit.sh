@@ -95,13 +95,27 @@ echo "note: $ungrounded ungrounded, $paperonly paper-only (curation, not failure
 # deliberately-axiomatized mid-level statements in Statements/) is the honest, reviewed, kernel-
 # visible infrastructure, and its status is already grounded by axiom-report + reconcile above.
 note "incompleteness sweep (sorry / admit / sorryAx / native_decide)"
-hits="$(grep -rnE '\b(sorry|admit|sorryAx|native_decide)\b' MeasureToMeasure ForMathlib \
+# `Regression/` is swept too (its disproofs are real kernel-checked theorems). `Refutations/` is
+# deliberately excluded: those files never compile (must-fail adapters, checked by the gate below).
+hits="$(grep -rnE '\b(sorry|admit|sorryAx|native_decide)\b' MeasureToMeasure ForMathlib Regression \
           --include='*.lean' 2>/dev/null || true)"
 if [ -z "$hits" ]; then
   echo "audit: OK -- no sorry/admit/sorryAx/native_decide in the Lean tree."
 else
   echo "audit: FAIL -- incompleteness/trust-widening markers found:" >&2
   echo "$hits" >&2
+  fail=1
+fi
+
+# --- 5. refutation regression gate ---------------------------------------------------------------
+# Statement-truth guard (findings F11-F16): every Refutations/*.lean derives a kernel-refuted OLD
+# axiom statement from the CURRENT axiom and must FAIL to elaborate; the Regression lib (witnesses
+# + disproofs) already built in step 0.
+note "refutation regression gate (must-fail refutations / must-pass witnesses)"
+if scripts/refutation-gate.sh --skip-build; then
+  echo "audit: OK -- no axiom re-loosened; witnesses healthy."
+else
+  echo "audit: FAIL -- refutation gate (axiom re-loosened, or a refutation file broke)." >&2
   fail=1
 fi
 
