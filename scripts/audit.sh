@@ -72,11 +72,11 @@ fi
 cat "$CACHE/axiom-report.txt"
 
 # --- 2. validity gate ---------------------------------------------------------------------------
-note "claimgraph audit (validity gate: proved-but-kernel-refutes)"
-if claimgraph audit "$TEX" --repo . --claims "$CLAIMS" --axioms "$CACHE/axiom-report.txt"; then
-  echo "audit: OK -- no honesty gaps."
+note "claimgraph audit (validity gate: proved-but-kernel-refutes; fidelity gate: axiomatised claims need a fidelity record)"
+if claimgraph audit "$TEX" --repo . --claims "$CLAIMS" --axioms "$CACHE/axiom-report.txt" --require-fidelity; then
+  echo "audit: OK -- no honesty gaps; every axiomatised claim carries a fidelity record."
 else
-  echo "audit: FAIL -- a node is shown proved but the kernel refutes it." >&2
+  echo "audit: FAIL -- a node is proved-but-kernel-refuted, or an axiomatised claim lacks a fidelity record." >&2
   fail=1
 fi
 
