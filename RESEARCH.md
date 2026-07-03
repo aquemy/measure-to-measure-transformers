@@ -473,6 +473,12 @@ Theorems 1.1/1.2 over transformer schedules. Until that lands, `exists_disentang
 hence the assembled `prop_3_1`, `theorem_1_1`, `theorem_1_2`) remain honest about this in their
 docstrings and here.
 
+**Progress (2026-07-03):** the mean-field interface landed in `Foundations/Attention.lean`
+(`AttnParams`, the concrete field of eq. (1.2) with the softmax average `attnAvg`,
+`IsMeanFieldFlow`, the axiom pair `exists_meanFieldFlow`/`meanFieldFlow_unique`, and the schedule
+operator `attnMeasureFlow` with probability/sphere preservation). The Statements-layer restatement
+over `AttnSchedule` follows.
+
 ### F15 (paper erratum candidate) B.1/B.2 print a quantifier order their proofs do not support
 
 Paper Lemmas B.1/B.2 (p.31) are printed "there exist parameters such that for all

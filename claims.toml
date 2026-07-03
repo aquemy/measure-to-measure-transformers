@@ -646,3 +646,11 @@ tests     = ["thm-1-1"]
 status    = "sci.measured"
 paper     = "eq. 1.7, p.8"
 created   = "2026-06-30"
+
+[claims.attn-meanfield-wellposed]
+kind      = "conjecture"
+statement = "Well-posedness of the self-attention mean-field flow (McKean-Vlasov on the sphere): for every constant Transformer block (V, B, W, U, b) and every sphere-supported probability datum mu_0 there exists a mean-field characteristic flow Phi (measurable, Lipschitz, sphere-bijective time slices, d/dt Phi_t x = field((Phi_t)_# mu_0)(Phi_t x)), and any two such flows agree on the sphere (Gronwall in the point and W2 variables jointly). This is the genuinely NONLINEAR remainder of milestone M3 (F14): the linear characteristic flow of Foundations/FlowMap.lean covers only the measure-independent case, and the paper's eq. (1.7) shows the linear model cannot host disentanglement. The velocity field itself (eq. (1.2): P_x-perp of V A_B[mu] + W (U x + b)_+, with A_B the Gibbs/softmax average) is a concrete definition, not an axiom."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Foundations.exists_meanFieldFlow"
+paper     = "eq. (1.2)-(1.3), p.2-3; Thm 1.1 well-posedness clause, p.5"
+created   = "2026-07-03"
