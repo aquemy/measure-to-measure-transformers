@@ -10,21 +10,50 @@ theorems (1.1, 1.2), the propositions (2.1, 2.2, 3.1, 4.1, 4.2), and the mid-lev
 compile. But *closing a statement* and *proving it from first principles* are different claims, and
 this project is scrupulous about the difference.
 
-The honest, kernel-driven status of the headline results is [axiomatised]{.badge .axiom}, not
-[machine-checked]{.badge .ok}. The self-contained cores -- the derivative computations, the geometry,
-the Grönwall / Lyapunov / pigeonhole leaves (L1--L11) -- carry a clean kernel proof. The *deep*
-content (optimal transport, the mean-field flow, the clustering dynamics) is stated as a layer of
-about 30 clearly **labeled axioms** standing in for mathematics that Mathlib does not yet have. Every
-result that leans on them inherits `axiomatised` -- a node's effective status is the minimum over its
-dependency closure.
+The self-contained cores -- the derivative computations, the geometry, the Grönwall / Lyapunov /
+pigeonhole leaves (L1--L11) -- carry a clean kernel proof. The *deep* content that Mathlib lacks was
+stated as a layer of clearly **labeled axioms**; "proving the axiomatized parts for real" means
+**building that missing mathematics in Lean** and discharging them, so a node's effective status
+climbs `axiomatised → machine-checked` (a node inherits the minimum status over its dependency
+closure).
 
-"Proving the axiomatized parts for real" means **building that missing mathematics in Lean** and
-discharging the axioms, so the effective status climbs `axiomatised → machine-checked`. This page is
-the public roadmap for that program -- and, increasingly, a record of it: the first milestone is
-already **discharged for real**.
+That program is now well underway, and the biggest piece is done: **the entire infrastructure axiom
+layer is discharged.** The optimal-transport / Wasserstein theory (M2) and the mean-field
+continuity-equation flow (M3, the linchpin every downstream milestone waited on) are now *built* from
+Mathlib's Picard-Lindelöf, Grönwall, and coupling machinery, and are machine-checked. As a result
+**the headline theorems no longer rest on any infrastructure axiom** -- `#print axioms theorem_1_1`
+lists only a handful of *paper-level* dynamical statements (`cluster_to_point`,
+`exists_disentangling_balls`, `exists_parked_schedule`; `theorem_1_2` adds `lemma_5_4`), each encoding
+a specific result from the paper's Sections 2--5 that rests on classical theorems (LaSalle invariance,
+Hartman-Grobman linearization) Mathlib does not yet have. This page is the public roadmap for that
+program -- and, increasingly, a record of it.
 
 ## Progress so far
 
+- **M2 -- Optimal transport / Wasserstein: [done]{.badge .ok} (machine-checked).** `Axioms.W2` is no
+  longer opaque: it is now the *definition* `(Foundations.W2 μ ν).toReal` over the ENNReal Kantorovich
+  coupling cost, and its five structural facts -- nonnegativity, symmetry, the triangle inequality, the
+  map / `L²` displacement bound, and convexity along mixtures -- are proved theorems. Because `toReal`
+  sends `⊤` to `0`, the honest ℝ-valued statements carry exactly the finiteness / measurability
+  hypotheses that keep the ENNReal→ℝ bridge sound, discharged at the call sites from bounded (sphere)
+  support.
+- **M3 -- Mean-field flow, the linchpin: [done]{.badge .ok} (machine-checked).** The per-block
+  characteristic flow `flowMap` is built as the fold of Picard-Lindelöf solutions of a `Block` -- a
+  globally-Lipschitz, globally-bounded, radially-tangent velocity field with a duration. Its Lipschitz,
+  bijectivity, semigroup (`comp` / `id` / reverse-and-negate `inv`), sphere-invariance, and parked laws
+  are all *derived* from Mathlib's `IsPicardLindelof.of_time_independent` + Grönwall, with the sphere
+  kept invariant by the radial-tangency identity. Every downstream milestone waited on this flow; with
+  it and M2 discharged, the whole infrastructure axiom layer is now empty.
+- **M4 -- Per-point transport (Appendix B): [in progress]{.badge .partial}.** The dynamical core of the
+  mass-transport lemmas is machine-checked: the ReLU-gated cutoff velocity field of B.5 as a genuine
+  well-posed `Block` (the quadratic tangential projector made globally Lipschitz by a bespoke
+  *vanishing-gluing* argument -- a compactly-supported scalar times a locally-bounded-Lipschitz field is
+  global), the finite-time logistic reaching estimate (B.7, via a log-odds substitution whose flow
+  derivative is exactly `2g`), the cap contraction of the gated flow toward its centre, and the
+  pushforward mass-retention bridge (B.8). Lemma B.1 is a proved induction over the single-ball lemma;
+  Lemma B.2 is faithfully restricted to genuine geodesic balls (a soundness fix over arbitrary sets)
+  with its full discharge dependency tree machine-checked. What remains is the general-position gate
+  confinement and the final measure-preimage assembly.
 - **M8a -- Atomless splitting: [done]{.badge .ok} (machine-checked).** `exists_atomless_partition` (the
   disjoint, prescribed-mass decomposition behind Proposition 2.2) is fully de-axiomatized. The
   measure-theoretic primitive it rested on -- **Sierpiński's intermediate-value theorem** for nonatomic
@@ -39,8 +68,8 @@ already **discharged for real**.
   fact that an **open hemisphere is geodesically convex** (the confinement the paper uses), and the full
   hull characterization -- `geodesicHull = cone ∩ sphere` *is* geodesically convex and *is* the smallest
   geodesic-convex set containing its generators. What remains for M5 is the Section 3.3 disentanglement
-  geometry that consumes these facts; the paper axiom `exists_disentangling_balls` also waits on the
-  flow layer (M3), so it stays `axiomatised` for now.
+  geometry that consumes these facts; the paper axiom `exists_disentangling_balls` -- now that the flow
+  layer (M3) is discharged -- waits only on that geometry, so it stays `axiomatised` for now.
 
 Everything above is kernel-clean; the [claim graph](claimgraph.qmd) badges each node live, and the
 commit history records every step under the [Conventional Knowledge Commits](history.qmd) discipline
@@ -58,7 +87,7 @@ matches the kernel. The full re-usability discipline is catalogued in the `lean-
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target and is now discharged; M5 (blue) is in progress; M3 (gold) is the linchpin every downstream milestone waits on.](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold) and M2 -- the whole infrastructure layer -- are now discharged, so every downstream milestone is unblocked. M4 and M5 (blue) are in progress. (The node colours show the original plan; the live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)
@@ -79,11 +108,12 @@ optimal-transport and mean-field *layers*; the measure-theoretic substrate benea
 | Layer | In the pinned Mathlib | Plan |
 | --- | --- | --- |
 | Nonatomic prescribed-mass splitting (Sierpiński) | absent (only an interval-*average* IVT) | **[done]{.badge .ok}** -- built on `NoAtoms` + IVT (M8a) |
-| Optimal transport / Wasserstein / Kantorovich | absent | **build** (`Measure.prod` + marginals exist) |
-| LaSalle / Lyapunov stability | theorems absent (`Flow`, `omegaLimit`, `IsPicardLindelof` exist) | **build** on the flow substrate |
+| Mean-field / continuity-equation flow | absent (`Kernel`, `Measure.map` exist) | **[done]{.badge .ok}** -- the linchpin, built on `IsPicardLindelof` + Grönwall (M3) |
+| Optimal transport / Wasserstein / Kantorovich | absent | **[done]{.badge .ok}** -- coupling-based `W₂` over the ENNReal cost (M2) |
 | Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[in progress]{.badge .partial}** -- foundation + hull characterization built (M5) |
+| ReLU-gated cap transport (Appendix B) | absent | **[in progress]{.badge .partial}** -- gated `Block` + reaching + mass bridge built (M4) |
+| LaSalle / Lyapunov stability | theorems absent (`Flow`, `omegaLimit`, `IsPicardLindelof` exist) | **build** on the flow substrate |
 | Measurable selection (Kuratowski--Ryll-Nardzewski) | absent | **build** on the Polish / analytic-set layer |
-| Mean-field / continuity-equation flow | absent (`Kernel`, `Measure.map` exist) | **build** -- the linchpin (M3) |
 
 ## What we can reuse
 
@@ -93,9 +123,10 @@ Nothing is importable across proof assistants, but the external audit found real
   [`drouhling/LaSalle`](https://github.com/drouhling/LaSalle)) is a proof-structure blueprint, and
   [`mcdoll/DynamicalSystems`](https://github.com/mcdoll/DynamicalSystems) (Apache-2.0) ships Lean
   `LaSalle.lean` / `Lyapunov.lean` plus Carathéodory ODE extensions to vendor.
-- **Optimal transport (M2)** -- absent in *every* assistant, so genuinely from scratch; but once a
-  coupling-based $W_2$ exists, the bound the paper needs is a one-liner (the pair map is an admissible
-  coupling; Santambrogio, *Optimal Transport for Applied Mathematicians*, Ch. 5).
+- **Optimal transport (M2)** -- absent in *every* assistant, so built genuinely from scratch
+  ([done]{.badge .ok}): a coupling-based $W_2$ over the ENNReal Kantorovich cost, from which the bound
+  the paper needs is a one-liner (the pair map is an admissible coupling; Santambrogio, *Optimal
+  Transport for Applied Mathematicians*, Ch. 5).
 - **Sierpiński splitting (M8a)** -- absent everywhere; **built** ([done]{.badge .ok}) via the
   cumulative-distribution + intermediate-value-theorem route rather than Fremlin's exhaustion argument,
   which turned out cleaner in Mathlib.
@@ -122,8 +153,9 @@ candidates** (marked in the Lean source with a `-- ForMathlib candidate:` commen
 
 These are *prepared*, not published: staging them ForMathlib-style (minimal imports, generic names,
 an Apache header, passing linters) is a mechanical readiness step, but actually contributing them to
-Mathlib is a deliberate human decision, not something the pipeline does on its own. Optimal transport
-and the mean-field flow, by contrast, are multi-year theory gaps, not quick upstream wins.
+Mathlib is a deliberate human decision, not something the pipeline does on its own. The optimal-transport
+and mean-field-flow layers (now built in-repo, M2 / M3) are broader developments whose upstreaming
+would be a much larger, separate effort than these self-contained geometry leaves.
 
 ## The first target: M8a -- discharged
 
