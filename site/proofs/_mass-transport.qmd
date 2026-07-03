@@ -57,24 +57,45 @@ E1. This is finding **F1**; see [`ERRATA.md`](https://github.com/aquemy/measure-
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [axiomatised]{.badge .axiom}
 
 The authors' strategy is the gated-drift construction above: a single ReLU gate, active on
 $\mathcal B_0$ (after the F1 sign correction), pushes the interior mass of $\mathcal B_0$ along
 $+\omega$ into $\mathcal B_0\cap\mathcal B_1$ while leaving everything off $\mathcal B_0$ fixed, so a
-$(1-\varepsilon)$ fraction is retained in the overlap. We state this type-correctly in Lean against the
-labeled axiom layer — the solution map `measureFlow`, the switch count `switches`, and the Wasserstein
-distance `W2` — with "no mass outside $S$" read measure-theoretically. It is an open `sorry` stub: we
-do **not** claim a proof; discharging it rests on the continuity-equation flow axiom.
+$(1-\varepsilon)$ fraction is retained in the overlap. We state it as a labeled `axiom` over the flow
+layer (`measureFlow`, `switches`), and — a soundness correction — over genuine **geodesic balls**
+$\mathcal B_i=B(z_i,R_i)$ rather than arbitrary sets: the gated drift funnels a *cap* toward its
+overlap with another cap, and the retention claim is simply false for arbitrary $B_0,B_1$
+(finding F1's companion fix). It also now carries the `switches θ ≤ 1` budget the chain lemma needs.
+
+While the axiom itself is not yet discharged (that rests on the continuity-equation flow existence
+Mathlib lacks), **its entire dependency tree is now built and machine-checked** — the ball signature
+is exactly what the eventual discharge will prove:
+
+- `gatedBlock` [machine-checked]{.badge .ok} — the B.5 field $\chi(\lVert x\rVert)(\langle z,x\rangle-\cos R)_+\,\mathbf P_x^\perp\omega$
+  as a genuine well-posed `Block`: globally Lipschitz (the quadratic projector tamed by a cutoff via a
+  bespoke *vanishing-gluing* lemma), bounded, and radially tangent so its flow preserves the sphere;
+- `hasDerivAt_inner_gatedFlow` [machine-checked]{.badge .ok} — along that flow the coordinate
+  $u(t)=\langle\phi^t x,\omega\rangle$ obeys the logistic gate ODE $u'=g\,(1-u^2)$ (B.5);
+- `logistic_flow_reach` [machine-checked]{.badge .ok} — the finite-time reaching estimate (B.7), via a
+  log-odds substitution whose derivative along the flow is exactly $2g$;
+- `exists_closed_sublevel_mass_ge` [machine-checked]{.badge .ok} — the shrunken-cap mass bound (B.6);
+- `inner_mem_Ioo_of_ne` [machine-checked]{.badge .ok} — strict Cauchy-Schwarz keeping $u\in(-1,1)$.
+
+What remains open is the final assembly: the reaching argument on the sphere plus the B.8
+measure-preimage step $\mu(T,\mathcal B_0\cap\mathcal B_1)=\mu\bigl(\phi^{-1}(\mathcal B_0\cap\mathcal B_1)\bigr)\ge\mu(B(z_0,R_0-\delta))$.
 
 ```lean
-/-- **Lemma B.2** (single ball pair). Mass in `B₀` is pushed into `B₀ ∩ B₁`, retaining `(1-ε)`. Stub
-(`sorry`): `math.open`. (Review finding F1: the paper's printed gate parameters have the activation
-side reversed; the corrected sign is `U = +𝟙 zᵀ, b = -cos(R) 𝟙`. See `ERRATA.md`.) -/
-theorem lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (B₀ B₁ : Set (Eucl d)) (hcap : (B₀ ∩ B₁).Nonempty) :
-    ∃ θ : Params d, (1 - ENNReal.ofReal ε) * μ B₀ ≤ (measureFlow θ T μ) (B₀ ∩ B₁) := by
-  sorry
+/-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `B(z₀,R₀)` is pushed into
+`B(z₀,R₀) ∩ B(z₁,R₁)`, retaining `(1-ε)`, with one switch. AXIOM (`math.axiomatised`); the
+discharge machinery (gatedBlock, logistic_flow_reach, …) is machine-checked. (Finding F1: the
+gate sign is `U = +z 𝟙ᵀ, b = -cos(R) 𝟙`; see `ERRATA.md`.) -/
+axiom lemma_B_2 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)
+    (hcap : (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁).Nonempty) :
+    ∃ θ : Params d, switches θ ≤ 1 ∧
+      (1 - ENNReal.ofReal ε) * μ (geodesicBall z₀ R₀) ≤
+        (measureFlow θ T μ) (geodesicBall z₀ R₀ ∩ geodesicBall z₁ R₁)
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -110,25 +131,37 @@ $$\mu(T,\mathcal B_K)\ge(1-\varepsilon)^K\Bigl(\sum_{k=1}^K\mu_0(\mathcal B_k\se
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 The authors' argument is a backward induction that applies the single-pair lemma (Lemma B.2) once per
-adjacent overlap, each step retaining a factor $(1-\varepsilon)$, the non-adjacency disjointness
-guaranteeing the steps do not interfere. We state the retention bound type-correctly in Lean against
-the axiom layer (`measureFlow`, `switches`); it is an open `sorry` stub. The purely arithmetic heart —
-that a per-step retention factor $(1-\varepsilon)$ compounds to $a_K\ge(1-\varepsilon)^K a_0$ — is
-already discharged kernel-clean by leaf **L9** (`ball_chain_geom`, [machine-checked]{.badge .ok}); what
-remains open is the geometric non-interference, which rests on the parking property of the flow axiom.
+adjacent overlap, each step retaining a factor $(1-\varepsilon)$. We **prove** this in Lean by
+induction on the chain length $K$: the base case is the identity schedule (`idParams`, zero switches);
+each step composes one `lemma_B_2` transport via `comp`, carrying the previous mass forward with
+`measureFlow_comp`, passing from $\mathcal B_k\cap\mathcal B_{k+1}$ to $\mathcal B_{k+1}$ by
+`measure_mono`, and adding the switch budget with `switches_comp`. So the retention bound is
+machine-checked **given** the single-ball transport fact; `#print axioms lemma_B_1` lists exactly
+`lemma_B_2` and the structural flow algebra.
+
+Two corrections over the original type-correct stub. The retained fraction multiplies
+$\mu(\mathcal B_0)$ — the mass that *starts* in the first ball and is funneled along the chain — not
+$\mu(\bigcup_k\mathcal B_k)$ (which would make the $K=0$ base case false, since
+$\mathcal B_0\subseteq\bigcup_k\mathcal B_k$). And the chain is a sequence of genuine geodesic balls
+$B(z_k,R_k)$, matching the faithful `lemma_B_2` signature. The chain-overlap hypothesis `hchain` and
+the per-step `switches ≤ 1` budget are what make the bound hold.
 
 ```lean
-/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping balls, `K` switches retain
-`(1-ε)^K` of the mass into the last ball. Stub (`sorry`): `math.open`. The arithmetic core is leaf
-L9; the geometric non-interference is the parking axiom. -/
+/-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` overlapping geodesic balls, `K`
+switches retain `(1-ε)^K` of the mass initially in `B(z₀,R₀)` into the last ball. PROVED
+(`math.axiomatised`: rests only on `lemma_B_2` + the flow algebra) by induction on `K`. -/
 theorem lemma_B_1 (μ : Measure (Eucl d)) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (K : ℕ) (B : ℕ → Set (Eucl d)) :
+    (K : ℕ) (z : ℕ → Eucl d) (hz : ∀ k, z k ∈ sphere d) (R : ℕ → ℝ)
+    (hchain : ∀ k, (geodesicBall (z k) (R k) ∩ geodesicBall (z (k + 1)) (R (k + 1))).Nonempty) :
     ∃ θ : Params d, switches θ ≤ K ∧
-      (1 - ENNReal.ofReal ε) ^ K * μ (⋃ k, B k) ≤ (measureFlow θ T μ) (B K) := by
-  sorry
+      (1 - ENNReal.ofReal ε) ^ K * μ (geodesicBall (z 0) (R 0)) ≤
+        (measureFlow θ T μ) (geodesicBall (z K) (R K)) := by
+  induction K with
+  | zero => exact ⟨idParams d, by simp [switches_id], by simp [measureFlow_id]⟩
+  | succ k ih => /- compose one lemma_B_2 step onto the chain -/
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}

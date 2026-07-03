@@ -94,3 +94,24 @@
 | 92 | 2026-07-02 | `meta` | meta(ci): add kernel-honesty drift guard (regenerate-and-compare) | `ci` |
 | 93 | 2026-07-02 | `port` | port(formathlib): stage the spherical-geometry leaves as Mathlib-ready generalizations | `InnerProductGeometry.tangentialProjector` |
 | 94 | 2026-07-02 | `docs` | docs(ledger): restructure RESEARCH.md into the v0.8.0 math-research ledger | `ledger` |
+| 95 | 2026-07-02 | `docs` | docs(site): spot-check provenance/numerical fidelity; fix em-dashes; regenerate site | `site` |
+| 96 | 2026-07-02 | `docs` | docs(blueprint): add the machine-checked foundations, closing the reconcile coverage gap | `MeasureToMeasure.Foundations.exists_measurableSet_subset_measure_eq_real` |
+| 97 | 2026-07-02 | `formalize` | formalize(foundations): machine-check the W2 triangle inequality via Minkowski + gluing | `foundations` |
+| 98 | 2026-07-02 | `formalize` | formalize(foundations): machine-check W2 convexity under mixtures | `foundations` |
+| 99 | 2026-07-02 | `fix` | fix(foundations): disambiguate W2/W1 name collision between Foundations and Axioms | `foundations` |
+| 100 | 2026-07-02 | `formalize` | formalize(foundations): concrete Block + per-block Picard-Lindelof existence (M3) | `foundations` |
+| 101 | 2026-07-02 | `chore` | chore(audit): add a lake build gate so stale oleans cannot false-green | `audit` |
+| 102 | 2026-07-02 | `formalize` | formalize(foundations): global point flow of a block via gluing (M3) | `foundations` |
+| 103 | 2026-07-02 | `formalize` | formalize(foundations): the point flow map of a block and its group algebra (M3) | `foundations` |
+| 104 | 2026-07-02 | `formalize` | formalize(foundations): the schedule flow map as a fold over blocks (M3) | `foundations` |
+| 105 | 2026-07-02 | `formalize` | formalize(foundations): time-reversal of the schedule flow map (M3) | `foundations` |
+| 106 | 2026-07-02 | `formalize` | formalize(axioms): discharge the continuity-equation flow-axiom layer (M3 complete) | `axioms` |
+| 107 | 2026-07-02 | `formalize` | formalize(foundations): finiteness of W2 for boundedly-supported measures (M2) | `foundations` |
+| 108 | 2026-07-02 | `formalize` | formalize(axioms): discharge the W2 optimal-transport axiom layer (M2 complete) | `axioms` |
+| 109 | 2026-07-02 | `formalize` | formalize(foundations): measure continuity along a shrinking cap (lemma_B_2 slice 1, M4) | `foundations` |
+| 110 | 2026-07-02 | `formalize` | formalize(foundations): logistic reaching estimate (lemma_B_2 slice 3, the ODE crux) | `foundations` |
+| 111 | 2026-07-03 | `formalize` | formalize(foundations): reusable Lipschitz infra for the gated cutoff Block (M4 slice 2a) | `foundations` |
+| 112 | 2026-07-03 | `formalize` | formalize(foundations): the gated cutoff Block instantiation (M4 slice 2 complete) | `foundations` |
+| 113 | 2026-07-03 | `fix` | fix(statements): restrict lemma_B_2 to geodesic balls, not arbitrary sets (M4 fidelity) | `statements` |
+| 114 | 2026-07-03 | `formalize` | formalize(leaves): the gated flow satisfies the logistic gate ODE (M4 discharge step 1) | `leaves` |
+| 115 | 2026-07-03 | `formalize` | formalize(foundations): strict Cauchy-Schwarz on the sphere (M4 discharge prerequisite) | `foundations` |
