@@ -1,4 +1,4 @@
-import Mathlib
+import Mathlib.Analysis.InnerProductSpace.PiL2
 
 /-!
 # The sphere `𝕊^{d-1}` as the ambient space

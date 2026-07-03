@@ -1,4 +1,6 @@
 import MeasureToMeasure.Foundations.Sphere
+import Mathlib.Analysis.Convex.Integral
+import Mathlib.Analysis.Normed.Lp.MeasurableSpace
 
 /-!
 # Leaf L11: disjoint geodesic hulls force non-colinear barycenters (review finding F2)

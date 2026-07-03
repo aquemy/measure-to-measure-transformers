@@ -1,4 +1,9 @@
 import MeasureToMeasure.Foundations.Sphere
+import Mathlib.Analysis.Normed.Lp.MeasurableSpace
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
+import Mathlib.MeasureTheory.Integral.MeanInequalities
+import Mathlib.Probability.Kernel.Disintegration.StandardBorel
+import Mathlib.Probability.Kernel.MeasurableLIntegral
 
 /-!
 # Optimal transport: couplings and the `W₁` Kantorovich cost
