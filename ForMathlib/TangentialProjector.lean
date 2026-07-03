@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Alexandre Quemy
 -/
 import Mathlib.Analysis.InnerProductSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 
 /-!
 # The tangential projector `P_x v = v - ⟪x, v⟫ • x`
@@ -15,9 +16,10 @@ annihilates `x`, self-adjointness, idempotence, and the quadratic identity
 `⟪P_x v, v⟫ = ‖v‖² - ⟪x, v⟫²`.
 
 These are stated for a general `[NormedAddCommGroup E] [InnerProductSpace ℝ E]`, with unit-vector
-hypotheses written as `‖x‖ = 1`. Mathlib packages the general orthogonal projection onto a subspace
-as `orthogonalProjection`; this file is the closed-form rank-one-complement special case, which is
-what appears explicitly in layer-normalized dynamics on the sphere.
+hypotheses written as `‖x‖ = 1`. Mathlib packages the general orthogonal projection onto a
+subspace as `Submodule.starProjection`; the bridge lemma `tangentialProjector_eq_starProjection`
+identifies this file's closed-form rank-one-complement special case, which is what appears
+explicitly in layer-normalized dynamics on the sphere, with `(ℝ ∙ x)ᗮ.starProjection`.
 
 *Preparation only:* staged for possible upstreaming, not contributed to Mathlib.
 -/
@@ -73,5 +75,13 @@ theorem inner_tangentialProjector_self_eq_norm_sq_sub_inner_sq (x v : E) :
   simp only [tangentialProjector, inner_sub_left, inner_smul_left, RCLike.conj_to_real,
     real_inner_self_eq_norm_sq]
   ring
+
+/-- For a unit vector `x`, the tangential projector agrees with Mathlib's star projection onto
+the orthogonal complement of `ℝ ∙ x`. This ties the closed form `v - ⟪x, v⟫ • x` to the bundled
+`Submodule.starProjection` API. -/
+theorem tangentialProjector_eq_starProjection {x : E} (hx : ‖x‖ = 1) (v : E) :
+    tangentialProjector x v = (ℝ ∙ x)ᗮ.starProjection v := by
+  rw [Submodule.starProjection_orthogonal_val,
+    Submodule.starProjection_unit_singleton ℝ hx, tangentialProjector_apply]
 
 end InnerProductGeometry

@@ -14,13 +14,14 @@ and re-based on Mathlib's own vocabulary (e.g. the geodesic distance is bridged 
 Readiness checklist (see the `lean-math:mathlib-ready` skill and its
 `references/reusable-blueprints.md`):
 
-- [ ] `#print axioms` is `clean` (only `propext` / `Classical.choice` / `Quot.sound`)
-- [ ] Mathlib naming (snake_case term lemmas / UpperCamelCase types / lowerCamelCase data;
+- [x] `#print axioms` is `clean` (only `propext` / `Classical.choice` / `Quot.sound`)
+- [x] Mathlib naming (snake_case term lemmas / UpperCamelCase types / lowerCamelCase data;
       conclusion-first `conclusion_of_hyp1_of_hyp2`) and a namespace mirroring the theory path
-- [ ] Builds on Mathlib definitions (bridge lemma if a bespoke def is unavoidable)
-- [ ] Minimal imports; no project-prelude dependency
-- [ ] Apache-2.0 header + `Authors:` line; module + declaration docstrings
-- [ ] Linters clean; lines <= 100 cols
+- [x] Builds on Mathlib definitions (bridge lemma if a bespoke def is unavoidable:
+      `tangentialProjector_eq_starProjection` ties the projector to `Submodule.starProjection`)
+- [x] Minimal imports; no project-prelude dependency
+- [x] Apache-2.0 header + `Authors:` line; module + declaration docstrings
+- [ ] Linters clean; lines <= 100 cols (lines checked locally; Mathlib's linter suite not yet run)
 
 ## Staged
 
@@ -29,9 +30,9 @@ All three files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductS
 
 | File / declaration | Statement | Imports | Readiness |
 | --- | --- | --- | --- |
-| `TangentialProjector.lean` -- `InnerProductGeometry.tangentialProjector` (+ `_apply`, `_add`, `_smul`, `_self_of_norm_eq_one`, `_symm`, `_idem_of_norm_eq_one`, `inner_tangentialProjector_self_eq_norm_sq_sub_inner_sq`) | The rank-one-complement projector `P_x v = v - ⟪x,v⟫•x` and its identities (linearity, annihilates a unit `x`, self-adjoint, idempotent, `⟪P_x v,v⟫ = ‖v‖²-⟪x,v⟫²`) | `Mathlib.Analysis.InnerProductSpace.Basic` | ready; docstring notes the relation to `orthogonalProjection {x}ᗮ` |
+| `TangentialProjector.lean` -- `InnerProductGeometry.tangentialProjector` (+ `_apply`, `_add`, `_smul`, `_self_of_norm_eq_one`, `_symm`, `_idem_of_norm_eq_one`, `inner_tangentialProjector_self_eq_norm_sq_sub_inner_sq`, `tangentialProjector_eq_starProjection`) | The rank-one-complement projector `P_x v = v - ⟪x,v⟫•x` and its identities (linearity, annihilates a unit `x`, self-adjoint, idempotent, `⟪P_x v,v⟫ = ‖v‖²-⟪x,v⟫²`), bridged to Mathlib's `(ℝ ∙ x)ᗮ.starProjection` | `Mathlib.Analysis.InnerProductSpace.Basic`, `Mathlib.Analysis.InnerProductSpace.Projection.Basic` | ready; bridge lemma ties the closed form to the bundled `Submodule.starProjection` API |
 | `UnitSphereGeodesic.lean` -- `InnerProductGeometry.{inner_le_one_of_norm_eq_one, neg_one_le_inner_of_norm_eq_one, angle_eq_arccos_inner_of_norm_eq_one, cos_angle_of_norm_eq_one}` | On the unit sphere the paper's `arccos⟪x,y⟫` **is** Mathlib's `InnerProductGeometry.angle`; plus the Cauchy-Schwarz bounds `⟪x,y⟫ ∈ [-1,1]` | `Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic` | ready; reuses `angle`, does not shadow it |
-| `SeparatingHyperplane.lean` -- `InnerProductGeometry.inner_lt_cos_of_pi_div_two_le_angle` | `angle ω x ≥ π/2`, `τ ∈ (0,3π/8)` ⟹ `⟪ω,x⟫ < cos(π/8+τ)` (cosine strictly antitone on `[0,π]`) | `ForMathlib.UnitSphereGeodesic` | ready |
+| `SeparatingHyperplane.lean` -- `InnerProductGeometry.inner_lt_cos_of_lt_angle` | `0 ≤ θ`, `θ < angle ω x` ⟹ `⟪ω,x⟫ < cos θ` for unit vectors (cosine strictly antitone on `[0,π]`); the paper-constant specialization (`θ = π/8 + τ`) lives in `MeasureToMeasure/Leaves/SeparatingHyperplane.lean` | `ForMathlib.UnitSphereGeodesic` | ready; constant-free threshold form |
 
 ## Candidates under evaluation (not staged)
 
