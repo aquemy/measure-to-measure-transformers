@@ -27,6 +27,10 @@ the minimizing-arc definition on any open hemisphere -- the only regime the pape
   such a hemisphere and stays there).
 * `GeodesicConvex.inter`, `geodesicConvex_iInter` -- geodesic convexity is preserved by (arbitrary)
   intersections; in particular an orthant, being an intersection of hemispheres, is geodesically convex.
+* `geodesicConvex_inner_cap` -- a strict spherical cap `{x ∈ 𝕊 | c < ⟪α, x⟫}` at a level `c ≥ 0` is
+  geodesically convex, with the polarization bridges `inner_cap_of_mem_ball` / `dist_le_of_inner_cap`
+  between Euclidean `r`-balls and caps at level `1 - r²/2`, and the cap-disjointness criterion
+  `not_mem_inner_caps_of_separated` for `2r`-separated unit directions (the Section 3.3 containers).
 -/
 
 namespace MeasureToMeasure
@@ -82,6 +86,101 @@ theorem geodesicConvex_singleton {x : Eucl d} (hx : x ∈ sphere d) : GeodesicCo
   have hcomb : a • x + b • x = (a + b) • x := (add_smul a b x).symm
   rw [Set.mem_singleton_iff, hcomb, norm_smul, hxn, mul_one, Real.norm_eq_abs, abs_of_pos hab,
     smul_smul, inv_mul_cancel₀ (ne_of_gt hab), one_smul]
+
+/-- **A strict spherical cap is geodesically convex.** For a direction `α` and a level `c ≥ 0`, the
+set of sphere points with `c < ⟪α, x⟫` is closed under normalized positive chords: the chord
+`v = a • x + b • y` has `⟪α, v⟫ > (a + b) c ≥ 0` (so `v ≠ 0`), and since `‖v‖ ≤ a + b` the
+normalization keeps the level, `⟪α, ‖v‖⁻¹ • v⟫ > c`. The open hemisphere is the case `c = 0`; for
+`c = cos r` with `0 < r ≤ π/2` this is the open geodesic cap of radius `r`. This is the Section 3.3
+container: hulls of shrunk clusters live in such caps. -/
+theorem geodesicConvex_inner_cap (α : Eucl d) {c : ℝ} (hc : 0 ≤ c) :
+    GeodesicConvex {x : Eucl d | x ∈ sphere d ∧ c < ⟪α, x⟫} := by
+  refine ⟨fun x hx => hx.1, ?_⟩
+  rintro x ⟨hxs, hx⟩ y ⟨hys, hy⟩ a b ha hb
+  set v := a • x + b • y with hv
+  have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hxs
+  have hyn : ‖y‖ = 1 := norm_eq_one_of_mem_sphere hys
+  -- The chord clears the level before normalization.
+  have hev : (a + b) * c < ⟪α, v⟫ := by
+    rw [hv, inner_add_right, real_inner_smul_right, real_inner_smul_right, add_mul]
+    exact add_lt_add (by nlinarith) (by nlinarith)
+  have hev0 : 0 < ⟪α, v⟫ := lt_of_le_of_lt (by positivity) hev
+  have hvne : v ≠ 0 := fun h => by simp [h] at hev0
+  have hvnorm : ‖v‖ ≤ a + b := by
+    calc ‖v‖ ≤ ‖a • x‖ + ‖b • y‖ := norm_add_le _ _
+      _ = a + b := by
+          rw [norm_smul, norm_smul, hxn, hyn, mul_one, mul_one, Real.norm_eq_abs,
+            Real.norm_eq_abs, abs_of_pos ha, abs_of_pos hb]
+  have hvpos : 0 < ‖v‖ := norm_pos_iff.mpr hvne
+  refine ⟨normalize_mem_sphere hvne, ?_⟩
+  -- `⟪α, ‖v‖⁻¹ • v⟫ = ‖v‖⁻¹ ⟪α, v⟫ > ‖v‖⁻¹ (a+b) c ≥ c`.
+  rw [real_inner_smul_right]
+  have h1 : ‖v‖⁻¹ * ((a + b) * c) < ‖v‖⁻¹ * ⟪α, v⟫ :=
+    mul_lt_mul_of_pos_left hev (inv_pos.mpr hvpos)
+  have h2 : c ≤ ‖v‖⁻¹ * ((a + b) * c) := by
+    rcases eq_or_lt_of_le hc with hc0 | hcpos
+    · simp [← hc0]
+    · have hinv : (a + b)⁻¹ ≤ ‖v‖⁻¹ := by
+        gcongr
+      calc c = (a + b)⁻¹ * ((a + b) * c) := by
+              field_simp
+        _ ≤ ‖v‖⁻¹ * ((a + b) * c) := by
+              apply mul_le_mul_of_nonneg_right hinv (by positivity)
+  linarith
+
+/-- **Ball-to-cap (polarization).** A sphere point within Euclidean distance `r` of a unit vector
+`α` lies in the strict inner cap at level `1 - r²/2`: from `‖x - α‖² = 2 - 2⟪α, x⟫`. This converts
+the `Metric.ball` carriers of the disentanglement output into the caps that geodesic convexity
+speaks about. -/
+theorem inner_cap_of_mem_ball {α x : Eucl d} (hα : ‖α‖ = 1) (hx : x ∈ sphere d)
+    {r : ℝ} (hxr : dist x α < r) : 1 - r ^ 2 / 2 < ⟪α, x⟫ := by
+  have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+  have hpol : ‖x - α‖ ^ 2 = 2 - 2 * ⟪α, x⟫ := by
+    rw [norm_sub_sq_real, hxn, hα, real_inner_comm]
+    ring
+  have hd0 : (0 : ℝ) ≤ dist x α := dist_nonneg
+  have hsq : dist x α ^ 2 < r ^ 2 := by
+    have hr0 : 0 < r := lt_of_le_of_lt hd0 hxr
+    nlinarith
+  rw [dist_eq_norm, hpol] at hsq
+  linarith
+
+/-- **Cap-to-ball (polarization, reverse direction).** A sphere point in the closed inner cap at
+level `1 - r²/2` (for `r > 0`) is within Euclidean distance `r` of `α`. -/
+theorem dist_le_of_inner_cap {α x : Eucl d} (hα : ‖α‖ = 1) (hx : x ∈ sphere d)
+    {r : ℝ} (hr : 0 < r) (hc : 1 - r ^ 2 / 2 ≤ ⟪α, x⟫) : dist x α ≤ r := by
+  have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+  have hpol : ‖x - α‖ ^ 2 = 2 - 2 * ⟪α, x⟫ := by
+    rw [norm_sub_sq_real, hxn, hα, real_inner_comm]
+    ring
+  have hsq : ‖x - α‖ ^ 2 ≤ r ^ 2 := by rw [hpol]; linarith
+  rw [dist_eq_norm]
+  nlinarith [norm_nonneg (x - α)]
+
+/-- **Cap disjointness from `2r`-separation.** No sphere point lies in both closed inner caps at
+level `1 - r²/2` around unit directions at distance `≥ 2r` apart, unless it witnesses equality
+throughout; with one strict cap membership the triangle inequality is strict and the point cannot
+exist. Stated with one strict and one non-strict side so both the hull version (all strict) and
+the barycenter version (strict via the a.e. argument) can consume it. -/
+theorem not_mem_inner_caps_of_separated {α₁ α₂ : Eucl d} (hα₁ : ‖α₁‖ = 1) (hα₂ : ‖α₂‖ = 1)
+    {r : ℝ} (hr : 0 < r) (hsep : 2 * r ≤ dist α₁ α₂) {x : Eucl d} (hx : x ∈ sphere d)
+    (h₁ : 1 - r ^ 2 / 2 < ⟪α₁, x⟫) (h₂ : 1 - r ^ 2 / 2 ≤ ⟪α₂, x⟫) : False := by
+  have hd₁ : dist x α₁ ≤ r := dist_le_of_inner_cap hα₁ hx hr h₁.le
+  have hd₂ : dist x α₂ ≤ r := dist_le_of_inner_cap hα₂ hx hr h₂
+  -- Strictness on the first side: `⟪α₁,x⟫ > 1 - r²/2` gives `dist x α₁ < r` strictly.
+  have hd₁' : dist x α₁ < r := by
+    have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+    have hpol : ‖x - α₁‖ ^ 2 = 2 - 2 * ⟪α₁, x⟫ := by
+      rw [norm_sub_sq_real, hxn, hα₁, real_inner_comm]; ring
+    have hsq : ‖x - α₁‖ ^ 2 < r ^ 2 := by rw [hpol]; linarith
+    rw [dist_eq_norm]
+    nlinarith [norm_nonneg (x - α₁)]
+  have : dist α₁ α₂ < 2 * r := by
+    calc dist α₁ α₂ ≤ dist α₁ x + dist x α₂ := dist_triangle _ _ _
+      _ = dist x α₁ + dist x α₂ := by rw [dist_comm α₁ x]
+      _ < r + r := by linarith
+      _ = 2 * r := by ring
+  linarith
 
 /-- Geodesic convexity is preserved under intersection. -/
 theorem GeodesicConvex.inter {s t : Set (Eucl d)} (hs : GeodesicConvex s) (ht : GeodesicConvex t) :
