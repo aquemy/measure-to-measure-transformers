@@ -5,9 +5,11 @@
 # Status is shown by colour: green = discharged (machine-checked), blue = in progress,
 # gold stroke on M3 = the flow linchpin (discharged; linear/per-block), white = not yet started.
 # The infrastructure layer (M1 selection, M2 optimal transport, M3 characteristic flow) is green,
-# and M4 (Appendix-B transport) is now green too. M3b is the mean-field attention layer added by
-# the F14 restatement: the field is defined, well-posedness is the one remaining axiom pair.
-# What remains axiomatised is M3b well-posedness plus the dynamical/assembly layer (M6, M7, M8b).
+# and M4 (Appendix-B transport) and M5 (geodesic convexity) are green too. M3b is the mean-field
+# attention layer (F14 restatement): the field is defined and the flow's UNIQUENESS is now
+# machine-checked (meanFieldFlow_unique, F20 repair + a decomposed Grönwall campaign); only
+# EXISTENCE (exists_meanFieldFlow) remains axiomatised. What remains is M3b existence plus the
+# dynamical/assembly layer (M6, M7, M8b) and the top-level disentanglement assembly.
 
 direction: down
 
@@ -37,8 +39,8 @@ M4: M4 · Per-point lemmas (B.1, B.2)  ✓ DONE {
   style.bold: true
 }
 
-M3b: M3b · Mean-field attention flow  ◐ INTERFACE BUILT {
-  style.fill: "#d0ebff"
+M3b: M3b · Mean-field flow  ◑ UNIQUENESS ✓ · existence axiom {
+  style.fill: "#c3e6cb"
   style.stroke: "#f08c00"
   style.stroke-width: 2
   style.bold: true

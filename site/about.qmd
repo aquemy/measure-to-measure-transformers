@@ -74,7 +74,11 @@ CKC spec v0.2.0, enforced by the pre-commit hook) and is guarded by a committed 
 regression suite**: the disproofs of previously-refuted draft statements are kernel-checked
 theorems, paired with must-fail adapters that CI compiles on every push, and every axiom carries a
 compiled non-vacuity witness (concrete data satisfying all its hypotheses), so an over-strengthened
-statement breaks the build just as a re-loosened one trips the gate. The self-contained leaves
+statement breaks the build just as a re-loosened one trips the gate. This audit (findings F11--F20 in
+[`RESEARCH.md`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/RESEARCH.md))
+caught two axioms that were not merely loose but **unsound** -- `lemma_5_1` (F19, a `Measure.map`
+measurability escape) and `meanFieldFlow_unique` (F20, false off the sphere) -- each realigned with
+the paper's actual hypotheses and then *discharged* to a machine-checked theorem. The self-contained leaves
 and the whole Appendix-B transport chain carry the machine-checked load; see
 **[Beyond Mathlib](beyond-mathlib.qmd)** for the plan to discharge the remaining axioms and lift
 the headline results to [machine-checked]{.badge .ok}.

@@ -103,11 +103,11 @@
   <text x="760" y="338" text-anchor="middle" class="mono box-h">M2 ✓</text>
   <text x="760" y="359" text-anchor="middle" class="box-s">Optimal transport</text>
 
-  <!-- M5 · Geodesic convexity — IN PROGRESS (cool blue) -->
-  <text x="280" y="286" text-anchor="middle" class="mono layer-tag">IN PROGRESS</text>
-  <rect x="130" y="298" width="300" height="84" fill="#abc1d2" opacity="0.5" filter="url(#wash-b)"/>
+  <!-- M5 · Geodesic convexity — DONE, machine-checked (sage/green) -->
+  <text x="280" y="286" text-anchor="middle" class="mono layer-tag">DONE ✓</text>
+  <rect x="130" y="298" width="300" height="84" fill="#a9c39c" opacity="0.5" filter="url(#wash-b)"/>
   <rect x="138" y="306" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
-  <text x="280" y="338" text-anchor="middle" class="mono box-h">M5 ◐</text>
+  <text x="280" y="338" text-anchor="middle" class="mono box-h">M5 ✓</text>
   <text x="280" y="359" text-anchor="middle" class="box-s">Geodesic convexity</text>
 
   <!-- M3 · Mean-field flow — the LINCHPIN, now DONE (sage/green, heavy stroke keeps its identity) -->
@@ -116,10 +116,10 @@
   <text x="760" y="478" text-anchor="middle" class="mono box-h">M3 · LINCHPIN ✓</text>
   <text x="760" y="500" text-anchor="middle" class="box-s">Mean-field flow</text>
 
-  <!-- M4 · Per-point lemmas — IN PROGRESS (cool blue; ◐ marks the status, tag omitted to avoid the M3→M4 edge) -->
-  <rect x="130" y="588" width="300" height="84" fill="#abc1d2" opacity="0.5" filter="url(#wash-c)"/>
+  <!-- M4 · Per-point lemmas — DONE, machine-checked (sage/green) -->
+  <rect x="130" y="588" width="300" height="84" fill="#a9c39c" opacity="0.5" filter="url(#wash-c)"/>
   <rect x="138" y="596" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
-  <text x="280" y="628" text-anchor="middle" class="mono box-h">M4 ◐</text>
+  <text x="280" y="628" text-anchor="middle" class="mono box-h">M4 ✓</text>
   <text x="280" y="649" text-anchor="middle" class="box-s">Per-point lemmas</text>
 
   <!-- M6 · LaSalle / Lyapunov — open (paper axiom cluster_to_point); neutral stone = pending -->
@@ -147,5 +147,5 @@
   <text x="760" y="929" text-anchor="middle" class="box-s">Thm 1.1 / 1.2 checked</text>
 
   <!-- One-line takeaway -->
-  <text x="760" y="1044" text-anchor="middle" class="caption">Infrastructure discharged (green): M1, M2, linchpin M3; M4, M5 in progress; dynamical layer M6/M7/M8b remains.</text>
+  <text x="760" y="1044" text-anchor="middle" class="caption">Discharged (green): M1, M2, linchpin M3, M4, M5, M8a — plus mean-field uniqueness. Remaining: mean-field existence + dynamical layer M6/M7/M8b + assembly.</text>
 </svg>
