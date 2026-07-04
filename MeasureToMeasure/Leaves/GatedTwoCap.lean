@@ -1,5 +1,5 @@
 import MeasureToMeasure.Leaves.GatedFlow
-import MeasureToMeasure.Leaves.GatedCapMass
+import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Foundations.SublevelMass
 
 /-!
