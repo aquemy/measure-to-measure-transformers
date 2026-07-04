@@ -681,9 +681,22 @@ sphere (convex weights, `∑ α k = 1`, each `α k ≠ 0`). AXIOM (`math.axiomat
 proof (Section 2.2 and Remark 2.3) is a GATED PERCEPTRON construction -- prescribed-mass splitting
 (machine-checked here as `exists_atomless_partition`) followed by ball-chain transport of each
 piece (Lemmas B.1/B.2), all with `V ≡ 0` parameters -- so the statement lives faithfully on the
-linear layer, and its honest Lean derivation is a future assembly over `lemma_B_1` and the
-Appendix-B gated machinery (milestone M4). `Depends-On exists_atomless_partition`,
-`Depends-On lemma_B_1`.
+linear layer. `Depends-On exists_atomless_partition`, `Depends-On lemma_B_1`.
+
+**Assembly status (partial).** The *combination* half of the derivation is now machine-checked:
+`Leaves.measureFlow_W2_discrete_of_perPiece` proves that a SINGLE schedule `θ` driving every piece
+`W₂`-near its Dirac drives the mixture `W₂`-near `∑ αₖ • δ_{x k}` -- the linear flow's distributivity
+(`measureFlow_sum_smul`) composed with mixture-convexity of `W₂` (`W2_convexCombo_le`). This reduces
+`prop_2_2` to a single remaining obligation, which is what keeps it axiomatised: the existence of
+ONE gated schedule that simultaneously transports each disjoint piece into a small ball around its
+prescribed target while PARKING the others. Its per-piece step is `lemma_B_1` (ball-chain mass
+concentration), but the honest close additionally needs (i) a prescribed-weight AND geometrically
+localized partition (`exists_atomless_partition` carves by mass via Sierpiński, not into caps, so a
+full-support datum -- e.g. the uniform law -- is not captured by any single sub-`π/2` ball), and
+(ii) the disjoint gating/non-interference that lets the per-piece schedules concatenate without
+disturbing one another. Both are the paper's §2.2 mass-sweep (`O(M)` switches, non-explicit constant
+§1.4.3), which Mathlib `v4.31.0`'s absent continuity-equation theory cannot yet express -- deferred,
+not invented.
 
 History (F14): an earlier machine-checked assembly routed each piece through `lemma_3_2` and the
 attention-based `cluster_to_point`, then parked the pieces and used the linearity

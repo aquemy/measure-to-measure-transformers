@@ -29,5 +29,6 @@ import MeasureToMeasure.Leaves.GeodesicGradient
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.MarkovBound
+import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
