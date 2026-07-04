@@ -82,14 +82,20 @@ example : True := by
     (dirac_supportedIn_hemisphere (unitE_norm 1 0))
   trivial
 
-/-- Non-vacuity of `lemma_3_2`: `δ_{e₀}`, probability, sphere-supported, missing the antipodal
-cap. -/
+/-- Non-vacuity of `lemma_3_2` (family form): the one-member family `![δ_{e₀}]`, probability,
+sphere-supported, with the shared antipodal missing cap. -/
 example : True := by
-  have _h := lemma_3_2 (Measure.dirac (unitE 1 0)) 1 one_pos
-    (dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) (dirac_missingCap (unitE_norm 1 0))
+  have hmiss : SharedMissingDirection (fun _ : Fin 1 => Measure.dirac (unitE 1 0)) := by
+    obtain ⟨ω, hω, δ, hδ, hsupp⟩ := dirac_missingCap (unitE_norm 1 0)
+    exact ⟨ω, hω, δ, hδ, fun _ => hsupp⟩
+  have _h := lemma_3_2 (fun _ : Fin 1 => Measure.dirac (unitE 1 0))
+    (fun _ => inferInstance) 1 one_pos
+    (fun _ => dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) hmiss
   trivial
 
-/-- Non-vacuity of `lemma_3_3`: `δ_{e₀}` is sphere- and orthant-supported in `ℝ¹`. -/
+/-- Non-vacuity of `lemma_3_3` (family form): the one-member family `![δ_{e₀}]` acted at `j = 0`
+with itself as the colinear companion (`c = 1`); the non-colinearity hypothesis is vacuous on one
+member. -/
 example : True := by
   have horth : supportedIn (Measure.dirac (unitE 1 0)) (orthant 1) := by
     have hmem : unitE 1 0 ∈ orthant 1 := by
@@ -100,8 +106,12 @@ example : True := by
     show Measure.dirac (unitE 1 0) (orthant 1)ᶜ = 0
     rw [Measure.dirac_apply' _ Regression.Refuted.measurableSet_orthant1.compl,
       Set.indicator_of_notMem (Set.notMem_compl_iff.mpr hmem)]
-  have _h := lemma_3_3 (Measure.dirac (unitE 1 0)) 1 1 one_pos one_pos
+  have _h := lemma_3_3 (0 : Fin 1) (fun _ => Measure.dirac (unitE 1 0))
+    (Measure.dirac (unitE 1 0)) (fun _ => inferInstance) 1 1 one_pos one_pos
+    (fun _ => dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) (fun _ => horth)
     (dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) horth
+    (by intro i k hik; exact absurd (Subsingleton.elim i k) hik)
+    ⟨1, (one_smul ℝ _).symm⟩
   trivial
 
 /-- Non-vacuity of `prop_4_2`: one active point, `e₀ ↦ e₁` on `𝕊² ⊂ ℝ³`. -/
@@ -300,7 +310,14 @@ example : True := by
     · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
         Pi.smul_apply, smul_eq_mul]
       norm_num
+  have hUuniv : supportedIn μ Set.univ := by
+    show μ Set.univᶜ = 0
+    simp
+  have hUuniv' : supportedIn ν Set.univ := by
+    show ν Set.univᶜ = 0
+    simp
   have _h := lemma_3_4_part1 μ ν 1 one_pos hne hμs hνs hμo hνo hbar
+    Set.univ isOpen_univ hUuniv hUuniv'
   trivial
 
 /-- Non-vacuity of `lemma_3_4_part2`: the diagonal-symmetric halves have barycenters

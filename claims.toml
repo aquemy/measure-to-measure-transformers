@@ -101,7 +101,7 @@ evidence = "F14 (eq. 1.7 refutes any linear form; kernel disproof); Regression/R
 
 [claims.lem-3-2]
 kind      = "conjecture"
-statement = "Lemma 3.2: two constant parameter pieces transport a sphere-supported probability measure whose support misses a cap into the positive orthant cap Q_1^{d-1}. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure (flowMap is a Lipschitz bijection, so an open-positive infinite measure cannot be annihilated off the orthant); restored the paper's P(S^{d-1}) + union-of-supports-proper hypotheses (MissingCap). Budget convention: Lean's switches counts constant pieces; the paper's 'one switch' = two pieces (W_1 pushing off -omega, then W_2 pulling toward alpha)."
+statement = "Lemma 3.2 (family form): ONE two-piece schedule transports every member of a sphere-supported probability family with a shared missing cap (SharedMissingDirection) into the positive orthant simultaneously -- the paper's own quantification ('for any i in [1,N]', p.15); the dynamics is measure-independent (V=B=U=0), so the members share one transport map, available from the linear layer. FAMILY RESTATEMENT (2026-07-04, Section-3.3 upgrade): the interim single-measure MissingCap form was the per-member reading; upgraded to the family form the Section 3.3 induction consumes. SOUNDNESS FIX (2026-07-03, F12): the original stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure. Budget convention: Lean's switches counts constant pieces; the paper's 'one switch' = two pieces."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_2"
 paper     = "Lem 3.2, p.15"
@@ -110,11 +110,11 @@ created   = "2026-06-30"
 [claims.lem-3-2.fidelity]
 reviewed = "2026-07-03"
 paper    = "Lem 3.2, p.15, arXiv:2411.04551v3"
-evidence = "F12; disproof Regression/Refuted/F12_Volume.lean; adapter Refutations/F12_lemma_3_2_volume.lean; witness Regression/NonVacuity/MidLevel.lean"
+evidence = "F12 + family restatement vs pp.15 verbatim (2026-07-04); disproof Regression/Refuted/F12_Volume.lean; adapter Refutations/F12_lemma_3_2_volume.lean (re-derived for the family form); witness Regression/NonVacuity/MidLevel.lean"
 
 [claims.lem-3-3]
 kind      = "conjecture"
-statement = "Lemma 3.3 (single-measure core): a sphere-supported probability measure on the orthant can be concentrated into an eps-ball around a unit direction alpha. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over EVERY measure and was kernel-refuted with the Lebesgue measure; restored probability + sphere + orthant support (the paper's P(Q_1^{d-1}) context, applied after Lemma 3.2) and alpha on the sphere. The paper's family form (fixing the other measures, O(dN) switches with a non-explicit constant) is deferred to the mean-field restatement (F14). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the paper's construction switches on the value matrix V, so the field reads the flowing measure's barycenter); alpha now on the sphere."
+statement = "Lemma 3.3 (family form, paper-verbatim): for a Q_1-supported probability family with pairwise fully-non-colinear barycenters, an acted index j, and a companion nu_0 with barycenter colinear to the j-th, one schedule concentrates BOTH nu_0 and mu_0^j into the eps-ball around the normalized j-th barycenter direction while restoring every other member exactly (mu^i(T) = mu_0^i for i != j -- the paper's fixing clause, the net effect of the Psi_1^-1 Psi_2 Psi_1 conjugation of B.2). Ball stated Euclidean (weaker-sound; the paper's geodesic ball is contained in it). O(dN) budget deferred (non-explicit constant). FAMILY RESTATEMENT (2026-07-04): the interim single-measure form lacked the fixing clause and could not drive the Section 3.3 induction. Earlier fixes: F12 (refuted unhypothesized stub), F14 (mean-field layer)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_3"
 paper     = "Lem 3.3, p.16"
@@ -127,7 +127,7 @@ evidence = "F12; disproof Regression/Refuted/F12_Volume.lean; adapter Refutation
 
 [claims.lem-3-4]
 kind      = "conjecture"
-statement = "Lemma 3.4: two DISTINCT probability measures on the orthant cap Q_1^{d-1} can be made non-colinear in barycenter, via the perceptron (gamma1=1, equal barycenters: part1) or via attention (gamma1 in (0,1), colinear-but-unequal barycenters: part2). SOUNDNESS FIX (2026-07-03): the original stubs dropped the paper's hypotheses -- part1 kept only equal-barycenters (refutable by mu=nu) and part2 kept NONE (refutable by mu=nu, since SameRay v v always holds); F11 restored mu != nu, IsProbabilityMeasure, orthant support, and part2's gamma in (0,1) colinearity. SECOND FIX (2026-07-03, F12): sphere supports added -- with only the AMBIENT orthant the statements stayed refutable via heavy-tailed orthant measures whose identity is not Bochner-integrable (both barycenters are the junk value 0, and SameRay 0 0 holds); on the sphere the barycenters are genuine. All refutations machine-checked. Orphan axioms (not in the footprint of theorem_1_1/theorem_1_2). LAYER SPLIT (2026-07-03, F14): part1 STAYS LINEAR (the paper's construction has V = 0, measure-independent); part2 moves to AttnSchedule/attnMeasureFlow with durationSum = T (its construction has V != 0, B = 0: barycenter-driven)."
+statement = "Lemma 3.4: two DISTINCT probability measures on Q_1^{d-1} can be made non-colinear in barycenter: part1 (gamma1=1, equal barycenters, V=0/linear) now also carries the paper's eq.-(3.2) localization, stated soundly relative to any OPEN carrier U of both measures (flowMap = id on the sphere off U); part2 (gamma1 in (0,1), attention layer) now concludes FULL non-colinearity (E_mu(T) != gamma2 E_nu(T) for every real gamma2, the paper's conclusion; the earlier not-SameRay form was strictly weaker). FIXING-CLAUSE FIDELITY (2026-07-04, F17/E4): the printed (3.2) (identity off the geodesic hulls of the supports) is refutable for atomic inputs -- a continuous flow that is the identity off a finite set is the identity everywhere, while distinct finite-support measures with equal barycenters exist; the proof's open-ball-inside-the-supports step assumes nonempty interior. The open-carrier form is what the proof (phi = id off the gate ball, p.35) actually delivers. Earlier fixes: F11 (mu != nu etc.), F12 (sphere supports), F14 (layer split)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
@@ -136,7 +136,7 @@ created   = "2026-06-30"
 [claims.lem-3-4.fidelity]
 reviewed = "2026-07-03"
 paper    = "Lem 3.4, p.16, arXiv:2411.04551v3"
-evidence = "F11 (mu=nu) + F12 (heavy tails); disproofs Regression/Refuted/F11_LemmaThreeFour.lean + F12_HeavyTails.lean; adapters Refutations/F11_*, F12_*heavy_tails.lean; witness WITNESS-TODO"
+evidence = "F11 (mu=nu) + F12 (heavy tails) + F17 (atomic-support refutation of the printed (3.2) clause, 2026-07-04); disproofs Regression/Refuted/F11_LemmaThreeFour.lean + F12_HeavyTails.lean; adapters Refutations/F11_*, F12_*heavy_tails.lean; witnesses Regression/NonVacuity/MidLevel.lean"
 
 [claims.prop-4-1]
 kind      = "conjecture"
