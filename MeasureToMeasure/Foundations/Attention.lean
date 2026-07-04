@@ -176,15 +176,19 @@ for the base-point projector `P_x^⊥` and the coordinatewise ReLU — not merel
 *measure* modulus `MeanFieldWellPosed.norm_field_sub_measure_W1_le`. The measure-coupling step is
 machine-checked too: for `h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` the domination
 `(W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)).toReal ≤ h t` (witnessed by the plan `(Φ_t, Ψ_t)_#μ₀`) is
-`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. What remains (on this now-sound statement) is the
-ODE assembly: an FTC representation of the flow (velocity time-continuity is *derivable* — `Φ_·x` is
-continuous from the `deriv` clause, `μ₀.map Φ_·` is `W₁`-continuous by the coupling bound, and the
-field is jointly Lipschitz), the integral inequality `h t ≤ K ∫₀ᵗ h`, its Grönwall closure — via the
-**antiderivative** `U t = ∫₀ᵗ h` (which *is* differentiable, `U' = h`, sidestepping the norm's corner
-at `0`) fed to the derivative-form `norm_le_gronwallBound_of_norm_deriv_right_le` — giving `h ≡ 0`,
-and finally the a.e.-to-everywhere transfer by single-ODE uniqueness (`ODE_solution_unique_of_mem_Icc`)
-against the now-common measure trajectory. It pins the mean-field flow of a measure-independent block
-to the linear `Block` flow, which is what transfers the Appendix-B gated results to this interface. -/
+`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. The Grönwall closure itself is now
+machine-checked: `MeanFieldWellPosed.gronwall_integral_zero` proves that a nonnegative continuous
+`h` with `h t ≤ K ∫₀ᵗ h` vanishes, via the **antiderivative** `U t = ∫₀ᵗ h` (which *is* `C¹`,
+`U' = h`, sidestepping the norm's corner at `0`) fed to the derivative-form
+`norm_le_gronwallBound_of_norm_deriv_right_le` — precisely the ingredient an earlier attempt
+flagged as unpackaged in Mathlib `v4.31.0`. What remains (on this now-sound statement) is the ODE
+plumbing that produces the integral inequality `h t ≤ K ∫₀ᵗ h` and consumes the Grönwall lemma:
+the FTC representation of the flow (velocity time-continuity is *derivable* — `Φ_·x` is continuous
+from the `deriv` clause, `μ₀.map Φ_·` is `W₁`-continuous by the coupling bound, and the field is
+jointly Lipschitz), the pointwise bound averaged over `μ₀` (Tonelli) into that inequality, and the
+a.e.-to-everywhere transfer by single-ODE uniqueness (`ODE_solution_unique_of_mem_Icc`) against the
+now-common measure trajectory. It pins the mean-field flow of a measure-independent block to the
+linear `Block` flow, which is what transfers the Appendix-B gated results to this interface. -/
 axiom meanFieldFlow_unique {p : AttnParams d} {μ₀ : Measure (Eucl d)}
     [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
     {Φ Ψ : ℝ → Eucl d → Eucl d}
