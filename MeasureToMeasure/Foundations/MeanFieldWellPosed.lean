@@ -31,9 +31,19 @@ Assembling the numerator/denominator moduli through the softmax quotient gives:
 
 With the point modulus (`AttentionEstimates.attnAvg_sub_le_of_norm_le`) this is the *complete*
 Lipschitz-in-(point, `W₁`) modulus of the velocity field, so the **analytic** content of the
-McKean-Vlasov well-posedness axioms is discharged. What remains for `exists_meanFieldFlow` /
-`meanFieldFlow_unique` is the ODE-theoretic assembly (a Grönwall/Picard argument in the joint
-variable), which Mathlib `v4.31.0` cannot express directly for the measure-coupled field.
+McKean-Vlasov well-posedness axioms is discharged.
+
+*Coupling layer* (`CouplingBound` section): the last *measure-theoretic* ingredient of the
+uniqueness Grönwall — `W1_map_le_lintegral_edist` / `W1_toReal_map_le_integral_norm`, the `W₁`
+analogue of `Axioms.W2_map_le_L2`, bounding `W₁(f_#μ, g_#μ)` by the `μ`-average displacement
+`∫ ‖f − g‖ ∂μ` via the plan `(f, g)_# μ`. Applied to the flow slices this dominates
+`W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)` by `∫ ‖Φ_t − Ψ_t‖ ∂μ₀`, the coupling step of the uniqueness argument.
+
+So both the analytic moduli and the measure-coupling bound are now machine-checked. What remains for
+`exists_meanFieldFlow` / `meanFieldFlow_unique` is purely the ODE-theoretic assembly (an FTC
+representation of the flow trajectory — whose velocity's time-continuity the `deriv` clause does not
+carry — plus an integral Grönwall and an a.e.-to-everywhere transfer), which Mathlib `v4.31.0`
+cannot express directly for the measure-coupled field.
 -/
 
 namespace MeasureToMeasure.Foundations
@@ -363,5 +373,46 @@ theorem norm_field_sub_measure_W1_le (p : AttnParams d) {μ ν : Measure (Eucl d
         ring
 
 end MeasureModulus
+
+/-! ### The measure-trajectory coupling bound
+
+The final measure-theoretic ingredient of the mean-field uniqueness Grönwall. The `W₁` distance
+between two pushforwards of a common measure `μ` is bounded by the `μ`-average displacement of the
+two maps — the `W₁` analogue of `Axioms.W2_map_le_L2`, witnessed by the plan `(f, g)_# μ`, whose
+transport cost is exactly that average displacement. Applied to the two flow slices `Φ_t, Ψ_t` and
+`μ = μ₀` it turns the pointwise flow distance `∫ ‖Φ_t x − Ψ_t x‖ ∂μ₀` into a control on
+`W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)` — the coupling step that feeds the field's measure modulus in the
+Grönwall estimate. -/
+
+section CouplingBound
+
+variable {μ : Measure (Eucl d)} {f g : Eucl d → Eucl d}
+
+/-- **`W₁` map-coupling bound (`ℝ≥0∞` form).** The `W₁` distance between two pushforwards of `μ` is
+at most the `μ`-average `edist` of the maps, witnessed by the plan `(f, g)_# μ`. -/
+theorem W1_map_le_lintegral_edist (hf : Measurable f) (hg : Measurable g) :
+    W1 (μ.map f) (μ.map g) ≤ ∫⁻ x, edist (f x) (g x) ∂μ := by
+  have hcpl : IsCoupling (μ.map fun x => (f x, g x)) (μ.map f) (μ.map g) :=
+    ⟨Measure.fst_map_prodMk hg, Measure.snd_map_prodMk hf⟩
+  calc W1 (μ.map f) (μ.map g)
+      ≤ transportCost (μ.map fun x => (f x, g x)) := W1_le_transportCost hcpl
+    _ = ∫⁻ x, edist (f x) (g x) ∂μ := by
+        rw [transportCost, lintegral_map (by fun_prop) (by fun_prop)]
+
+/-- **`W₁` map-coupling bound (`ℝ` form).** For a `μ`-integrable displacement the real-valued `W₁`
+between the two pushforwards is at most the average norm displacement `∫ ‖f x − g x‖ ∂μ`. This is the
+bridge from the pointwise flow distance to `W₁` that the uniqueness Grönwall consumes. -/
+theorem W1_toReal_map_le_integral_norm (hf : Measurable f) (hg : Measurable g)
+    (hint : Integrable (fun x => ‖f x - g x‖) μ) :
+    (W1 (μ.map f) (μ.map g)).toReal ≤ ∫ x, ‖f x - g x‖ ∂μ := by
+  have hle := W1_map_le_lintegral_edist (μ := μ) hf hg
+  have heq : ∫⁻ x, edist (f x) (g x) ∂μ = ENNReal.ofReal (∫ x, ‖f x - g x‖ ∂μ) := by
+    rw [ofReal_integral_eq_lintegral_ofReal hint (ae_of_all _ fun x => norm_nonneg _)]
+    exact lintegral_congr fun x => by rw [edist_dist, dist_eq_norm]
+  rw [heq] at hle
+  rw [← ENNReal.toReal_ofReal (integral_nonneg fun x => norm_nonneg _)]
+  exact ENNReal.toReal_mono ENNReal.ofReal_ne_top hle
+
+end CouplingBound
 
 end MeasureToMeasure.Foundations

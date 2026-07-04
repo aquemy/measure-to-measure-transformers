@@ -142,10 +142,11 @@ discharged: the *point* modulus is `AttentionEstimates.attnAvg_sub_le_of_norm_le
 (`‖field μ x − field ν x‖ ≤ ‖V‖·(e^{2‖B‖}+e^{4‖B‖})(1+‖B‖)·(W₁ μ ν).toReal`), obtained from the
 self-attention average's `W₁`-modulus `attnAvg_sub_measure_le` via the on-sphere Kantorovich-
 Rubinstein bound (the softmax integrands are Lipschitz only on the sphere, but every coupling of
-sphere-supported measures sits on `sphere × sphere`). What remains is purely ODE-theoretic: a
-Picard iteration in the joint (point, `W₁`) variable for `exists_meanFieldFlow` and a Grönwall
-argument for `meanFieldFlow_unique`, neither expressible in Mathlib `v4.31.0` for the
-measure-coupled field. -/
+sphere-supported measures sits on `sphere × sphere`). The measure-trajectory coupling bound is now
+machine-checked too (`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`:
+`(W₁(f_#μ, g_#μ)).toReal ≤ ∫ ‖f − g‖ ∂μ`), so what remains is purely ODE-theoretic: a Picard
+iteration in the joint (point, `W₁`) variable for `exists_meanFieldFlow` and a Grönwall argument for
+`meanFieldFlow_unique`, neither expressible in Mathlib `v4.31.0` for the measure-coupled field. -/
 axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
     [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
     ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ
@@ -155,12 +156,15 @@ mean-field flows of the same block and datum agree on the sphere throughout the 
 AXIOM (`math.axiomatised`): the uniqueness half of the same McKean-Vlasov well-posedness. Its
 analytic input — the field's joint Lipschitz-in-(point, `W₁`) modulus — is now machine-checked
 (`MeanFieldWellPosed.norm_field_sub_measure_W1_le` + `AttentionEstimates.attnAvg_sub_le_of_norm_le`).
-What remains is the Grönwall assembly itself: for the two flows `Φ, Ψ`, bound
-`h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` (which dominates `W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)` via the coupling
-`(Φ_t, Ψ_t)_#μ₀`), obtain `h t ≤ K ∫₀ᵗ h` from the `deriv` clause + the moduli + Fubini, conclude
-`h ≡ 0` by Grönwall, and then transfer to the *everywhere*-on-sphere statement via non-autonomous
-single-ODE uniqueness against the now-common measure trajectory — an ODE-theoretic composition
-Mathlib `v4.31.0` does not package for the measure-coupled field. It pins the mean-field flow of a
+The measure-coupling step is now also machine-checked: for `h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` the
+domination `(W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)).toReal ≤ h t` (witnessed by the plan `(Φ_t, Ψ_t)_#μ₀`) is
+`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. What remains is therefore purely the ODE
+integration: obtain `h t ≤ K ∫₀ᵗ h` from the `deriv` clause + the (point and measure) moduli +
+Fubini, conclude `h ≡ 0` by Grönwall, and transfer to the *everywhere*-on-sphere statement via
+non-autonomous single-ODE uniqueness against the now-common measure trajectory — an ODE-theoretic
+composition (a fundamental-theorem-of-calculus representation of the trajectory whose velocity's
+time-continuity is not carried by the `deriv` clause, then an integral Grönwall) that Mathlib
+`v4.31.0` does not package for the measure-coupled field. It pins the mean-field flow of a
 measure-independent block to the linear `Block` flow, which is what transfers the Appendix-B
 gated results to this interface. -/
 axiom meanFieldFlow_unique {p : AttnParams d} {μ₀ : Measure (Eucl d)}
