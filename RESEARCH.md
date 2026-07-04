@@ -581,6 +581,38 @@ Lesson: the same degenerate-instantiation discipline that caught the F11-F16 fal
 when *discharging* an axiom — the construction's real hypotheses (here `d ≥ 2`) are exposed the
 moment a proof is attempted, and are strictly stronger than a type-correct transcription guessed.
 
+### F19 (soundness + discharge — recorded 2026-07-04) Lemma 5.1's disjoint-support form is unprovable without measurable transport maps; discharged once `Measurable Tᵢ` is restored
+
+Discharging `lemma_5_1` (glue per-pair transport maps of a disentangled family into a single
+matching map) exposed a missing-measurability gap in its own hypothesis. The pre-F19 form asked only
+`hmatch : ∀ i, ∃ Tᵢ, (μ₀ i).map Tᵢ = μ₁ i` — no measurability on `Tᵢ`. Mathlib defines
+`Measure.map f = 0` whenever `f` is not `AEMeasurable`, so this hypothesis is satisfiable by a
+*non-measurable* `Tᵢ` paired with `μ₁ i = 0` even when `μ₀ i ≠ 0`. The conclusion then demands a
+**measurable** `ψ` with `(μ₀ i).map ψ = 0`, which is impossible: a measurable pushforward preserves
+total mass (`((μ₀ i).map ψ) Set.univ = μ₀ i (ψ⁻¹ Set.univ) = μ₀ i Set.univ ≠ 0`). So the unrestricted
+form is **not provable** — it has an unsatisfiable instance. Unlike F11-F18, this gap admits **no
+constructive kernel refutation**: exhibiting it requires a non-`AEMeasurable` function, and the
+existence of one is non-constructive (a Vitali-type non-measurable set), so no `OldSig → False`
+witness can be built with the hypotheses discharged in-kernel. It is therefore recorded here as a
+reasoned soundness note rather than a committed disproof — the honesty standard forbids fabricating a
+`False` witness, and the reasoned argument is the faithful record.
+
+Fix: `Measurable Tᵢ` added to `hmatch`. This is faithful, not a convenience: the paper's Lemma 5.1
+matches the disentangled measures by transport (Monge) maps, which are measurable by construction, so
+the hypothesis the Lean statement had silently dropped is exactly the one the paper's context
+supplies (the F11-F18 pattern). `lemma_5_1` is now a `theorem` (`math.machine-checked`), not an axiom,
+and the discharge also *corrects an over-pessimistic provenance note*: the axiom had claimed the glue
+"rests on the optimal-transport / measurable-selection theory Mathlib lacks", but for the
+disjoint-support case it is elementary. Carve measurable full-mass carriers
+`C i := (toMeasurable (μ₀ i) (S i)ᶜ)ᶜ`; each is measurable, has `μ₀ i (C i)ᶜ = 0` (`toMeasurable`
+preserves measure), and sits inside the disjoint `S i`, so the `C i` are pairwise disjoint for free —
+no `MutuallySingular` machinery. Then `ψ := ∑ i, (C i).indicator Tᵢ` is measurable (finite sum of
+`Measurable.indicator`s) and equals `Tᵢ` on `C i` by disjointness, hence `ψ =ᵐ[μ₀ i] Tᵢ` and
+`(μ₀ i).map ψ = (μ₀ i).map Tᵢ = μ₁ i` by `Measure.map_congr`. Lesson: the `Measure.map`-of-a-non-
+measurable-function-is-zero convention is a standing trap for transcription fidelity — a `.map`
+equality hypothesis silently permits garbage maps unless measurability is stated, and the omission is
+invisible until a discharge forces the mass-preservation obstruction into view.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
