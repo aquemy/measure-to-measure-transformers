@@ -415,4 +415,143 @@ theorem W1_toReal_map_le_integral_norm (hf : Measurable f) (hg : Measurable g)
 
 end CouplingBound
 
+/-! ### The point modulus: `x ↦ field μ x` is Lipschitz on the sphere
+
+The measure modulus (`norm_field_sub_measure_W1_le`) controls the field's dependence on `μ`; the
+ODE-uniqueness step of mean-field well-posedness also needs its dependence on the *point* — the field
+`field μ ·` Lipschitz on the sphere (the `LipschitzOnWith` hypothesis of `ODE_solution_unique`). The
+self-attention average's point modulus lives in `AttentionEstimates.attnAvg_sub_le_of_norm_le`, but
+the *field* wraps that average in the base-point-dependent projector `P_x^⊥` and adds the perceptron
+term `W (U x + b)₊`, so the field's own point modulus is a genuine further step: the projector varies
+with the base point (`norm_tangentialProjector_sub_point_le`) and the perceptron term is Lipschitz
+through the nonexpansive coordinatewise ReLU (`norm_reluVec_sub_le`). -/
+
+section PointModulus
+
+/-- **The tangential projector is Lipschitz in its base point** (on the sphere):
+`‖P_x^⊥ v - P_y^⊥ v‖ ≤ 2 ‖v‖ ‖x - y‖` for `x, y ∈ 𝕊^{d-1}`. Writing
+`P_x^⊥ v - P_y^⊥ v = ⟪y - x, v⟫ y + ⟪x, v⟫ (y - x)` and bounding each inner product by Cauchy–Schwarz
+with `‖x‖ = ‖y‖ = 1`. -/
+theorem norm_tangentialProjector_sub_point_le {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d)
+    (v : Eucl d) :
+    ‖tangentialProjector x v - tangentialProjector y v‖ ≤ 2 * ‖v‖ * ‖x - y‖ := by
+  have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hx
+  have hyn : ‖y‖ = 1 := norm_eq_one_of_mem_sphere hy
+  have key : tangentialProjector x v - tangentialProjector y v
+      = (⟪y - x, v⟫ : ℝ) • y + (⟪x, v⟫ : ℝ) • (y - x) := by
+    simp only [tangentialProjector_apply, inner_sub_left, sub_smul, smul_sub]
+    abel
+  rw [key]
+  have h1 : ‖(⟪y - x, v⟫ : ℝ) • y‖ ≤ ‖x - y‖ * ‖v‖ := by
+    rw [norm_smul, Real.norm_eq_abs, hyn, mul_one]
+    calc |(⟪y - x, v⟫ : ℝ)| ≤ ‖y - x‖ * ‖v‖ := abs_real_inner_le_norm _ _
+      _ = ‖x - y‖ * ‖v‖ := by rw [norm_sub_rev]
+  have h2 : ‖(⟪x, v⟫ : ℝ) • (y - x)‖ ≤ ‖v‖ * ‖x - y‖ := by
+    rw [norm_smul, Real.norm_eq_abs, norm_sub_rev]
+    have hxv : |(⟪x, v⟫ : ℝ)| ≤ ‖v‖ := by
+      calc |(⟪x, v⟫ : ℝ)| ≤ ‖x‖ * ‖v‖ := abs_real_inner_le_norm _ _
+        _ = ‖v‖ := by rw [hxn, one_mul]
+    exact mul_le_mul_of_nonneg_right hxv (norm_nonneg _)
+  calc ‖(⟪y - x, v⟫ : ℝ) • y + (⟪x, v⟫ : ℝ) • (y - x)‖
+      ≤ ‖(⟪y - x, v⟫ : ℝ) • y‖ + ‖(⟪x, v⟫ : ℝ) • (y - x)‖ := norm_add_le _ _
+    _ ≤ ‖x - y‖ * ‖v‖ + ‖v‖ * ‖x - y‖ := add_le_add h1 h2
+    _ = 2 * ‖v‖ * ‖x - y‖ := by ring
+
+/-- **Coordinatewise ReLU is nonexpansive:** `‖(a)₊ - (b)₊‖ ≤ ‖a - b‖`. Each coordinate
+`t ↦ max 0 t` is `1`-Lipschitz (`abs_max_sub_max_le_abs`), so the `L²` norm cannot increase. -/
+theorem norm_reluVec_sub_le (a b : Eucl d) : ‖reluVec a - reluVec b‖ ≤ ‖a - b‖ := by
+  rw [EuclideanSpace.norm_eq (reluVec a - reluVec b), EuclideanSpace.norm_eq (a - b)]
+  apply Real.sqrt_le_sqrt
+  apply Finset.sum_le_sum
+  intro i _
+  have h : |max 0 (a.ofLp i) - max 0 (b.ofLp i)| ≤ |a.ofLp i - b.ofLp i| := by
+    rw [max_comm 0 (a.ofLp i), max_comm 0 (b.ofLp i)]
+    exact abs_max_sub_max_le_abs _ _ _
+  simp only [reluVec, WithLp.ofLp_sub, Real.norm_eq_abs, Pi.sub_apply]
+  exact pow_le_pow_left₀ (abs_nonneg _) h 2
+
+/-- **Coordinatewise ReLU is bounded by the identity:** `‖(a)₊‖ ≤ ‖a‖` (nonexpansiveness at
+`b = 0`, since `(0)₊ = 0`). -/
+theorem norm_reluVec_le (a : Eucl d) : ‖reluVec a‖ ≤ ‖a‖ := by
+  have h0 : reluVec (0 : Eucl d) = 0 := by ext i; simp [reluVec]
+  calc ‖reluVec a‖ = ‖reluVec a - reluVec 0‖ := by rw [h0, sub_zero]
+    _ ≤ ‖a - 0‖ := norm_reluVec_sub_le a 0
+    _ = ‖a‖ := by rw [sub_zero]
+
+/-- **Point modulus of the field on the sphere.** For a fixed sphere-supported probability measure
+`μ`, the field `field μ ·` is Lipschitz on `𝕊^{d-1}`: the attention average's point modulus
+(`attnAvg_sub_le_of_norm_le`) drives the `V`-term, the nonexpansive coordinatewise ReLU
+(`norm_reluVec_sub_le`) drives the perceptron term, and the projector's base-point Lipschitzness
+(`norm_tangentialProjector_sub_point_le`) accounts for `P_x^⊥`'s own `x`-dependence (with the
+argument bounded via `norm_attnAvg_le` / `norm_reluVec_le`). Together with the measure modulus
+`norm_field_sub_measure_W1_le` this is the *complete* joint Lipschitz-in-`(point, W₁)` modulus of the
+field — the `LipschitzOnWith` hypothesis on `field μ ·` that the mean-field uniqueness ODE argument
+(`ODE_solution_unique`) consumes. -/
+theorem norm_field_sub_point_le (p : AttnParams d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (hμS : μ (sphere d)ᶜ = 0) {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere d) :
+    ‖p.field μ x - p.field μ y‖ ≤
+      ((‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
+        + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖))) * ‖x - y‖ := by
+  have hxb : ‖x‖ ≤ 1 := (norm_eq_one_of_mem_sphere hx).le
+  have hyb : ‖y‖ ≤ 1 := (norm_eq_one_of_mem_sphere hy).le
+  set ax := p.V (attnAvg p.B μ x) + p.W (reluVec (p.U x + p.b)) with hax
+  set ay := p.V (attnAvg p.B μ y) + p.W (reluVec (p.U y + p.b)) with hay
+  have hfield : p.field μ x - p.field μ y
+      = tangentialProjector x (ax - ay)
+        + (tangentialProjector x ay - tangentialProjector y ay) := by
+    simp only [AttnParams.field, hax, hay]
+    rw [tangentialProjector_sub]
+    abel
+  -- `‖ax - ay‖` bound: attention point modulus + nonexpansive ReLU.
+  have haxay : ‖ax - ay‖
+      ≤ (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖) * ‖x - y‖ := by
+    have e1 : ax - ay = p.V (attnAvg p.B μ x - attnAvg p.B μ y)
+        + p.W (reluVec (p.U x + p.b) - reluVec (p.U y + p.b)) := by
+      simp only [hax, hay, map_sub]; abel
+    have eU : (p.U x + p.b) - (p.U y + p.b) = p.U (x - y) := by rw [map_sub]; abel
+    rw [e1]
+    calc ‖p.V (attnAvg p.B μ x - attnAvg p.B μ y)
+            + p.W (reluVec (p.U x + p.b) - reluVec (p.U y + p.b))‖
+        ≤ ‖p.V (attnAvg p.B μ x - attnAvg p.B μ y)‖
+            + ‖p.W (reluVec (p.U x + p.b) - reluVec (p.U y + p.b))‖ := norm_add_le _ _
+      _ ≤ ‖p.V‖ * ‖attnAvg p.B μ x - attnAvg p.B μ y‖
+            + ‖p.W‖ * ‖reluVec (p.U x + p.b) - reluVec (p.U y + p.b)‖ :=
+          add_le_add (p.V.le_opNorm _) (p.W.le_opNorm _)
+      _ ≤ ‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖) * ‖x - y‖) + ‖p.W‖ * ‖p.U (x - y)‖ := by
+          gcongr
+          · exact attnAvg_sub_le_of_norm_le p.B hμS hxb hyb
+          · rw [← eU]; exact norm_reluVec_sub_le _ _
+      _ ≤ ‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖) * ‖x - y‖) + ‖p.W‖ * (‖p.U‖ * ‖x - y‖) := by
+          gcongr; exact p.U.le_opNorm _
+      _ = (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖) * ‖x - y‖ := by ring
+  -- `‖ay‖` bound: attention average bounded + ReLU bounded.
+  have hay_bd : ‖ay‖ ≤ ‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖) := by
+    calc ‖ay‖ ≤ ‖p.V (attnAvg p.B μ y)‖ + ‖p.W (reluVec (p.U y + p.b))‖ := by
+            rw [hay]; exact norm_add_le _ _
+      _ ≤ ‖p.V‖ * ‖attnAvg p.B μ y‖ + ‖p.W‖ * ‖reluVec (p.U y + p.b)‖ :=
+          add_le_add (p.V.le_opNorm _) (p.W.le_opNorm _)
+      _ ≤ ‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * ‖p.U y + p.b‖ := by
+          gcongr
+          · exact norm_attnAvg_le p.B hμS hyb
+          · exact norm_reluVec_le _
+      _ ≤ ‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖) := by
+          gcongr
+          calc ‖p.U y + p.b‖ ≤ ‖p.U y‖ + ‖p.b‖ := norm_add_le _ _
+            _ ≤ ‖p.U‖ * ‖y‖ + ‖p.b‖ := by gcongr; exact p.U.le_opNorm _
+            _ = ‖p.U‖ + ‖p.b‖ := by rw [norm_eq_one_of_mem_sphere hy, mul_one]
+  rw [hfield]
+  calc ‖tangentialProjector x (ax - ay)
+          + (tangentialProjector x ay - tangentialProjector y ay)‖
+      ≤ ‖tangentialProjector x (ax - ay)‖
+          + ‖tangentialProjector x ay - tangentialProjector y ay‖ := norm_add_le _ _
+    _ ≤ ‖ax - ay‖ + 2 * ‖ay‖ * ‖x - y‖ :=
+        add_le_add (norm_tangentialProjector_le hx _) (norm_tangentialProjector_sub_point_le hx hy _)
+    _ ≤ (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖) * ‖x - y‖
+          + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) * ‖x - y‖ := by
+        gcongr
+    _ = ((‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
+          + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖))) * ‖x - y‖ := by ring
+
+end PointModulus
+
 end MeasureToMeasure.Foundations

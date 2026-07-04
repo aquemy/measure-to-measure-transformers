@@ -137,7 +137,9 @@ is *proved* in `Foundations/FlowMap.lean` (milestone M3); this axiom is the genu
 remainder (M3b).
 
 The field's Lipschitz moduli are now machine-checked, so the **analytic** content of this axiom is
-discharged: the *point* modulus is `AttentionEstimates.attnAvg_sub_le_of_norm_le`, and the
+discharged: the *point* modulus is `MeanFieldWellPosed.norm_field_sub_point_le` (the field's own
+modulus — the base-point projector `P_x^⊥` and the coordinatewise ReLU included, built over
+`AttentionEstimates.attnAvg_sub_le_of_norm_le`), and the
 *measure* modulus is `MeanFieldWellPosed.norm_field_sub_measure_W1_le`
 (`‖field μ x − field ν x‖ ≤ ‖V‖·(e^{2‖B‖}+e^{4‖B‖})(1+‖B‖)·(W₁ μ ν).toReal`), obtained from the
 self-attention average's `W₁`-modulus `attnAvg_sub_measure_le` via the on-sphere Kantorovich-
@@ -154,17 +156,23 @@ axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
 /-- **Well-posedness of the self-attention mean-field flow (uniqueness on the sphere).** Two
 mean-field flows of the same block and datum agree on the sphere throughout the block's duration.
 AXIOM (`math.axiomatised`): the uniqueness half of the same McKean-Vlasov well-posedness. Its
-analytic input — the field's joint Lipschitz-in-(point, `W₁`) modulus — is now machine-checked
-(`MeanFieldWellPosed.norm_field_sub_measure_W1_le` + `AttentionEstimates.attnAvg_sub_le_of_norm_le`).
-The measure-coupling step is now also machine-checked: for `h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` the
-domination `(W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)).toReal ≤ h t` (witnessed by the plan `(Φ_t, Ψ_t)_#μ₀`) is
-`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. What remains is therefore purely the ODE
-integration: obtain `h t ≤ K ∫₀ᵗ h` from the `deriv` clause + the (point and measure) moduli +
-Fubini, conclude `h ≡ 0` by Grönwall, and transfer to the *everywhere*-on-sphere statement via
-non-autonomous single-ODE uniqueness against the now-common measure trajectory — an ODE-theoretic
-composition (a fundamental-theorem-of-calculus representation of the trajectory whose velocity's
-time-continuity is not carried by the `deriv` clause, then an integral Grönwall) that Mathlib
-`v4.31.0` does not package for the measure-coupled field. It pins the mean-field flow of a
+analytic input — the field's joint Lipschitz-in-(point, `W₁`) modulus — is now machine-checked in
+full: the *point* modulus `MeanFieldWellPosed.norm_field_sub_point_le` (the field's own, accounting
+for the base-point projector `P_x^⊥` and the coordinatewise ReLU — not merely `attnAvg`'s) and the
+*measure* modulus `MeanFieldWellPosed.norm_field_sub_measure_W1_le`. The measure-coupling step is
+machine-checked too: for `h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` the domination
+`(W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)).toReal ≤ h t` (witnessed by the plan `(Φ_t, Ψ_t)_#μ₀`) is
+`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. The plan is then `h t ≤ K ∫₀ᵗ h` from the
+`deriv` clause + the moduli + Fubini, `h ≡ 0` by Grönwall, and transfer to *everywhere* on the
+sphere via non-autonomous single-ODE uniqueness (`ODE_solution_unique_of_mem_Icc`) against the
+now-common measure trajectory. The one remaining obstruction is the Grönwall step, and it is
+specific: Mathlib `v4.31.0`'s Grönwall lemmas are all *derivative*-form
+(`norm_le_gronwallBound_of_norm_deriv_right_le`), but `h t` is not differentiable in `t` (the norm
+has a corner at `0`), while the per-trajectory `dist_le_of_approx_trajectories_ODE` decouples the two
+flows only at the cost of a coupling error `εg = C · (W₁((Φ_s)_#μ₀, (Ψ_s)_#μ₀)).toReal` that is *not*
+a small constant — it is controlled solely by `h s` itself. So the discharge needs a self-referential
+*integral-inequality* Grönwall on a non-differentiable functional, which Mathlib `v4.31.0` does not
+package for the measure-coupled field. It pins the mean-field flow of a
 measure-independent block to the linear `Block` flow, which is what transfers the Appendix-B
 gated results to this interface. -/
 axiom meanFieldFlow_unique {p : AttnParams d} {μ₀ : Measure (Eucl d)}
