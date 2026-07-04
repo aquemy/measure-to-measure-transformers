@@ -623,4 +623,167 @@ theorem gronwall_integral_zero {K T : ℝ} (hT : 0 ≤ T) {h : ℝ → ℝ}
 
 end UniquenessGronwall
 
+/-! ### Velocity time-continuity and the FTC representation of the flow
+
+The purely ODE-theoretic bridge that the mean-field uniqueness Grönwall consumes. Along a
+mean-field flow `Φ` of a **sphere-supported probability** datum `μ₀`, the velocity
+`s ↦ field((Φ_s)_#μ₀)(Φ_s x)` is continuous in time on `[0, duration]`. `IsMeanFieldFlow.deriv`
+supplies only a pointwise `HasDerivAt`, so time-continuity is *derived*, not assumed: `s ↦ Φ_s x`
+is continuous (a function with a derivative everywhere on the interval), `s ↦ (Φ_s)_#μ₀` is
+`W₁`-continuous (dominated convergence through the coupling bound `W1_toReal_map_le_integral_norm`),
+and `field` is jointly Lipschitz in `(point, W₁)` (`norm_field_sub_point_le`,
+`norm_field_sub_measure_W1_le`). Continuity makes the velocity interval-integrable, so the
+fundamental theorem of calculus represents the trajectory as
+`Φ_t x - x = ∫₀ᵗ field((Φ_s)_#μ₀)(Φ_s x) ds` — the representation the Grönwall
+(`gronwall_integral_zero`) consumes. -/
+
+section FlowRepresentation
+
+variable {p : AttnParams d} {μ₀ : Measure (Eucl d)} {Φ : ℝ → Eucl d → Eucl d}
+
+/-- Each time slice of a mean-field flow pushes a probability datum to a probability measure. -/
+theorem isProbabilityMeasure_map_flow [IsProbabilityMeasure μ₀] (hΦ : IsMeanFieldFlow p μ₀ Φ)
+    {t : ℝ} (ht : t ∈ Set.Icc 0 p.duration) : IsProbabilityMeasure (μ₀.map (Φ t)) :=
+  ⟨by rw [Measure.map_apply (hΦ.measurable t ht) MeasurableSet.univ, Set.preimage_univ];
+      exact measure_univ⟩
+
+/-- Each time slice keeps a sphere-supported datum sphere-supported (the sphere is invariant,
+`sphere_bijOn`). -/
+theorem map_flow_sphere_support [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) {t : ℝ} (ht : t ∈ Set.Icc 0 p.duration) :
+    (μ₀.map (Φ t)) (sphere d)ᶜ = 0 := by
+  have hms : MeasurableSet ((sphere d)ᶜ) := Metric.isClosed_sphere.measurableSet.compl
+  rw [Measure.map_apply (hΦ.measurable t ht) hms]
+  refine measure_mono_null (fun y hy => ?_) hμ₀S
+  simp only [Set.mem_preimage, Set.mem_compl_iff] at hy ⊢
+  exact fun hyS => hy ((hΦ.sphere_bijOn t ht).mapsTo hyS)
+
+/-- On the sphere, the pointwise displacement of two time slices is at most `2` (both slices land on
+the sphere), the dominating bound for the dominated-convergence arguments below. -/
+theorem norm_flow_sub_le_two (hΦ : IsMeanFieldFlow p μ₀ Φ) {s t : ℝ}
+    (hs : s ∈ Set.Icc 0 p.duration) (ht : t ∈ Set.Icc 0 p.duration) {y : Eucl d}
+    (hy : y ∈ sphere d) : ‖Φ s y - Φ t y‖ ≤ 2 := by
+  have h1 : Φ s y ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hy
+  have h2 : Φ t y ∈ sphere d := (hΦ.sphere_bijOn t ht).mapsTo hy
+  calc ‖Φ s y - Φ t y‖ ≤ ‖Φ s y‖ + ‖Φ t y‖ := norm_sub_le _ _
+    _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+
+/-- The `μ₀`-average displacement between two time slices is integrable (bounded by `2`). -/
+theorem integrable_norm_flow_sub [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) {s t : ℝ} (hs : s ∈ Set.Icc 0 p.duration)
+    (ht : t ∈ Set.Icc 0 p.duration) : Integrable (fun y => ‖Φ s y - Φ t y‖) μ₀ := by
+  refine Integrable.mono' (integrable_const (2 : ℝ))
+    ((hΦ.measurable s hs).sub (hΦ.measurable t ht)).norm.aestronglyMeasurable ?_
+  refine ae_of_sphere_supported hμ₀S (fun y hy => ?_)
+  rw [norm_norm]; exact norm_flow_sub_le_two hΦ hs ht hy
+
+/-- The `μ₀`-average flow displacement `∫ ‖Φ_s − Φ_{s₀}‖ ∂μ₀ → 0` as `s → s₀` (dominated
+convergence: pointwise on the sphere each `s ↦ Φ_s y` is continuous, dominated by `2`). -/
+theorem integral_flow_sub_tendsto_zero [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) {s₀ : ℝ} (hs₀ : s₀ ∈ Set.Icc 0 p.duration) :
+    Filter.Tendsto (fun s => ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀)
+      (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds 0) := by
+  have hcont : ContinuousWithinAt (fun s => ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀)
+      (Set.Icc 0 p.duration) s₀ := by
+    refine MeasureTheory.continuousWithinAt_of_dominated (bound := fun _ => (2 : ℝ)) ?_ ?_
+      (integrable_const _) ?_
+    · filter_upwards [self_mem_nhdsWithin] with s hs
+      exact ((hΦ.measurable s hs).sub (hΦ.measurable s₀ hs₀)).norm.aestronglyMeasurable
+    · filter_upwards [self_mem_nhdsWithin] with s hs
+      refine ae_of_sphere_supported hμ₀S (fun y hy => ?_)
+      rw [norm_norm]; exact norm_flow_sub_le_two hΦ hs hs₀ hy
+    · refine ae_of_sphere_supported hμ₀S (fun y hy => ?_)
+      exact ((((hΦ.deriv y hy s₀ hs₀).continuousAt).continuousWithinAt).sub
+        continuousWithinAt_const).norm
+  have hval : Filter.Tendsto (fun s => ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀)
+      (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds (∫ y, ‖Φ s₀ y - Φ s₀ y‖ ∂μ₀)) := hcont
+  simpa using hval
+
+/-- **Leaf A — velocity time-continuity.** Along a mean-field flow of a sphere-supported
+probability datum, the velocity `s ↦ field((Φ_s)_#μ₀)(Φ_s x)` is continuous on `[0, duration]`. -/
+theorem velocity_continuousOn [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) {x : Eucl d} (hx : x ∈ sphere d) :
+    ContinuousOn (fun s => p.field (μ₀.map (Φ s)) (Φ s x)) (Set.Icc 0 p.duration) := by
+  intro s₀ hs₀
+  set Cp : ℝ := (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
+    + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) with hCp
+  set Cm : ℝ := ‖p.V‖ * ((Real.exp (2 * ‖p.B‖) + Real.exp (4 * ‖p.B‖)) * (1 + ‖p.B‖)) with hCm
+  have hCm0 : 0 ≤ Cm := by rw [hCm]; positivity
+  -- The two scalar quantities that vanish at `s₀`.
+  have ha : Filter.Tendsto (fun s => ‖Φ s x - Φ s₀ x‖)
+      (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds 0) := by
+    have hnorm : ContinuousWithinAt (fun s => ‖Φ s x - Φ s₀ x‖) (Set.Icc 0 p.duration) s₀ :=
+      ((((hΦ.deriv x hx s₀ hs₀).continuousAt).continuousWithinAt).sub continuousWithinAt_const).norm
+    have hval : Filter.Tendsto (fun s => ‖Φ s x - Φ s₀ x‖)
+        (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds ‖Φ s₀ x - Φ s₀ x‖) := hnorm
+    simpa using hval
+  have hb := integral_flow_sub_tendsto_zero hμ₀S hΦ hs₀
+  have hg : Filter.Tendsto
+      (fun s => Cp * ‖Φ s x - Φ s₀ x‖ + Cm * ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀)
+      (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds 0) := by
+    have := (Filter.Tendsto.const_mul Cp ha).add (Filter.Tendsto.const_mul Cm hb)
+    simpa using this
+  -- Squeeze the field difference by `Cp·a + Cm·b`.
+  have key : Filter.Tendsto
+      (fun s => p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x))
+      (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds 0) := by
+    refine squeeze_zero_norm' ?_ hg
+    filter_upwards [self_mem_nhdsWithin] with s hs
+    haveI := isProbabilityMeasure_map_flow hΦ hs
+    haveI := isProbabilityMeasure_map_flow hΦ hs₀
+    have hνsS := map_flow_sphere_support hμ₀S hΦ hs
+    have hνs₀S := map_flow_sphere_support hμ₀S hΦ hs₀
+    have hxs : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hx
+    have hxs₀ : Φ s₀ x ∈ sphere d := (hΦ.sphere_bijOn s₀ hs₀).mapsTo hx
+    have hW1ne : W1 (μ₀.map (Φ s)) (μ₀.map (Φ s₀)) ≠ ⊤ :=
+      W1_ne_top_of_sphere_supported _ _ hνsS hνs₀S
+    -- Point modulus at the measure `(Φ_s)_#μ₀`.
+    have hpt : ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Φ s₀ x)‖
+        ≤ Cp * ‖Φ s x - Φ s₀ x‖ := by
+      have := norm_field_sub_point_le p (μ₀.map (Φ s)) hνsS hxs hxs₀
+      rwa [← hCp] at this
+    -- Measure modulus, then the coupling bound.
+    have hms : ‖p.field (μ₀.map (Φ s)) (Φ s₀ x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x)‖
+        ≤ Cm * ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀ := by
+      have hmod := norm_field_sub_measure_W1_le p hνsS hνs₀S hW1ne hxs₀
+      rw [← hCm] at hmod
+      have hcoup : (W1 (μ₀.map (Φ s)) (μ₀.map (Φ s₀))).toReal ≤ ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀ :=
+        W1_toReal_map_le_integral_norm (hΦ.measurable s hs) (hΦ.measurable s₀ hs₀)
+          (integrable_norm_flow_sub hμ₀S hΦ hs hs₀)
+      exact hmod.trans (mul_le_mul_of_nonneg_left hcoup hCm0)
+    have hsplit :
+        p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x)
+          = (p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Φ s₀ x))
+            + (p.field (μ₀.map (Φ s)) (Φ s₀ x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x)) :=
+      (sub_add_sub_cancel _ _ _).symm
+    calc ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x)‖
+        = ‖(p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Φ s₀ x))
+            + (p.field (μ₀.map (Φ s)) (Φ s₀ x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x))‖ := by
+          rw [hsplit]
+      _ ≤ ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Φ s₀ x)‖
+            + ‖p.field (μ₀.map (Φ s)) (Φ s₀ x) - p.field (μ₀.map (Φ s₀)) (Φ s₀ x)‖ :=
+          norm_add_le _ _
+      _ ≤ Cp * ‖Φ s x - Φ s₀ x‖ + Cm * ∫ y, ‖Φ s y - Φ s₀ y‖ ∂μ₀ := add_le_add hpt hms
+  rwa [tendsto_sub_nhds_zero_iff] at key
+
+/-- **Leaf B — FTC representation of the flow.** The trajectory of a sphere point along a mean-field
+flow of a sphere-supported probability datum is the time integral of its velocity:
+`Φ_t x - x = ∫₀ᵗ field((Φ_s)_#μ₀)(Φ_s x) ds`. This is the representation the uniqueness Grönwall
+(`gronwall_integral_zero`) consumes. -/
+theorem flow_sub_eq_integral_field [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) {x : Eucl d} (hx : x ∈ sphere d)
+    {t : ℝ} (ht : t ∈ Set.Icc 0 p.duration) :
+    Φ t x - x = ∫ s in (0)..t, p.field (μ₀.map (Φ s)) (Φ s x) := by
+  have h0mem : (0 : ℝ) ∈ Set.Icc 0 p.duration := ⟨le_refl 0, p.duration_nonneg⟩
+  have hsub : Set.uIcc 0 t ⊆ Set.Icc 0 p.duration := Set.uIcc_subset_Icc h0mem ht
+  have hderiv : ∀ s ∈ Set.uIcc 0 t,
+      HasDerivAt (fun s => Φ s x) (p.field (μ₀.map (Φ s)) (Φ s x)) s :=
+    fun s hs => hΦ.deriv x hx s (hsub hs)
+  have hint : IntervalIntegrable (fun s => p.field (μ₀.map (Φ s)) (Φ s x)) volume 0 t :=
+    ((velocity_continuousOn hμ₀S hΦ hx).mono hsub).intervalIntegrable
+  have hftc := intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hint
+  rw [hftc, hΦ.init]; simp
+
+end FlowRepresentation
+
 end MeasureToMeasure.Foundations
