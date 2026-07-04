@@ -141,7 +141,7 @@ example : True := by
     simp
   have _h := lemma_5_1 (fun _ : Fin 1 => Measure.dirac (unitE 1 0))
     (fun _ : Fin 1 => Measure.dirac (unitE 1 0)) hdisj hdisj
-    (fun i => ⟨id, Measure.map_id⟩)
+    (fun i => ⟨id, measurable_id, Measure.map_id⟩)
   trivial
 
 /-- Non-vacuity of `lemma_5_4`: `δ_{e₀}` with the identity transport map. -/

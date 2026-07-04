@@ -395,8 +395,12 @@ axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3
 /-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
 source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition
 3.1 achieves for `μ^i₀` and `μ^i₁` in the paper) -- and each pair is individually matchable, then a
-single bijective map matches them all. AXIOM (`math.axiomatised`): gluing the per-pair transport maps
-across disjoint supports rests on the optimal-transport / measurable-selection theory Mathlib lacks.
+single measurable map matches them all. DISCHARGED (`math.machine-checked`): with each pair's transport
+map taken **measurable** (finding F19 below), the glue is elementary -- carve measurable full-mass
+carriers `C i := (toMeasurable (μ₀ i) (S i)ᶜ)ᶜ ⊆ S i` (pairwise disjoint, inherited from `S`, so NO
+optimal-transport / measurable-selection theory is needed -- the original "Mathlib lacks it"
+justification was too pessimistic for the disjoint-support case) and set `ψ := ∑ i, (C i).indicator Tᵢ`,
+which agrees with each `Tᵢ` `μ₀ i`-a.e. (`Measure.map_congr`).
 
 **Fidelity (soundness):** the disjoint-supports hypotheses are load-bearing and are the paper's context
 (Lemma 5.1 takes the measures from Proposition 3.1 applied to both `μ^i₀` and `μ^i₁`, i.e. already
@@ -410,11 +414,58 @@ injection pushes an atomless measure onto an atom (review finding F13). The pape
 (p.24) does print "invertible", but its own proof (B.4) composes `ψ^i = T^i_{Φ₃} ∘ T^i ∘
 (T^i_{Φ₁})^{-1}` where the per-pair transport `T^i` need not be invertible -- a statement/proof
 mismatch recorded as erratum candidate E2 in `ERRATA.md`. The faithful conclusion keeps
-measurability (required for the pushforward to be meaningful) and drops invertibility. -/
-axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
-    (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
-    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
-    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
+measurability (required for the pushforward to be meaningful) and drops invertibility.
+
+**Missing-measurability gap (finding F19, the repair that makes this provable):** the pre-F19 hypothesis
+was `hmatch : ∀ i, ∃ Tᵢ, (μ₀ i).map Tᵢ = μ₁ i` with **no measurability on `Tᵢ`**. Mathlib defines
+`Measure.map f = 0` when `f` is not `AEMeasurable`, so that hypothesis is satisfiable by a non-measurable
+`Tᵢ` with `μ₁ i = 0` while `μ₀ i ≠ 0`; the conclusion then demands a *measurable* `ψ` with
+`(μ₀ i).map ψ = 0`, impossible because a measurable pushforward preserves total mass
+(`(μ₀ i).map ψ Set.univ = μ₀ i Set.univ ≠ 0`). The unrestricted form is therefore **not provable**. No
+constructive kernel refutation exists (exhibiting the gap requires a non-measurable function, which is
+non-constructive), so this is recorded as a reasoned soundness note rather than a committed `False`
+(`RESEARCH.md` F19). The paper's transport maps are Monge maps -- measurable by construction -- so the
+faithful repair is the added `Measurable Tᵢ`, matching the F11-F18 pattern. The target-disjointness
+hypothesis (bound `_hdisj₁`) is retained for the paper's disentangled context though this pushforward
+direction does not consume it. -/
+theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hdisj₀ : DisjointSupports μ₀) (_hdisj₁ : DisjointSupports μ₁)
+    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, Measurable Ti ∧ (μ₀ i).map Ti = μ₁ i) :
+    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
+  classical
+  obtain ⟨S, hSsupp, hSdisj⟩ := hdisj₀
+  choose T hTmeas hTmap using hmatch
+  -- Measurable, full-mass carriers `C i ⊆ S i`; pairwise disjointness is inherited from `S`.
+  set C : Fin N → Set (Eucl d) := fun i => (toMeasurable (μ₀ i) (S i)ᶜ)ᶜ with hCdef
+  have hCmeas : ∀ i, MeasurableSet (C i) := fun i => (measurableSet_toMeasurable _ _).compl
+  have hCmass : ∀ i, μ₀ i (C i)ᶜ = 0 := by
+    intro i
+    simp only [hCdef, compl_compl]
+    rw [measure_toMeasurable]
+    exact hSsupp i
+  have hCsub : ∀ i, C i ⊆ S i := by
+    intro i x hx
+    simp only [hCdef, Set.mem_compl_iff] at hx
+    by_contra hxS
+    exact hx (subset_toMeasurable (μ₀ i) (S i)ᶜ hxS)
+  have hCdisj : ∀ i j, i ≠ j → Disjoint (C i) (C j) := fun i j hij =>
+    Disjoint.mono (hCsub i) (hCsub j) (hSdisj hij)
+  -- Glue the measurable per-pair maps over the disjoint carriers.
+  refine ⟨fun x => ∑ i, (C i).indicator (T i) x,
+    Finset.measurable_sum _ (fun i _ => (hTmeas i).indicator (hCmeas i)), ?_⟩
+  intro i
+  have hEqOn : Set.EqOn (fun x => ∑ j, (C j).indicator (T j) x) (T i) (C i) := by
+    intro x hx
+    show ∑ j, (C j).indicator (T j) x = T i x
+    rw [Finset.sum_eq_single i
+        (fun j _ hji => Set.indicator_of_notMem
+          (Set.disjoint_left.mp (hCdisj i j hji.symm) hx) (T j))
+        (fun hi => absurd (Finset.mem_univ i) hi)]
+    exact Set.indicator_of_mem hx (T i)
+  have hae : (fun x => ∑ j, (C j).indicator (T j) x) =ᵐ[μ₀ i] T i :=
+    Filter.eventuallyEq_of_mem (mem_ae_iff.mpr (hCmass i)) hEqOn
+  rw [Measure.map_congr hae]
+  exact hTmap i
 
 /-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
 map `ψ` of a sphere-supported probability measure is approximated in `L²(μ)` by a flow map of the
