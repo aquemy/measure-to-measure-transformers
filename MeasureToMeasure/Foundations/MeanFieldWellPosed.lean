@@ -554,4 +554,73 @@ theorem norm_field_sub_point_le (p : AttnParams d) (μ : Measure (Eucl d)) [IsPr
 
 end PointModulus
 
+/-! ### Integral-form Grönwall
+
+The one ingredient the mean-field uniqueness argument needs that Mathlib `v4.31.0` does not package
+directly: a Grönwall inequality for a *nonnegative continuous functional* obeying an *integral*
+bound `h t ≤ K ∫₀ᵗ h`. The functional `h t = ∫ ‖Φ_t x − Ψ_t x‖ ∂μ₀` is not differentiable in `t`
+(the norm has a corner at `0`), so the derivative-form Grönwall does not apply to it directly. The
+antiderivative `U t = ∫₀ᵗ h`, however, *is* `C¹` with `U' = h`, and `U' = h ≤ K U`, `U 0 = 0` feed
+the derivative-form `norm_le_gronwallBound_of_norm_deriv_right_le` to force `U ≡ 0`, whence
+`h ≤ K U = 0`. -/
+
+section UniquenessGronwall
+
+open MeasureTheory Set
+open scoped Topology
+
+/-- **Integral-form Grönwall (nonnegative continuous functional).** If `h ≥ 0` is continuous on
+`[0,T]` and `h t ≤ K · ∫₀ᵗ h` there, then `h ≡ 0` on `[0,T]`. Proved via the antiderivative
+`U t = ∫₀ᵗ h`: `U` is `C¹` with `U' = h`, so `U' = h ≤ K U` and `U 0 = 0` give `U ≡ 0` by the
+derivative-form Grönwall, whence `h t ≤ K U t = 0`. -/
+theorem gronwall_integral_zero {K T : ℝ} (hT : 0 ≤ T) {h : ℝ → ℝ}
+    (hcont : ContinuousOn h (Icc 0 T)) (hnonneg : ∀ t ∈ Icc 0 T, 0 ≤ h t)
+    (hbound : ∀ t ∈ Icc 0 T, h t ≤ K * ∫ s in (0:ℝ)..t, h s) :
+    ∀ t ∈ Icc 0 T, h t = 0 := by
+  set U : ℝ → ℝ := fun t => ∫ s in (0:ℝ)..t, h s with hUdef
+  have hInt : IntervalIntegrable h volume 0 T := hcont.intervalIntegrable_of_Icc hT
+  have hIntOn : IntegrableOn h (Icc 0 T) volume := hcont.integrableOn_Icc
+  have hUnonneg : ∀ t ∈ Icc 0 T, 0 ≤ U t := fun t ht =>
+    intervalIntegral.integral_nonneg ht.1 (fun s hs => hnonneg s ⟨hs.1, hs.2.trans ht.2⟩)
+  have hUcont : ContinuousOn U (Icc 0 T) := by
+    have hc := intervalIntegral.continuousOn_primitive_interval
+      (a := (0:ℝ)) (b := T) (μ := volume) (f := h) (by rw [Set.uIcc_of_le hT]; exact hIntOn)
+    rwa [Set.uIcc_of_le hT] at hc
+  have hUderiv : ∀ x ∈ Ico (0:ℝ) T, HasDerivWithinAt U (h x) (Ici x) x := by
+    intro x hx
+    have hxT : x ≤ T := hx.2.le
+    have hmemFilter : Icc x T ∈ 𝓝[Ici x] x := by
+      rw [← Set.Ici_inter_Iic]
+      exact Filter.inter_mem self_mem_nhdsWithin
+        (mem_nhdsWithin_of_mem_nhds (Iic_mem_nhds hx.2))
+    have hIntx : IntervalIntegrable h volume 0 x :=
+      hInt.mono_set (by rw [Set.uIcc_of_le hx.1, Set.uIcc_of_le hT]; exact Icc_subset_Icc le_rfl hxT)
+    have hcwaIcc : ContinuousWithinAt h (Icc x T) x :=
+      (hcont.mono (Icc_subset_Icc hx.1 le_rfl)).continuousWithinAt ⟨le_rfl, hxT⟩
+    have hcwaIci : ContinuousWithinAt h (Ici x) x := hcwaIcc.mono_of_mem_nhdsWithin hmemFilter
+    have hcwa : ContinuousWithinAt h (Ioi x) x := hcwaIci.mono Set.Ioi_subset_Ici_self
+    have hmeasIci : StronglyMeasurableAtFilter h (𝓝[Ici x] x) volume :=
+      ⟨Icc x T, hmemFilter, (hcont.mono (Icc_subset_Icc hx.1 le_rfl)).aestronglyMeasurable
+        measurableSet_Icc⟩
+    have hmeas : StronglyMeasurableAtFilter h (𝓝[Ioi x] x) volume :=
+      hmeasIci.filter_mono (nhdsWithin_mono x Set.Ioi_subset_Ici_self)
+    exact intervalIntegral.integral_hasDerivWithinAt_right hIntx hmeas hcwa
+  have hUzero : ∀ t ∈ Icc 0 T, U t = 0 := by
+    intro t ht
+    have hb : ∀ x ∈ Ico (0:ℝ) T, ‖h x‖ ≤ K * ‖U x‖ + 0 := by
+      intro x hx
+      have hxIcc : x ∈ Icc (0:ℝ) T := ⟨hx.1, hx.2.le⟩
+      rw [Real.norm_of_nonneg (hnonneg x hxIcc), Real.norm_of_nonneg (hUnonneg x hxIcc), add_zero]
+      exact hbound x hxIcc
+    have hU0 : ‖U 0‖ ≤ 0 := by simp [hUdef]
+    have hg := norm_le_gronwallBound_of_norm_deriv_right_le hUcont hUderiv hU0 hb t ht
+    rw [sub_zero, gronwallBound_ε0_δ0, Real.norm_of_nonneg (hUnonneg t ht)] at hg
+    linarith [hUnonneg t ht]
+  intro t ht
+  have hbt : h t ≤ K * U t := hbound t ht
+  rw [hUzero t ht, mul_zero] at hbt
+  linarith [hnonneg t ht]
+
+end UniquenessGronwall
+
 end MeasureToMeasure.Foundations
