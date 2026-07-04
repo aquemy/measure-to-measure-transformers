@@ -80,6 +80,19 @@ abbrev OldLemma32Sig : Prop :=
   ∀ {d : ℕ} (μ : Measure (Eucl d)) (T : ℝ), 0 < T →
     ∃ θ : Params d, supportedIn (measureFlow θ T μ) (orthant d)
 
+/-- Current-layer `lemma_3_2` family form with the **dimension hypothesis `2 ≤ d` removed**
+(finding F18). Refuted at `d = 1` (`oldLemma32Family_dimOne_false`): on `S^0 = {±ω}` every
+radially-tangent block field vanishes (in dimension one, orthogonal-to-a-unit-vector forces `0`),
+so the flow fixes `-ω`, which cannot reach the orthant `{+ω}` while the sphere-support and
+shared-missing-cap hypotheses at `d = 1` are jointly satisfiable. The discharged `lemma_3_2`
+carries `2 ≤ d` (matching the paper's `S^{d-1}, d ≥ 2` and `lemma_B_1`/`lemma_B_2`). -/
+abbrev OldLemma32FamilyNoDimSig : Prop :=
+  ∀ {d N : ℕ} (μ₀ : Fin N → Measure (Eucl d)),
+    (∀ i, IsProbabilityMeasure (μ₀ i)) → ∀ T : ℝ, 0 < T →
+    (∀ i, supportedIn (μ₀ i) (sphere d)) → SharedMissingDirection μ₀ →
+    ∃ θ : Params d, switches θ ≤ 2 ∧
+      ∀ i, supportedIn (measureFlow θ T (μ₀ i)) (orthant d)
+
 /-- Pre-F12 `lemma_3_3` (finding F12), historical linear record: every measure, into a ball of
 any radius. Refuted by Lebesgue `volume`. No adapter (the current `lemma_3_3` is mean-field). -/
 abbrev OldLemma33LinearSig : Prop :=

@@ -3,6 +3,7 @@ import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Leaves.GatedTwoCap
+import MeasureToMeasure.Leaves.OrthantRotation
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.Attention
@@ -121,9 +122,13 @@ member of a sphere-supported probability family with a shared missing cap into `
 simultaneously (the paper's own quantification: "for any `i ∈ ⟦1,N⟧` the solution `μ^i` ...
 satisfies `supp μ^i(T) ⊂ Q₁^{d-1}`", p.15). The dynamics is measure-independent (`V ≡ B ≡ U ≡ 0`),
 so the members share one transport map: consumers obtain it from the linear layer
-(`flowMap θ T`, with `measureFlow θ T (μ₀ i) = (μ₀ i).map (flowMap θ T)` definitionally). AXIOM
-(`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
-continuity-equation flow existence. `Depends-On` the separating-hyperplane leaf L3.
+(`flowMap θ T`, with `measureFlow θ T (μ₀ i) = (μ₀ i).map (flowMap θ T)` definitionally).
+DISCHARGED (`math.machine-checked`): the two constant perceptron phases are realized as scaled
+gated block flows and the pointwise rotation into the orthant is machine-checked in
+`Leaves.exists_twoPhase_mapsTo_orthant` (push off `-ω` to a cap around `-ω`, then pull toward an
+interior orthant direction `α ≠ ω`); the transfer to `supportedIn ... (orthant d)` is the
+pushforward `le_measureFlow_of_mapsTo` applied to the full-mass source cap. `Depends-On` the
+scaled-gated-cap leaf (`exists_scaledGatedBlock_mapsTo_cap`).
 
 **Fidelity (soundness):** the paper's hypotheses (Lemma 3.2, p.15) are `μ₀^i ∈ P(S^{d-1})` with
 `⋃_i supp μ₀^i ⊊ S^{d-1}`; the missing direction `ω` is where the rotation field `-P_x^⊥ ω` pushes
@@ -131,18 +136,68 @@ mass away from, and the shared gap is what `SharedMissingDirection` encodes (fin
 the unrestricted per-measure stub with the Lebesgue measure; the earlier single-measure `MissingCap`
 form was the interim per-member reading, upgraded here to the paper's family quantification).
 
+Dimension hypothesis `2 ≤ d` (finding F18, load-bearing): on the `0`-sphere `S^0 = {±ω}` every
+radially-tangent field vanishes, so no flow can move `δ_{-ω}` into the orthant `{+ω}` while the
+missing-cap hypotheses at `d = 1` are satisfiable -- the `2 ≤ d`-free family form is FALSE, disproved
+by the kernel-checked `Regression.Refuted.oldLemma32Family_dimOne_false`. The paper works on
+`S^{d-1}` with `d ≥ 2` throughout; the hypothesis matches `lemma_B_1`/`lemma_B_2`.
+
 Budget convention: Lean's `switches` counts constant PIECES of the schedule; the paper's "at most
 one switch" counts discontinuities. The paper's proof runs two constant phases (`W ≡ W₁` pushing
 off `-ω`, then `W ≡ W₂` pulling toward `α`), hence `switches θ ≤ 2` here.
 
 Layer (F14): stays on the LINEAR layer faithfully -- the paper's construction sets
 `V ≡ B ≡ U ≡ 0, b = 1` (p.15), so the field `P_x^⊥ (W 1)` never reads the measure. -/
-axiom lemma_3_2 {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
-    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (T : ℝ) (hT : 0 < T)
+theorem lemma_3_2 {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (hd : 2 ≤ d) (T : ℝ) (hT : 0 < T)
     (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
     (hmiss : SharedMissingDirection μ₀) :
     ∃ θ : Params d, switches θ ≤ 2 ∧
-      ∀ i, supportedIn (measureFlow θ T (μ₀ i)) (orthant d)
+      ∀ i, supportedIn (measureFlow θ T (μ₀ i)) (orthant d) := by
+  obtain ⟨ω, hω, δ, hδ0, hcap⟩ := hmiss
+  -- Work at `δ' = min δ 1 ∈ (0,1]`; shrinking `δ` only enlarges the cap, so the support survives.
+  set δ' : ℝ := min δ 1 with hδ'def
+  have hδ'0 : 0 < δ' := lt_min hδ0 one_pos
+  have hδ'1 : δ' ≤ 1 := min_le_right _ _
+  have hδ'le : δ' ≤ δ := min_le_left _ _
+  -- The machine-checked pointwise rotation (Leaves.OrthantRotation), shared by every member.
+  obtain ⟨θ, hsw, hmaps⟩ := Leaves.exists_twoPhase_mapsTo_orthant hd hω hδ'0 hδ'1 hT
+  -- `orthant d` is a finite intersection of open coordinate half-spaces, hence measurable.
+  have hOrthMeas : MeasurableSet (orthant d) := by
+    have hrw : orthant d = ⋂ j : Fin d, {x : Eucl d | 0 < x j} := by
+      ext x; simp only [orthant, Set.mem_setOf_eq, Set.mem_iInter]
+    rw [hrw]
+    exact MeasurableSet.iInter fun j => measurableSet_lt measurable_const (by fun_prop)
+  refine ⟨θ, hsw.le, fun i => ?_⟩
+  haveI := hμ i
+  haveI := isProbabilityMeasure_measureFlow θ T (μ₀ i)
+  -- The source cap `S` carries the full mass of `μ₀ i` (sphere support ∩ the `δ'`-cap).
+  set S : Set (Eucl d) := {x | x ∈ sphere d ∧ (⟪ω, x⟫ : ℝ) ≤ 1 - δ'} with hSdef
+  have hScap : (μ₀ i) Sᶜ = 0 := by
+    have hcapδ' : (μ₀ i) {x | (⟪ω, x⟫ : ℝ) ≤ 1 - δ'}ᶜ = 0 := by
+      refine measure_mono_null (fun x hx => ?_) (hcap i)
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq] at hx ⊢
+      exact fun h => hx (le_trans h (by linarith))
+    have hcompl : Sᶜ = (sphere d)ᶜ ∪ {x | (⟪ω, x⟫ : ℝ) ≤ 1 - δ'}ᶜ := by
+      rw [hSdef]; ext x
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, Set.mem_union, not_and_or]
+    rw [hcompl]
+    exact measure_union_null (hμs i) hcapδ'
+  -- Full mass on `S` ⇒ orthant carries mass `1` ⇒ its complement is null.
+  have hSmass1 : 1 ≤ (μ₀ i) S := by
+    have hle := measure_union_le (μ := μ₀ i) S Sᶜ
+    rw [Set.union_compl_self, measure_univ, hScap, add_zero] at hle
+    exact hle
+  have hmaps' : Set.MapsTo (flowMap θ T) S (orthant d) := hmaps
+  have hbridge : (μ₀ i) S ≤ measureFlow θ T (μ₀ i) (orthant d) :=
+    le_measureFlow_of_mapsTo θ hT.le (μ₀ i) hOrthMeas hmaps'
+  have hfull : measureFlow θ T (μ₀ i) (orthant d) = 1 := by
+    refine le_antisymm ?_ (le_trans hSmass1 hbridge)
+    calc measureFlow θ T (μ₀ i) (orthant d)
+        ≤ measureFlow θ T (μ₀ i) Set.univ := measure_mono (Set.subset_univ _)
+      _ = 1 := measure_univ
+  show measureFlow θ T (μ₀ i) (orthant d)ᶜ = 0
+  rw [measure_compl hOrthMeas (measure_ne_top _ _), measure_univ, hfull, tsub_self]
 
 /-- **Lemma 3.3** (family form: shrink the acted member and its colinear companion, fixing the
 rest). For a `Q₁`-supported probability family with pairwise fully-non-colinear barycenters, an

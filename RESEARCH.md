@@ -54,6 +54,7 @@
 | 2026-07-03 | C: sound? (F14 fix) | mean-field restatement landed | F14 FIXED: `Foundations/Attention.lean` (eq. (1.2) field, `IsMeanFieldFlow`, well-posedness axiom pair) + Statements restated per-layer (paper's `V ≡ 0` constructions stay linear; attention-driven results move to `AttnSchedule`); `SharedMissingDirection` gap form; `exists_disentangling_balls` gains `μ₀^i ≢ μ₀^j` + per-member flow maps; `prop_2_2` re-axiomatised (its old assembly needed mixture linearity, invalid for mean-field); all refutation files now fail to typecheck |
 | 2026-07-04 | C: sound? (family forms) | Lemmas 3.2-3.4 upgraded to the paper's family statements | F17 (paper-level): the printed (3.2) localization is refutable for atomic inputs (open-carrier form is the sound reading, E4); §3.3 step 3's bystander preservation is asserted without proof, so `exists_disentangling_balls` keeps exactly that composite as its axiom content. lemma_3_2 family+shared-map; lemma_3_3 family+companion+fixing clause; lemma_3_4 part 1 + open-carrier (3.2), part 2 conclusion upgraded to full non-colinearity (∀ γ₂); `attnMeasureFlow_exists_map` derives the transport-map clauses from the interface |
 | 2026-07-03 | G: guarded? (regression suite) | committed | Refutation regression suite: `Regression/` lib (kernel-checked disproofs of the F11/F12/F14 false shapes + per-axiom non-vacuity witnesses) and `Refutations/` must-fail adapters, gated by `scripts/refutation-gate.sh` in audit.sh step 5 and CI; a re-loosened axiom now fails the build instead of surviving 135 commits |
+| 2026-07-04 | C: sound? + discharge (lemma_3_2) | `lemma_3_2` machine-checked; `2 ≤ d` restored | F18: the family form was unsound without `2 ≤ d` (`d = 1`: every radially-tangent field vanishes on `S^0`, so the flow fixes `-ω` and `δ_{-e₀}` cannot reach the orthant; kernel-disproved `oldLemma32Family_dimOne_false`). Discharged via `Leaves.OrthantRotation`'s two-phase rotation + the `le_measureFlow_of_mapsTo` pushforward; non-vacuity witness lifted to `Eucl 2`, must-fail adapter added |
 | 2026-07-03 | G: guarded? (admission hardening) | landed | Axiom admission protocol (WORKFLOW.md: verbatim anchor, six-axis fidelity diff, degenerate attack, witness, model adequacy, fidelity footers); `ckc-axiom-check` v0.2.0 requires `Paper-Ref:`/`Refutation-Attempt:` on axiomatised commits; per-node axiom footprints in public CI (vendored `scripts/axiom-report`); per-claim `fidelity` records in claims.toml gated by `claimgraph audit --require-fidelity` |
 | 2026-07-03 | F: prove (M4 discharge) | lemma_B_2 + lemma_B_1 machine-checked | The gated two-cap retention is PROVED (`Leaves.gated_twoCap_retention`): amplitude-scaled self-centered gated block recentered at an overlap point, sub-cap mass (B.6) + geodesic triangle inequality (Mathlib `angle_le_angle_add_angle`) + logistic reaching with the amplitude buying the fixed-`T` budget + the pushforward bridge. `lemma_B_2` flips axiom → theorem after two discharge-time statement restrictions (probability measure: infinite rim mass defeats any single block; sub-hemisphere radii: rim stalling / `±ω` in one cap), and `#print axioms lemma_B_1` = `propext, Classical.choice, Quot.sound` -- the Appendix-B chain is fully kernel-checked. Statement-layer axiom count 13 → 12 |
 | 2026-07-04 | F: prove (M5 complete) | Section 3.3 disentanglement geometry machine-checked | Strict spherical caps are geodesically convex (`geodesicConvex_inner_cap`), ball-to-cap polarization bridges (`inner_cap_of_mem_ball`, `dist_le_of_inner_cap`), cap disjointness from `2r`-separation, and the two separation transfers: `geodesicHull_disjoint_of_separated_balls` (hulls of clusters in `2r`-separated `r`-balls are disjoint) and `barycenter_not_sameRay_of_separated_balls` (their barycenters are non-colinear; strict via the a.e. argument `inner_barycenter_gt`, normalization controlled by `norm_barycenter_le_one`). The geometry the paper uses without proof on p. 17 ('shrunk until achieving the separation') is now kernel-checked; `exists_disentangling_balls` owes only mean-field dynamics (M3b) and the family/fixing-clause composition (M8b path) |
@@ -553,6 +554,32 @@ step-2/3 composite (with its preservation claim) is the honest remaining axiom c
 Lesson: family-form fixing clauses are exactly where transcription fidelity and paper rigor
 interact; both defects were caught by the admission protocol's degenerate-instantiation step
 before any statement landed.
+
+### F18 (soundness + discharge — recorded 2026-07-04) Lemma 3.2's family form is unsound without `2 ≤ d`; discharged with the dimension hypothesis restored
+
+Discharging `lemma_3_2` (transport a sphere-supported probability family with a shared missing cap
+into the positive orthant) via the machine-checked two-phase rotation `Leaves/OrthantRotation.lean`
+surfaced a missing hypothesis. The rotation is a pointwise construction on `S^{d-1}`: push mass off
+`-ω` into a cap, then pull toward an interior orthant direction `α ≠ ω` with a positive coordinate
+floor (`exists_unit_orthant_ne`) — which exists only for `d ≥ 2`. The axiom as written quantified
+over all `d`, and the `d = 1` instance is FALSE: on `S^0 = {±ω}` every block's velocity field is
+radially tangent (`Block.radial`: `⟪x, field x⟫ = gate x · (‖x‖² − 1)`, so `field x ⊥ x` on the
+sphere), and in dimension one orthogonality to a unit vector forces `field x = 0`
+(`eucl1_ortho_unit_eq_zero`), so the flow fixes `-ω` (`flowMap_fixed_of_forall_field_zero`). Thus
+`δ_{-e₀}` — which satisfies every hypothesis (sphere support; shared missing cap toward `e₀`, since
+`⟪e₀, -e₀⟫ = -1 ≤ 0`) — cannot be moved into the orthant `{+e₀}`. Kernel-disproved by
+`Regression.Refuted.oldLemma32Family_dimOne_false` (signature `OldLemma32FamilyNoDimSig`), with the
+must-fail adapter `Refutations/F18_lemma_3_2_dim_one.lean` guarding against re-loosening.
+
+Fix: `2 ≤ d` added to the discharged theorem (the paper works on `S^{d-1}` with `d ≥ 2`, and
+`lemma_B_1`/`lemma_B_2` already carry it); the `d = 1` non-vacuity witness lifted to `Eucl 2`.
+`lemma_3_2` is now a `theorem` (`math.machine-checked`), not an axiom: the pointwise rotation is
+two scaled gated block flows, and the pushforward transfer to
+`supportedIn (measureFlow θ T (μ₀ i)) (orthant d)` is `le_measureFlow_of_mapsTo` applied to the
+full-mass source cap (`(μ₀ i) S = 1 ⇒ measureFlow(orthant) = 1 ⇒ measureFlow(orthantᶜ) = 0`).
+Lesson: the same degenerate-instantiation discipline that caught the F11-F16 false stubs also fires
+when *discharging* an axiom — the construction's real hypotheses (here `d ≥ 2`) are exposed the
+moment a proof is attempted, and are strictly stronger than a type-correct transcription guessed.
 
 ### Verdict
 
