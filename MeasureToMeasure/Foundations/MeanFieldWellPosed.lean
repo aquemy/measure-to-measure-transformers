@@ -786,4 +786,51 @@ theorem flow_sub_eq_integral_field [IsProbabilityMeasure μ₀] (hμ₀S : μ₀
 
 end FlowRepresentation
 
+/-! ### The averaged Grönwall inequality
+
+Averaging the pointwise field bound over the sphere-supported probability datum `μ₀` turns the two
+flows' distance functional `meanFlowDist μ₀ Φ Ψ t = ∫ ‖Φ_t x − Ψ_t x‖ ∂μ₀` into the integral-Grönwall
+hypothesis `h t ≤ K ∫₀ᵗ h`. The FTC representation (`flow_sub_eq_integral_field`) writes the pointwise
+displacement as a time integral of the field difference; the joint `(point, W₁)` modulus bounds that
+difference by `Cp‖Φ_s x − Ψ_s x‖ + Cm·(W₁((Φ_s)_#μ₀, (Ψ_s)_#μ₀)).toReal`; a Fubini/Tonelli swap
+integrates it over `μ₀`, and the coupling bound `W1_toReal_map_le_integral_norm` controls the `W₁`
+term by `meanFlowDist s` itself — collapsing the bound to `K·meanFlowDist s` with `K = Cp + Cm`. -/
+
+section AveragedGronwall
+
+open MeasureTheory
+
+variable {p : AttnParams d} {μ₀ : Measure (Eucl d)} {Φ Ψ : ℝ → Eucl d → Eucl d}
+
+/-- The `μ₀`-averaged distance between two mean-field flow slices at time `t`. This is the functional
+the mean-field uniqueness Grönwall drives to zero. -/
+noncomputable def meanFlowDist (μ₀ : Measure (Eucl d)) (Φ Ψ : ℝ → Eucl d → Eucl d) (t : ℝ) : ℝ :=
+  ∫ x, ‖Φ t x - Ψ t x‖ ∂μ₀
+
+theorem meanFlowDist_nonneg (t : ℝ) : 0 ≤ meanFlowDist μ₀ Φ Ψ t :=
+  integral_nonneg fun _ => norm_nonneg _
+
+/-- The averaged flow distance is continuous in time on `[0, duration]` (dominated convergence: each
+`t ↦ ‖Φ_t x − Ψ_t x‖` is continuous on the sphere and dominated by `2`). -/
+theorem meanFlowDist_continuousOn [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ) :
+    ContinuousOn (meanFlowDist μ₀ Φ Ψ) (Set.Icc 0 p.duration) := by
+  intro t₀ ht₀
+  refine continuousWithinAt_of_dominated (bound := fun _ => (2 : ℝ)) ?_ ?_
+    (integrable_const _) ?_
+  · filter_upwards [self_mem_nhdsWithin] with t ht
+    exact ((hΦ.measurable t ht).sub (hΨ.measurable t ht)).norm.aestronglyMeasurable
+  · filter_upwards [self_mem_nhdsWithin] with t ht
+    refine ae_of_sphere_supported hμ₀S (fun x hx => ?_)
+    rw [norm_norm]
+    have h1 : Φ t x ∈ sphere d := (hΦ.sphere_bijOn t ht).mapsTo hx
+    have h2 : Ψ t x ∈ sphere d := (hΨ.sphere_bijOn t ht).mapsTo hx
+    calc ‖Φ t x - Ψ t x‖ ≤ ‖Φ t x‖ + ‖Ψ t x‖ := norm_sub_le _ _
+      _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+  · refine ae_of_sphere_supported hμ₀S (fun x hx => ?_)
+    exact ((((hΦ.deriv x hx t₀ ht₀).continuousAt).continuousWithinAt).sub
+      (((hΨ.deriv x hx t₀ ht₀).continuousAt).continuousWithinAt)).norm
+
+end AveragedGronwall
+
 end MeasureToMeasure.Foundations
