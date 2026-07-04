@@ -317,4 +317,96 @@ theorem attnMeasureFlow_singleton_eq_map_blockFlow (p : AttnParams d) (hV : p.V 
     attnMeasureFlow [p] μ₀ = μ₀.map (b.blockFlow p.duration) :=
   attnStep_eq_map_blockFlow p hV b hagree μ₀ hs
 
+/-! ### Transport-map extraction: every solution operator is a pushforward
+
+Each block step pushes the measure along its mean-field flow at the block's duration; composing
+the steps exhibits the whole schedule's action as one measurable pushforward, invertible on the
+sphere. This is the paper's flow-map convention (the Lipschitz invertible `φ^T : 𝕊^{d-1} → 𝕊^{d-1}`
+of eq. (B.2)), derived from the well-posedness interface, so downstream statements need not carry
+per-member transport-map clauses as axiom content. -/
+
+/-- A sphere-supported probability measure sees a nonempty sphere. -/
+theorem sphere_nonempty_of_supported (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (hs : μ (sphere d)ᶜ = 0) : (sphere d).Nonempty := by
+  rcases Set.eq_empty_or_nonempty (sphere d) with hempty | hne
+  · exfalso
+    have huniv : (sphere d)ᶜ = Set.univ := by rw [hempty, Set.compl_empty]
+    have : μ Set.univ = 0 := huniv ▸ hs
+    simpa [this] using (measure_univ (μ := μ))
+  · exact hne
+
+/-- **One step is a pushforward.** The block step of a sphere-supported probability measure is the
+pushforward along a measurable map that carries the sphere into itself and has a measurable
+left inverse there (the mean-field flow slice at the block's duration; its sphere restriction is a
+continuous bijection of a compact space, hence a homeomorphism). -/
+theorem attnStep_exists_map (p : AttnParams d) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
+    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
+      attnStep p μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
+      ∀ x ∈ sphere d, Φinv (Φ x) = x := by
+  classical
+  have hspec := (@exists_meanFieldFlow d p μ ‹_› hs).choose_spec
+  set Φd := (@exists_meanFieldFlow d p μ ‹_› hs).choose p.duration with hΦd
+  have hdur : p.duration ∈ Set.Icc 0 p.duration := ⟨p.duration_nonneg, le_rfl⟩
+  have hmeas : Measurable Φd := hspec.measurable p.duration hdur
+  have hbij : Set.BijOn Φd (sphere d) (sphere d) := hspec.sphere_bijOn p.duration hdur
+  obtain ⟨L, hlip⟩ := hspec.lipschitz
+  have hcont : Continuous Φd := (hlip p.duration hdur).continuous
+  -- The sphere restriction is a continuous bijection of a compact T2 space: a homeomorphism.
+  haveI : CompactSpace (sphere d) := isCompact_iff_compactSpace.mp (isCompact_sphere 0 1)
+  let e : sphere d ≃ sphere d := hbij.equiv Φd
+  have hecont : Continuous (e : sphere d → sphere d) := by
+    have : Continuous fun x : sphere d => Φd (x : Eucl d) := hcont.comp continuous_subtype_val
+    exact Continuous.subtype_mk this _
+  let homeo : sphere d ≃ₜ sphere d := Continuous.homeoOfEquivCompactToT2 (f := e) hecont
+  -- Re-embed the sphere inverse as a global measurable map via a measurable retraction.
+  obtain ⟨z₀, hz₀⟩ := sphere_nonempty_of_supported μ hs
+  set πval : Eucl d → Eucl d := (sphere d).piecewise id fun _ => z₀ with hπval
+  have hπmeas : Measurable πval :=
+    Measurable.piecewise Metric.isClosed_sphere.measurableSet measurable_id measurable_const
+  have hπmem : ∀ y, πval y ∈ sphere d := by
+    intro y
+    by_cases hy : y ∈ sphere d <;> simp [hπval, hy, hz₀]
+  refine ⟨Φd, fun y => (homeo.symm ⟨πval y, hπmem y⟩ : Eucl d), hmeas,
+    (continuous_subtype_val.comp homeo.symm.continuous).measurable.comp
+      (hπmeas.subtype_mk (p := fun z => z ∈ sphere d)), ?_, hbij.mapsTo, ?_⟩
+  · rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
+  · intro x hx
+    have hΦx : Φd x ∈ sphere d := hbij.mapsTo hx
+    have hπ : πval (Φd x) = Φd x := by simp [hπval, hΦx]
+    have hval : (⟨πval (Φd x), hπmem (Φd x)⟩ : sphere d) = e ⟨x, hx⟩ :=
+      Subtype.ext (by show πval (Φd x) = ((e ⟨x, hx⟩ : sphere d) : Eucl d); rw [hπ]; rfl)
+    calc (homeo.symm ⟨πval (Φd x), hπmem (Φd x)⟩ : Eucl d)
+        = (homeo.symm (e ⟨x, hx⟩) : Eucl d) := by rw [hval]
+      _ = ((⟨x, hx⟩ : sphere d) : Eucl d) := by
+          have h2 : homeo.symm (e ⟨x, hx⟩) = ⟨x, hx⟩ := homeo.symm_apply_apply ⟨x, hx⟩
+          exact congrArg Subtype.val h2
+      _ = x := rfl
+
+/-- **The solution operator is a pushforward.** Along any schedule, a sphere-supported probability
+measure is pushed forward by one measurable map, sphere-to-sphere, with a measurable left inverse
+on the sphere: the composition of the per-block flow slices. This derives the transport-map clause
+the paper attaches to its flow maps (eq. (B.2)) once and for all. -/
+theorem attnMeasureFlow_exists_map (θ : AttnSchedule d) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
+    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
+      attnMeasureFlow θ μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
+      ∀ x ∈ sphere d, Φinv (Φ x) = x := by
+  induction θ generalizing μ with
+  | nil =>
+    exact ⟨id, id, measurable_id, measurable_id, (Measure.map_id).symm,
+      Set.mapsTo_id _, fun x _ => rfl⟩
+  | cons p rest ih =>
+    obtain ⟨Φp, Φpinv, hΦpm, hΦpim, hΦpeq, hΦpto, hΦpinv⟩ := attnStep_exists_map p μ hs
+    haveI := isProbabilityMeasure_attnStep p μ hs
+    have hs' : (attnStep p μ) (sphere d)ᶜ = 0 := attnStep_supportedIn_sphere p μ hs
+    obtain ⟨Φr, Φrinv, hΦrm, hΦrim, hΦreq, hΦrto, hΦrinv⟩ := ih (attnStep p μ) hs'
+    refine ⟨Φr ∘ Φp, Φpinv ∘ Φrinv, hΦrm.comp hΦpm, hΦpim.comp hΦrim, ?_,
+      hΦrto.comp hΦpto, fun x hx => ?_⟩
+    · have hcons : attnMeasureFlow (p :: rest) μ = attnMeasureFlow rest (attnStep p μ) := rfl
+      rw [hcons, hΦreq, hΦpeq, Measure.map_map hΦrm hΦpm]
+    · have hpx : Φp x ∈ sphere d := hΦpto hx
+      simp only [Function.comp_apply]
+      rw [hΦrinv (Φp x) hpx, hΦpinv x hx]
+
 end MeasureToMeasure.Foundations
