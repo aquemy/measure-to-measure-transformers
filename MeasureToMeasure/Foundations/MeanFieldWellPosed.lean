@@ -1103,4 +1103,125 @@ theorem meanFlowDist_le_integral [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (
 
 end AveragedGronwall
 
+/-! ### Mean-field uniqueness (discharge of `meanFieldFlow_unique`)
+
+The averaged-Grönwall trio (`meanFlowDist_continuousOn`, `meanFlowDist_nonneg`,
+`meanFlowDist_le_integral`) feeds `gronwall_integral_zero` to force the `μ₀`-averaged flow distance
+to zero; the pushforward measure trajectories then coincide, so both flows solve the *same*
+non-autonomous ODE on the sphere and `ODE_solution_unique_of_mem_Icc_right` (the field being
+Lipschitz-on-the-sphere via `norm_field_sub_point_le`, and the trajectories staying on the sphere by
+`sphere_bijOn`) pins them together everywhere. -/
+section MeanFieldUniqueness
+
+open MeasureTheory Set
+open scoped Topology NNReal
+
+variable {p : AttnParams d} {μ₀ : Measure (Eucl d)} {Φ Ψ : ℝ → Eucl d → Eucl d}
+
+/-- **Uniqueness of the self-attention mean-field flow (on the sphere).** Two mean-field flows of the
+same block and the same sphere-supported probability datum agree on the sphere throughout the block's
+duration. Machine-checked (`math.machine-checked`) via the measure-averaged Grönwall route: the
+`μ₀`-averaged flow distance `meanFlowDist` satisfies `h t ≤ K ∫₀ᵗ h` (`meanFlowDist_le_integral`) with
+`h 0 = 0`, so `gronwall_integral_zero` gives `h ≡ 0`; the pushforwards then coincide and
+`ODE_solution_unique_of_mem_Icc_right` closes the pointwise equality on the sphere. The
+sphere-support hypothesis `hμ₀S` is load-bearing (finding F20): off the sphere the flows are
+unconstrained, so the pushforwards — and hence the sphere field — could diverge. This discharges the
+former `meanFieldFlow_unique` axiom (McKean–Vlasov uniqueness). -/
+theorem meanFieldFlow_unique [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ) :
+    ∀ t ∈ Set.Icc 0 p.duration, ∀ x ∈ sphere d, Φ t x = Ψ t x := by
+  -- Step 1: the averaged Grönwall forces the averaged flow distance to vanish.
+  obtain ⟨K, hK⟩ := meanFlowDist_le_integral hμ₀S hΦ hΨ
+  have hzero : ∀ t ∈ Set.Icc 0 p.duration, meanFlowDist μ₀ Φ Ψ t = 0 :=
+    gronwall_integral_zero p.duration_nonneg (meanFlowDist_continuousOn hμ₀S hΦ hΨ)
+      (fun t _ => meanFlowDist_nonneg t) hK
+  -- Step 2: the pushforward measure trajectories coincide.
+  have hmap : ∀ t ∈ Set.Icc 0 p.duration, μ₀.map (Φ t) = μ₀.map (Ψ t) := by
+    intro t ht
+    have h0 : ∫ x, ‖Φ t x - Ψ t x‖ ∂μ₀ = 0 := hzero t ht
+    have hint : Integrable (fun x => ‖Φ t x - Ψ t x‖) μ₀ := by
+      refine Integrable.mono' (integrable_const (2 : ℝ))
+        ((hΦ.measurable t ht).sub (hΨ.measurable t ht)).norm.aestronglyMeasurable ?_
+      refine ae_of_sphere_supported hμ₀S (fun y hy => ?_)
+      rw [norm_norm]
+      have h1 : Φ t y ∈ sphere d := (hΦ.sphere_bijOn t ht).mapsTo hy
+      have h2 : Ψ t y ∈ sphere d := (hΨ.sphere_bijOn t ht).mapsTo hy
+      calc ‖Φ t y - Ψ t y‖ ≤ ‖Φ t y‖ + ‖Ψ t y‖ := norm_sub_le _ _
+        _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+    have hae : (fun x => ‖Φ t x - Ψ t x‖) =ᵐ[μ₀] 0 :=
+      (integral_eq_zero_iff_of_nonneg (fun x => norm_nonneg _) hint).mp h0
+    have hae' : Φ t =ᵐ[μ₀] Ψ t := by
+      filter_upwards [hae] with x hx
+      exact sub_eq_zero.mp (norm_eq_zero.mp hx)
+    exact Measure.map_congr hae'
+  -- Step 3: pointwise ODE uniqueness on the sphere against the common trajectory.
+  intro t ht x hx
+  set C : ℝ := (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
+    + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) with hCdef
+  have hC0 : 0 ≤ C := by rw [hCdef]; positivity
+  have hEq : Set.EqOn (fun s => Φ s x) (fun s => Ψ s x) (Set.Icc 0 p.duration) := by
+    refine ODE_solution_unique_of_mem_Icc_right
+      (v := fun s y => p.field (μ₀.map (Φ s)) y) (s := fun _ => sphere d) (K := C.toNNReal)
+      ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
+    · -- v s Lipschitz-on-sphere, uniform constant C
+      intro s hs
+      have hsIcc := Set.Ico_subset_Icc_self hs
+      haveI := isProbabilityMeasure_map_flow hΦ hsIcc
+      have hmapS := map_flow_sphere_support hμ₀S hΦ hsIcc
+      rw [lipschitzOnWith_iff_dist_le_mul]
+      intro a ha b hb
+      rw [dist_eq_norm, dist_eq_norm]
+      calc ‖p.field (μ₀.map (Φ s)) a - p.field (μ₀.map (Φ s)) b‖
+          ≤ C * ‖a - b‖ := norm_field_sub_point_le p (μ₀.map (Φ s)) hmapS ha hb
+        _ = (C.toNNReal : ℝ) * ‖a - b‖ := by rw [Real.coe_toNNReal C hC0]
+    · exact fun s hs => (hΦ.deriv x hx s hs).continuousAt.continuousWithinAt
+    · exact fun s hs => (hΦ.deriv x hx s (Set.Ico_subset_Icc_self hs)).hasDerivWithinAt
+    · exact fun s hs => (hΦ.sphere_bijOn s (Set.Ico_subset_Icc_self hs)).mapsTo hx
+    · exact fun s hs => (hΨ.deriv x hx s hs).continuousAt.continuousWithinAt
+    · intro s hs
+      have hsIcc := Set.Ico_subset_Icc_self hs
+      have hv_eq : p.field (μ₀.map (Φ s)) (Ψ s x) = p.field (μ₀.map (Ψ s)) (Ψ s x) := by
+        rw [hmap s hsIcc]
+      rw [hv_eq]
+      exact (hΨ.deriv x hx s hsIcc).hasDerivWithinAt
+    · exact fun s hs => (hΨ.sphere_bijOn s (Set.Ico_subset_Icc_self hs)).mapsTo hx
+    · show Φ 0 x = Ψ 0 x
+      rw [hΦ.init, hΨ.init]
+  exact hEq ht
+
+end MeanFieldUniqueness
+
+section MeanFieldBridge
+
+open MeasureTheory
+
+/-- **The linear bridge.** The attention step of a `V = 0` block coincides with the linear
+pushforward along any `Block` whose field matches on the sphere: the block flow is a mean-field
+flow (`isMeanFieldFlow_blockFlow`), uniqueness pins the chosen flow to it on the sphere, and sphere
+support upgrades the pointwise agreement to equality of pushforwards. First consumer of
+`meanFieldFlow_unique` (now a theorem). -/
+theorem attnStep_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0) (b : Block d)
+    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
+    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
+    attnStep p μ₀ = μ₀.map (b.blockFlow p.duration) := by
+  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ₀›, hs⟩]
+  have hΦ := (@exists_meanFieldFlow d p μ₀ ‹_› hs).choose_spec
+  have heq := meanFieldFlow_unique hs hΦ (isMeanFieldFlow_blockFlow b p hV hagree μ₀)
+    p.duration ⟨p.duration_nonneg, le_rfl⟩
+  refine Measure.map_congr ?_
+  rw [Filter.EventuallyEq, ae_iff]
+  refine measure_mono_null (fun x hx => ?_) hs
+  simp only [Set.mem_setOf_eq, Set.mem_compl_iff] at hx ⊢
+  exact fun hxs => hx (heq x hxs)
+
+/-- The singleton-schedule form of the bridge: one `V = 0` piece is the linear block flow. -/
+theorem attnMeasureFlow_singleton_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0)
+    (b : Block d)
+    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
+    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
+    attnMeasureFlow [p] μ₀ = μ₀.map (b.blockFlow p.duration) :=
+  attnStep_eq_map_blockFlow p hV b hagree μ₀ hs
+
+end MeanFieldBridge
+
 end MeasureToMeasure.Foundations
