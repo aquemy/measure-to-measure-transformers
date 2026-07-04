@@ -183,6 +183,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#node-projector" id="toc-node-projector" class="nav-link" data-scroll-target="#node-projector">Tangential projector (layer normalization)</a></li>
   <li><a href="#node-geodesic" id="toc-node-geodesic" class="nav-link" data-scroll-target="#node-geodesic">Geodesic distance</a></li>
+  <li><a href="#node-geodesic-convex" id="toc-node-geodesic-convex" class="nav-link" data-scroll-target="#node-geodesic-convex">Geodesic convexity and the separation transfer (M5)</a></li>
   <li><a href="#node-meanfield" id="toc-node-meanfield" class="nav-link" data-scroll-target="#node-meanfield">The mean-field attention layer (M3b)</a></li>
   </ul></li>
   <li><a href="#sec-leaves" id="toc-sec-leaves" class="nav-link" data-scroll-target="#sec-leaves">Self-contained leaves</a>
@@ -315,6 +316,13 @@ theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere
 <p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/GeodesicDistance.lean" class="lean-src"><code>Foundations/GeodesicDistance.lean</code></a></p>
 </div>
 </section>
+<section id="node-geodesic-convex" class="level2">
+<h2 class="anchored" data-anchor-id="node-geodesic-convex">Geodesic convexity and the separation transfer (M5)</h2>
+<div class="our-work">
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The Section 3.3 geometry the paper uses without proof, fully kernel-checked: strict spherical caps at nonnegative level are geodesically convex (<code>geodesicConvex_inner_cap</code>), polarization bridges identify Euclidean <code>r</code>-balls with caps at level <span class="math inline">\(1 - r^2/2\)</span>, and the <strong>separation transfer</strong> – measures shrunk into <code>r</code>-balls around <code>2r</code>-separated unit directions have pairwise disjoint geodesic hulls and pairwise non-colinear barycenters (<code>geodesicHull_disjoint_of_separated_balls</code>, <code>barycenter_not_sameRay_of_separated_balls</code>, with the strict barycenter-level bound <code>inner_barycenter_gt</code> via an a.e. vanishing argument). With M5 done, the disentanglement axiom owes only mean-field dynamics, no geometry.</p>
+</div>
+</section>
 <section id="node-meanfield" class="level2">
 <h2 class="anchored" data-anchor-id="node-meanfield">The mean-field attention layer (M3b)</h2>
 <div class="from-paper">
@@ -325,7 +333,7 @@ theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere
 </div>
 <div class="our-work">
 <p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>The field (1.2) is a concrete <strong>definition</strong>: <code>AttnParams</code> packages the five parameters <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)\)</span> of one constant piece, <code>attnAvg</code> is the softmax average <span class="math inline">\(\mathscr A_{\mathbf B}\)</span>, and <code>AttnParams.field</code> assembles the projected velocity. A mean-field flow is the predicate <code>IsMeanFieldFlow</code> (initial condition, measurability, Lipschitz regularity, sphere bijectivity, and the characteristic ODE against the <em>pushforward-evolved</em> measure), and schedules compose by list concatenation (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>, <code>durationSum</code>, <code>switches</code> counting constant pieces). Exactly one axiom pair remains – existence and uniqueness of the mean-field flow for sphere-supported probability data (<code>exists_meanFieldFlow</code>, <code>meanFieldFlow_unique</code>): McKean-Vlasov well-posedness on the sphere, the honest remaining M3 gap. Every measure-dependent statement of the paper is stated over this layer; the linear <code>Block</code> flow hosts the paper’s <span class="math inline">\(\mathbf V\equiv0\)</span> sections.</p>
+<p>The field (1.2) is a concrete <strong>definition</strong>: <code>AttnParams</code> packages the five parameters <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)\)</span> of one constant piece, <code>attnAvg</code> is the softmax average <span class="math inline">\(\mathscr A_{\mathbf B}\)</span>, and <code>AttnParams.field</code> assembles the projected velocity. A mean-field flow is the predicate <code>IsMeanFieldFlow</code> (initial condition, measurability, Lipschitz regularity, sphere bijectivity, and the characteristic ODE against the <em>pushforward-evolved</em> measure), and schedules compose by list concatenation (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>, <code>durationSum</code>, <code>switches</code> counting constant pieces). Exactly one axiom pair remains – existence and uniqueness of the mean-field flow for sphere-supported probability data (<code>exists_meanFieldFlow</code>, <code>meanFieldFlow_unique</code>): McKean-Vlasov well-posedness on the sphere, the honest remaining M3 gap. Every measure-dependent statement of the paper is stated over this layer; the linear <code>Block</code> flow hosts the paper’s <span class="math inline">\(\mathbf V\equiv0\)</span> sections. The two layers are bridged, kernel-checked on the predicate side: <code>isMeanFieldFlow_blockFlow</code> shows a linear <code>Block</code> matching a <span class="math inline">\(\mathbf V = 0\)</span> attention field on the sphere satisfies the mean-field predicate, and <code>attnStep_eq_map_blockFlow</code> (the first consumer of <code>meanFieldFlow_unique</code>) pins the attention step to the linear pushforward – so the discharged Appendix-B machinery acts on this layer too.</p>
 <pre class="lean"><code>/-- One constant-in-time Transformer block (paper eq. (1.2)). -/
 structure AttnParams (d : ℕ) where
   V B W U : Eucl d →L[ℝ] Eucl d

@@ -59,7 +59,10 @@ a record of it.
   (`IsMeanFieldFlow`), and exactly one axiom pair remains: existence and uniqueness of that flow
   (`exists_meanFieldFlow` / `meanFieldFlow_unique`) -- McKean-Vlasov well-posedness on the sphere,
   the true remaining M3 gap. All measure-dependent statements (Prop 2.1, Lemma 3.3, the
-  disentanglement, Lemmas 5.4, parking, Theorems 1.1/1.2) now live on this layer.
+  disentanglement, Lemmas 5.4, parking, Theorems 1.1/1.2) now live on this layer. The two layers
+  are bridged: a `V = 0` attention step *is* the linear block-flow pushforward
+  (`attnStep_eq_map_blockFlow`, the first consumer of `meanFieldFlow_unique`), so the
+  machine-checked Appendix-B transport acts on the mean-field layer as well.
 - **M4 -- Per-point transport (Appendix B): [done]{.badge .ok} (machine-checked).** The full
   mass-transport chain is discharged: `lemma_B_2` (the single overlapping ball pair) is a **proved
   theorem**, and with it `lemma_B_1`'s ball-chain induction reports a footprint of exactly
@@ -108,7 +111,7 @@ matches the kernel. The full re-usability discipline is catalogued in the `lean-
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M2, and now M4 are discharged; M5 is in progress, and the mean-field layer M3b sits between M3 and the measure-dependent milestones. (The node colours show the original plan; the live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M2, M4, and M5 are all discharged, and the mean-field layer M3b sits between M3 and the measure-dependent milestones. (The node colours show the original plan; the live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)

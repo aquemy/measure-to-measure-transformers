@@ -71,6 +71,21 @@ theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere
 [`Foundations/GeodesicDistance.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/GeodesicDistance.lean){.lean-src}
 :::
 
+## Geodesic convexity and the separation transfer (M5) {#node-geodesic-convex}
+
+::: {.our-work}
+**Our formalization.** [machine-checked]{.badge .ok}
+
+The Section 3.3 geometry the paper uses without proof, fully kernel-checked: strict spherical caps
+at nonnegative level are geodesically convex (`geodesicConvex_inner_cap`), polarization bridges
+identify Euclidean `r`-balls with caps at level $1 - r^2/2$, and the **separation transfer** --
+measures shrunk into `r`-balls around `2r`-separated unit directions have pairwise disjoint
+geodesic hulls and pairwise non-colinear barycenters
+(`geodesicHull_disjoint_of_separated_balls`, `barycenter_not_sameRay_of_separated_balls`, with the
+strict barycenter-level bound `inner_barycenter_gt` via an a.e. vanishing argument). With M5 done,
+the disentanglement axiom owes only mean-field dynamics, no geometry.
+:::
+
 ## The mean-field attention layer (M3b) {#node-meanfield}
 
 ::: {.from-paper}
@@ -97,7 +112,11 @@ measure), and schedules compose by list concatenation (`AttnSchedule`, `attnMeas
 and uniqueness of the mean-field flow for sphere-supported probability data
 (`exists_meanFieldFlow`, `meanFieldFlow_unique`): McKean-Vlasov well-posedness on the sphere,
 the honest remaining M3 gap. Every measure-dependent statement of the paper is stated over this
-layer; the linear `Block` flow hosts the paper's $\mathbf V\equiv0$ sections.
+layer; the linear `Block` flow hosts the paper's $\mathbf V\equiv0$ sections. The two layers are
+bridged, kernel-checked on the predicate side: `isMeanFieldFlow_blockFlow` shows a linear `Block`
+matching a $\mathbf V = 0$ attention field on the sphere satisfies the mean-field predicate, and
+`attnStep_eq_map_blockFlow` (the first consumer of `meanFieldFlow_unique`) pins the attention step
+to the linear pushforward -- so the discharged Appendix-B machinery acts on this layer too.
 
 ```lean
 /-- One constant-in-time Transformer block (paper eq. (1.2)). -/

@@ -149,3 +149,9 @@
 | 147 | 2026-07-03 | `fix` | fix(statements): probability and sub-hemisphere hypotheses for lemma_B_2/B_1 (gated-construction fidelity) | `MeasureToMeasure.Statements.lemma_B_2` |
 | 148 | 2026-07-03 | `formalize` | formalize(leaves): two-cap retention of the amplitude-scaled gated flow (M4) | `MeasureToMeasure.gated_twoCap_retention` |
 | 149 | 2026-07-03 | `formalize` | formalize(statements): discharge lemma_B_2; the Appendix-B chain is machine-checked (M4) | `MeasureToMeasure.Statements.lemma_B_2` |
+| 150 | 2026-07-04 | `docs` | docs(site): refresh for the fidelity audit, mean-field restatement, and discharged M4 | `site` |
+| 151 | 2026-07-04 | `formalize` | formalize~(foundations): bridge V=0 attention steps to the linear block flow | `MeasureToMeasure.Foundations.attnStep_eq_map_blockFlow` |
+| 152 | 2026-07-04 | `test` | test(regression): non-vacuity witnesses for lemma_3_4 and exists_parked_schedule | `regression` |
+| 153 | 2026-07-04 | `refactor` | refactor: sweep the remaining build warnings | -- |
+| 154 | 2026-07-04 | `formalize` | formalize(foundations): strict spherical caps are geodesically convex (M5) | `MeasureToMeasure.geodesicConvex_inner_cap` |
+| 155 | 2026-07-04 | `formalize` | formalize(leaves): the Section 3.3 separation transfer (M5 complete) | `MeasureToMeasure.Leaves.barycenter_not_sameRay_of_separated_balls` |

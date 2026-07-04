@@ -72,7 +72,9 @@ statement-fidelity admission protocol (verbatim source anchor, hypothesis-parity
 refutation attempt, model-adequacy check; `Source-Ref:` / `Refutation-Attempt:` commit footers per
 CKC spec v0.2.0, enforced by the pre-commit hook) and is guarded by a committed **refutation
 regression suite**: the disproofs of previously-refuted draft statements are kernel-checked
-theorems, paired with must-fail adapters that CI compiles on every push. The self-contained leaves
+theorems, paired with must-fail adapters that CI compiles on every push, and every axiom carries a
+compiled non-vacuity witness (concrete data satisfying all its hypotheses), so an over-strengthened
+statement breaks the build just as a re-loosened one trips the gate. The self-contained leaves
 and the whole Appendix-B transport chain carry the machine-checked load; see
 **[Beyond Mathlib](beyond-mathlib.qmd)** for the plan to discharge the remaining axioms and lift
 the headline results to [machine-checked]{.badge .ok}.
