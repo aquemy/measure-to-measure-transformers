@@ -613,6 +613,45 @@ measurable-function-is-zero convention is a standing trap for transcription fide
 equality hypothesis silently permits garbage maps unless measurability is stated, and the omission is
 invisible until a discharge forces the mass-preservation obstruction into view.
 
+### F20 (soundness — recorded 2026-07-04) `meanFieldFlow_unique` is unsound without a sphere-supported datum; hypotheses realigned with `exists_meanFieldFlow`
+
+Attempting to discharge `meanFieldFlow_unique` (two mean-field flows of the same block and datum
+agree on the sphere) surfaced a soundness gap in its own signature: it quantified over an *arbitrary*
+`μ₀ : Measure (Eucl d)`, omitting the `μ₀ (sphere d)ᶜ = 0` restriction that its existence sibling
+`exists_meanFieldFlow` carries — a transcription slip, since the paper works with `μ₀ ∈ P(𝕊^{d-1})`
+throughout. As stated it is **FALSE**. `IsMeanFieldFlow.deriv` constrains trajectories *only at sphere
+points*, so when `μ₀` has mass off the sphere two flows may differ there while both remain mean-field
+flows, and that off-sphere disagreement feeds back through the pushforward the field reads. Explicit
+counterexample: take `μ₀ = δ_{2e}` (`‖2e‖ = 2`, off the sphere) and `V ≠ 0`. For any Lipschitz curve
+`c(t)` with `c(0) = 2e` there is a mean-field flow `Φ` with `Φ_t(2e) = c(t)` (the off-sphere value is
+unconstrained; extend the sphere flow by a Lipschitz bump), and then `μ₀.map Φ_t = δ_{c(t)}`, so the
+sphere field is `field(δ_{c(t)}, x) = P_x^⊥(V·c(t) + W(U x + b)₊)` — the average of a Dirac is its atom,
+`A_B[δ_c](x) = c`. Two distinct curves `c₁ ≠ c₂` give *different* sphere fields, hence *different*
+sphere trajectories from the common identity start: uniqueness on the sphere fails. (For `V = 0` the
+field is measure-independent and uniqueness holds — consistent with the linear bridge.)
+
+Fix: `[IsProbabilityMeasure μ₀]` and `hμ₀S : μ₀ (sphere d)ᶜ = 0` added, matching `exists_meanFieldFlow`
+and the paper's standing hypothesis. Sphere support closes the self-reference — `μ₀.map Φ_t` is then
+determined by `Φ`'s values on the sphere alone, and (each `Φ_t` mapping the sphere into itself,
+`sphere_bijOn`) is itself a sphere-supported probability measure, so the field's `W₁`-moduli apply and
+the intended Grönwall argument is available. The single consumer `attnStep_eq_map_blockFlow` already
+carries both hypotheses, so the repair is additive.
+
+Like F19, this gap admits **no constructive kernel refutation**: witnessing it requires *two* explicit
+mean-field flows for `δ_{2e}`, i.e. solving the non-autonomous sphere ODE for two driving curves —
+non-constructive in Lean — so it is recorded here as a reasoned soundness note, not a committed
+`False`. The repair makes the axiom **sound**; it remains an axiom (`math.axiomatised`). Its analytic
+content is fully machine-checked (the joint point/`W₁` field moduli, PRs #84/#88/#89/#92, and the
+map-coupling bound `W1_toReal_map_le_integral_norm`, PR #90); what remains is purely the ODE assembly
+— an FTC flow representation (velocity time-continuity is derivable from the `deriv` clause + the
+coupling bound + joint Lipschitzness), the integral inequality `h t ≤ K ∫₀ᵗ h` for
+`h t = ∫ ‖Φ t − Ψ t‖ ∂μ₀`, its closure via the **antiderivative** `U t = ∫₀ᵗ h` (`U' = h`, feeding the
+derivative-form `norm_le_gronwallBound_of_norm_deriv_right_le`, sidestepping the norm's corner at `0`),
+and an a.e.-to-everywhere transfer by `ODE_solution_unique_of_mem_Icc` against the common measure
+trajectory. Lesson (echoing F19): a soundness slip can hide in a signature's *missing* hypothesis
+relative to a sibling axiom — cross-checking `meanFieldFlow_unique` against `exists_meanFieldFlow`'s
+own hypotheses is what surfaced it.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
