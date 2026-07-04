@@ -82,15 +82,16 @@ example : True := by
     (dirac_supportedIn_hemisphere (unitE_norm 1 0))
   trivial
 
-/-- Non-vacuity of `lemma_3_2` (family form): the one-member family `![δ_{e₀}]`, probability,
-sphere-supported, with the shared antipodal missing cap. -/
+/-- Non-vacuity of `lemma_3_2` (family form): the one-member family `![δ_{e₀}]` on `Eucl 2`
+(`2 ≤ d` is now required, finding F18), probability, sphere-supported, with the shared antipodal
+missing cap. -/
 example : True := by
-  have hmiss : SharedMissingDirection (fun _ : Fin 1 => Measure.dirac (unitE 1 0)) := by
-    obtain ⟨ω, hω, δ, hδ, hsupp⟩ := dirac_missingCap (unitE_norm 1 0)
+  have hmiss : SharedMissingDirection (fun _ : Fin 1 => Measure.dirac (unitE 2 0)) := by
+    obtain ⟨ω, hω, δ, hδ, hsupp⟩ := dirac_missingCap (unitE_norm 2 0)
     exact ⟨ω, hω, δ, hδ, fun _ => hsupp⟩
-  have _h := lemma_3_2 (fun _ : Fin 1 => Measure.dirac (unitE 1 0))
-    (fun _ => inferInstance) 1 one_pos
-    (fun _ => dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) hmiss
+  have _h := lemma_3_2 (fun _ : Fin 1 => Measure.dirac (unitE 2 0))
+    (fun _ => inferInstance) (le_refl 2) 1 one_pos
+    (fun _ => dirac_supportedIn_sphere (unitE_mem_sphere 2 0)) hmiss
   trivial
 
 /-- Non-vacuity of `lemma_3_3` (family form): the one-member family `![δ_{e₀}]` acted at `j = 0`
