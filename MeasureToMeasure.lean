@@ -27,6 +27,7 @@ import MeasureToMeasure.Leaves.Pigeonhole
 import MeasureToMeasure.Leaves.Coupling
 import MeasureToMeasure.Leaves.GeodesicGradient
 import MeasureToMeasure.Leaves.BarycenterNonColinear
+import MeasureToMeasure.Leaves.BarycenterFlow
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
