@@ -45,17 +45,6 @@ open scoped RealInnerProductSpace
 
 variable {d : ℕ}
 
-/-- There is a unit direction `ω` missed by every measure in the family *with a positive cap gap*
-`δ`: full mass on `{x | ⟪ω, x⟫ ≤ 1 - δ}` (eq. 1.4-1.5). This is the faithful encoding of
-`w₀ ∉ ⋃ᵢ supp(μ₀^i)`: supports are closed, so avoiding `ω` leaves a mass-free open cap.
-
-**Fidelity (soundness):** the earlier encoding (`full mass on {⟪ω, x⟫ < 1}`) only forbade an atom
-AT `ω` -- every atomless family satisfied it for every `ω` -- and made `exists_disentangling_balls`
-kernel-refutable via a measure with atoms dense in the sphere minus a point (review finding F12/F14
-apparatus). The gap form restores the paper's actual strength. -/
-def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
-  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i, supportedIn (μ i) {x | ⟪ω, x⟫ ≤ 1 - δ}
-
 /-- Each input/target pair is matchable by some *measurable, a.e. sphere-valued* transport map (the
 minimal assumption of Theorem 1.2). Measurability is part of "transport map" and is needed for the
 pushforward to be the target rather than the zero measure; the sphere-valued clause is the paper's
@@ -82,7 +71,16 @@ measure-independent flow can disentangle overlapping inputs, and the pre-restate
 was kernel-refuted (two identical Dirac inputs cannot enter two disjoint balls under one
 pushforward). The probability/sphere hypotheses are data (D); `Pairwise (μ₀ i ≠ μ₀ j)` is the
 paper's standing assumption (p. 5) -- with equal members even the mean-field flow produces equal
-outputs. The switch budget (`O(d·N)`, non-explicit constant) is deliberately deferred. -/
+outputs. The switch budget (`O(d·N)`, non-explicit constant) is deliberately deferred. 
+**Narrowed axiom content (2026-07-04, family-forms upgrade):** Lemmas 3.2-3.4 now carry the
+paper's family quantification, fixing clauses, and full non-colinearity, and the M5 separation
+geometry plus `attnMeasureFlow_exists_map` are machine-checked -- so what this axiom still
+assumes beyond them is precisely the §3.3 induction's dynamical composite: the step-2/3
+non-colinearization of a colinear pair with bystander preservation through the part-2 attention
+phase, which the paper asserts without proof (finding F17(b)). The final shrinking round and the
+ball packaging are in reach of `lemma_3_3` + the M5 transfer and are the target of the next
+de-axiomatization pass.
+-/
 axiom exists_disentangling_balls (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
     (T : ℝ) (hT : 0 < T)
     (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))

@@ -79,6 +79,17 @@ def DisjointSupports {N : ℕ} (ν : Fin N → Measure (Eucl d)) : Prop :=
   ∃ S : Fin N → Set (Eucl d), (∀ i, supportedIn (ν i) (S i)) ∧
     Pairwise (fun i j => Disjoint (S i) (S j))
 
+/-- There is a unit direction `ω` missed by every measure in the family *with a positive cap gap*
+`δ`: full mass on `{x | ⟪ω, x⟫ ≤ 1 - δ}` (eq. 1.4-1.5). This is the faithful encoding of
+`w₀ ∉ ⋃ᵢ supp(μ₀^i)`: supports are closed, so avoiding `ω` leaves a mass-free open cap.
+
+**Fidelity (soundness):** the earlier encoding (`full mass on {⟪ω, x⟫ < 1}`) only forbade an atom
+AT `ω` -- every atomless family satisfied it for every `ω` -- and made `exists_disentangling_balls`
+kernel-refutable via a measure with atoms dense in the sphere minus a point (review finding F12/F14
+apparatus). The gap form restores the paper's actual strength. -/
+def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
+  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i, supportedIn (μ i) {x | ⟪ω, x⟫ ≤ 1 - δ}
+
 /-- The support misses a spherical cap: some unit direction `ω` has a positive gap `δ` with
 `⟪ω, x⟫ ≤ 1 - δ` on the full mass of `μ`. This is the faithful encoding of the paper's
 `supp μ ⊊ S^{d-1}` hypothesis (eq. 1.4, Lemma 3.2): a closed support avoiding `ω` leaves a
@@ -105,17 +116,20 @@ axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (h
       AttnSchedule.switches θ ≤ 1 ∧ z ∈ sphere d ∧
       Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
 
-/-- **Lemma 3.2** (transport into the orthant). Two constant parameter pieces move a
-sphere-supported probability measure whose support misses a cap into `Q₁^{d-1}`. AXIOM
+/-- **Lemma 3.2** (transport into the orthant, family form). ONE two-piece schedule moves every
+member of a sphere-supported probability family with a shared missing cap into `Q₁^{d-1}`
+simultaneously (the paper's own quantification: "for any `i ∈ ⟦1,N⟧` the solution `μ^i` ...
+satisfies `supp μ^i(T) ⊂ Q₁^{d-1}`", p.15). The dynamics is measure-independent (`V ≡ B ≡ U ≡ 0`),
+so the members share one transport map: consumers obtain it from the linear layer
+(`flowMap θ T`, with `measureFlow θ T (μ₀ i) = (μ₀ i).map (flowMap θ T)` definitionally). AXIOM
 (`math.axiomatised`): realizes a separating-hyperplane rotation as a flow; rests on
 continuity-equation flow existence. `Depends-On` the separating-hyperplane leaf L3.
 
 **Fidelity (soundness):** the paper's hypotheses (Lemma 3.2, p.15) are `μ₀^i ∈ P(S^{d-1})` with
 `⋃_i supp μ₀^i ⊊ S^{d-1}`; the missing direction `ω` is where the rotation field `-P_x^⊥ ω` pushes
-mass away from. The original stub quantified over EVERY measure and was kernel-refuted with the
-Lebesgue measure: `flowMap` is a Lipschitz bijection of `Eucl d`, so the pushforward of an
-open-positive infinite measure cannot be annihilated off the orthant (review finding F12). The
-missing-cap gap is what `MissingCap` encodes.
+mass away from, and the shared gap is what `SharedMissingDirection` encodes (finding F12 refuted
+the unrestricted per-measure stub with the Lebesgue measure; the earlier single-measure `MissingCap`
+form was the interim per-member reading, upgraded here to the paper's family quantification).
 
 Budget convention: Lean's `switches` counts constant PIECES of the schedule; the paper's "at most
 one switch" counts discontinuities. The paper's proof runs two constant phases (`W ≡ W₁` pushing
@@ -123,30 +137,48 @@ off `-ω`, then `W ≡ W₂` pulling toward `α`), hence `switches θ ≤ 2` her
 
 Layer (F14): stays on the LINEAR layer faithfully -- the paper's construction sets
 `V ≡ B ≡ U ≡ 0, b = 1` (p.15), so the field `P_x^⊥ (W 1)` never reads the measure. -/
-axiom lemma_3_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T : ℝ) (hT : 0 < T)
-    (hμs : supportedIn μ (sphere d)) (hgap : MissingCap μ) :
-    ∃ θ : Params d, switches θ ≤ 2 ∧ supportedIn (measureFlow θ T μ) (orthant d)
+axiom lemma_3_2 {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (T : ℝ) (hT : 0 < T)
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (hmiss : SharedMissingDirection μ₀) :
+    ∃ θ : Params d, switches θ ≤ 2 ∧
+      ∀ i, supportedIn (measureFlow θ T (μ₀ i)) (orthant d)
 
-/-- **Lemma 3.3** (shrink a measure's hull toward its barycenter direction). For any tolerance a
-sphere-supported probability measure on the orthant can be concentrated into a small ball around
-some unit direction `α`. AXIOM (`math.axiomatised`): the contraction is driven by the barycenter
-dynamics (leaf L6) but its realization as a flow on measures rests on the missing
-continuity-equation theory.
+/-- **Lemma 3.3** (family form: shrink the acted member and its colinear companion, fixing the
+rest). For a `Q₁`-supported probability family with pairwise fully-non-colinear barycenters, an
+acted index `j`, and a companion `ν₀` whose barycenter is colinear with the `j`-th, one schedule
+concentrates BOTH `ν₀` and `μ₀ j` into the `ε`-ball around the normalized `j`-th barycenter
+direction while restoring every other member exactly (`μ^i(T) = μ₀^i` for `i ≠ j`, the paper's
+fixing clause; net effect of the `Ψ₁⁻¹ ∘ Ψ₂ ∘ Ψ₁` conjugation of §B.2 -- the fixed members
+LEAVE `Q₁` during `Ψ₁` and return, so only the endpoint identity is asserted). AXIOM
+(`math.axiomatised`): the contraction is the barycenter dynamics (leaf L6) plus the missing
+mean-field theory.
 
-**Fidelity (soundness):** this is the single-measure core of the paper's Lemma 3.3 (p.16), whose
-family form concentrates one measure while FIXING the others and carries an `O(d·N)` switch budget
-with a non-explicit constant (deferred to the mean-field restatement, F14). The paper works over
-`P(Q₁^{d-1})`, hence the probability, sphere, and orthant hypotheses. The original stub quantified
-over EVERY measure and was kernel-refuted with the Lebesgue measure (no bijection supports an
-open-positive infinite measure inside a bounded ball; review finding F12); on-sphere full-support
-measures are equally impossible (a homeomorphism preserves the support's density).
+**Fidelity (soundness):** the paper's Lemma 3.3 (p.16) verbatim, with the ball stated Euclidean
+(the paper's geodesic ball is contained in the Euclidean one of the same radius: weaker-sound) and
+the target direction indexed by the acted member `j` (the paper's display mixes `j` and `N`; the
+`j`-form is the one its §3.3 proof uses). The `O(d·N)` switch budget has a non-explicit constant
+and stays deferred (house policy: no invented constants). The normalized direction is genuinely
+unit under these hypotheses (orthant support forces a nonzero barycenter via
+`inner_barycenter_gt`); the axiom does not assert it, consumers derive it. The pre-family stub was
+kernel-refuted with the Lebesgue measure (F12); the single-measure interim form lacked the fixing
+clause and could not drive the §3.3 induction.
 
 Layer (F14): mean-field -- the paper's construction (B.2, p.33) switches on the value matrix
 (`V(t) = ∑ α_k α_k^⊤` pieces with `W ≡ 0`), so the field reads the flowing measure's barycenter. -/
-axiom lemma_3_3 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (hμs : supportedIn μ (sphere d)) (hμo : supportedIn μ (orthant d)) :
-    ∃ (θ : AttnSchedule d) (α : Eucl d), AttnSchedule.durationSum θ = T ∧ α ∈ sphere d ∧
-      supportedIn (attnMeasureFlow θ μ) (Metric.ball α ε)
+axiom lemma_3_3 {N : ℕ} (j : Fin N) (μ₀ : Fin N → Measure (Eucl d)) (ν₀ : Measure (Eucl d))
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) [IsProbabilityMeasure ν₀]
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hμo : ∀ i, supportedIn (μ₀ i) (orthant d))
+    (hνs : supportedIn ν₀ (sphere d)) (hνo : supportedIn ν₀ (orthant d))
+    (hnoncol : Pairwise fun i k => ∀ c : ℝ, barycenter (μ₀ i) ≠ c • barycenter (μ₀ k))
+    (hνcol : ∃ c : ℝ, barycenter ν₀ = c • barycenter (μ₀ j)) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      supportedIn (attnMeasureFlow θ ν₀)
+        (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
+      supportedIn (attnMeasureFlow θ (μ₀ j))
+        (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
+      ∀ i, i ≠ j → attnMeasureFlow θ (μ₀ i) = μ₀ i
 
 /-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). For two **distinct** probability measures on the orthant
 `Q₁^{d-1}` with **equal** barycenters, a constant parameter (`V ≡ 0`) makes the barycenters differ.
@@ -163,18 +195,33 @@ identity map is not Bochner-integrable, so both barycenters are the junk value `
 separate them (review finding F12). On the sphere the identity is bounded, hence integrable, and
 the orthant support makes the barycenter genuinely nonzero.
 
+**The fixing clause (eq. (3.2)) and finding F17:** the paper's "Moreover" clause localizes the
+flow map to the identity off `conv_g supp μ₀ ∪ conv_g supp ν₀`. AS PRINTED that is refutable for
+atomic inputs: a continuous flow that is the identity off a finite set is the identity everywhere
+(the complement is dense), yet distinct finite-support measures with equal barycenters exist, and
+the barycenter-separation conclusion then fails; the proof's own first step ("there exists an open
+ball `ℬ ⊂ supp μ₀ ∪ supp ν₀`") silently assumes the union of supports has nonempty interior. The
+sound localization, faithful to what the proof delivers (`φ = id` off the gate ball `ℬ`, p.35), is
+relative to any OPEN carrier `U` of both measures: the flow is the identity on the sphere off `U`.
+Recorded as review finding F17 / erratum candidate E4.
+
 Layer (F14): stays on the LINEAR layer faithfully -- the paper's part-1 construction sets `V ≡ 0`
 (perceptron only, §B.3), so the field never reads the measure. -/
 axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (hbar : barycenter μ = barycenter ν) :
-    ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν)
+    (hbar : barycenter μ = barycenter ν)
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
+    ∃ θ : Params d,
+      barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) ∧
+      ∀ x ∈ sphere d, x ∉ U → flowMap θ T x = x
 
 /-- **Lemma 3.4, Part 2** (`γ₁ ∈ (0,1)` case). For two **distinct** probability measures on the orthant
 whose barycenters are **colinear but unequal** (`ℰ_μ = γ·ℰ_ν` for some `γ ∈ (0,1)`), at most two
-switches make the barycenters non-colinear (not `SameRay`). AXIOM (`math.axiomatised`). The "disjoint
+switches make the barycenters FULLY non-colinear: `ℰ_{μ(T)} ≠ γ₂ · ℰ_{ν(T)}` for every real `γ₂`
+(the paper's conclusion verbatim; the earlier `¬ SameRay` form was strictly weaker, allowing
+antipodal colinearity -- upgraded per finding F11's fidelity note). AXIOM (`math.axiomatised`). The "disjoint
 geodesic hulls ⟹ non-colinear barycenters" implication used alongside this is the machine-checked leaf
 L11 (`barycenter_noncolinear_of_disjoint_hull`, review finding F2).
 
@@ -197,7 +244,7 @@ axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsPr
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
-      ¬ SameRay ℝ (barycenter (attnMeasureFlow θ μ)) (barycenter (attnMeasureFlow θ ν))
+      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)
 
 /-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, distinct inputs/targets, and the
 inactive points (the first `M-1`) already at their targets, at most `6` switches move every input to

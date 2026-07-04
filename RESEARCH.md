@@ -52,6 +52,7 @@
 | 2026-07-03 | C: sound? (re-audit) | fixed 3 false stubs | F11: `lemma_3_4_part1/part2`, `lemma_5_1` dropped paper hypotheses and were refutable; restored `μ≠ν`/orthant/colinearity and `DisjointSupports`. Orphan axioms, no proved result affected; disproofs machine-checked |
 | 2026-07-03 | C: sound? (full fidelity matrix + refutation harness) | fixed 7 more stubs; 1 structural gap open | F12: sphere/support/dimension hypotheses restored across the axiom layer (4 kernel disproofs, 3 in-system); F13: Lemma 5.1 "invertible ψ" unsatisfiable (paper statement/proof mismatch, E2); F14 OPEN: linear `measureFlow` cannot express disentanglement (eq. 1.7) -- mean-field attention model decided; F15: B.1/B.2 quantifier order (E3); F16: lemma_B_1 docstring corrected |
 | 2026-07-03 | C: sound? (F14 fix) | mean-field restatement landed | F14 FIXED: `Foundations/Attention.lean` (eq. (1.2) field, `IsMeanFieldFlow`, well-posedness axiom pair) + Statements restated per-layer (paper's `V ≡ 0` constructions stay linear; attention-driven results move to `AttnSchedule`); `SharedMissingDirection` gap form; `exists_disentangling_balls` gains `μ₀^i ≢ μ₀^j` + per-member flow maps; `prop_2_2` re-axiomatised (its old assembly needed mixture linearity, invalid for mean-field); all refutation files now fail to typecheck |
+| 2026-07-04 | C: sound? (family forms) | Lemmas 3.2-3.4 upgraded to the paper's family statements | F17 (paper-level): the printed (3.2) localization is refutable for atomic inputs (open-carrier form is the sound reading, E4); §3.3 step 3's bystander preservation is asserted without proof, so `exists_disentangling_balls` keeps exactly that composite as its axiom content. lemma_3_2 family+shared-map; lemma_3_3 family+companion+fixing clause; lemma_3_4 part 1 + open-carrier (3.2), part 2 conclusion upgraded to full non-colinearity (∀ γ₂); `attnMeasureFlow_exists_map` derives the transport-map clauses from the interface |
 | 2026-07-03 | G: guarded? (regression suite) | committed | Refutation regression suite: `Regression/` lib (kernel-checked disproofs of the F11/F12/F14 false shapes + per-axiom non-vacuity witnesses) and `Refutations/` must-fail adapters, gated by `scripts/refutation-gate.sh` in audit.sh step 5 and CI; a re-loosened axiom now fails the build instead of surviving 135 commits |
 | 2026-07-03 | G: guarded? (admission hardening) | landed | Axiom admission protocol (WORKFLOW.md: verbatim anchor, six-axis fidelity diff, degenerate attack, witness, model adequacy, fidelity footers); `ckc-axiom-check` v0.2.0 requires `Paper-Ref:`/`Refutation-Attempt:` on axiomatised commits; per-node axiom footprints in public CI (vendored `scripts/axiom-report`); per-claim `fidelity` records in claims.toml gated by `claimgraph audit --require-fidelity` |
 | 2026-07-03 | F: prove (M4 discharge) | lemma_B_2 + lemma_B_1 machine-checked | The gated two-cap retention is PROVED (`Leaves.gated_twoCap_retention`): amplitude-scaled self-centered gated block recentered at an overlap point, sub-cap mass (B.6) + geodesic triangle inequality (Mathlib `angle_le_angle_add_angle`) + logistic reaching with the amplitude buying the fixed-`T` budget + the pushforward bridge. `lemma_B_2` flips axiom → theorem after two discharge-time statement restrictions (probability measure: infinite rim mass defeats any single block; sub-hemisphere radii: rim stalling / `±ω` in one cap), and `#print axioms lemma_B_1` = `propext, Classical.choice, Quot.sound` -- the Appendix-B chain is fully kernel-checked. Statement-layer axiom count 13 → 12 |
@@ -523,6 +524,35 @@ makes the `K = 0` base case false. It does not: the paper's union is bounded (`k
 `lemma_B_2` drops the paper's localization clause (flow = Id on `S^{d-1} ∖ ℬ₀`) and the
 `|k − k'| ≥ 2` disjointness hypothesis, which the union form needs so that mass already sitting in
 later balls stays put during earlier legs. Docstring corrected.
+
+### F17 (paper-level, statement + rigor — recorded 2026-07-04) Lemma 3.4's (3.2) clause fails for atomic inputs; §3.3 step 3's bystander preservation is asserted without proof
+
+Two related findings surfaced while upgrading Lemmas 3.2-3.4 to their family forms.
+
+(a) **The printed eq. (3.2) is refutable as stated.** Lemma 3.4 part 1's "Moreover" clause asserts
+the flow map is the identity off `conv_g supp μ₀ ∪ conv_g supp ν₀`. For finite-support inputs the
+complement of the (finite) support union is dense, and a continuous flow that is the identity on a
+dense set is the identity everywhere -- so the barycenter-separation conclusion fails; yet distinct
+finite-support measures with equal barycenters exist (the crossing-chords witness,
+`Regression/NonVacuity/MidLevel.lean`). The proof's first step ("there exists an open ball
+`ℬ ⊂ supp μ₀ ∪ supp ν₀` with `μ₀(ℬ) ≠ ν₀(ℬ)`", p.35) silently assumes the support union has
+nonempty interior. What the construction actually delivers is `φ = id` off the gate ball, which is
+sound relative to any OPEN carrier of both measures: the Lean `lemma_3_4_part1` states the clause
+in that open-carrier form. Erratum candidate E4.
+
+(b) **§3.3 step 3's bystander preservation is hand-waved.** The proof of Proposition 3.1 preserves
+the already-disentangled members through the part-2 (attention-on) phase "owing to (3.4), and
+noting that V = I_d ..., along with the fact that conv_g supp(μ(t)) ⊂ conv_g supp(μ₀)" (p.17).
+Hull-nesting holds for the pure attention phase, but part 2's schedule also has a perceptron phase
+whose gate ball (chosen in B.3 to meet the acted supports) is not shown to avoid bystander
+territory. Universal hull-nesting is false (a perceptron phase moves Diracs), so the preservation
+needs the gate ball confined near the acted pair -- asserted, not proved. Consequence for the
+formalization: the §3.3 induction is not assemblable from the family Lemmas 3.2-3.4 alone; the
+step-2/3 composite (with its preservation claim) is the honest remaining axiom content of
+`exists_disentangling_balls`, now that the family forms and the M5 geometry are in place.
+Lesson: family-form fixing clauses are exactly where transcription fidelity and paper rigor
+interact; both defects were caught by the admission protocol's degenerate-instantiation step
+before any statement landed.
 
 ### Verdict
 
