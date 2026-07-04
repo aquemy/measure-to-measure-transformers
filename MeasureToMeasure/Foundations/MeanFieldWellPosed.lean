@@ -1,4 +1,5 @@
 import MeasureToMeasure.Foundations.AttentionEstimates
+import Mathlib.MeasureTheory.Integral.Prod
 
 /-!
 # Lipschitz-in-measure modulus of the self-attention field (milestone M3b)
@@ -830,6 +831,275 @@ theorem meanFlowDist_continuousOn [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ 
   · refine ae_of_sphere_supported hμ₀S (fun x hx => ?_)
     exact ((((hΦ.deriv x hx t₀ ht₀).continuousAt).continuousWithinAt).sub
       (((hΨ.deriv x hx t₀ ht₀).continuousAt).continuousWithinAt)).norm
+
+/-- **Joint continuity of a mean-field flow** on `[0,duration] × sphere`. Uniform Lipschitz-in-point
+(`IsMeanFieldFlow.lipschitz`) plus time-continuity at each sphere point (`deriv`) give continuity in
+`(t,x)` jointly: `‖Φ s x − Φ s₀ x₀‖ ≤ L‖x−x₀‖ + ‖Φ s x₀ − Φ s₀ x₀‖`, both terms vanishing. This is
+the measurability unblock for the Fubini step in `meanFlowDist_le_integral` — the field is only
+continuous *on the sphere*, so the global Carathéodory route fails, but the product measure lives on
+`sphere × [0,duration]` where this joint continuity holds. -/
+theorem flow_continuousOn_prod (hΦ : IsMeanFieldFlow p μ₀ Φ) :
+    ContinuousOn (fun q : ℝ × Eucl d => Φ q.1 q.2) (Set.Icc 0 p.duration ×ˢ sphere d) := by
+  obtain ⟨L, hL⟩ := hΦ.lipschitz
+  rintro ⟨s₀, x₀⟩ ⟨hs₀, hx₀⟩
+  rw [ContinuousWithinAt, ← tendsto_sub_nhds_zero_iff]
+  have hfst : Filter.Tendsto (fun q : ℝ × Eucl d => ‖Φ q.1 x₀ - Φ s₀ x₀‖)
+      (nhdsWithin (s₀, x₀) (Set.Icc 0 p.duration ×ˢ sphere d)) (nhds 0) := by
+    have hs : Filter.Tendsto (fun s => ‖Φ s x₀ - Φ s₀ x₀‖)
+        (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds 0) := by
+      have hcont : ContinuousWithinAt (fun s => ‖Φ s x₀ - Φ s₀ x₀‖) (Set.Icc 0 p.duration) s₀ :=
+        ((((hΦ.deriv x₀ hx₀ s₀ hs₀).continuousAt).continuousWithinAt).sub
+          continuousWithinAt_const).norm
+      have hval : Filter.Tendsto (fun s => ‖Φ s x₀ - Φ s₀ x₀‖)
+          (nhdsWithin s₀ (Set.Icc 0 p.duration)) (nhds ‖Φ s₀ x₀ - Φ s₀ x₀‖) := hcont
+      simpa using hval
+    have hmap : Filter.Tendsto (fun q : ℝ × Eucl d => q.1)
+        (nhdsWithin (s₀, x₀) (Set.Icc 0 p.duration ×ˢ sphere d))
+        (nhdsWithin s₀ (Set.Icc 0 p.duration)) := by
+      rw [nhdsWithin_prod_eq]; exact Filter.tendsto_fst
+    exact hs.comp hmap
+  have hsnd : Filter.Tendsto (fun q : ℝ × Eucl d => (L : ℝ) * ‖q.2 - x₀‖)
+      (nhdsWithin (s₀, x₀) (Set.Icc 0 p.duration ×ˢ sphere d)) (nhds 0) := by
+    have hc : Continuous (fun q : ℝ × Eucl d => (L : ℝ) * ‖q.2 - x₀‖) :=
+      continuous_const.mul (continuous_snd.sub continuous_const).norm
+    have h2 : Filter.Tendsto (fun q : ℝ × Eucl d => (L : ℝ) * ‖q.2 - x₀‖)
+        (nhdsWithin (s₀, x₀) (Set.Icc 0 p.duration ×ˢ sphere d))
+        (nhds ((L : ℝ) * ‖(s₀, x₀).2 - x₀‖)) :=
+      (hc.tendsto (s₀, x₀)).mono_left nhdsWithin_le_nhds
+    simpa using h2
+  refine squeeze_zero_norm' ?_ (by simpa using hsnd.add hfst)
+  filter_upwards [self_mem_nhdsWithin] with q hq
+  obtain ⟨hq1, hq2⟩ := hq
+  calc ‖Φ q.1 q.2 - Φ s₀ x₀‖
+      ≤ ‖Φ q.1 q.2 - Φ q.1 x₀‖ + ‖Φ q.1 x₀ - Φ s₀ x₀‖ := by
+        rw [← sub_add_sub_cancel]; exact norm_add_le _ _
+    _ ≤ (L : ℝ) * ‖q.2 - x₀‖ + ‖Φ q.1 x₀ - Φ s₀ x₀‖ := by
+        gcongr
+        have hd := (hL q.1 hq1).dist_le_mul q.2 x₀
+        rwa [dist_eq_norm, dist_eq_norm] at hd
+
+/-- Pointwise, the flow distance is bounded by the time-integral of the field difference, by
+subtracting the two FTC representations (`flow_sub_eq_integral_field`) and `norm_integral_le`. -/
+theorem norm_flow_sub_le_intervalIntegral_field [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ) {x : Eucl d} (hx : x ∈ sphere d)
+    {t : ℝ} (ht : t ∈ Set.Icc 0 p.duration) :
+    ‖Φ t x - Ψ t x‖ ≤ ∫ s in (0)..t,
+      ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖ := by
+  have h0mem : (0 : ℝ) ∈ Set.Icc 0 p.duration := ⟨le_refl 0, p.duration_nonneg⟩
+  have hsub : Set.uIcc 0 t ⊆ Set.Icc 0 p.duration := Set.uIcc_subset_Icc h0mem ht
+  have hintΦ : IntervalIntegrable (fun s => p.field (μ₀.map (Φ s)) (Φ s x)) volume 0 t :=
+    ((velocity_continuousOn hμ₀S hΦ hx).mono hsub).intervalIntegrable
+  have hintΨ : IntervalIntegrable (fun s => p.field (μ₀.map (Ψ s)) (Ψ s x)) volume 0 t :=
+    ((velocity_continuousOn hμ₀S hΨ hx).mono hsub).intervalIntegrable
+  have hrep : Φ t x - Ψ t x = ∫ s in (0)..t,
+      (p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)) := by
+    rw [intervalIntegral.integral_sub hintΦ hintΨ,
+      ← flow_sub_eq_integral_field hμ₀S hΦ hx ht, ← flow_sub_eq_integral_field hμ₀S hΨ hx ht]
+    abel
+  rw [hrep]
+  exact intervalIntegral.norm_integral_le_integral_norm ht.1
+
+/-- **Fubini/Tonelli swap.** The `μ₀`-average of the time-integrated pointwise flow distance equals
+the time integral of `meanFlowDist`. The integrand `(x,s) ↦ ‖Φ_s x − Ψ_s x‖` is jointly continuous
+on `sphere × [0,duration]`, which carries the product measure `μ₀ ⊗ volume|_{(0,t]}`, so it is
+integrable and `MeasureTheory.integral_integral_swap` applies. -/
+theorem meanFlowDist_intervalIntegral_swap [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ)
+    {t : ℝ} (ht : t ∈ Set.Icc 0 p.duration) :
+    ∫ x, (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖) ∂μ₀
+      = ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+  have h0t : (0:ℝ) ≤ t := ht.1
+  have hmapsto : Set.MapsTo (Prod.swap : Eucl d × ℝ → ℝ × Eucl d)
+      (sphere d ×ˢ Set.Icc 0 p.duration) (Set.Icc 0 p.duration ×ˢ sphere d) :=
+    fun q hq => ⟨hq.2, hq.1⟩
+  have hcontΦ : ContinuousOn (fun q : Eucl d × ℝ => Φ q.2 q.1)
+      (sphere d ×ˢ Set.Icc 0 p.duration) :=
+    (flow_continuousOn_prod hΦ).comp continuous_swap.continuousOn hmapsto
+  have hcontΨ : ContinuousOn (fun q : Eucl d × ℝ => Ψ q.2 q.1)
+      (sphere d ×ˢ Set.Icc 0 p.duration) :=
+    (flow_continuousOn_prod hΨ).comp continuous_swap.continuousOn hmapsto
+  have hcontG : ContinuousOn (fun q : Eucl d × ℝ => ‖Φ q.2 q.1 - Ψ q.2 q.1‖)
+      (sphere d ×ˢ Set.Icc 0 p.duration) := (hcontΦ.sub hcontΨ).norm
+  haveI : IsFiniteMeasure (volume.restrict (Set.Ioc (0:ℝ) t)) :=
+    ⟨by rw [Measure.restrict_apply_univ]; exact measure_Ioc_lt_top⟩
+  have hμ₀ae : ∀ᵐ x ∂μ₀, x ∈ sphere d := by rw [ae_iff]; exact hμ₀S
+  have hμ₀restr : μ₀.restrict (sphere d) = μ₀ := Measure.restrict_eq_self_of_ae_mem hμ₀ae
+  have hprodeq : μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))
+      = (μ₀.prod volume).restrict (sphere d ×ˢ Set.Ioc (0:ℝ) t) := by
+    rw [← Measure.prod_restrict, hμ₀restr]
+  have hmeasSet : MeasurableSet (sphere d ×ˢ Set.Ioc (0:ℝ) t) :=
+    (Metric.isClosed_sphere.measurableSet).prod measurableSet_Ioc
+  have haesm : AEStronglyMeasurable (fun q : Eucl d × ℝ => ‖Φ q.2 q.1 - Ψ q.2 q.1‖)
+      (μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))) := by
+    rw [hprodeq]
+    exact (hcontG.mono (Set.prod_mono le_rfl
+      (fun s hs => ⟨hs.1.le, hs.2.trans ht.2⟩))).aestronglyMeasurable hmeasSet
+  have hbd : ∀ᵐ q ∂(μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))),
+      ‖‖Φ q.2 q.1 - Ψ q.2 q.1‖‖ ≤ (2 : ℝ) := by
+    rw [hprodeq]
+    refine ae_restrict_of_forall_mem hmeasSet ?_
+    rintro ⟨x, s⟩ ⟨hx, hs⟩
+    have hsIcc : s ∈ Set.Icc 0 p.duration := ⟨hs.1.le, hs.2.trans ht.2⟩
+    have h1 : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hsIcc).mapsTo hx
+    have h2 : Ψ s x ∈ sphere d := (hΨ.sphere_bijOn s hsIcc).mapsTo hx
+    rw [norm_norm]
+    calc ‖Φ s x - Ψ s x‖ ≤ ‖Φ s x‖ + ‖Ψ s x‖ := norm_sub_le _ _
+      _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+  have hintegrable : Integrable (Function.uncurry (fun x s => ‖Φ s x - Ψ s x‖))
+      (μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))) :=
+    Integrable.mono' (integrable_const (2 : ℝ)) haesm hbd
+  calc ∫ x, (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖) ∂μ₀
+      = ∫ x, (∫ s in Set.Ioc (0:ℝ) t, ‖Φ s x - Ψ s x‖) ∂μ₀ := by
+        simp_rw [intervalIntegral.integral_of_le h0t]
+    _ = ∫ s in Set.Ioc (0:ℝ) t, (∫ x, ‖Φ s x - Ψ s x‖ ∂μ₀) :=
+        integral_integral_swap hintegrable
+    _ = ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+        rw [intervalIntegral.integral_of_le h0t]; simp_rw [meanFlowDist]
+
+/-- **The averaged Grönwall inequality** — the third `gronwall_integral_zero` hypothesis. Averaging
+the pointwise FTC bound over the sphere-supported probability datum `μ₀`: the point term becomes
+`Cp · meanFlowDist s` and integrates in time (`meanFlowDist_intervalIntegral_swap`); the measure term
+is folded back into `meanFlowDist s` by the coupling bound `W1_toReal_map_le_integral_norm`. The
+constant is `K = Cp + Cm`, the joint `(point, W₁)` field modulus constants. Together with
+`meanFlowDist_continuousOn` / `meanFlowDist_nonneg` and `gronwall_integral_zero`, this drives
+`meanFlowDist ≡ 0` — the `μ₀`-a.e. half of mean-field uniqueness. -/
+theorem meanFlowDist_le_integral [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
+    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ) :
+    ∃ K : ℝ, ∀ t ∈ Set.Icc 0 p.duration,
+      meanFlowDist μ₀ Φ Ψ t ≤ K * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+  set Cp : ℝ := (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
+    + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) with hCp
+  set Cm : ℝ := ‖p.V‖ * ((Real.exp (2 * ‖p.B‖) + Real.exp (4 * ‖p.B‖)) * (1 + ‖p.B‖)) with hCm
+  have hCm0 : 0 ≤ Cm := by rw [hCm]; positivity
+  refine ⟨Cp + Cm, fun t ht => ?_⟩
+  have h0t : (0:ℝ) ≤ t := ht.1
+  have huIcc : Set.uIcc 0 t ⊆ Set.Icc 0 p.duration :=
+    Set.uIcc_subset_Icc ⟨le_rfl, p.duration_nonneg⟩ ht
+  have hd1_int : ∀ s ∈ Set.Icc 0 p.duration, Integrable (fun y => ‖Φ s y - Ψ s y‖) μ₀ := by
+    intro s hs
+    refine Integrable.mono' (integrable_const (2:ℝ))
+      ((hΦ.measurable s hs).sub (hΨ.measurable s hs)).norm.aestronglyMeasurable ?_
+    refine ae_of_sphere_supported hμ₀S (fun y hy => ?_)
+    rw [norm_norm]
+    have h1 : Φ s y ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hy
+    have h2 : Ψ s y ∈ sphere d := (hΨ.sphere_bijOn s hs).mapsTo hy
+    calc ‖Φ s y - Ψ s y‖ ≤ ‖Φ s y‖ + ‖Ψ s y‖ := norm_sub_le _ _
+      _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+  have hint_mfd : IntervalIntegrable (meanFlowDist μ₀ Φ Ψ) volume 0 t :=
+    ((meanFlowDist_continuousOn hμ₀S hΦ hΨ).mono huIcc).intervalIntegrable
+  have hcoup : ∀ s ∈ Set.Icc 0 p.duration,
+      (W1 (μ₀.map (Φ s)) (μ₀.map (Ψ s))).toReal ≤ meanFlowDist μ₀ Φ Ψ s := fun s hs =>
+    W1_toReal_map_le_integral_norm (hΦ.measurable s hs) (hΨ.measurable s hs) (hd1_int s hs)
+  have hfield : ∀ s ∈ Set.Icc 0 p.duration, ∀ x ∈ sphere d,
+      ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖
+        ≤ Cp * ‖Φ s x - Ψ s x‖ + Cm * meanFlowDist μ₀ Φ Ψ s := by
+    intro s hs x hx
+    haveI := isProbabilityMeasure_map_flow hΦ hs
+    haveI := isProbabilityMeasure_map_flow hΨ hs
+    have hΦsS := map_flow_sphere_support hμ₀S hΦ hs
+    have hΨsS := map_flow_sphere_support hμ₀S hΨ hs
+    have hpΦ : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hx
+    have hpΨ : Ψ s x ∈ sphere d := (hΨ.sphere_bijOn s hs).mapsTo hx
+    have hW1ne : W1 (μ₀.map (Φ s)) (μ₀.map (Ψ s)) ≠ ⊤ :=
+      W1_ne_top_of_sphere_supported _ _ hΦsS hΨsS
+    have hpt : ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Ψ s x)‖
+        ≤ Cp * ‖Φ s x - Ψ s x‖ := by
+      have h := norm_field_sub_point_le p (μ₀.map (Φ s)) hΦsS hpΦ hpΨ
+      rwa [← hCp] at h
+    have hms : ‖p.field (μ₀.map (Φ s)) (Ψ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖
+        ≤ Cm * meanFlowDist μ₀ Φ Ψ s := by
+      have hmod := norm_field_sub_measure_W1_le p hΦsS hΨsS hW1ne hpΨ
+      rw [← hCm] at hmod
+      exact hmod.trans (mul_le_mul_of_nonneg_left (hcoup s hs) hCm0)
+    calc ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖
+        = ‖(p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Ψ s x))
+            + (p.field (μ₀.map (Φ s)) (Ψ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x))‖ := by
+          rw [sub_add_sub_cancel]
+      _ ≤ ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Ψ s x)‖
+            + ‖p.field (μ₀.map (Φ s)) (Ψ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖ := norm_add_le _ _
+      _ ≤ Cp * ‖Φ s x - Ψ s x‖ + Cm * meanFlowDist μ₀ Φ Ψ s := add_le_add hpt hms
+  have hint_d1x : ∀ x ∈ sphere d,
+      IntervalIntegrable (fun s => ‖Φ s x - Ψ s x‖) volume 0 t := by
+    intro x hx
+    have hc : ContinuousOn (fun s => ‖Φ s x - Ψ s x‖) (Set.Icc 0 p.duration) := fun s hs =>
+      ((((hΦ.deriv x hx s hs).continuousAt).continuousWithinAt).sub
+        (((hΨ.deriv x hx s hs).continuousAt).continuousWithinAt)).norm
+    exact (hc.mono huIcc).intervalIntegrable
+  have hbound : ∀ x ∈ sphere d, ‖Φ t x - Ψ t x‖
+      ≤ Cp * (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖)
+        + Cm * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+    intro x hx
+    refine (norm_flow_sub_le_intervalIntegral_field hμ₀S hΦ hΨ hx ht).trans ?_
+    have hintL : IntervalIntegrable
+        (fun s => ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖) volume 0 t :=
+      (((velocity_continuousOn hμ₀S hΦ hx).sub
+        (velocity_continuousOn hμ₀S hΨ hx)).norm.mono huIcc).intervalIntegrable
+    have hintR : IntervalIntegrable
+        (fun s => Cp * ‖Φ s x - Ψ s x‖ + Cm * meanFlowDist μ₀ Φ Ψ s) volume 0 t :=
+      ((hint_d1x x hx).const_mul Cp).add (hint_mfd.const_mul Cm)
+    calc ∫ s in (0:ℝ)..t, ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Ψ s)) (Ψ s x)‖
+        ≤ ∫ s in (0:ℝ)..t, (Cp * ‖Φ s x - Ψ s x‖ + Cm * meanFlowDist μ₀ Φ Ψ s) :=
+          intervalIntegral.integral_mono_on h0t hintL hintR
+            (fun s hs => hfield s ⟨hs.1, hs.2.trans ht.2⟩ x hx)
+      _ = Cp * (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖)
+            + Cm * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+          rw [intervalIntegral.integral_add ((hint_d1x x hx).const_mul Cp)
+            (hint_mfd.const_mul Cm), intervalIntegral.integral_const_mul,
+            intervalIntegral.integral_const_mul]
+  have hI_int : Integrable (fun x => ∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖) μ₀ := by
+    haveI : IsFiniteMeasure (volume.restrict (Set.Ioc (0:ℝ) t)) :=
+      ⟨by rw [Measure.restrict_apply_univ]; exact measure_Ioc_lt_top⟩
+    have hμ₀ae : ∀ᵐ x ∂μ₀, x ∈ sphere d := by rw [ae_iff]; exact hμ₀S
+    have hμ₀restr : μ₀.restrict (sphere d) = μ₀ := Measure.restrict_eq_self_of_ae_mem hμ₀ae
+    have hprodeq : μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))
+        = (μ₀.prod volume).restrict (sphere d ×ˢ Set.Ioc (0:ℝ) t) := by
+      rw [← Measure.prod_restrict, hμ₀restr]
+    have hmeasSet : MeasurableSet (sphere d ×ˢ Set.Ioc (0:ℝ) t) :=
+      (Metric.isClosed_sphere.measurableSet).prod measurableSet_Ioc
+    have hmapsto : Set.MapsTo (Prod.swap : Eucl d × ℝ → ℝ × Eucl d)
+        (sphere d ×ˢ Set.Icc 0 p.duration) (Set.Icc 0 p.duration ×ˢ sphere d) :=
+      fun q hq => ⟨hq.2, hq.1⟩
+    have hcontG : ContinuousOn (fun q : Eucl d × ℝ => ‖Φ q.2 q.1 - Ψ q.2 q.1‖)
+        (sphere d ×ˢ Set.Icc 0 p.duration) :=
+      (((flow_continuousOn_prod hΦ).comp continuous_swap.continuousOn hmapsto).sub
+        ((flow_continuousOn_prod hΨ).comp continuous_swap.continuousOn hmapsto)).norm
+    have hintegrable : Integrable (Function.uncurry (fun x s => ‖Φ s x - Ψ s x‖))
+        (μ₀.prod (volume.restrict (Set.Ioc (0:ℝ) t))) := by
+      refine Integrable.mono' (integrable_const (2:ℝ)) ?_ ?_
+      · rw [hprodeq]
+        exact (hcontG.mono (Set.prod_mono le_rfl
+          (fun s hs => ⟨hs.1.le, hs.2.trans ht.2⟩))).aestronglyMeasurable hmeasSet
+      · rw [hprodeq]
+        refine ae_restrict_of_forall_mem hmeasSet ?_
+        rintro ⟨x, s⟩ ⟨hx, hs⟩
+        have hsIcc : s ∈ Set.Icc 0 p.duration := ⟨hs.1.le, hs.2.trans ht.2⟩
+        have h1 : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hsIcc).mapsTo hx
+        have h2 : Ψ s x ∈ sphere d := (hΨ.sphere_bijOn s hsIcc).mapsTo hx
+        simp only [Function.uncurry_apply_pair, norm_norm]
+        calc ‖Φ s x - Ψ s x‖ ≤ ‖Φ s x‖ + ‖Ψ s x‖ := norm_sub_le _ _
+          _ = 2 := by rw [norm_eq_one_of_mem_sphere h1, norm_eq_one_of_mem_sphere h2]; norm_num
+    have := hintegrable.integral_prod_left
+    refine this.congr ?_
+    filter_upwards with x
+    rw [intervalIntegral.integral_of_le h0t]
+    simp only [Function.uncurry_apply_pair]
+  have hG_int : Integrable (fun x => Cp * (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖)
+      + Cm * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s) μ₀ :=
+    (hI_int.const_mul Cp).add (integrable_const _)
+  have hmono : meanFlowDist μ₀ Φ Ψ t ≤ ∫ x, (Cp * (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖)
+      + Cm * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s) ∂μ₀ := by
+    rw [meanFlowDist]
+    exact integral_mono_ae (hd1_int t ht) hG_int (ae_of_sphere_supported hμ₀S hbound)
+  have hval : ∫ x, (Cp * (∫ s in (0:ℝ)..t, ‖Φ s x - Ψ s x‖)
+      + Cm * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s) ∂μ₀
+      = (Cp + Cm) * ∫ s in (0:ℝ)..t, meanFlowDist μ₀ Φ Ψ s := by
+    rw [integral_add (hI_int.const_mul Cp) (integrable_const _), integral_const_mul,
+      integral_const, meanFlowDist_intervalIntegral_swap hμ₀S hΦ hΨ ht]
+    have huniv : μ₀.real Set.univ = 1 := by simp
+    rw [huniv, one_smul]
+    ring
+  rw [hval] at hmono
+  exact hmono
 
 end AveragedGronwall
 
