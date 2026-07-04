@@ -134,7 +134,16 @@ is Lipschitz in `x` and (by the bounded-Lipschitz kernel) Lipschitz in `μ` for 
 Picard-Lindelöf iteration on the product of the point and measure variables converges; Mathlib
 `v4.31.0` has no mean-field ODE theory to express this. The measure-independent case (`V = 0`)
 is *proved* in `Foundations/FlowMap.lean` (milestone M3); this axiom is the genuinely nonlinear
-remainder (M3b). -/
+remainder (M3b).
+
+Toward the discharge, the field's Lipschitz moduli are being machine-checked: the *point* modulus
+is `AttentionEstimates.attnAvg_sub_le_of_norm_le`, and the *measure* modulus is structurally
+reduced to the self-attention average's own modulus in `Foundations/MeanFieldWellPosed.lean`
+(`norm_field_sub_measure_le`: `‖field μ x − field ν x‖ ≤ ‖V‖ · ‖A_B[μ] x − A_B[ν] x‖`, since the
+perceptron term is measure-independent and the tangential projector is nonexpansive). The single
+remaining analytic input is the self-attention `W₁`-modulus `‖A_B[μ] x − A_B[ν] x‖ ≲ W₁(μ, ν)`
+(a sphere-supported, hence local-Lipschitz, Kantorovich-Rubinstein estimate), after which a
+Grönwall argument discharges `meanFieldFlow_unique` and a Picard iteration `exists_meanFieldFlow`. -/
 axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
     [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
     ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ
