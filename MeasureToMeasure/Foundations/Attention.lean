@@ -32,9 +32,11 @@ This file provides the faithful interface:
   `d/dt Φ_t x = field (μ₀.map Φ_t) (Φ_t x)` on the sphere, starting from the identity, each time
   slice measurable, Lipschitz, and a bijection of the sphere (the regularity the paper's
   `φ^t` carries, eq. (B.2)).
-* `exists_meanFieldFlow` / `meanFieldFlow_unique` -- the ONLY axioms: well-posedness of this
-  McKean-Vlasov system on the sphere for sphere-supported probability data. Mathlib `v4.31.0`
-  has no mean-field / measure-dependent ODE theory; this is the honest completion of milestone M3
+* `exists_meanFieldFlow` -- the sole remaining axiom here: EXISTENCE of the McKean-Vlasov
+  characteristic flow on the sphere for sphere-supported probability data. Its companion
+  `meanFieldFlow_unique` (UNIQUENESS) is now a THEOREM (`MeanFieldWellPosed.meanFieldFlow_unique`),
+  machine-checked via the measure-averaged Grönwall route. Mathlib `v4.31.0`
+  has no mean-field / measure-dependent ODE existence theory; this is the honest completion of M3
   (the linear characteristic flow of `Foundations/FlowMap.lean` covers the measure-independent
   special case).
 * `AttnSchedule`, `attnMeasureFlow` -- the solution operator of a schedule, by folding the
@@ -146,54 +148,15 @@ self-attention average's `W₁`-modulus `attnAvg_sub_measure_le` via the on-sphe
 Rubinstein bound (the softmax integrands are Lipschitz only on the sphere, but every coupling of
 sphere-supported measures sits on `sphere × sphere`). The measure-trajectory coupling bound is now
 machine-checked too (`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`:
-`(W₁(f_#μ, g_#μ)).toReal ≤ ∫ ‖f − g‖ ∂μ`), so what remains is purely ODE-theoretic: a Picard
-iteration in the joint (point, `W₁`) variable for `exists_meanFieldFlow` and a Grönwall argument for
-`meanFieldFlow_unique`, neither expressible in Mathlib `v4.31.0` for the measure-coupled field. -/
+`(W₁(f_#μ, g_#μ)).toReal ≤ ∫ ‖f − g‖ ∂μ`). The Grönwall argument for `meanFieldFlow_unique` is now
+FULLY machine-checked (`MeanFieldWellPosed.meanFieldFlow_unique`, via the measure-averaged
+antiderivative Grönwall + `ODE_solution_unique_of_mem_Icc_right`); what remains axiomatic is only the
+EXISTENCE half — a Picard iteration in the joint (point, `W₁`) variable, not yet expressible in
+Mathlib `v4.31.0` for the measure-coupled field. -/
 axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
     [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
     ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ
 
-/-- **Well-posedness of the self-attention mean-field flow (uniqueness on the sphere).** Two
-mean-field flows of the same block and datum, of a **sphere-supported probability** initial measure,
-agree on the sphere throughout the block's duration. AXIOM (`math.axiomatised`): the uniqueness half
-of the same McKean-Vlasov well-posedness.
-
-**Soundness (review finding F20, load-bearing).** The pre-F20 statement omitted the datum
-restriction `μ₀ (sphere d)ᶜ = 0` (`exists_meanFieldFlow` carries it; uniqueness dropping it was a
-transcription slip) and was then **FALSE**: `IsMeanFieldFlow.deriv` constrains trajectories *only at
-sphere points*, so if `μ₀` places mass off the sphere two flows may differ there while both remain
-mean-field flows. With `μ₀ = δ_{2e}` (`‖2e‖ = 2`) and `V ≠ 0`, choosing two Lipschitz off-sphere
-curves `c₁(t) ≠ c₂(t)` with `cᵢ(0) = 2e` gives `μ₀.map Φⁱ_t = δ_{cᵢ(t)}`, hence *different* sphere
-fields `field(δ_{cᵢ(t)}, ·) = P_·^⊥(V cᵢ(t) + W(U· + b)₊)`, hence *different* sphere trajectories —
-uniqueness on the sphere fails. Requiring `μ₀ ∈ P(𝕊^{d-1})` (the paper's standing hypothesis,
-matching `exists_meanFieldFlow`) closes the self-reference: `μ₀.map Φ_t` is then determined by `Φ`'s
-values on the sphere alone, and — since each `Φ_t` maps the sphere into itself (`sphere_bijOn`) — is
-itself a sphere-supported probability measure, so the field moduli below apply.
-
-Its analytic input — the field's joint Lipschitz-in-(point, `W₁`) modulus — is machine-checked in
-full: the *point* modulus `MeanFieldWellPosed.norm_field_sub_point_le` (the field's own, accounting
-for the base-point projector `P_x^⊥` and the coordinatewise ReLU — not merely `attnAvg`'s) and the
-*measure* modulus `MeanFieldWellPosed.norm_field_sub_measure_W1_le`. The measure-coupling step is
-machine-checked too: for `h t = ∫ ‖Φ t x − Ψ t x‖ ∂μ₀` the domination
-`(W₁((Φ_t)_#μ₀, (Ψ_t)_#μ₀)).toReal ≤ h t` (witnessed by the plan `(Φ_t, Ψ_t)_#μ₀`) is
-`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`. The Grönwall closure itself is now
-machine-checked: `MeanFieldWellPosed.gronwall_integral_zero` proves that a nonnegative continuous
-`h` with `h t ≤ K ∫₀ᵗ h` vanishes, via the **antiderivative** `U t = ∫₀ᵗ h` (which *is* `C¹`,
-`U' = h`, sidestepping the norm's corner at `0`) fed to the derivative-form
-`norm_le_gronwallBound_of_norm_deriv_right_le` — precisely the ingredient an earlier attempt
-flagged as unpackaged in Mathlib `v4.31.0`. What remains (on this now-sound statement) is the ODE
-plumbing that produces the integral inequality `h t ≤ K ∫₀ᵗ h` and consumes the Grönwall lemma:
-the FTC representation of the flow (velocity time-continuity is *derivable* — `Φ_·x` is continuous
-from the `deriv` clause, `μ₀.map Φ_·` is `W₁`-continuous by the coupling bound, and the field is
-jointly Lipschitz), the pointwise bound averaged over `μ₀` (Tonelli) into that inequality, and the
-a.e.-to-everywhere transfer by single-ODE uniqueness (`ODE_solution_unique_of_mem_Icc`) against the
-now-common measure trajectory. It pins the mean-field flow of a measure-independent block to the
-linear `Block` flow, which is what transfers the Appendix-B gated results to this interface. -/
-axiom meanFieldFlow_unique {p : AttnParams d} {μ₀ : Measure (Eucl d)}
-    [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphere d)ᶜ = 0)
-    {Φ Ψ : ℝ → Eucl d → Eucl d}
-    (hΦ : IsMeanFieldFlow p μ₀ Φ) (hΨ : IsMeanFieldFlow p μ₀ Ψ) :
-    ∀ t ∈ Set.Icc 0 p.duration, ∀ x ∈ sphere d, Φ t x = Ψ t x
 
 /-- A piecewise-constant Transformer schedule: the list of constant blocks. -/
 abbrev AttnSchedule (d : ℕ) := List (AttnParams d)
@@ -335,32 +298,6 @@ theorem isMeanFieldFlow_blockFlow (b : Block d) (p : AttnParams d) (hV : p.V = 0
     rw [p.field_of_V_eq_zero hV, ← hagree _ (b.blockFlow_mem_sphere hx ht.1)]
     exact b.blockCurve_isIntegralCurve x t
 
-/-- **The linear bridge.** The attention step of a `V = 0` block coincides with the linear
-pushforward along any `Block` whose field matches on the sphere: the block flow is a mean-field
-flow (`isMeanFieldFlow_blockFlow`), uniqueness pins the chosen flow to it on the sphere, and sphere
-support upgrades the pointwise agreement to equality of pushforwards. First consumer of
-`meanFieldFlow_unique`. -/
-theorem attnStep_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0) (b : Block d)
-    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
-    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    attnStep p μ₀ = μ₀.map (b.blockFlow p.duration) := by
-  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ₀›, hs⟩]
-  have hΦ := (@exists_meanFieldFlow d p μ₀ ‹_› hs).choose_spec
-  have heq := meanFieldFlow_unique hs hΦ (isMeanFieldFlow_blockFlow b p hV hagree μ₀)
-    p.duration ⟨p.duration_nonneg, le_rfl⟩
-  refine Measure.map_congr ?_
-  rw [Filter.EventuallyEq, ae_iff]
-  refine measure_mono_null (fun x hx => ?_) hs
-  simp only [Set.mem_setOf_eq, Set.mem_compl_iff] at hx ⊢
-  exact fun hxs => hx (heq x hxs)
-
-/-- The singleton-schedule form of the bridge: one `V = 0` piece is the linear block flow. -/
-theorem attnMeasureFlow_singleton_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0)
-    (b : Block d)
-    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
-    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    attnMeasureFlow [p] μ₀ = μ₀.map (b.blockFlow p.duration) :=
-  attnStep_eq_map_blockFlow p hV b hagree μ₀ hs
 
 /-! ### Transport-map extraction: every solution operator is a pushforward
 

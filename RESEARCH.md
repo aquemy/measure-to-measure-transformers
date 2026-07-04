@@ -652,6 +652,23 @@ trajectory. Lesson (echoing F19): a soundness slip can hide in a signature's *mi
 relative to a sibling axiom — cross-checking `meanFieldFlow_unique` against `exists_meanFieldFlow`'s
 own hypotheses is what surfaced it.
 
+**DISCHARGED (2026-07-04).** That ODE assembly is now complete and `meanFieldFlow_unique` is a
+kernel-clean **theorem** (`MeasureToMeasure.Foundations.meanFieldFlow_unique`, `#print axioms` =
+{propext, Classical.choice, Quot.sound}), removing the axiom (inventory 12 → 11). It was closed by a
+decomposed sequential leaf campaign in `Foundations/MeanFieldWellPosed.lean`: the FTC representation
+`flow_sub_eq_integral_field` + `velocity_continuousOn` (PR #95); the averaged functional `meanFlowDist`
+with continuity/nonneg (PR #96); the Tonelli-averaged inequality `meanFlowDist_le_integral` — its crux
+the JOINT continuity `flow_continuousOn_prod` (uniform-Lipschitz-in-`x` + continuous-in-`s`), which
+makes the integrand `AEStronglyMeasurable` and unblocks `integral_integral_swap` (PR #97); the
+integral-form `gronwall_integral_zero` via the antiderivative `U=∫₀ᵗh` (PR #94); and finally the
+discharge itself — `gronwall_integral_zero` forces `meanFlowDist ≡ 0`, the pushforward trajectories
+coincide (`Measure.map_congr` on the a.e. equality), and `ODE_solution_unique_of_mem_Icc_right` (the
+field being `LipschitzOnWith` *on the sphere* via `norm_field_sub_point_le`, the trajectories confined
+there by `sphere_bijOn`) closes the pointwise equality everywhere. The two bridge consumers
+(`attnStep_eq_map_blockFlow`, `attnMeasureFlow_singleton_eq_map_blockFlow`) moved to
+`MeanFieldWellPosed.lean` (downstream of the theorem). Only `exists_meanFieldFlow` (existence) remains
+axiomatic on the mean-field side.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
