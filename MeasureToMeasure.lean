@@ -35,6 +35,7 @@ import MeasureToMeasure.Leaves.OffCenterReach
 import MeasureToMeasure.Leaves.OffCenterDisplacement
 import MeasureToMeasure.Leaves.W2Collapse
 import MeasureToMeasure.Leaves.OffCenterCollapse
+import MeasureToMeasure.Leaves.OffCenterW2
 import MeasureToMeasure.Leaves.BarycenterSeparation
 import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.AnnulusMass
