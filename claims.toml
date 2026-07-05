@@ -127,8 +127,8 @@ evidence = "F12; disproof Regression/Refuted/F12_Volume.lean; adapter Refutation
 
 [claims.lem-3-4]
 kind      = "conjecture"
-statement = "Lemma 3.4: two DISTINCT probability measures on Q_1^{d-1} can be made non-colinear in barycenter: part1 (gamma1=1, equal barycenters, V=0/linear) now also carries the paper's eq.-(3.2) localization, stated soundly relative to any OPEN carrier U of both measures (flowMap = id on the sphere off U); part2 (gamma1 in (0,1), attention layer) now concludes FULL non-colinearity (E_mu(T) != gamma2 E_nu(T) for every real gamma2, the paper's conclusion; the earlier not-SameRay form was strictly weaker). FIXING-CLAUSE FIDELITY (2026-07-04, F17/E4): the printed (3.2) (identity off the geodesic hulls of the supports) is refutable for atomic inputs -- a continuous flow that is the identity off a finite set is the identity everywhere, while distinct finite-support measures with equal barycenters exist; the proof's open-ball-inside-the-supports step assumes nonempty interior. The open-carrier form is what the proof (phi = id off the gate ball, p.35) actually delivers. Earlier fixes: F11 (mu != nu etc.), F12 (sphere supports), F14 (layer split)."
-status    = "math.axiomatised"
+statement = "Lemma 3.4, Part 1 (gamma1=1, equal barycenters, V=0/LINEAR layer): two DISTINCT sphere+orthant-supported probability measures are made non-colinear in barycenter, with flowMap = id on the sphere off any OPEN carrier U of both measures (the paper's eq.-(3.2) localization, stated soundly relative to U). DISCHARGED (2026-07-05, PR #116): kernel-clean theorem in Statements/Lemma34Part1.lean, axiom inventory 11->10. The App. B.3 Part 1 argument is mass-collapse + pigeonhole: gate a fixed cap where mu and nu disagree in mass and collapse it to a pole chosen off the one forced direction, so the two collapse barycenters separate; block-stacking (flowMap_replicate, an additive one-parameter group) supplies the honest large-T at the axiom's fixed horizon; 2<=d is DERIVED from mu!=nu; W2-Lipschitz barycenter transfers the gap (hbar retained for transcription, unused -- the discharge is more general). FIXING-CLAUSE FIDELITY (2026-07-04, F17/E4): the printed (3.2) (identity off the geodesic hulls of the supports) is refutable for atomic inputs -- a continuous flow that is the identity off a finite set is the identity everywhere, while distinct finite-support measures with equal barycenters exist; the open-carrier form is what the proof (phi = id off the gate ball, p.35) actually delivers. Earlier fixes: F11 (mu != nu etc.), F12 (sphere supports), F14 (layer split into part1/part2). Part 2 (attention layer, still axiomatised) is the separate node lem-3-4-part2."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Statements.lemma_3_4_part1"
 paper     = "Lem 3.4, p.16"
 created   = "2026-06-30"
@@ -136,7 +136,20 @@ created   = "2026-06-30"
 [claims.lem-3-4.fidelity]
 reviewed = "2026-07-03"
 paper    = "Lem 3.4, p.16, arXiv:2411.04551v3"
-evidence = "F11 (mu=nu) + F12 (heavy tails) + F17 (atomic-support refutation of the printed (3.2) clause, 2026-07-04); disproofs Regression/Refuted/F11_LemmaThreeFour.lean + F12_HeavyTails.lean; adapters Refutations/F11_*, F12_*heavy_tails.lean; witnesses Regression/NonVacuity/MidLevel.lean"
+evidence = "F11 (mu=nu) + F12 (heavy tails) + F17 (atomic-support refutation of the printed (3.2) clause, 2026-07-04); disproofs Regression/Refuted/F11_LemmaThreeFour.lean + F12_HeavyTails.lean; adapters Refutations/F11_*, F12_*heavy_tails.lean; witnesses Regression/NonVacuity/MidLevel.lean; DISCHARGED to a kernel-clean theorem 2026-07-05 (PR #116), #print axioms = propext/Classical.choice/Quot.sound"
+
+[claims.lem-3-4-part2]
+kind      = "conjecture"
+statement = "Lemma 3.4, Part 2 (gamma1 in (0,1), MEAN-FIELD/ATTENTION layer, V!=0 with B=0): two DISTINCT sphere+orthant-supported probability measures whose barycenters are initially colinear (barycenter mu = gamma1 * barycenter nu, gamma1 in (0,1)) are driven to FULL non-colinearity (barycenter(attnMeasureFlow mu) != gamma2 * barycenter(attnMeasureFlow nu) for EVERY real gamma2 -- the paper's conclusion; the earlier not-SameRay form was strictly weaker) via one AttnSchedule with <= 2 switches. AXIOM (math.axiomatised): the paper's §B.3 part-2 construction switches on the value matrix so the field reads the flowing measures' barycenters (a mean-field system); discharging it needs McKean-Vlasov well-posedness (exists_meanFieldFlow) plus the barycenter-shrink dynamics. Split from Part 1 in the F14 layer audit -- Part 1 is LINEAR and now discharged (lem-3-4), Part 2 is mean-field and remains axiomatised. Fixes: F11 (mu!=nu), F12 (sphere supports, heavy-tails refutation), F14 (layer split)."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.lemma_3_4_part2"
+paper     = "Lem 3.4, p.16"
+created   = "2026-07-05"
+
+[claims.lem-3-4-part2.fidelity]
+reviewed = "2026-07-03"
+paper    = "Lem 3.4, p.16, arXiv:2411.04551v3"
+evidence = "F12 (heavy tails); disproof Regression/Refuted/F12_HeavyTails.lean; adapter Refutations/F12_lemma_3_4_part2_heavy_tails.lean; witness Regression/NonVacuity/MidLevel.lean"
 
 [claims.prop-4-1]
 kind      = "conjecture"

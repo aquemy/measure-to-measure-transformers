@@ -134,10 +134,10 @@
   <text x="1180" y="628" text-anchor="middle" class="mono box-h">M7 ◑</text>
   <text x="1180" y="649" text-anchor="middle" class="box-s">Transport + L² density</text>
 
-  <!-- M8b · Parking + assembly — in progress (Lemma 3.4 Part 1 skeleton machine-checked; collapse + §3.3 assembly + exists_parked_schedule remain); blue wash -->
+  <!-- M8b · Parking + assembly — in progress (Lemma 3.4 Part 1 fully DISCHARGED, PR #116; §3.3 assembly + exists_parked_schedule + prop_4_2 remain); blue wash -->
   <rect x="610" y="728" width="300" height="84" fill="#abc1d2" opacity="0.45" filter="url(#wash-c)"/>
   <rect x="618" y="736" width="284" height="68" fill="none" stroke="#111111" stroke-width="1.3" filter="url(#ink-a)"/>
-  <text x="760" y="768" text-anchor="middle" class="mono box-h">M8b ◔</text>
+  <text x="760" y="768" text-anchor="middle" class="mono box-h">M8b ◑</text>
   <text x="760" y="789" text-anchor="middle" class="box-s">Parking + assembly</text>
 
   <!-- DONE — the goal, not yet reached (all axioms discharged); pale neutral = aspirational -->
@@ -147,5 +147,5 @@
   <text x="760" y="929" text-anchor="middle" class="box-s">Thm 1.1 / 1.2 checked</text>
 
   <!-- One-line takeaway -->
-  <text x="760" y="1044" text-anchor="middle" class="caption">Discharged (green): M1, M2, linchpin M3, M4, M5, M8a — plus mean-field uniqueness. In progress (blue): M7 (5.1 ✓, 5.4 left), M8b (§3.4 skeleton). Remaining: mean-field existence + M6.</text>
+  <text x="760" y="1044" text-anchor="middle" class="caption">Discharged (green): M1, M2, linchpin M3, M4, M5, M8a — plus mean-field uniqueness. In progress (blue): M7 (5.1 ✓, 5.4 left), M8b (§3.4 Part 1 ✓, parking / §3.3 left). Remaining: mean-field existence + M6.</text>
 </svg>

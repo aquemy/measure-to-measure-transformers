@@ -119,7 +119,7 @@ matches the kernel. The full re-usability discipline is catalogued in the `lean-
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer M6/M7/M8b and the top-level assembly are what is left. (The live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer -- M6, the M7 tail (Lemma 5.4), and the M8b parking / §3.3 assembly (whose §3.4 Part 1 leaf is now machine-checked) -- plus the top-level assembly are what is left. (The live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)
@@ -133,21 +133,27 @@ carrying the full edge set (e.g. the direct `M1 → M7`, `M2 → M7`, and `M5 �
 
 ## What's left, and how to finish
 
-**11 named axioms remain.** They fall into three groups by *how* each is closed:
+**10 named axioms remain.** They fall into three groups by *how* each is closed:
 
 **Tier 1 -- constructive assembly (decomposition-tractable; the pieces already exist).**
 
-- `lemma_3_4_part1` (make two measures non-colinear) -- the **active front**, and the one mid-level
-  axiom on the *linear* layer ($V \equiv 0$, so the field never reads the measure). Its App. B.3
-  Part 1 argument is **mass-collapse + pigeonhole** (not the barycenter linearization of Part 2), and
-  its skeleton is now machine-checked: barycenter-of-a-flowed-measure (`barycenter_measureFlow`), the
-  gated block's off-cap parking / fixing clause (`flowMap_gatedBlock_id_of_inner_le`), and the
-  separation pigeonhole itself (`exists_mem_ball_barycenter_collapse_ne`, on leaf L10). What remains
-  is the mass-gap ball, a single-gated-block localized collapse to the pigeonhole point (reusing
-  `gatedBlock_reach`, sidestepping the F16 non-localized ball-chain gap), and barycenter
-  $W_2$-continuity -- then it discharges, taking the count to **10**.
-- `exists_parked_schedule` (parking) -- the gated field vanishes off its cap, so a schedule parks
-  disjoint supports; what remains is the non-interference argument plus the concatenation budget.
+- `lemma_3_4_part1` (make two measures non-colinear) -- **[machine-checked]{.badge .ok}**. This was
+  the active front; it is now a discharged theorem (`Statements/Lemma34Part1.lean`) and the first
+  mid-level statement de-axiomatized -- the one mid-level axiom on the *linear* layer
+  ($V \equiv 0$, so the field never reads the measure). Its App. B.3 Part 1 argument is
+  **mass-collapse + pigeonhole** (not the barycenter linearization of Part 2): a fixed cap where
+  $\mu$ and $\nu$ disagree in mass is gated and collapsed to a pole chosen off the one forced
+  direction, so the two collapse barycenters separate. Two realizations were load-bearing:
+  **block-stacking** supplies the honest "large $T$" the axiom's *fixed* horizon otherwise lacks
+  (`flowMap_replicate`: a `List.replicate n block` runs an additive one-parameter flow for effective
+  time $n\cdot T$, since a single ReLU-gated block has no gain), and **$2 \le d$ is *derived* from
+  $\mu \ne \nu$** (the cap-pole needs a unit $w \perp z$) rather than assumed. Barycenter
+  $W_2$-continuity transfers the gap; `hbar` (equal barycenters) is retained for transcription but
+  unused, so the discharge is slightly more general than the paper's lemma. This took the axiom
+  count to **10**.
+- `exists_parked_schedule` (parking) -- the **remaining Tier-1 target**: the gated field vanishes off
+  its cap, so a schedule parks disjoint supports; what remains is the non-interference argument plus
+  the concatenation budget.
 
 **Blocked -- constructive in principle, but stalled on a missing Mathlib layer (the continuity-equation / mass-sweep theory).**
 
@@ -169,7 +175,7 @@ carrying the full edge set (e.g. the direct `M1 → M7`, `M2 → M7`, and `M5 �
 - `prop_2_1`, `cluster_to_point` -- the M6 LaSalle/Lyapunov convergence theory.
 - `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
 - `lemma_3_3`, `lemma_3_4_part2` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the
-  linear layer and sits in Tier 1 above).
+  linear layer and is **discharged** -- see Tier 1 above).
 
 **Top-level assembly.**
 

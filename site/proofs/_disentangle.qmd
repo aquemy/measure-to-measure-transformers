@@ -41,31 +41,41 @@ norm bound follows by time-rescaling the two phases. $\square$
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 The authors' construction (attributed to them) is the two-phase control above: a first phase
 $\mathbf W_1\mathbf 1=-\omega$ contracts every support toward $-\omega$ through the gate-free dynamics
 $\frac{d}{dt}\langle x,\omega\rangle=-(1-\langle x,\omega\rangle^2)$ — the projector identity of leaf
 **L1** — and a second phase $\mathbf W_2\mathbf 1=\alpha\in\mathbb Q_1^{d-1}$ drives them into a small
 cap inside the orthant. The dynamics here is pure perceptron ($\mathbf V\equiv0$), so the statement
-lives faithfully on the linear flow layer, as a labeled `axiom` carrying the paper's hypotheses in
-full: a **probability** measure, **sphere-supported**, with a **missing cap** (`MissingCap`, the
-positive-gap encoding of $\bigcup\operatorname{supp}\subsetneq\mathbb S^{d-1}$; without it a
-dense-support measure refutes the statement — a homeomorphism preserves density). The budget is
-`switches θ ≤ 2` in the formal pieces convention (the paper's "one switch" counts the single
-discontinuity between the two constant phases).
+lives faithfully on the linear flow layer. It is now **discharged** (finding F18): a kernel-clean
+theorem via the two-phase pointwise **orthant rotation** (`Leaves.OrthantRotation`), stated in the
+**family form** the Section 3.3 induction consumes — one two-phase schedule transports *every* member
+of a sphere-supported probability family sharing a missing direction (`SharedMissingDirection`)
+simultaneously, since the linear ($\mathbf V=\mathbf B=\mathbf U=0$) field is measure-independent and
+hence shared across members. Two hypotheses are load-bearing: the shared missing cap (without it a
+dense-support member refutes the statement — a homeomorphism preserves density, finding F12), and
+$2\le d$ (at $d=1$ the radially-tangent field cannot move $\delta_{-\omega}$ into the orthant, so the
+dimension-free family form is **false** — disproved by `Regression.Refuted.oldLemma32Family_dimOne_false`).
+The budget is `switches θ ≤ 2` (the paper's "one switch" counts the single discontinuity between the
+two constant phases).
 
 ```lean
-/-- The support misses a spherical cap: some unit `ω` has a positive gap `δ` with
-`⟪ω, x⟫ ≤ 1 - δ` on the full mass of `μ` (the faithful encoding of `supp μ ⊊ S^{d-1}`). -/
-def MissingCap (μ : Measure (Eucl d)) : Prop :=
-  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ supportedIn μ {x | ⟪ω, x⟫ ≤ 1 - δ}
+/-- Some unit direction `ω` has a positive gap `δ` with `⟪ω, x⟫ ≤ 1 - δ` on the full mass of every
+member — the faithful family encoding of a shared missing cap `⋃ supp (μ i) ⊊ 𝕊^{d-1}`. -/
+def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
+  ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ ∀ i, supportedIn (μ i) {x | ⟪ω, x⟫ ≤ 1 - δ}
 
-/-- **Lemma 3.2** (transport into the orthant). Two constant phases move a sphere-supported
-probability measure with a missing cap into `Q₁^{d-1}`. AXIOM (`math.axiomatised`). -/
-axiom lemma_3_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T : ℝ) (hT : 0 < T)
-    (hμs : supportedIn μ (sphere d)) (hgap : MissingCap μ) :
-    ∃ θ : Params d, switches θ ≤ 2 ∧ supportedIn (measureFlow θ T μ) (orthant d)
+/-- **Lemma 3.2** (transport into the orthant, family form), machine-checked. One two-phase schedule
+moves every sphere-supported probability member sharing a missing direction into `Q₁^{d-1}`
+(`2 ≤ d` load-bearing). -/
+theorem lemma_3_2 {N : ℕ} (μ₀ : Fin N → Measure (Eucl d))
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (hd : 2 ≤ d) (T : ℝ) (hT : 0 < T)
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (hmiss : SharedMissingDirection μ₀) :
+    ∃ θ : Params d, switches θ ≤ 2 ∧
+      ∀ i, supportedIn (measureFlow θ T (μ₀ i)) (orthant d) := by
+  /- shrink δ to (0,1] · pointwise two-phase orthant rotation (Leaves.OrthantRotation) · pushforward -/
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
@@ -156,34 +166,45 @@ with $\Phi(x)=x$ off $\mathcal B$. $\square$
 :::
 
 ::: {.our-work}
-**Our formalization.** [open]{.badge .open}
+**Our formalization.** [machine-checked]{.badge .ok}
 
-In the $\gamma_1=1$ (perceptron) case the authors locate a ball $\mathcal B$ on which $\mu_0,\nu_0$
-differ in mass, then argue that **some $x^*\in\mathcal B$ makes the barycenters differ** — for if every
-$x^*$ gave equality, $x^*$ would be pinned to one value on the whole ball, which no map can be. That
-"no map is constant on a nonempty open ball" core is our machine-checked leaf **L10**
-(`exists_ne_in_ball`). We state the $\gamma_1=1$ conclusion as a labeled `axiom` on the linear
-layer (the paper sets $\mathbf V\equiv0$ here), **carrying the paper's hypotheses in full**:
-$\mu,\nu$ are distinct probability measures, supported on the sphere inside the orthant, with equal
-barycenters. Every hypothesis is load-bearing: the proof opens with "since $\mu_0\ne\nu_0$"
-($\mu=\nu$ refutes the bare statement — finding F11), and without sphere support a heavy-tailed
-orthant measure has the junk Bochner barycenter $0$, satisfying the hypotheses vacuously (finding
-F12). (The attention case $\gamma_1\ne1$, at most two switches, is the companion axiom
-`lemma_3_4_part2`, on the same layer with a genuine $\gamma\in(0,1)$ colinearity hypothesis.)
+In the $\gamma_1=1$ (perceptron) case the authors locate a ball on which $\mu_0,\nu_0$ differ in
+mass, then argue that **some point $x^*$ there makes the barycenters differ** — for if every $x^*$
+gave equality, $x^*$ would be pinned to one value on the whole ball, which no map can be. This node
+is now **discharged**: a kernel-clean theorem in `Statements/Lemma34Part1.lean`, taking the axiom
+inventory 11 → 10. The construction is **mass-collapse + pigeonhole** (not the barycenter
+linearization of Part 2): gate a fixed cap $\{\cos R<\langle z,\cdot\rangle\}\subseteq U$ where
+$\mu,\nu$ disagree in mass, and collapse it to a pole $\omega$ chosen off the *one* forced direction,
+so the two collapse barycenters separate; the actual flow approximates that collapse in
+$\mathsf W_2$, and the $\mathsf W_2$-Lipschitz barycenter transfers the gap. Two facts were
+load-bearing. The axiom **fixes** the horizon $T$, but the collapse needs "large $T$":
+**block-stacking** supplies it — `θ = List.replicate n block` runs an additive one-parameter flow
+for effective time $n\cdot T$ (`flowMap_replicate`), since a single ReLU-gated block has no gain. And
+$2\le d$ is **derived** from $\mu\ne\nu$ (the cap-pole needs a unit $w\perp z$), not assumed —
+adding it as a hypothesis would break transcription against the axiom's signature. The "no map is
+constant on a nonempty open ball" pigeonhole is leaf **L10** (`exists_ne_in_ball`); `hbar` (equal
+barycenters) is retained for transcription fidelity but **unused**, so the discharge is slightly more
+general than the paper's lemma. (The attention case $\gamma_1\ne1$, at most two switches, remains the
+companion axiom `lemma_3_4_part2`, on the mean-field layer with a genuine $\gamma\in(0,1)$
+colinearity hypothesis.)
 
 ```lean
-/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). Two distinct sphere-supported probability measures on
-the orthant with equal barycenters can be driven, by a constant parameter, to differing
-barycenters. AXIOM (`math.axiomatised`); the pigeonhole core is leaf L10. -/
-axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case), machine-checked. For two distinct probability measures on
+`𝕊^{d-1} ∩ Q₁^{d-1}` with equal barycenters and a common open carrier `U`, some linear schedule `θ`
+makes the flowed barycenters differ while fixing the sphere off `U`. -/
+theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (hbar : barycenter μ = barycenter ν) :
-    ∃ θ : Params d, barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν)
+    (_hbar : barycenter μ = barycenter ν)
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
+    ∃ θ : Params d,
+      barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) ∧
+      ∀ x ∈ sphere d, x ∉ U → flowMap θ T x = x := by
+  /- mass-gap cap ⊆ U (Besicovitch) · off-pole ω · block-stacked collapse · W₂-barycenter gap -/
 ```
 
-[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+[`Statements/Lemma34Part1.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/Lemma34Part1.lean){.lean-src}
 :::
 
 ## Disentanglement {#node-disentanglement}
