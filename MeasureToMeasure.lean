@@ -32,6 +32,7 @@ import MeasureToMeasure.Leaves.GatedPark
 import MeasureToMeasure.Leaves.BarycenterSeparation
 import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.GeodesicHullConvex
+import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Statements.MainResults
