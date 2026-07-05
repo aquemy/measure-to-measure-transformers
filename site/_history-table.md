@@ -155,3 +155,22 @@
 | 153 | 2026-07-04 | `refactor` | refactor: sweep the remaining build warnings | -- |
 | 154 | 2026-07-04 | `formalize` | formalize(foundations): strict spherical caps are geodesically convex (M5) | `MeasureToMeasure.geodesicConvex_inner_cap` |
 | 155 | 2026-07-04 | `formalize` | formalize(leaves): the Section 3.3 separation transfer (M5 complete) | `MeasureToMeasure.Leaves.barycenter_not_sameRay_of_separated_balls` |
+| 156 | 2026-07-04 | `docs` | docs(site): refresh for discharged M5, the attention bridge, and the completed witness suite | `site` |
+| 157 | 2026-07-04 | `formalize` | formalize~(foundations): transport-map extraction for the attention solution operator | `foundations` |
+| 158 | 2026-07-04 | `fix` | fix(statements)!: family forms for Lemmas 3.2-3.4 with the paper's fixing clauses (F17) | `statements` |
+| 159 | 2026-07-04 | `formalize` | formalize~(foundations): quantitative moduli for the self-attention field (M3b groundwork) | `foundations` |
+| 160 | 2026-07-04 | `formalize` | formalize(statements)!: discharge lemma_3_2 via the two-phase orthant rotation (F18) | `statements` |
+| 161 | 2026-07-04 | `chore` | chore: remove the orphaned self-centered cap-mass leaf (GatedCapMass) | -- |
+| 162 | 2026-07-04 | `formalize` | formalize(statements)!: discharge lemma_5_1 via disjoint-carrier gluing (F19) | `statements` |
+| 163 | 2026-07-04 | `formalize` | formalize~(foundations): field measure-modulus reduction (M3b, toward mean-field well-posedness) | `foundations` |
+| 164 | 2026-07-04 | `formalize` | formalize~(foundations): discharge the self-attention field W₁-modulus (M3b analytic core) | `foundations` |
+| 165 | 2026-07-04 | `formalize` | formalize~(foundations): W1 map-coupling bound (M3b, mean-field uniqueness coupling step) | `foundations` |
+| 166 | 2026-07-04 | `formalize` | formalize~(leaves): machine-check the discrete-clustering assembly core of prop_2_2 | `leaves` |
+| 167 | 2026-07-04 | `formalize` | formalize~(foundations): the field's point-Lipschitz modulus on the sphere (M3b) | `foundations` |
+| 168 | 2026-07-04 | `fix` | fix(foundations)!: meanFieldFlow_unique requires a sphere-supported datum (F20) | `foundations` |
+| 169 | 2026-07-04 | `formalize` | formalize~(foundations): integral-form Grönwall for mean-field uniqueness (M3b) | `MeasureToMeasure.Foundations.gronwall_integral_zero` |
+| 170 | 2026-07-04 | `formalize` | formalize~(foundations): FTC representation + velocity continuity of the mean-field flow (M3b, leaf 1/3) | `MeasureToMeasure.Foundations.velocity_continuousOn` |
+| 171 | 2026-07-04 | `formalize` | formalize~(foundations): the averaged flow-distance functional + its continuity (M3b, leaf 2a) | `MeasureToMeasure.Foundations.meanFlowDist` |
+| 172 | 2026-07-04 | `formalize` | formalize~(foundations): the averaged Grönwall integral inequality (M3b, leaf 2b) | `MeasureToMeasure.Foundations.flow_continuousOn_prod` |
+| 173 | 2026-07-04 | `formalize` | formalize(foundations)!: discharge meanFieldFlow_unique via measure-averaged Grönwall (M3b) | `MeasureToMeasure.Foundations.meanFieldFlow_unique` |
+| 174 | 2026-07-04 | `docs` | docs(site): refresh for meanFieldFlow_unique + lemma_5_1 discharges, DAG diagrams, roadmap | `site` |

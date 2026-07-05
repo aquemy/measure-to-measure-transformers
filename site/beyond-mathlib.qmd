@@ -25,9 +25,12 @@ statement-fidelity audit (findings F11--F16 in
 then sharpened the picture in an important way: the M3 flow is a **linear** (measure-independent)
 pushforward, and the paper's own eq. (1.7) proves such dynamics cannot disentangle overlapping
 measures -- so the measure-dependent statements were **restated over a mean-field attention layer**
-(M3b): the paper's velocity field (1.2) as a concrete definition, with a single well-posedness
-axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKean-Vlasov gap.
-Today `#print axioms theorem_1_1` lists exactly that well-posedness axiom plus the *paper-level*
+(M3b): the paper's velocity field (1.2) as a concrete definition, with a well-posedness
+axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKean-Vlasov gap --
+of which the **uniqueness half (`meanFieldFlow_unique`) is now a machine-checked theorem**
+(a measure-averaged Grönwall argument on the sphere), leaving only *existence*
+(`exists_meanFieldFlow`) axiomatised.
+Today `#print axioms theorem_1_1` lists exactly that existence axiom plus the *paper-level*
 dynamical statements (`cluster_to_point`, `exists_disentangling_balls`, `exists_parked_schedule`;
 `theorem_1_2` swaps `cluster_to_point` for `lemma_5_4`), each encoding a result from the paper's
 Sections 2--5 that rests on classical theorems (LaSalle invariance, Hartman-Grobman linearization)
@@ -50,15 +53,20 @@ a record of it.
   *derived* from Mathlib's `IsPicardLindelof.of_time_independent` + Grönwall, with the sphere kept
   invariant by the radial-tangency identity. This layer is **linear** in the measure -- the honest
   home for the paper's `V ≡ 0` (perceptron-only) sections (§4, Appendix B).
-- **M3b -- Mean-field attention layer: [interface built]{.badge .partial} (finding F14).** The
+- **M3b -- Mean-field attention layer: [uniqueness machine-checked, existence axiom]{.badge .partial} (findings F14, F20).** The
   fidelity audit kernel-refuted the family-level statements when read over the linear flow -- two
   identical inputs cannot enter disjoint balls under one pushforward map, exactly the paper's
   eq. (1.7) obstruction. The fix is structural: the paper's measure-dependent velocity (1.2) -- the
   softmax attention average plus perceptron, tangentially projected -- is now a concrete definition
   (`AttnParams`, `attnAvg`, `AttnParams.field`), a mean-field flow is a predicate
-  (`IsMeanFieldFlow`), and exactly one axiom pair remains: existence and uniqueness of that flow
-  (`exists_meanFieldFlow` / `meanFieldFlow_unique`) -- McKean-Vlasov well-posedness on the sphere,
-  the true remaining M3 gap. All measure-dependent statements (Prop 2.1, Lemma 3.3, the
+  (`IsMeanFieldFlow`), and the well-posedness of that flow was an axiom pair -- existence and
+  uniqueness. The **uniqueness half (`meanFieldFlow_unique`) is now a discharged theorem**: found
+  unsound off the sphere (**F20**) and repaired to the paper's `μ₀ ∈ P(𝕊^{d-1})` datum, then closed
+  by a decomposed campaign -- the field's full joint `(point, W₁)`-modulus, an integral-form
+  Grönwall, an FTC representation, a Fubini-averaged distance, and an `ODE_solution_unique` transfer.
+  Only *existence* (`exists_meanFieldFlow`) -- McKean-Vlasov well-posedness on the sphere, which
+  additionally needs Picard-Lindelöf plus Wasserstein completeness of $\mathcal P(\mathbb S^{d-1})$ --
+  remains axiomatised, the true remaining M3 gap. All measure-dependent statements (Prop 2.1, Lemma 3.3, the
   disentanglement, Lemmas 5.4, parking, Theorems 1.1/1.2) now live on this layer. The two layers
   are bridged: a `V = 0` attention step *is* the linear block-flow pushforward
   (`attnStep_eq_map_blockFlow`, the first consumer of `meanFieldFlow_unique`), so the
@@ -111,7 +119,7 @@ matches the kernel. The full re-usability discipline is catalogued in the `lean-
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M2, M4, and M5 are all discharged, and the mean-field layer M3b sits between M3 and the measure-dependent milestones. (The node colours show the original plan; the live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer M6/M7/M8b and the top-level assembly are what is left. (The live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)
@@ -123,6 +131,56 @@ carrying the full edge set (e.g. the direct `M1 → M7`, `M2 → M7`, and `M5 �
 ![The de-axiomatization build DAG, rendered from the D2 source.](diagrams/build-dag.svg){width=100%}
 :::
 
+## What's left, and how to finish
+
+**11 named axioms remain.** They fall into three groups by *how* each is closed:
+
+**Tier 1 -- constructive assembly (decomposition-tractable; the pieces already exist).**
+
+- `lemma_3_4_part1` (make two measures non-colinear) -- the **active front**, and the one mid-level
+  axiom on the *linear* layer ($V \equiv 0$, so the field never reads the measure). Its App. B.3
+  Part 1 argument is **mass-collapse + pigeonhole** (not the barycenter linearization of Part 2), and
+  its skeleton is now machine-checked: barycenter-of-a-flowed-measure (`barycenter_measureFlow`), the
+  gated block's off-cap parking / fixing clause (`flowMap_gatedBlock_id_of_inner_le`), and the
+  separation pigeonhole itself (`exists_mem_ball_barycenter_collapse_ne`, on leaf L10). What remains
+  is the mass-gap ball, a single-gated-block localized collapse to the pigeonhole point (reusing
+  `gatedBlock_reach`, sidestepping the F16 non-localized ball-chain gap), and barycenter
+  $W_2$-continuity -- then it discharges, taking the count to **10**.
+- `exists_parked_schedule` (parking) -- the gated field vanishes off its cap, so a schedule parks
+  disjoint supports; what remains is the non-interference argument plus the concatenation budget.
+
+**Blocked -- constructive in principle, but stalled on a missing Mathlib layer (the continuity-equation / mass-sweep theory).**
+
+- `prop_2_2` (discrete clustering) -- the mixture-combination core is machine-checked
+  (`measureFlow_W2_discrete_of_perPiece`) and a cap-localized refinement is buildable, but the
+  *routing* is the wall: `prop_2_2` asks for a single `Params d`, and one deterministic flow map
+  cannot split a cap's mass toward several far-apart targets. The paper's proof is a sequential
+  $O(M)$-switch mass-sweep, which needs the continuity-equation theory Mathlib lacks (mapped in a
+  scouting pass; the naive "one cap per piece" partition is *false*).
+- `prop_4_2` (steering) -- the geodesic-gradient corridor construction, the hardest constructive
+  target. Closing it also makes `prop_4_1` (already a theorem) kernel-clean and unblocks
+  `cluster_to_point`.
+
+**Tier 2 -- infrastructure builds (a genuine new layer of Mathlib-level theory).**
+
+- `exists_meanFieldFlow` (the mean-field *existence* half) -- Picard-Lindelöf plus **Wasserstein
+  completeness of $\mathcal P(\mathbb S^{d-1})$**. The Lipschitz-in-$(x, W_1)$ moduli are already
+  machine-checked from the uniqueness campaign, so the same leaf-decomposition applies.
+- `prop_2_1`, `cluster_to_point` -- the M6 LaSalle/Lyapunov convergence theory.
+- `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
+- `lemma_3_3`, `lemma_3_4_part2` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the
+  linear layer and sits in Tier 1 above).
+
+**Top-level assembly.**
+
+- `exists_disentangling_balls` -- assembles the §3.3 chain and closes Theorems 1.1 / 1.2; it
+  discharges *last*, once its dependencies land.
+
+**The method.** The fork-sized **leaf decomposition** that discharged `meanFieldFlow_unique` -- where
+six monolithic attempts stalled on context budget alone -- is the template for the rest: cut the
+proof at its lemma boundaries, bank each leaf to `main` kernel-clean, and let the next cite the last
+instead of re-deriving it.
+
 ## What must be built, and what Mathlib already gives
 
 A three-part audit -- the pinned Mathlib, the wider Lean 4 ecosystem, and cross-assistant (the
@@ -133,7 +191,7 @@ optimal-transport and mean-field *layers*; the measure-theoretic substrate benea
 | --- | --- | --- |
 | Nonatomic prescribed-mass splitting (Sierpiński) | absent (only an interval-*average* IVT) | **[done]{.badge .ok}** -- built on `NoAtoms` + IVT (M8a) |
 | Per-block characteristic (linear) flow | absent (`Kernel`, `Measure.map` exist) | **[done]{.badge .ok}** -- built on `IsPicardLindelof` + Grönwall (M3) |
-| Mean-field (McKean-Vlasov) attention flow | absent | **[interface built]{.badge .partial}** -- field + flow predicate defined; well-posedness is the one axiom pair (M3b) |
+| Mean-field (McKean-Vlasov) attention flow | absent | **[uniqueness proved, existence axiom]{.badge .partial}** -- field + flow predicate defined; `meanFieldFlow_unique` machine-checked, only `exists_meanFieldFlow` remains (M3b) |
 | Optimal transport / Wasserstein / Kantorovich | absent | **[done]{.badge .ok}** -- coupling-based `W₂` over the ENNReal cost (M2) |
 | Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[done]{.badge .ok}** -- caps, hulls, and the Section 3.3 separation transfer (M5) |
 | ReLU-gated cap transport (Appendix B) | absent | **[done]{.badge .ok}** -- Lemmas B.1/B.2 machine-checked (M4) |

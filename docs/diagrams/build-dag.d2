@@ -5,9 +5,14 @@
 # Status is shown by colour: green = discharged (machine-checked), blue = in progress,
 # gold stroke on M3 = the flow linchpin (discharged; linear/per-block), white = not yet started.
 # The infrastructure layer (M1 selection, M2 optimal transport, M3 characteristic flow) is green,
-# and M4 (Appendix-B transport) is now green too. M3b is the mean-field attention layer added by
-# the F14 restatement: the field is defined, well-posedness is the one remaining axiom pair.
-# What remains axiomatised is M3b well-posedness plus the dynamical/assembly layer (M6, M7, M8b).
+# and M4 (Appendix-B transport) and M5 (geodesic convexity) are green too. M3b is the mean-field
+# attention layer (F14 restatement): the field is defined and the flow's UNIQUENESS is now
+# machine-checked (meanFieldFlow_unique, F20 repair + a decomposed Grönwall campaign); only
+# EXISTENCE (exists_meanFieldFlow) remains axiomatised. In the dynamical/assembly layer, M7 is now
+# partial (lemma_5_1 discharged via F19; only lemma_5_4 remains) and M8b is in progress (the
+# Lemma 3.4 Part 1 skeleton -- barycenter-of-flow, gated off-cap parking, the App. B.3 pigeonhole --
+# is machine-checked; the collapse + assembly remain). What remains is M3b existence plus M6, the
+# M7 tail (5.4), and the M8b parking/§3.3 assembly.
 
 direction: down
 
@@ -37,8 +42,8 @@ M4: M4 · Per-point lemmas (B.1, B.2)  ✓ DONE {
   style.bold: true
 }
 
-M3b: M3b · Mean-field attention flow  ◐ INTERFACE BUILT {
-  style.fill: "#d0ebff"
+M3b: M3b · Mean-field flow  ◑ UNIQUENESS ✓ · existence axiom {
+  style.fill: "#c3e6cb"
   style.stroke: "#f08c00"
   style.stroke-width: 2
   style.bold: true
@@ -53,7 +58,12 @@ M5: M5 · Geodesic convexity (sphere)  ✓ DONE {
 }
 
 M6: M6 · LaSalle / Lyapunov + convergence
-M7: M7 · Transport map + L² density (5.1, 5.4)
+
+M7: M7 · Transport map + L² density  ◑ 5.1 ✓ · 5.4 axiom {
+  style.fill: "#d0ebff"
+  style.stroke: "#1971c2"
+  style.stroke-width: 2
+}
 
 M8a: M8a · Atomless split  ✓ DONE {
   style.fill: "#b2f2bb"
@@ -62,7 +72,11 @@ M8a: M8a · Atomless split  ✓ DONE {
   style.bold: true
 }
 
-M8b: M8b · Parking + §3.3 assembly
+M8b: M8b · Parking + §3.3 assembly  ◔ §3.4 skeleton {
+  style.fill: "#d0ebff"
+  style.stroke: "#1971c2"
+  style.stroke-width: 2
+}
 
 DONE: All axioms discharged → Thm 1.1 / 1.2 machine-checked {
   style.fill: "#f8f9fa"
