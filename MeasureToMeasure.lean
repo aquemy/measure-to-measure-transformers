@@ -32,6 +32,7 @@ import MeasureToMeasure.Leaves.GatedPark
 import MeasureToMeasure.Leaves.CapSubset
 import MeasureToMeasure.Leaves.GatedCollapse
 import MeasureToMeasure.Leaves.OffCenterReach
+import MeasureToMeasure.Leaves.OffCenterDisplacement
 import MeasureToMeasure.Leaves.W2Collapse
 import MeasureToMeasure.Leaves.OffCenterCollapse
 import MeasureToMeasure.Leaves.BarycenterSeparation
