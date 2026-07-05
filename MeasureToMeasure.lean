@@ -32,6 +32,7 @@ import MeasureToMeasure.Leaves.GatedPark
 import MeasureToMeasure.Leaves.GatedCollapse
 import MeasureToMeasure.Leaves.OffCenterReach
 import MeasureToMeasure.Leaves.W2Collapse
+import MeasureToMeasure.Leaves.OffCenterCollapse
 import MeasureToMeasure.Leaves.BarycenterSeparation
 import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.AnnulusMass
