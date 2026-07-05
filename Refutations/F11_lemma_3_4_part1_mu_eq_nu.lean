@@ -4,6 +4,7 @@
 -- a shape already proved false by `Regression.Refuted.oldLemma34Part1_false` (composing the two
 -- yields `False`).
 import Regression.OldStatements
+import MeasureToMeasure.Statements.Lemma34Part1
 set_option autoImplicit false
 open MeasureTheory MeasureToMeasure MeasureToMeasure.Statements
 

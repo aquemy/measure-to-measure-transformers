@@ -3,6 +3,7 @@
 -- current axiom. If this file ever COMPILES, the sphere-support hypotheses have been dropped:
 -- `Regression.Refuted.oldLemma34Part1Orthant_false` already refutes that shape (heavy tails).
 import Regression.OldStatements
+import MeasureToMeasure.Statements.Lemma34Part1
 set_option autoImplicit false
 open MeasureTheory MeasureToMeasure MeasureToMeasure.Statements
 

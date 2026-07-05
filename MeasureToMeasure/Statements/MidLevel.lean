@@ -235,42 +235,11 @@ axiom lemma_3_3 {N : ℕ} (j : Fin N) (μ₀ : Fin N → Measure (Eucl d)) (ν�
         (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
       ∀ i, i ≠ j → attnMeasureFlow θ (μ₀ i) = μ₀ i
 
-/-- **Lemma 3.4, Part 1** (`γ₁ = 1` case). For two **distinct** probability measures on the orthant
-`Q₁^{d-1}` with **equal** barycenters, a constant parameter (`V ≡ 0`) makes the barycenters differ.
-AXIOM (`math.axiomatised`). The self-contained pigeonhole core (non-constancy over an open ball) is the
-kernel-checked leaf L10 (`exists_ne_in_ball`).
-
-**Fidelity (soundness):** the hypotheses `μ ≠ ν`, `IsProbabilityMeasure`, and support in the orthant
-are the paper's ("let `μ₀, ν₀ ∈ P(Q₁^{d-1})` be two *different* measures", Lemma 3.4). The original
-stub omitted all of them, which makes the statement **false**: taking `μ = ν` satisfies the equal-
-barycenter hypothesis yet no `θ` can separate the (identical) flowed barycenters. The sphere support
-is also the paper's (`Q₁^{d-1} = S^{d-1} ∩ (ℝ_{>0})^d`, while `orthant d` is only the ambient
-orthant): without it the statement remained refutable by heavy-tailed orthant measures whose
-identity map is not Bochner-integrable, so both barycenters are the junk value `0` and no flow can
-separate them (review finding F12). On the sphere the identity is bounded, hence integrable, and
-the orthant support makes the barycenter genuinely nonzero.
-
-**The fixing clause (eq. (3.2)) and finding F17:** the paper's "Moreover" clause localizes the
-flow map to the identity off `conv_g supp μ₀ ∪ conv_g supp ν₀`. AS PRINTED that is refutable for
-atomic inputs: a continuous flow that is the identity off a finite set is the identity everywhere
-(the complement is dense), yet distinct finite-support measures with equal barycenters exist, and
-the barycenter-separation conclusion then fails; the proof's own first step ("there exists an open
-ball `ℬ ⊂ supp μ₀ ∪ supp ν₀`") silently assumes the union of supports has nonempty interior. The
-sound localization, faithful to what the proof delivers (`φ = id` off the gate ball `ℬ`, p.35), is
-relative to any OPEN carrier `U` of both measures: the flow is the identity on the sphere off `U`.
-Recorded as review finding F17 / erratum candidate E4.
-
-Layer (F14): stays on the LINEAR layer faithfully -- the paper's part-1 construction sets `V ≡ 0`
-(perceptron only, §B.3), so the field never reads the measure. -/
-axiom lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
-    (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
-    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
-    (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (hbar : barycenter μ = barycenter ν)
-    (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
-    ∃ θ : Params d,
-      barycenter (measureFlow θ T μ) ≠ barycenter (measureFlow θ T ν) ∧
-      ∀ x ∈ sphere d, x ∉ U → flowMap θ T x = x
+-- **Lemma 3.4, Part 1** (`γ₁ = 1` case) is DISCHARGED as a kernel-clean `theorem` in
+-- `Statements/Lemma34Part1.lean` (FQN `MeasureToMeasure.Statements.lemma_3_4_part1`). It lives in a
+-- separate module because its App. B.3 construction cites the `two_le_d_of_distinct` leaf, which
+-- itself imports this file (for `orthant`), so the discharge cannot sit here without an import cycle.
+-- See that file for the statement, the fidelity/soundness notes (F12/F17/F14), and the proof.
 
 /-- **Lemma 3.4, Part 2** (`γ₁ ∈ (0,1)` case). For two **distinct** probability measures on the orthant
 whose barycenters are **colinear but unequal** (`ℰ_μ = γ·ℰ_ν` for some `γ ∈ (0,1)`), at most two
