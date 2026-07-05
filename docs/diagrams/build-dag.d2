@@ -9,10 +9,11 @@
 # attention layer (F14 restatement): the field is defined and the flow's UNIQUENESS is now
 # machine-checked (meanFieldFlow_unique, F20 repair + a decomposed Grönwall campaign); only
 # EXISTENCE (exists_meanFieldFlow) remains axiomatised. In the dynamical/assembly layer, M7 is now
-# partial (lemma_5_1 discharged via F19; only lemma_5_4 remains) and M8b is in progress (the
-# Lemma 3.4 Part 1 skeleton -- barycenter-of-flow, gated off-cap parking, the App. B.3 pigeonhole --
-# is machine-checked; the collapse + assembly remain). What remains is M3b existence plus M6, the
-# M7 tail (5.4), and the M8b parking/§3.3 assembly.
+# partial (lemma_5_1 discharged via F19; only lemma_5_4 remains) and M8b is in progress (Lemma 3.4
+# Part 1 -- the linear-layer non-colinearity result -- is now fully DISCHARGED as a kernel-clean
+# theorem via a mass-gap cap-collapse, PR #116; the parking / §3.3 assembly axioms remain). What
+# remains is M3b existence plus M6, the M7 tail (5.4), and the M8b parking / §3.3 assembly
+# (lemma_3_3, lemma_3_4_part2, exists_parked_schedule, prop_4_2, exists_disentangling_balls).
 
 direction: down
 
@@ -72,7 +73,7 @@ M8a: M8a · Atomless split  ✓ DONE {
   style.bold: true
 }
 
-M8b: M8b · Parking + §3.3 assembly  ◔ §3.4 skeleton {
+M8b: M8b · Parking + §3.3 assembly  ◑ §3.4 Part 1 ✓ {
   style.fill: "#d0ebff"
   style.stroke: "#1971c2"
   style.stroke-width: 2

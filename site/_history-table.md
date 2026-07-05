@@ -174,3 +174,24 @@
 | 172 | 2026-07-04 | `formalize` | formalize~(foundations): the averaged Grönwall integral inequality (M3b, leaf 2b) | `MeasureToMeasure.Foundations.flow_continuousOn_prod` |
 | 173 | 2026-07-04 | `formalize` | formalize(foundations)!: discharge meanFieldFlow_unique via measure-averaged Grönwall (M3b) | `MeasureToMeasure.Foundations.meanFieldFlow_unique` |
 | 174 | 2026-07-04 | `docs` | docs(site): refresh for meanFieldFlow_unique + lemma_5_1 discharges, DAG diagrams, roadmap | `site` |
+| 175 | 2026-07-05 | `formalize` | formalize(leaves): barycenter of a flowed measure is the flow-averaged input (L1) | `leaves` |
+| 176 | 2026-07-05 | `formalize` | formalize(leaves): a gated block fixes every point off its cap (L2) | `leaves` |
+| 177 | 2026-07-05 | `formalize` | formalize(leaves): the barycenter-separation pigeonhole of Lemma 3.4 Part 1 (L3a) | `leaves` |
+| 178 | 2026-07-05 | `docs` | docs(site): mark M7 partial (5.1 ✓) and M8b in-progress (§3.4 skeleton) in the build DAG | `site` |
+| 179 | 2026-07-05 | `formalize` | formalize(leaves): distinct measures differ on some closed ball (L3-ball, Besicovitch) | `leaves` |
+| 180 | 2026-07-05 | `formalize` | formalize(leaves): the barycenter is W₁-continuous (L3-wcont, Kantorovich–Rubinstein) | `leaves` |
+| 181 | 2026-07-05 | `formalize` | formalize(leaves): single-block collapse displacement bound (L3-collapse-1) | `leaves` |
+| 182 | 2026-07-05 | `formalize` | formalize(leaves): the rim annulus carries vanishing mass (L3-collapse-2) | `leaves` |
+| 183 | 2026-07-05 | `formalize` | formalize(leaves): the W₂ collapse bound (L3-collapse-3, capstone) | `leaves` |
+| 184 | 2026-07-05 | `formalize` | formalize(leaves): `W₁ ≤ W₂` for probability measures (assembly tail) | `leaves` |
+| 185 | 2026-07-05 | `formalize` | formalize(leaves): the non-self-centered gated reach (Lemma 3.4 Part 1, Path I crux) | `leaves` |
+| 186 | 2026-07-05 | `formalize` | formalize(leaves): barycenter of the non-self-centered collapse (Lemma 3.4 Part 1) | `leaves` |
+| 187 | 2026-07-05 | `formalize` | formalize(leaves): a tight gate cap lies inside the carrier (Lemma 3.4 Part 1) | `leaves` |
+| 188 | 2026-07-05 | `formalize` | formalize(leaves): off-center collapse displacement bound (Lemma 3.4 Part 1) | `leaves` |
+| 189 | 2026-07-05 | `formalize` | formalize(leaves): non-self-centered W₂ collapse bound (Lemma 3.4 Part 1) | `leaves` |
+| 190 | 2026-07-05 | `formalize` | formalize(leaves): mass-gap ball centred in a co-null target set (Lemma 3.4 Part 1) | `leaves` |
+| 191 | 2026-07-05 | `formalize` | formalize(leaves): mass-gap cap inside the carrier (Lemma 3.4 Part 1) | `leaves` |
+| 192 | 2026-07-05 | `formalize` | formalize(leaves): spherical-cap pigeonhole for the collapse pole (Lemma 3.4 Part 1) | `leaves` |
+| 193 | 2026-07-05 | `formalize` | formalize(leaves): distinct measures force 2 ≤ d (Lemma 3.4 Part 1) | `leaves` |
+| 194 | 2026-07-05 | `formalize` | formalize(leaves): grand-assembly infrastructure — block stacking, pole geometry, W₂ gap (Lemma 3.4 Part 1) | `leaves` |
+| 195 | 2026-07-05 | `formalize` | formalize(statements): discharge lemma_3_4_part1 via the mass-gap cap collapse (App. B.3, 11→10) | `statements` |

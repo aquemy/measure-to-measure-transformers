@@ -247,9 +247,9 @@ Disjoint-support atomless measures cluster to $M$ atoms. [open]
 
 \section{Disentangling supports}
 
-\begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\lean{MeasureToMeasure.Statements.lemma_3_2}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [open]\end{lemma}
+\begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\lean{MeasureToMeasure.Statements.lemma_3_2}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [machine-checked]\end{lemma}
 \begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\lean{MeasureToMeasure.Statements.lemma_3_3}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [open]\end{lemma}
-\begin{lemma}[Make non-colinear, 3.4]\label{lem:34}\lean{MeasureToMeasure.Statements.lemma_3_4_part1}\uses{lem:pigeon,lem:bary,lem:noncol}Two measures made non-colinear. [open]\end{lemma}
+\begin{lemma}[Make non-colinear, 3.4 Part 1]\label{lem:34}\lean{MeasureToMeasure.Statements.lemma_3_4_part1}\uses{lem:pigeon,lem:bary,lem:noncol}Two measures made non-colinear (Part 1, linear layer, via mass-collapse + pigeonhole; Part 2 remains axiomatised). [machine-checked]\end{lemma}
 
 \begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34,lem:noncol}
 A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]
@@ -270,7 +270,7 @@ $M$ points $x_0^i\to y^i$ exactly, $\le 6M$ switches. [open]
 
 \section{Main results}
 
-\begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\lean{MeasureToMeasure.Statements.lemma_5_1}\uses{prop:31}Existence of $\psi$. [open]\end{lemma}
+\begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\lean{MeasureToMeasure.Statements.lemma_5_1}\uses{prop:31}Existence of $\psi$. [machine-checked]\end{lemma}
 \begin{lemma}[$L^2$ approximation, 5.4]\label{lem:54}\lean{MeasureToMeasure.Statements.lemma_5_4}\uses{prop:22,prop:41}Approximate any $\psi$ by a flow map. [open]\end{lemma}
 
 \begin{theorem}[Theorem 1.2]\label{thm:12}\lean{MeasureToMeasure.Statements.theorem_1_2}\uses{prop:31,lem:51,lem:l52,lem:54}

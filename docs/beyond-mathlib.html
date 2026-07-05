@@ -238,7 +238,7 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="diagrams/build-dag.ink.svg" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer M6/M7/M8b and the top-level assembly are what is left. (The live per-node status is on the <a href="./claimgraph.html">claim graph</a>.)</figcaption>
+<figcaption>The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer – M6, the M7 tail (Lemma 5.4), and the M8b parking / §3.3 assembly (whose §3.4 Part 1 leaf is now machine-checked) – plus the top-level assembly are what is left. (The live per-node status is on the <a href="./claimgraph.html">claim graph</a>.)</figcaption>
 </figure>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -266,11 +266,11 @@ The same graph, precise (D2 source)
 </section>
 <section id="whats-left-and-how-to-finish" class="level2">
 <h2 class="anchored" data-anchor-id="whats-left-and-how-to-finish">What’s left, and how to finish</h2>
-<p><strong>11 named axioms remain.</strong> They fall into three groups by <em>how</em> each is closed:</p>
+<p><strong>10 named axioms remain.</strong> They fall into three groups by <em>how</em> each is closed:</p>
 <p><strong>Tier 1 – constructive assembly (decomposition-tractable; the pieces already exist).</strong></p>
 <ul>
-<li><code>lemma_3_4_part1</code> (make two measures non-colinear) – the <strong>active front</strong>, and the one mid-level axiom on the <em>linear</em> layer (<span class="math inline">\(V \equiv 0\)</span>, so the field never reads the measure). Its App. B.3 Part 1 argument is <strong>mass-collapse + pigeonhole</strong> (not the barycenter linearization of Part 2), and its skeleton is now machine-checked: barycenter-of-a-flowed-measure (<code>barycenter_measureFlow</code>), the gated block’s off-cap parking / fixing clause (<code>flowMap_gatedBlock_id_of_inner_le</code>), and the separation pigeonhole itself (<code>exists_mem_ball_barycenter_collapse_ne</code>, on leaf L10). What remains is the mass-gap ball, a single-gated-block localized collapse to the pigeonhole point (reusing <code>gatedBlock_reach</code>, sidestepping the F16 non-localized ball-chain gap), and barycenter <span class="math inline">\(W_2\)</span>-continuity – then it discharges, taking the count to <strong>10</strong>.</li>
-<li><code>exists_parked_schedule</code> (parking) – the gated field vanishes off its cap, so a schedule parks disjoint supports; what remains is the non-interference argument plus the concatenation budget.</li>
+<li><code>lemma_3_4_part1</code> (make two measures non-colinear) – <strong><span class="badge ok">machine-checked</span></strong>. This was the active front; it is now a discharged theorem (<code>Statements/Lemma34Part1.lean</code>) and the first mid-level statement de-axiomatized – the one mid-level axiom on the <em>linear</em> layer (<span class="math inline">\(V \equiv 0\)</span>, so the field never reads the measure). Its App. B.3 Part 1 argument is <strong>mass-collapse + pigeonhole</strong> (not the barycenter linearization of Part 2): a fixed cap where <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\nu\)</span> disagree in mass is gated and collapsed to a pole chosen off the one forced direction, so the two collapse barycenters separate. Two realizations were load-bearing: <strong>block-stacking</strong> supplies the honest “large <span class="math inline">\(T\)</span>” the axiom’s <em>fixed</em> horizon otherwise lacks (<code>flowMap_replicate</code>: a <code>List.replicate n block</code> runs an additive one-parameter flow for effective time <span class="math inline">\(n\cdot T\)</span>, since a single ReLU-gated block has no gain), and <strong><span class="math inline">\(2 \le d\)</span> is <em>derived</em> from <span class="math inline">\(\mu \ne \nu\)</span></strong> (the cap-pole needs a unit <span class="math inline">\(w \perp z\)</span>) rather than assumed. Barycenter <span class="math inline">\(W_2\)</span>-continuity transfers the gap; <code>hbar</code> (equal barycenters) is retained for transcription but unused, so the discharge is slightly more general than the paper’s lemma. This took the axiom count to <strong>10</strong>.</li>
+<li><code>exists_parked_schedule</code> (parking) – the <strong>remaining Tier-1 target</strong>: the gated field vanishes off its cap, so a schedule parks disjoint supports; what remains is the non-interference argument plus the concatenation budget.</li>
 </ul>
 <p><strong>Blocked – constructive in principle, but stalled on a missing Mathlib layer (the continuity-equation / mass-sweep theory).</strong></p>
 <ul>
@@ -282,7 +282,7 @@ The same graph, precise (D2 source)
 <li><code>exists_meanFieldFlow</code> (the mean-field <em>existence</em> half) – Picard-Lindelöf plus <strong>Wasserstein completeness of <span class="math inline">\(\mathcal P(\mathbb S^{d-1})\)</span></strong>. The Lipschitz-in-<span class="math inline">\((x, W_1)\)</span> moduli are already machine-checked from the uniqueness campaign, so the same leaf-decomposition applies.</li>
 <li><code>prop_2_1</code>, <code>cluster_to_point</code> – the M6 LaSalle/Lyapunov convergence theory.</li>
 <li><code>lemma_5_4</code> – the M7 <span class="math inline">\(L^2\)</span> approximation of a transport map by flow maps.</li>
-<li><code>lemma_3_3</code>, <code>lemma_3_4_part2</code> – the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the linear layer and sits in Tier 1 above).</li>
+<li><code>lemma_3_3</code>, <code>lemma_3_4_part2</code> – the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the linear layer and is <strong>discharged</strong> – see Tier 1 above).</li>
 </ul>
 <p><strong>Top-level assembly.</strong></p>
 <ul>

@@ -15,18 +15,20 @@ for some Lipschitz-continuous and invertible maps $\mathsf T^i_{\Phi_1}, \mathsf
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
-The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow and the individual matchings $\psi^i$ are glued into one global $\psi$ agreeing with each $\psi^i$ on the $i$-th (now disjoint) support. It is a labeled `axiom`. The **disjoint-supports hypotheses on both families are load-bearing and kept explicit** (`DisjointSupports μ₀`, `DisjointSupports μ₁`): without them the gluing is genuinely impossible — with $\mu_0^0=\mu_0^1=\delta_a$ and distinct targets a single $\psi$ would need two values at $a$ (finding F11). The conclusion asserts a **measurable** $\psi$, not the paper's "invertible" one: invertibility is unsatisfiable even per pair (no injection pushes an atomless measure onto an atom), and the paper's own proof builds $\psi^i=\mathsf T^i_{\Phi_3}\circ\mathsf T^i\circ(\mathsf T^i_{\Phi_1})^{-1}$ from the non-invertible transport $\mathsf T^i$ — a statement/proof mismatch recorded as erratum candidate **E2** (finding F13).
+The paper's strategy (Geshkovski, Rigollet, Ruiz-Balet, App. B.4, p. 37) exploits disentanglement: once Proposition 3.1 has pushed the supports $\operatorname{supp}\Phi_1(\mu_0^i)$ pairwise disjoint, the per-pair transport maps $\mathsf T^i$ are carried through the flow and the individual matchings $\psi^i$ are glued into one global $\psi$ agreeing with each $\psi^i$ on the $i$-th (now disjoint) support. It is now **discharged** to a kernel-clean theorem (finding F19) — no optimal-transport or measurable-selection theory needed: the global $\psi$ is the **indicator gluing** of the per-pair maps over `toMeasurable` disjoint full-mass carriers $C^i\subseteq\operatorname{supp}\mu_0^i$. Three hypotheses are load-bearing. The **disjoint-supports hypotheses on both families are kept explicit** (`DisjointSupports μ₀`, `DisjointSupports μ₁`): without them the gluing is genuinely impossible — with $\mu_0^0=\mu_0^1=\delta_a$ and distinct targets a single $\psi$ would need two values at $a$ (finding F11). The per-pair maps carry **`Measurable Tⁱ`** (finding F19): without it Mathlib's `map`-of-non-`AEMeasurable`$=0$ convention makes the statement unprovable — a measurable $\psi$ cannot realize a mass-losing target — and the paper's Monge maps are measurable by construction. And the conclusion asserts a **measurable** $\psi$, not the paper's "invertible" one: invertibility is unsatisfiable even per pair (no injection pushes an atomless measure onto an atom), and the paper's own proof builds $\psi^i$ from the non-invertible transport — a statement/proof mismatch recorded as erratum candidate **E2** (finding F13).
 
 ```lean
-/-- **Lemma 5.1** (transport map after disentanglement). If both families are disentangled (pairwise
-disjoint supports, as Proposition 3.1 provides) and each pair is matchable, a single measurable map
-matches them all. AXIOM (`math.axiomatised`); the paper's "invertible" is erratum candidate E2. -/
-axiom lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
-    (hdisj₀ : DisjointSupports μ₀) (hdisj₁ : DisjointSupports μ₁)
-    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, (μ₀ i).map Ti = μ₁ i) :
-    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i
+/-- **Lemma 5.1** (transport map after disentanglement), machine-checked. If both families are
+disentangled (pairwise disjoint supports, as Proposition 3.1 provides) and each pair is matchable by
+a *measurable* map, a single measurable `ψ` matches them all. The paper's "invertible" is erratum
+candidate E2; discharged by indicator gluing over `toMeasurable` carriers. -/
+theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (hdisj₀ : DisjointSupports μ₀) (_hdisj₁ : DisjointSupports μ₁)
+    (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, Measurable Ti ∧ (μ₀ i).map Ti = μ₁ i) :
+    ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
+  /- toMeasurable disjoint full-mass carriers Cⁱ ⊆ supp μ₀ⁱ · indicator gluing of the Tⁱ -/
 ```
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
