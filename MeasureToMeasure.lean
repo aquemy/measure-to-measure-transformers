@@ -39,6 +39,7 @@ import MeasureToMeasure.Leaves.OffCenterW2
 import MeasureToMeasure.Leaves.BarycenterSeparation
 import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.BesicovitchTarget
+import MeasureToMeasure.Leaves.CapMassGap
 import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterWasserstein
