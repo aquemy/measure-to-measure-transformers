@@ -36,6 +36,7 @@ import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterWasserstein
+import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Statements.MainResults
