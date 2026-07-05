@@ -53,3 +53,4 @@ import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
+import MeasureToMeasure.Statements.Lemma34Part1
