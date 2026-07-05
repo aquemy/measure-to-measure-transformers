@@ -29,6 +29,7 @@ import MeasureToMeasure.Leaves.GeodesicGradient
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Leaves.BarycenterFlow
 import MeasureToMeasure.Leaves.GatedPark
+import MeasureToMeasure.Leaves.CapSubset
 import MeasureToMeasure.Leaves.GatedCollapse
 import MeasureToMeasure.Leaves.OffCenterReach
 import MeasureToMeasure.Leaves.W2Collapse
