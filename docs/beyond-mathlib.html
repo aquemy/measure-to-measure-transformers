@@ -269,8 +269,12 @@ The same graph, precise (D2 source)
 <p><strong>11 named axioms remain.</strong> They fall into three groups by <em>how</em> each is closed:</p>
 <p><strong>Tier 1 – constructive assembly (decomposition-tractable; the pieces already exist).</strong></p>
 <ul>
-<li><code>prop_2_2</code> (discrete clustering) – the mixture-combination core is already machine-checked (<code>measureFlow_W2_discrete_of_perPiece</code>); the gap is a <em>localized</em> prescribed-weight partition, since a full-support datum fits no single sub-<span class="math inline">\(\pi/2\)</span> ball. The route is <strong>rotate-after-carve</strong>: split by mass (<code>exists_atomless_partition</code>), rotate each piece into a cap via the now-discharged <code>lemma_3_2</code>, ball-chain it in (<code>lemma_B_1</code>), with gating non-interference concatenating the pieces.</li>
+<li><code>lemma_3_4_part1</code> (make two measures non-colinear) – the <strong>active front</strong>, and the one mid-level axiom on the <em>linear</em> layer (<span class="math inline">\(V \equiv 0\)</span>, so the field never reads the measure). Its App. B.3 Part 1 argument is <strong>mass-collapse + pigeonhole</strong> (not the barycenter linearization of Part 2), and its skeleton is now machine-checked: barycenter-of-a-flowed-measure (<code>barycenter_measureFlow</code>), the gated block’s off-cap parking / fixing clause (<code>flowMap_gatedBlock_id_of_inner_le</code>), and the separation pigeonhole itself (<code>exists_mem_ball_barycenter_collapse_ne</code>, on leaf L10). What remains is the mass-gap ball, a single-gated-block localized collapse to the pigeonhole point (reusing <code>gatedBlock_reach</code>, sidestepping the F16 non-localized ball-chain gap), and barycenter <span class="math inline">\(W_2\)</span>-continuity – then it discharges, taking the count to <strong>10</strong>.</li>
 <li><code>exists_parked_schedule</code> (parking) – the gated field vanishes off its cap, so a schedule parks disjoint supports; what remains is the non-interference argument plus the concatenation budget.</li>
+</ul>
+<p><strong>Blocked – constructive in principle, but stalled on a missing Mathlib layer (the continuity-equation / mass-sweep theory).</strong></p>
+<ul>
+<li><code>prop_2_2</code> (discrete clustering) – the mixture-combination core is machine-checked (<code>measureFlow_W2_discrete_of_perPiece</code>) and a cap-localized refinement is buildable, but the <em>routing</em> is the wall: <code>prop_2_2</code> asks for a single <code>Params d</code>, and one deterministic flow map cannot split a cap’s mass toward several far-apart targets. The paper’s proof is a sequential <span class="math inline">\(O(M)\)</span>-switch mass-sweep, which needs the continuity-equation theory Mathlib lacks (mapped in a scouting pass; the naive “one cap per piece” partition is <em>false</em>).</li>
 <li><code>prop_4_2</code> (steering) – the geodesic-gradient corridor construction, the hardest constructive target. Closing it also makes <code>prop_4_1</code> (already a theorem) kernel-clean and unblocks <code>cluster_to_point</code>.</li>
 </ul>
 <p><strong>Tier 2 – infrastructure builds (a genuine new layer of Mathlib-level theory).</strong></p>
@@ -278,7 +282,7 @@ The same graph, precise (D2 source)
 <li><code>exists_meanFieldFlow</code> (the mean-field <em>existence</em> half) – Picard-Lindelöf plus <strong>Wasserstein completeness of <span class="math inline">\(\mathcal P(\mathbb S^{d-1})\)</span></strong>. The Lipschitz-in-<span class="math inline">\((x, W_1)\)</span> moduli are already machine-checked from the uniqueness campaign, so the same leaf-decomposition applies.</li>
 <li><code>prop_2_1</code>, <code>cluster_to_point</code> – the M6 LaSalle/Lyapunov convergence theory.</li>
 <li><code>lemma_5_4</code> – the M7 <span class="math inline">\(L^2\)</span> approximation of a transport map by flow maps.</li>
-<li><code>lemma_3_3</code>, <code>lemma_3_4_part1</code>, <code>lemma_3_4_part2</code> – the §3.3 mean-field barycenter shrink dynamics.</li>
+<li><code>lemma_3_3</code>, <code>lemma_3_4_part2</code> – the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the linear layer and sits in Tier 1 above).</li>
 </ul>
 <p><strong>Top-level assembly.</strong></p>
 <ul>

@@ -173,3 +173,4 @@
 | 171 | 2026-07-04 | `formalize` | formalize~(foundations): the averaged flow-distance functional + its continuity (M3b, leaf 2a) | `MeasureToMeasure.Foundations.meanFlowDist` |
 | 172 | 2026-07-04 | `formalize` | formalize~(foundations): the averaged Grönwall integral inequality (M3b, leaf 2b) | `MeasureToMeasure.Foundations.flow_continuousOn_prod` |
 | 173 | 2026-07-04 | `formalize` | formalize(foundations)!: discharge meanFieldFlow_unique via measure-averaged Grönwall (M3b) | `MeasureToMeasure.Foundations.meanFieldFlow_unique` |
+| 174 | 2026-07-04 | `docs` | docs(site): refresh for meanFieldFlow_unique + lemma_5_1 discharges, DAG diagrams, roadmap | `site` |
