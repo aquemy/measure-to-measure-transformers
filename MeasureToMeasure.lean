@@ -42,6 +42,9 @@ import MeasureToMeasure.Leaves.BesicovitchTarget
 import MeasureToMeasure.Leaves.CapMassGap
 import MeasureToMeasure.Leaves.CapPole
 import MeasureToMeasure.Leaves.DistinctDim
+import MeasureToMeasure.Leaves.FlowStack
+import MeasureToMeasure.Leaves.PoleGeometry
+import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterWasserstein
