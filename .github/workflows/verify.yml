@@ -85,6 +85,8 @@ jobs:
       # axiom-report has to resolve the same names to print a footprint, and already hard-fails
       # on an unknown identifier -- so this is not the load-bearing check. It is an independent,
       # community-maintained implementation catching a bug in our own vendored one: cheap
-      # insurance, not a new guarantee.
+      # insurance, not a new guarantee. Reads the committed blueprint/lean_decls (see .gitignore)
+      # rather than running the full plastex/web build to regenerate it, so this stays a plain
+      # `lake exe` invocation with no imaging/graphviz dependency added to CI.
       - name: Blueprint checkdecls (leanblueprint)
         run: uvx leanblueprint checkdecls
