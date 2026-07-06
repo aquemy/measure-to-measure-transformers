@@ -1,10 +1,12 @@
-# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks the five
+# Public, self-contained CI for this Lean blueprint project. On every push/PR it checks six
 # invariants that need no private tooling: the project COMPILES (lake build, including the
 # Regression witnesses), passes the Batteries environment linters (`lake lint` via the lintDriver
 # in lakefile.toml, with deliberate exemptions baselined in scripts/nolints.json), carries NO
 # stray `sorry` / `admit` / `sorryAx` / `native_decide`, passes the refutation regression
-# gate (no axiom re-loosened to a kernel-refuted historical shape), and has per-node axiom
-# footprints free of sorryAx (scripts/axiom-report, vendored -- `#print axioms` per blueprint node).
+# gate (no axiom re-loosened to a kernel-refuted historical shape), has per-node axiom
+# footprints free of sorryAx (scripts/axiom-report, vendored -- `#print axioms` per blueprint node),
+# and has every \lean{...} blueprint reference resolve and compile (leanblueprint checkdecls, a
+# public-PyPI, community-maintained cross-check on the same names axiom-report already resolves).
 #
 # It deliberately does NOT access any private plugin marketplace or the private claimgraph package,
 # and it does NOT deploy anything (docs/ is committed by hand for classic GitHub Pages, served from
@@ -73,3 +75,16 @@ jobs:
             exit 1
           fi
           echo "footprints clean: no blueprint node depends on sorryAx."
+
+      # Install uv (leanblueprint is a public PyPI package; no private tooling).
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      # checkdecls (leanblueprint): confirms every \lean{...} name in the blueprint exists and
+      # compiles. It overlaps almost entirely with what axiom-report above already requires --
+      # axiom-report has to resolve the same names to print a footprint, and already hard-fails
+      # on an unknown identifier -- so this is not the load-bearing check. It is an independent,
+      # community-maintained implementation catching a bug in our own vendored one: cheap
+      # insurance, not a new guarantee.
+      - name: Blueprint checkdecls (leanblueprint)
+        run: uvx leanblueprint checkdecls
