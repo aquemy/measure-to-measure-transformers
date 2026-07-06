@@ -14,6 +14,7 @@ import MeasureToMeasure.Foundations.GatedBlock
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttentionEstimates
 import MeasureToMeasure.Foundations.MeanFieldWellPosed
+import MeasureToMeasure.Foundations.SphereMeasureCompletion
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
