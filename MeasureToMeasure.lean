@@ -22,6 +22,7 @@ import MeasureToMeasure.Foundations.WassersteinTV
 import MeasureToMeasure.Foundations.SphereCover
 import MeasureToMeasure.Foundations.SphereRounding
 import MeasureToMeasure.Foundations.DiscreteTV
+import MeasureToMeasure.Foundations.WeakToTV
 import MeasureToMeasure.Foundations.SphereProbMetric
 import MeasureToMeasure.Foundations.SphereW1Weak
 import MeasureToMeasure.Foundations.BallProjection
