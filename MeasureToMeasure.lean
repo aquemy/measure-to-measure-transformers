@@ -27,6 +27,7 @@ import MeasureToMeasure.Foundations.WeakToW1
 import MeasureToMeasure.Foundations.SphereProbSeqCompact
 import MeasureToMeasure.Foundations.SphereProbMetric
 import MeasureToMeasure.Foundations.SphereW1Weak
+import MeasureToMeasure.Foundations.SphereProbComplete
 import MeasureToMeasure.Foundations.BallProjection
 import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
