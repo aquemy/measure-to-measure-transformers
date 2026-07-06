@@ -12,9 +12,14 @@ Toward the hard direction of the `W₁ ↔ weak` comparison (leaf S3b, `exists_m
 * `W1_map_le` — `W₁(T₁_# μ, T₂_# μ) ≤ ∫ dist(T₁ x, T₂ x) dμ`, witnessed by the coupling
   `(T₁, T₂)_# μ`. With `T₁ = id` and `T₂` a cell-rounding map this is the `W₁`-approximation step;
 * `W1_convexCombo_le` — `W₁` is convex under mixtures: if `∑ aₖ = 1` and each `W₁(Pₖ, Qₖ) ≤ ε`, then
-  `W₁(∑ aₖ • Pₖ, ∑ aₖ • Qₖ) ≤ ε` (simpler than the `W₂` version — the cost is already linear).
+  `W₁(∑ aₖ • Pₖ, ∑ aₖ • Qₖ) ≤ ε` (simpler than the `W₂` version — the cost is already linear);
+* `W1_map_le_of_ae_edist_le` / `W1_map_le_of_edist_le` — **rounding approximation**: if a measurable
+  `r` displaces `μ`-a.e. (resp. every) point by `≤ ε`, then `W₁(μ, r_# μ) ≤ ε`. The approximation half
+  of the `weak ⇒ W₁` crux (leaf S3b-ii): it turns a geometric displacement bound into a `W₁` bound,
+  taking the rounding map as a hypothesis so it is decoupled from how that map is built from a
+  diam-`≤ ε` partition. The a.e. form is the one the crux consumes (the measure is sphere-supported).
 
-All three mirror the banked `W₂` proofs with `edist` in place of `edist²` and no root exponent.
+All mirror the banked `W₂` proofs with `edist` in place of `edist²` and no root exponent.
 -/
 
 open MeasureTheory
@@ -72,5 +77,29 @@ theorem W1_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) {P Q : Fin M → 
       ≤ transportCost (∑ k, a k • π k) := W1_le_transportCost hcplγ
     _ = ∑ k, a k * transportCost (π k) := transportCost_finset_sum_smul a π
     _ ≤ B := hA
+
+/-- **Rounding approximation for `W₁` (a.e. form).** If a measurable `r : Eucl d → Eucl d` moves
+`μ`-a.e. point by at most `ε` (`edist x (r x) ≤ ε`), then pushing a probability measure forward through
+`r` costs at most `ε` in `W₁`: `W₁(μ, r_# μ) ≤ ε`. Immediate from `W1_map_le` with `T₁ = id`, `T₂ = r`
+(`μ.map id = μ`) and `∫⁻ ε ∂μ = ε` (the measure is a probability), the displacement bound applied under
+the integral by `lintegral_mono_ae`. This is the **approximation half of the `weak ⇒ W₁` crux**
+(leaf S3b-ii): a cell-rounding map to representatives of a diam-`≤ ε` partition realises the hypothesis
+`μ`-a.e. (the measure is sphere-supported, and `r` is controlled only on the sphere), and this lemma
+turns the geometric displacement bound into a `W₁` bound — independently of how `r` is constructed. -/
+theorem W1_map_le_of_ae_edist_le {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    {r : Eucl d → Eucl d} (hr : Measurable r) {ε : ℝ≥0∞} (hε : ∀ᵐ x ∂μ, edist x (r x) ≤ ε) :
+    W1 μ (μ.map r) ≤ ε := by
+  calc W1 μ (μ.map r)
+      = W1 (μ.map id) (μ.map r) := by rw [Measure.map_id]
+    _ ≤ ∫⁻ x, edist (id x) (r x) ∂μ := W1_map_le measurable_id hr
+    _ ≤ ∫⁻ _, ε ∂μ := lintegral_mono_ae hε
+    _ = ε := by rw [lintegral_const, measure_univ, mul_one]
+
+/-- **Rounding approximation for `W₁` (everywhere form).** The special case of
+`W1_map_le_of_ae_edist_le` when `r` displaces *every* point by at most `ε`. -/
+theorem W1_map_le_of_edist_le {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    {r : Eucl d → Eucl d} (hr : Measurable r) {ε : ℝ≥0∞} (hε : ∀ x, edist x (r x) ≤ ε) :
+    W1 μ (μ.map r) ≤ ε :=
+  W1_map_le_of_ae_edist_le hr (ae_of_all _ hε)
 
 end MeasureToMeasure
