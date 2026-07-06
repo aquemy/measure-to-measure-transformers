@@ -5,18 +5,22 @@ import MeasureToMeasure.Foundations.SphereCover
 
 The cell-rounding map of the `weak ⇒ W₁` crux (leaf S3b, toward `exists_meanFieldFlow`). From the
 finite `μ`-null-frontier ball cover (`exists_finite_null_frontier_ball_cover`), we build a measurable
-map `r : Eucl d → Eucl d` that rounds each sphere point to a representative on the sphere within `2ε`,
-with **finitely many fibres whose frontiers are `μ`-null** — exactly the data portmanteau consumes to
-show `μₙ(r⁻¹{z}) → μ(r⁻¹{z})` under weak convergence.
+selection `s : Eucl d → Fin M` into finitely many cells, together with representatives `g : Fin M →
+Eucl d` on the sphere, so that the rounding `y ↦ g (s y)` moves each sphere point by `< 2ε` and every
+cell `s ⁻¹' {i}` has `μ`-null frontier.
 
-* `exists_finite_rounding` — for a sphere-supported probability `μ` and `ε > 0`, a measurable
-  `r : Eucl d → Eucl d` with `r y ∈ sphere d` and `dist y (r y) < 2ε` for every `y ∈ sphere d`, and
-  `μ (frontier (r ⁻¹' {z})) = 0` for every `z`.
+* `exists_finite_rounding` — for a sphere-supported probability `μ` and `ε > 0`, a finite `M`, a
+  measurable `s : Eucl d → Fin M`, and `g : Fin M → Eucl d` with `g i ∈ sphere d`,
+  `dist y (g (s y)) < 2ε` for `y ∈ sphere d`, and `μ (frontier (s ⁻¹' {i})) = 0` for every `i`.
 
-Construction: order the cover centres as `Fin M`, let `r y = rep (sel y)` where `sel y` is the least
-index `i` with `y ∈ Bᵢ` (measurable via the finite membership pattern `y ↦ (i ↦ y ∈ Bᵢ)`) and `rep i`
-is a sphere point of `Bᵢ`. `r` is **locally constant off `⋃ᵢ frontier Bᵢ`** (a `μ`-null set), so every
-fibre frontier lands in it.
+The finite index `Fin M` is what the crux needs: `tv_map_le` reduces `TV(r_#μₙ, r_#μ)` for the
+`Eucl d`-valued rounding `r = g ∘ s` to `TV(s_#μₙ, s_#μ)` on `Fin M`, where the discrete bound applies,
+and the `μ`-null cell frontiers feed portmanteau (`μₙ(s⁻¹{i}) → μ(s⁻¹{i})`).
+
+Construction: order the cover centres as `Fin M`; `s y` = least index `i` with `y ∈ Bᵢ` (measurable via
+the finite membership pattern `y ↦ (i ↦ y ∈ Bᵢ) : Eucl d → (Fin M → Bool)`), `g i` = a sphere point of
+`Bᵢ`. `s` is **locally constant off `⋃ᵢ frontier Bᵢ`** (the membership pattern is locally constant
+there), so every cell frontier lands in that `μ`-null set.
 -/
 
 open MeasureTheory Metric Set Filter Topology
@@ -25,13 +29,15 @@ namespace MeasureToMeasure
 
 variable {d : ℕ}
 
-/-- **Existence of a measurable finite ε-rounding of the sphere with `μ`-null fibre frontiers.** -/
+/-- **Existence of a measurable finite ε-rounding of the sphere with `μ`-null cell frontiers.** The
+rounding is `y ↦ g (s y)` for a measurable selection `s : Eucl d → Fin M` and sphere representatives
+`g : Fin M → Eucl d`; each cell `s ⁻¹' {i}` has `μ`-null frontier. -/
 theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (hμ : μ (sphere d)ᶜ = 0) {ε : ℝ} (hε : 0 < ε) :
-    ∃ r : Eucl d → Eucl d, Measurable r ∧
-      (∀ y ∈ sphere d, r y ∈ sphere d) ∧
-      (∀ y ∈ sphere d, dist y (r y) < 2 * ε) ∧
-      (∀ z, μ (frontier (r ⁻¹' {z})) = 0) := by
+    ∃ (M : ℕ) (s : Eucl d → Fin M) (g : Fin M → Eucl d), Measurable s ∧
+      (∀ i, g i ∈ sphere d) ∧
+      (∀ y ∈ sphere d, dist y (g (s y)) < 2 * ε) ∧
+      (∀ i, μ (frontier (s ⁻¹' {i})) = 0) := by
   classical
   obtain ⟨e₀, he₀⟩ : (sphere d).Nonempty := by
     rcases Set.eq_empty_or_nonempty (sphere d) with hempty | hne
@@ -54,8 +60,8 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
   have hMpos : 0 < M := by
     rw [hMdef, Fintype.card_pos_iff]
     exact ⟨⟨hFne.choose, hFne.choose_spec⟩⟩
-  set g : Fin M → ↥F := ⇑(Fintype.equivFin ↥F).symm with hg
-  set c : Fin M → Eucl d := fun i => (g i : Eucl d) with hc
+  set enum : Fin M → ↥F := ⇑(Fintype.equivFin ↥F).symm with henum
+  set c : Fin M → Eucl d := fun i => (enum i : Eucl d) with hc
   set B : Fin M → Set (Eucl d) := fun i => Metric.ball (c i) (rr (c i)) with hB
   have hBmeas : ∀ i, MeasurableSet (B i) := fun i => Metric.isOpen_ball.measurableSet
   -- The cover, re-indexed: every sphere point lies in some `B i`.
@@ -64,7 +70,7 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     obtain ⟨x, hx, hyx⟩ := Set.mem_iUnion₂.1 (hcover hy)
     refine ⟨Fintype.equivFin ↥F ⟨x, hx⟩, ?_⟩
     have hcx : c (Fintype.equivFin ↥F ⟨x, hx⟩) = x := by
-      rw [hc]; simp [hg]
+      rw [hc]; simp [henum]
     rw [hB]; simp only; rw [hcx]; exact hyx
   -- Selection: least index whose ball contains `y`, via the finite membership pattern.
   set φ : (Fin M → Bool) → Fin M := fun t =>
@@ -73,13 +79,12 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
   set sel : Eucl d → Fin M := fun y => φ (fun i => decide (y ∈ B i)) with hseldef
   set rep : Fin M → Eucl d := fun i =>
     if h : (B i ∩ sphere d).Nonempty then h.choose else e₀ with hrepdef
-  set r : Eucl d → Eucl d := fun y => rep (sel y) with hrdef
   -- `rep i` always lands on the sphere.
   have hrep_sphere : ∀ i, rep i ∈ sphere d := by
     intro i; rw [hrepdef]; dsimp only; split
     · rename_i h; exact h.choose_spec.2
     · exact he₀
-  -- Measurability of `r = rep ∘ sel = rep ∘ φ ∘ pattern`.
+  -- Measurability of `sel = φ ∘ pattern`.
   have hpat : Measurable (fun y => (fun i => decide (y ∈ B i)) : Eucl d → (Fin M → Bool)) := by
     refine measurable_pi_lambda _ (fun i => ?_)
     refine measurable_to_countable' (fun b => ?_)
@@ -93,7 +98,6 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
         ext y; simp
       rw [this]; exact hBmeas i
   have hsel : Measurable sel := (measurable_of_countable φ).comp hpat
-  have hrmeas : Measurable r := (measurable_from_top (f := rep)).comp hsel
   -- `y ∈ B (sel y)` whenever some ball contains `y`.
   have hsel_mem : ∀ y, (∃ i, y ∈ B i) → y ∈ B (sel y) := by
     rintro y ⟨i, hi⟩
@@ -105,7 +109,7 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     have hmem := (Finset.univ.filter (fun j => decide (y ∈ B j) = true)).min'_mem hne
     rw [Finset.mem_filter] at hmem
     exact of_decide_eq_true hmem.2
-  refine ⟨r, hrmeas, fun y _ => hrep_sphere (sel y), ?_, ?_⟩
+  refine ⟨M, sel, rep, hsel, hrep_sphere, ?_, ?_⟩
   · -- Displacement `< 2ε`.
     intro y hy
     have hyB : y ∈ B (sel y) := hsel_mem y (hcov' y hy)
@@ -115,12 +119,12 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     have h1 : dist y (c (sel y)) < rr (c (sel y)) := Metric.mem_ball.1 hyB
     have h2 : dist (rep (sel y)) (c (sel y)) < rr (c (sel y)) := Metric.mem_ball.1 hrepB
     have hlt : rr (c (sel y)) < ε := hrr_lt (c (sel y))
-    calc dist y (r y) = dist y (rep (sel y)) := by rw [hrdef]
-      _ ≤ dist y (c (sel y)) + dist (c (sel y)) (rep (sel y)) := dist_triangle _ _ _
+    calc dist y (rep (sel y))
+        ≤ dist y (c (sel y)) + dist (c (sel y)) (rep (sel y)) := dist_triangle _ _ _
       _ = dist y (c (sel y)) + dist (rep (sel y)) (c (sel y)) := by rw [dist_comm (c (sel y))]
       _ < 2 * ε := by linarith
-  · -- Fibre frontiers are `μ`-null: `r` is locally constant off `⋃ᵢ frontier (B i)`.
-    have hloc : ∀ y₀ : Eucl d, (∀ i, y₀ ∉ frontier (B i)) → ∀ᶠ y in 𝓝 y₀, r y = r y₀ := by
+  · -- Cell frontiers are `μ`-null: `sel` is locally constant off `⋃ᵢ frontier (B i)`.
+    have hloc : ∀ y₀ : Eucl d, (∀ i, y₀ ∉ frontier (B i)) → ∀ᶠ y in 𝓝 y₀, sel y = sel y₀ := by
       intro y₀ hy₀
       set W : Fin M → Set (Eucl d) := fun i => if y₀ ∈ B i then B i else (closure (B i))ᶜ with hWdef
       have hWopen : ∀ i, IsOpen (W i) := by
@@ -148,31 +152,30 @@ theorem exists_finite_rounding (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
         · intro hy₀B
           rw [if_pos hy₀B] at hyWi
           exact hyWi
-      have hrV : ∀ y ∈ V, r y = r y₀ := by
+      have hselV : ∀ y ∈ V, sel y = sel y₀ := by
         intro y hyV
         have hpe : (fun i => decide (y ∈ B i)) = (fun i => decide (y₀ ∈ B i)) := by
           funext i; rw [decide_eq_decide]; exact hpatV y hyV i
-        rw [hrdef]; dsimp only; rw [hseldef]; dsimp only; rw [hpe]
-      exact Filter.eventually_of_mem (hVopen.mem_nhds hy₀V) hrV
-    -- Every fibre frontier is contained in the null set `⋃ᵢ frontier (B i)`.
-    have hfront_sub : ∀ z, frontier (r ⁻¹' {z}) ⊆ ⋃ i, frontier (B i) := by
-      intro z y₀ hy₀f
+        rw [hseldef]; dsimp only; rw [hpe]
+      exact Filter.eventually_of_mem (hVopen.mem_nhds hy₀V) hselV
+    -- Every cell frontier is contained in the null set `⋃ᵢ frontier (B i)`.
+    have hfront_sub : ∀ i, frontier (sel ⁻¹' {i}) ⊆ ⋃ j, frontier (B j) := by
+      intro i y₀ hy₀f
       by_contra hn
       simp only [Set.mem_iUnion, not_exists] at hn
       have hev := hloc y₀ hn
-      rcases eq_or_ne (r y₀) z with hz | hz
-      · have hnhds : r ⁻¹' {z} ∈ 𝓝 y₀ := by
+      rcases eq_or_ne (sel y₀) i with hz | hz
+      · have hnhds : sel ⁻¹' {i} ∈ 𝓝 y₀ := by
           filter_upwards [hev] with y hy
           rw [Set.mem_preimage, Set.mem_singleton_iff, hy, hz]
         exact hy₀f.2 (mem_interior_iff_mem_nhds.2 hnhds)
-      · have hnhds : (r ⁻¹' {z})ᶜ ∈ 𝓝 y₀ := by
+      · have hnhds : (sel ⁻¹' {i})ᶜ ∈ 𝓝 y₀ := by
           filter_upwards [hev] with y hy
           rw [Set.mem_compl_iff, Set.mem_preimage, Set.mem_singleton_iff, hy]
           exact hz
         rw [← frontier_compl] at hy₀f
         exact hy₀f.2 (mem_interior_iff_mem_nhds.2 hnhds)
-    intro z
-    refine measure_mono_null (hfront_sub z) ?_
-    exact measure_iUnion_null (fun i => hrr_front (c i))
+    intro i
+    exact measure_mono_null (hfront_sub i) (measure_iUnion_null (fun j => hrr_front (c j)))
 
 end MeasureToMeasure
