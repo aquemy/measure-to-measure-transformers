@@ -18,6 +18,7 @@ import MeasureToMeasure.Foundations.SphereMeasureCompletion
 import MeasureToMeasure.Foundations.BallProjection
 import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
+import MeasureToMeasure.Foundations.FrozenFieldBlock
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
