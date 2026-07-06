@@ -19,7 +19,11 @@ blueprint/*.pdf
 # published under docs/ for classic GitHub Pages).
 /blueprint/print/
 /blueprint/web/
-/blueprint/lean_decls
+# lean_decls (the plain \lean{...} name list `leanblueprint web` writes as a side effect) is
+# committed, NOT ignored: CI's checkdecls step reads it directly rather than running the full
+# plastex/web build (which would pull in gspdfpng/dvisvgm as new CI dependencies for zero
+# benefit -- lean_decls is the only part of that build checkdecls needs). Regenerate it locally
+# with `uvx leanblueprint web` and commit it whenever a \lean{...} tag changes in content.tex.
 
 # Python / uv
 __pycache__/
