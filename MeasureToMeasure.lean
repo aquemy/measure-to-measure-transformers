@@ -19,6 +19,7 @@ import MeasureToMeasure.Foundations.SphereMeasureBridge
 import MeasureToMeasure.Foundations.WassersteinFinite
 import MeasureToMeasure.Foundations.WassersteinMap
 import MeasureToMeasure.Foundations.WassersteinTV
+import MeasureToMeasure.Foundations.SphereCover
 import MeasureToMeasure.Foundations.SphereProbMetric
 import MeasureToMeasure.Foundations.SphereW1Weak
 import MeasureToMeasure.Foundations.BallProjection
