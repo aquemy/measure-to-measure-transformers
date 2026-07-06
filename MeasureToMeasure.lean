@@ -15,6 +15,7 @@ import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttentionEstimates
 import MeasureToMeasure.Foundations.MeanFieldWellPosed
 import MeasureToMeasure.Foundations.SphereMeasureCompletion
+import MeasureToMeasure.Foundations.SphereMeasureBridge
 import MeasureToMeasure.Foundations.BallProjection
 import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
