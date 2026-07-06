@@ -17,6 +17,7 @@ import MeasureToMeasure.Foundations.MeanFieldWellPosed
 import MeasureToMeasure.Foundations.SphereMeasureCompletion
 import MeasureToMeasure.Foundations.SphereMeasureBridge
 import MeasureToMeasure.Foundations.WassersteinFinite
+import MeasureToMeasure.Foundations.SphereProbMetric
 import MeasureToMeasure.Foundations.BallProjection
 import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
