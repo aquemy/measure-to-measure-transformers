@@ -36,7 +36,8 @@ sphere (`‖x‖ = 1`) this is `0`, i.e. `P_x^⊥ w` is tangent; off the sphere 
 drift that the Grönwall argument controls. -/
 theorem inner_tangentialProjector_left (x w : Eucl d) :
     ⟪x, tangentialProjector x w⟫ = ⟪x, w⟫ * (1 - ‖x‖ ^ 2) := by
-  simp only [tangentialProjector, inner_sub_right, inner_smul_right, real_inner_self_eq_norm_sq]
+  simp only [tangentialProjector_apply, inner_sub_right, inner_smul_right,
+    real_inner_self_eq_norm_sq]
   ring
 
 /-- The derivative of `t ↦ ‖x t‖² - 1` along an integral curve is `2 ⟪x t, v t⟫`. -/

@@ -41,7 +41,7 @@ gradient. -/
 theorem inner_eq_inner_tangentialProjector {x ω x' : Eucl d}
     (htangent : (⟪x', x⟫ : ℝ) = 0) :
     (⟪x', ω⟫ : ℝ) = ⟪x', tangentialProjector x ω⟫ := by
-  rw [tangentialProjector, inner_sub_right, real_inner_smul_right, htangent]
+  rw [tangentialProjector_apply, inner_sub_right, real_inner_smul_right, htangent]
   ring
 
 end MeasureToMeasure.Leaves

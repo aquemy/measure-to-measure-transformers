@@ -243,7 +243,7 @@ theorem tangentialProjector_norm_le {ω : Eucl d} (hω : ‖ω‖ = 1) {x : Eucl
     ‖tangentialProjector x ω‖ ≤ 5 := by
   have hcs : |⟪x, ω⟫| ≤ ‖x‖ * ‖ω‖ := abs_real_inner_le_norm x ω
   have h1 : ‖tangentialProjector x ω‖ ≤ ‖ω‖ + |⟪x, ω⟫| * ‖x‖ := by
-    rw [tangentialProjector]
+    rw [tangentialProjector_apply]
     calc ‖ω - ⟪x, ω⟫ • x‖ ≤ ‖ω‖ + ‖⟪x, ω⟫ • x‖ := norm_sub_le _ _
       _ = ‖ω‖ + |⟪x, ω⟫| * ‖x‖ := by rw [norm_smul, Real.norm_eq_abs]
   rw [hω] at hcs h1
@@ -258,7 +258,7 @@ theorem tangentialProjector_lipschitz_onBall {ω : Eucl d} (hω : ‖ω‖ = 1)
     ‖tangentialProjector x ω - tangentialProjector y ω‖ ≤ 4 * ‖x - y‖ := by
   have hexp : tangentialProjector x ω - tangentialProjector y ω
       = ⟪y, ω⟫ • (y - x) + ⟪y - x, ω⟫ • x := by
-    simp only [tangentialProjector, inner_sub_left]; module
+    simp only [tangentialProjector_apply, inner_sub_left]; module
   have hcy : |⟪y, ω⟫| ≤ 2 :=
     (abs_real_inner_le_norm y ω).trans (by rw [hω, mul_one]; exact hy)
   have hcd : |⟪y - x, ω⟫| ≤ ‖x - y‖ :=
@@ -315,7 +315,7 @@ noncomputable def gatedGate (z ω : Eucl d) (cosR : ℝ) (x : Eucl d) : ℝ :=
 computation (`⟪x, P_x^⊥ ω⟫ = ⟪x,ω⟫(1 - ‖x‖²)`). This makes the flow preserve the unit sphere. -/
 theorem gatedField_radial (z ω : Eucl d) (cosR : ℝ) (x : Eucl d) :
     ⟪x, gatedField z ω cosR x⟫ = gatedGate z ω cosR x * (‖x‖ ^ 2 - 1) := by
-  rw [gatedField, gatedGate, real_inner_smul_right, tangentialProjector, inner_sub_right,
+  rw [gatedField, gatedGate, real_inner_smul_right, tangentialProjector_apply, inner_sub_right,
     real_inner_smul_right, real_inner_self_eq_norm_sq]
   ring
 

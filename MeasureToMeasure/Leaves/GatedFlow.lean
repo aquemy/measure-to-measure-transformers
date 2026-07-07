@@ -84,7 +84,7 @@ theorem gatedField_pole_eq_zero {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : 
 theorem gatedField_neg_pole_eq_zero {z ω : Eucl d} (hω : ω ∈ sphere d) (cosR : ℝ) :
     gatedField z ω cosR (-ω) = 0 := by
   have hproj : tangentialProjector (-ω) ω = 0 := by
-    rw [tangentialProjector, inner_neg_left, inner_self_eq_one_of_mem_sphere hω]; module
+    rw [tangentialProjector_apply, inner_neg_left, inner_self_eq_one_of_mem_sphere hω]; module
   rw [gatedField, hproj, smul_zero]
 
 /-- The flow from `x ≠ ω` never reaches the pole `ω` (uniqueness: `ω` is fixed, and `blockFlow t` is
