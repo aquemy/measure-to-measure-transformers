@@ -8,12 +8,13 @@ Layer normalization in the Transformer continuity equation (1.2)-(1.3) projects 
 field onto the tangent space `T_x 𝕊^{d-1}`. For a unit vector `x`, the orthogonal projector onto
 `{x}^⊥` is `P_x^⊥ = I_d - x xᵀ`, i.e. `P_x^⊥ v = v - ⟪x, v⟫ x`.
 
-This file defines `tangentialProjector` and records the algebraic identities used throughout
-(`L1` in the project ledger): symmetry, idempotence, that it annihilates `x`, and the key
-quadratic identity `⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²` for `‖x‖ = 1`, which drives the gate ODE
-(B.5) and the barycenter ODE (B.9). The proofs delegate to the generic versions in
-`ForMathlib.TangentialProjector` (namespace `InnerProductGeometry`), which state the same facts
-for an arbitrary real inner product space; the definitions coincide definitionally.
+This file specializes `tangentialProjector` to `Eucl d` (an `abbrev` for
+`InnerProductGeometry.tangentialProjector`, not a re-declared def -- there is exactly one definition)
+and records the algebraic identities used throughout (`L1` in the project ledger): symmetry,
+idempotence, that it annihilates `x`, and the key quadratic identity `⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²`
+for `‖x‖ = 1`, which drives the gate ODE (B.5) and the barycenter ODE (B.9). The proofs delegate to
+the generic versions in `ForMathlib.TangentialProjector` (namespace `InnerProductGeometry`), which
+state the same facts for an arbitrary real inner product space.
 -/
 
 namespace MeasureToMeasure
@@ -22,9 +23,11 @@ open scoped RealInnerProductSpace
 
 variable {d : ℕ}
 
-/-- The tangential projector `P_x^⊥ v = v - ⟪x, v⟫ x`. For `‖x‖ = 1` this is the orthogonal
-projection onto the tangent space `{x}^⊥`. -/
-noncomputable def tangentialProjector (x v : Eucl d) : Eucl d := v - (⟪x, v⟫) • x
+/-- The tangential projector `P_x^⊥ v = v - ⟪x, v⟫ x` on `Eucl d`. For `‖x‖ = 1` this is the
+orthogonal projection onto the tangent space `{x}^⊥`. An `abbrev` for
+`InnerProductGeometry.tangentialProjector`, specialized to this file's ambient space. -/
+noncomputable abbrev tangentialProjector (x v : Eucl d) : Eucl d :=
+  InnerProductGeometry.tangentialProjector x v
 
 @[simp] theorem tangentialProjector_apply (x v : Eucl d) :
     tangentialProjector x v = v - (⟪x, v⟫) • x := rfl

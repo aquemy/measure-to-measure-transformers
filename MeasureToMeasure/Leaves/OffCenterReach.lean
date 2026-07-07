@@ -43,7 +43,7 @@ theorem hasDerivAt_inner_gate_gatedFlow {z ω : Eucl d} (hz : ‖z‖ = 1) (hω 
       = gateFactor z cosR (B.blockFlow t x)
         * ((⟪z, ω⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * ⟪z, B.blockFlow t x⟫) := by
     show (⟪z, gatedField z ω cosR (B.blockCurve x t)⟫ : ℝ) + ⟪(0 : Eucl d), B.blockCurve x t⟫ = _
-    rw [inner_zero_left, add_zero, gatedField, real_inner_smul_right, tangentialProjector,
+    rw [inner_zero_left, add_zero, gatedField, real_inner_smul_right, tangentialProjector_apply,
       inner_sub_right, real_inner_smul_right]
     rfl
   rw [hval] at h
