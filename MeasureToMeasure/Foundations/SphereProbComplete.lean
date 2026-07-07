@@ -18,6 +18,8 @@ subsequence `→ ν` (leaf S4a, Prokhorov compactness). Pushing forward by the i
 `tendsto_W1_of_tendsto` (the crux, leaf S3b) upgrades it to `W1 (f (φ k)).val (ofSub ν).val → 0`, i.e.
 the subsequence converges in `W₁`. A Cauchy sequence with a convergent subsequence converges
 (`tendsto_nhds_of_cauchySeq_of_subseq`), so the whole sequence tends to `ofSub ν`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Filter Topology

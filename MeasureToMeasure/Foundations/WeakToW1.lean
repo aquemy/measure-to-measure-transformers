@@ -25,6 +25,8 @@ The `W₁` triangle splits `W1(μs n, μ)` into three:
   which `→ 0` by `tendsto_residual_map_sel` (portmanteau on the continuity-set cells).
 
 Hence `W1(μs n, μ) ≤ 4δ + 2·(→0)`; choosing `4δ < ε` and taking `n` large gives `W1(μs n, μ) ≤ ε`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Set Filter Topology

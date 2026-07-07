@@ -18,6 +18,8 @@ metric distinguishing the measures — via the LP metric's own `T₀`), so the `
 the completeness transport are the following leaves (S3/S4). What this leaf fixes is the `W₁`
 **uniformity/topology** on `SphereProb d`, the object those leaves compare against the (complete)
 Lévy–Prokhorov uniformity banked in `SphereMeasureCompletion`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

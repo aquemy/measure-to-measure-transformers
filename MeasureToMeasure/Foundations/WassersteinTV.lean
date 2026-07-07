@@ -18,6 +18,8 @@ to `0`.
   `edist ≤ 2` a.e. — the product coupling costs `≤ 2·δ`.
 
 Mathlib has no optimal transport, so this is proved from the repo's bespoke `W₁`/`IsCoupling` layer.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

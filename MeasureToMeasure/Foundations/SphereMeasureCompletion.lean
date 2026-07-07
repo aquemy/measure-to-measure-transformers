@@ -28,6 +28,8 @@ topology, so the banked field moduli (`Foundations.MeanFieldWellPosed`) drive th
 
 `-- ForMathlib candidate:` the compact/complete packaging of `LevyProkhorov (ProbabilityMeasure X)`
 for a compact metric base `X` is generic (no dependence on the sphere).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

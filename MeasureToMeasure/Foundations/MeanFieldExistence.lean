@@ -33,6 +33,8 @@ sphere, `rawFieldBall_eq_rawField_of_norm_le_one`). This is the softmax+perceptr
 globally-Lipschitz field extension; the outer tangential projector `P_x^⊥` — quadratic in the base
 point, so still not globally Lipschitz — is localized by `normCutoff` when the `Block` is assembled
 (leaf E2a-3, via `GatedBlock.lipschitzWith_smul_of_vanishing`).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory
