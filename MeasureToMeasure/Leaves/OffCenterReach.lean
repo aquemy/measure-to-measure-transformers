@@ -25,30 +25,6 @@ open scoped RealInnerProductSpace
 
 variable {d : ℕ}
 
-/-- **The gate-coordinate ODE (non-self-centered).** Along the gated flow, the gate coordinate
-`v(t) = ⟪z, Φ_t x⟫` evolves as `v'(t) = gateFactor(Φ_t x)·(⟪z,ω⟫ − ⟪Φ_t x, ω⟫·⟪z, Φ_t x⟫)`. The
-derivative of `⟪z, ·⟫` (not the pole `ω`) along the flow whose drift points toward `ω`. -/
-theorem hasDerivAt_inner_gate_gatedFlow {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω‖ = 1) {cosR : ℝ}
-    (hcosR : -1 ≤ cosR) {T : ℝ} (hT : 0 ≤ T) {x : Eucl d} {t : ℝ} :
-    HasDerivAt (fun s => (⟪z, (gatedBlock hz hω hcosR hT).blockFlow s x⟫ : ℝ))
-      (gateFactor z cosR ((gatedBlock hz hω hcosR hT).blockFlow t x)
-        * ((⟪z, ω⟫ : ℝ) - ⟪(gatedBlock hz hω hcosR hT).blockFlow t x, ω⟫
-            * ⟪z, (gatedBlock hz hω hcosR hT).blockFlow t x⟫)) t := by
-  set B := gatedBlock hz hω hcosR hT with hB
-  have hcurve : HasDerivAt (B.blockCurve x) (B.field (B.blockCurve x t)) t :=
-    B.blockCurve_isIntegralCurve x t
-  have hconst : HasDerivAt (fun _ : ℝ => z) (0 : Eucl d) t := hasDerivAt_const t z
-  have h := hconst.inner ℝ hcurve
-  have hval : (⟪z, B.field (B.blockCurve x t)⟫ : ℝ) + ⟪(0 : Eucl d), B.blockCurve x t⟫
-      = gateFactor z cosR (B.blockFlow t x)
-        * ((⟪z, ω⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * ⟪z, B.blockFlow t x⟫) := by
-    show (⟪z, gatedField z ω cosR (B.blockCurve x t)⟫ : ℝ) + ⟪(0 : Eucl d), B.blockCurve x t⟫ = _
-    rw [inner_zero_left, add_zero, gatedField, real_inner_smul_right, tangentialProjector_apply,
-      inner_sub_right, real_inner_smul_right]
-    rfl
-  rw [hval] at h
-  exact h
-
 /-- **The gate barrier (non-self-centered).** If the pole `ω` sits strictly inside the closed sub-cap
 `{⟪z,·⟫ ≥ m}` (`m < ⟪z,ω⟫`, `cos R < m`, `0 ≤ cos R`) and `x` starts in it (`m ≤ ⟪z,x⟫`), the flow
 never leaves it: `m ≤ ⟪z, Φ_t x⟫` for all `t ∈ [0,T]`. Because `v = ⟪z,Φ⟫` has `v' ≥ 0` wherever
@@ -63,9 +39,23 @@ theorem inner_gate_gatedFlow_ge {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω�
   set B := gatedBlock hz hω hcosR hT with hB
   have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hω]
   set v : ℝ → ℝ := fun t => (⟪z, B.blockFlow t x⟫ : ℝ) with hv
+  -- The gate-coordinate ODE (non-self-centered): `v'(t) = gateFactor(Φ_t x)·(⟪z,ω⟫ − ⟪Φ_t x,ω⟫·v(t))`
+  -- (the derivative of `⟪z, ·⟫`, not the pole `ω`, along the flow whose drift points toward `ω`).
   have hderiv : ∀ t, HasDerivAt v
-      (gateFactor z cosR (B.blockFlow t x) * ((⟪z, ω⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * v t)) t :=
-    fun t => hasDerivAt_inner_gate_gatedFlow hz hω hcosR hT (x := x) (t := t)
+      (gateFactor z cosR (B.blockFlow t x) * ((⟪z, ω⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * v t)) t := by
+    intro t
+    have hcurve : HasDerivAt (B.blockCurve x) (B.field (B.blockCurve x t)) t :=
+      B.blockCurve_isIntegralCurve x t
+    have hconst : HasDerivAt (fun _ : ℝ => z) (0 : Eucl d) t := hasDerivAt_const t z
+    have h := hconst.inner ℝ hcurve
+    have hval : (⟪z, B.field (B.blockCurve x t)⟫ : ℝ) + ⟪(0 : Eucl d), B.blockCurve x t⟫
+        = gateFactor z cosR (B.blockFlow t x)
+          * ((⟪z, ω⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * v t) := by
+      show (⟪z, gatedField z ω cosR (B.blockCurve x t)⟫ : ℝ) + ⟪(0 : Eucl d), B.blockCurve x t⟫ = _
+      rw [inner_zero_left, add_zero, gatedField, real_inner_smul_right, tangentialProjector_apply,
+        inner_sub_right, real_inner_smul_right]
+      rfl
+    rwa [hval] at h
   have hcont : Continuous v := continuous_iff_continuousAt.mpr (fun t => (hderiv t).continuousAt)
   -- `v' ≥ 0` wherever `v ≤ m` (for `t ≥ 0`)
   have hnonneg : ∀ t, 0 ≤ t → v t ≤ m →
