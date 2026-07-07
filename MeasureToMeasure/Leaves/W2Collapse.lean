@@ -8,7 +8,7 @@ import MeasureToMeasure.Axioms.Dynamics
 
 The App. B.3 Part 1 collapse concentrates a probability measure `μ` onto the pole `ω = x*` with one
 self-centered gated block, up to a small `W₂` error. This leaf assembles that error bound from the
-two halves already banked plus the map-coupling axiom `Axioms.W2_map_le_L2`.
+two halves already banked plus the map-coupling theorem `Axioms.W2_map_le_L2`.
 
 Write `Φ = flowMap [gatedBlock …] T` for the single-block flow and
 `g = collapseMap ω cosR = {cosR < ⟪ω,·⟫}.piecewise (fun _ => ω) id` for the **exact** collapse (send

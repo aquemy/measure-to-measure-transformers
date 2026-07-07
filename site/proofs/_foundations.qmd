@@ -108,10 +108,11 @@ average $\mathscr A_{\mathbf B}$, and `AttnParams.field` assembles the projected
 mean-field flow is the predicate `IsMeanFieldFlow` (initial condition, measurability, Lipschitz
 regularity, sphere bijectivity, and the characteristic ODE against the *pushforward-evolved*
 measure), and schedules compose by list concatenation (`AttnSchedule`, `attnMeasureFlow`,
-`durationSum`, `switches` counting constant pieces). Exactly one axiom pair remains -- existence
-and uniqueness of the mean-field flow for sphere-supported probability data
-(`exists_meanFieldFlow`, `meanFieldFlow_unique`): McKean-Vlasov well-posedness on the sphere,
-the honest remaining M3 gap. Every measure-dependent statement of the paper is stated over this
+`durationSum`, `switches` counting constant pieces). Exactly one axiom remains -- existence
+of the mean-field flow for sphere-supported probability data (`exists_meanFieldFlow`):
+McKean-Vlasov well-posedness on the sphere, the honest remaining M3b gap. Its companion
+`meanFieldFlow_unique` (uniqueness) is now a machine-checked theorem, so what is left is purely
+the existence half. Every measure-dependent statement of the paper is stated over this
 layer; the linear `Block` flow hosts the paper's $\mathbf V\equiv0$ sections. The two layers are
 bridged, kernel-checked on the predicate side: `isMeanFieldFlow_blockFlow` shows a linear `Block`
 matching a $\mathbf V = 0$ attention field on the sphere satisfies the mean-field predicate, and

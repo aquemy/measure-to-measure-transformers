@@ -195,3 +195,30 @@
 | 193 | 2026-07-05 | `formalize` | formalize(leaves): distinct measures force 2 ≤ d (Lemma 3.4 Part 1) | `leaves` |
 | 194 | 2026-07-05 | `formalize` | formalize(leaves): grand-assembly infrastructure — block stacking, pole geometry, W₂ gap (Lemma 3.4 Part 1) | `leaves` |
 | 195 | 2026-07-05 | `formalize` | formalize(statements): discharge lemma_3_4_part1 via the mass-gap cap collapse (App. B.3, 11→10) | `statements` |
+| 196 | 2026-07-05 | `docs` | docs(site): refresh for lemma_3_4_part1 discharge (11 → 10 axioms) | `site` |
+| 197 | 2026-07-06 | `formalize` | formalize~(foundations): P(sphere) is a compact, complete metric space (M3b existence, leaf E1) | `MeasureToMeasure.instCompleteSpaceLevyProkhorovSphere` |
+| 198 | 2026-07-06 | `formalize` | formalize~(foundations): frozen-field tangency + sphere bound for mean-field existence (M3b, leaf E2-groundwork) | `MeasureToMeasure.Foundations.norm_rawField_le_onSphere` |
+| 199 | 2026-07-06 | `formalize` | formalize~(foundations): radial retraction onto the closed unit ball is 1-Lipschitz (M3b existence, leaf E2a-1) | `MeasureToMeasure.lipschitzWith_ballProj` |
+| 200 | 2026-07-06 | `formalize` | formalize~(foundations): ball-tamed raw attention field is globally bounded + Lipschitz (M3b existence, leaf E2a-2) | `MeasureToMeasure.Foundations.norm_rawFieldBall_sub_le` |
+| 201 | 2026-07-06 | `formalize` | formalize~(foundations): tangential projector with a varying argument is bounded + Lipschitz on the ball (M3b existence, leaf E2a-3) | `MeasureToMeasure.norm_tangentialProjector_comp_sub_le_onBall` |
+| 202 | 2026-07-06 | `formalize` | formalize~(foundations): the frozen attention field is a genuine well-posed Block (M3b existence, leaf E2a-4) | `MeasureToMeasure.Foundations.frozenBlock` |
+| 203 | 2026-07-06 | `formalize` | formalize~(foundations): the frozen-field characteristic flow, solving the mean-field ODE on the sphere (M3b existence, leaf E2b) | `MeasureToMeasure.Foundations.frozenFlow_hasDerivAt_field` |
+| 204 | 2026-07-06 | `ci` | ci: cross-check blueprint declarations with leanblueprint checkdecls | -- |
+| 205 | 2026-07-06 | `fix` | fix(ci): commit blueprint/lean_decls instead of regenerating it in CI | `ci` |
+| 206 | 2026-07-06 | `formalize` | formalize~(foundations): the sphere subtype-measure bridge (M3b existence, leaf S1) | `MeasureToMeasure.sphereProbEquiv` |
+| 207 | 2026-07-06 | `formalize` | formalize~(foundations): W1 is finite on sphere-supported probability measures (M3b existence, leaf S2a) | `MeasureToMeasure.W1_ne_top_of_sphere_supported` |
+| 208 | 2026-07-06 | `formalize` | formalize~(foundations): the W1 pseudometric on sphere-supported probability measures (M3b existence, leaf S2) | `MeasureToMeasure.instPseudoMetricSpaceSphereProb` |
+| 209 | 2026-07-06 | `formalize` | formalize~(foundations): Kantorovich-Rubinstein estimate on SphereProb, the easy W1->weak direction (M3b existence, leaf S3a) | `MeasureToMeasure.SphereProb.abs_integral_sub_le_dist` |
+| 210 | 2026-07-06 | `formalize` | formalize~(foundations): W1 map-coupling and mixture tools, the primal upper-bound layer (M3b existence, leaf S3b-i) | `MeasureToMeasure.W1_map_le` |
+| 211 | 2026-07-06 | `formalize` | formalize~(foundations): W₁ rounding-approximation bound (M3b existence, leaf S3b-ii) | `MeasureToMeasure.W1_map_le_of_ae_edist_le` |
+| 212 | 2026-07-06 | `formalize` | formalize~(foundations): W₁ ≤ 2·TV on the sphere via the min-coupling (M3b existence, leaf S3b-iii) | `MeasureToMeasure.W1_le_two_mul_tv` |
+| 213 | 2026-07-06 | `formalize` | formalize~(foundations): finite μ-null-frontier ball cover of the sphere (M3b existence, leaf S3b-iv-cover) | `MeasureToMeasure.exists_finite_null_frontier_ball_cover` |
+| 214 | 2026-07-06 | `formalize` | formalize~(foundations): measurable finite ε-rounding of the sphere (M3b existence, leaf S3b-iv-round) | `MeasureToMeasure.exists_finite_rounding` |
+| 215 | 2026-07-06 | `formalize` | formalize~(foundations): discrete total-variation lower bound (M3b existence, leaf S3b-iv-tv) | `MeasureToMeasure.sum_min_le_inf_univ` |
+| 216 | 2026-07-06 | `formalize` | formalize~(foundations): pushforward contracts total variation (M3b existence, leaf S3b-iv-tvmap) | `MeasureToMeasure.tv_map_le` |
+| 217 | 2026-07-06 | `formalize` | formalize~(foundations): expose sel + cell null-frontiers in the rounding map (M3b existence, leaf S3b-iv-round-sel) | `MeasureToMeasure.exists_finite_rounding` |
+| 218 | 2026-07-06 | `formalize` | formalize~(foundations): cell total variation → 0 under weak convergence (M3b existence, leaf S3b-iv-glue-tv) | `MeasureToMeasure.tendsto_residual_map_sel` |
+| 219 | 2026-07-06 | `formalize` | formalize~(foundations): weak convergence ⇒ W₁ convergence on the sphere — the crux (M3b existence, leaf S3b-iv-glue) | `MeasureToMeasure.tendsto_W1_of_tendsto` |
+| 220 | 2026-07-06 | `formalize` | formalize~(foundations): probability measures on the sphere are sequentially compact (M3b existence, leaf S4a) | `MeasureToMeasure.exists_subseq_tendsto_probabilityMeasure_sphere` |
+| 221 | 2026-07-06 | `formalize` | formalize~(foundations): the W₁ space of sphere-supported probabilities is complete (M3b existence, leaf S4) | `MeasureToMeasure.instCompleteSpaceSphereProb` |
+| 222 | 2026-07-07 | `chore` | chore(claims): reconcile stale claims.toml status against the kernel (D1-D3, D9) | `claims` |

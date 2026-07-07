@@ -194,7 +194,7 @@ of the horizon (`exists_disentangling_balls`, used directly for its per-member f
 disentangled measure `ν i = (μ₀ i).map Φᵢ` is then matchable to `μ₁ i` by `S = Ti ∘ Φᵢ⁻¹` (the
 on-sphere inverse the axiom provides, mirroring the paper's `ψ^i = T^i ∘ (T^i_{Φ₁})⁻¹`);
 approximate that transport map by a flow over the second half (`lemma_5_4`) and bound `W₂` by the
-`L²` map distance (the coupling axiom L7, `W2_map_le_L2`); finally park the per-member schedules
+`L²` map distance (the coupling theorem L7, `W2_map_le_L2`); finally park the per-member schedules
 into one (`exists_parked_schedule`) and concatenate with the disentangler. Effective status
 `math.axiomatised`; the `W₂` bookkeeping is machine-checked.
 

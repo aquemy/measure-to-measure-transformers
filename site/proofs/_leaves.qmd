@@ -553,18 +553,18 @@ $$\mathsf W_2^2\bigl(T^1_\#\mu,\,T^2_\#\mu\bigr)\lesssim\int\|x-\psi(x)\|^2(T^1_
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 This is the map-induced coupling bound. Since $T^1$ is bijective there is $\psi$ with $\psi\circ T^1=T^2$, and the
 deterministic coupling $(\mathrm{id},\psi)_\#(T^1_\#\mu)$ between the two pushforwards realizes transport cost
 $\int\|x-\psi(x)\|^2\,\mathrm d(T^1_\#\mu)=\|T^1-T^2\|_{L^2(\mu)}^2$, bounding $\mathsf W_2^2$. Mathlib `v4.31.0` has
-no $W_2$, so the Lean statement is asserted over the labeled optimal-transport axiom `W2_map_le_L2`; the node is
-therefore **axiomatised**, not a kernel proof. Its effective status is the minimum over its dependency closure, which
-contains the $W_2$ axiom.
+no $W_2$, so it was built from scratch (the coupling development in `Foundations/Wasserstein`): `W2_map_le_L2` is now
+a **proved theorem**, discharged from the map coupling $(T^1,T^2)_\#\mu$ over the ENNReal Kantorovich cost, so this
+node is a clean kernel proof.
 
 ```lean
 /-- L7 (Lemma 5.2): the `W₂` distance between two pushforwards of `μ` is bounded by the `L²(μ)`
-distance of the maps. Rests on the optimal-transport axiom `W2_map_le_L2`. -/
+distance of the maps. Machine-checked via the proved theorem `W2_map_le_L2`. -/
 theorem lemma_5_2 (μ : Measure (Eucl d)) (T₁ T₂ : Eucl d → Eucl d) :
     W2 (μ.map T₁) (μ.map T₂) ≤ Real.sqrt (∫ x, ‖T₁ x - T₂ x‖ ^ 2 ∂μ) :=
   W2_map_le_L2 μ T₁ T₂
@@ -590,7 +590,7 @@ $$g(x)=\begin{cases}1 & x\in B(x,\eta_3)\\[2pt] 1-\dfrac{1-\eta_3}{\eta_3} & x\i
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 We take the cleaner truncated-distance bump $f(x)=\min(\eta_3,\ d(x,x_0))$ in place of the paper's hat. It is
 **machine-checked $1$-Lipschitz** — `distBump_lipschitz`, obtained by truncating the $1$-Lipschitz distance through
@@ -599,8 +599,9 @@ the map $t\mapsto\min(\eta_3,t)$ and routed through the `dist`-characterization 
 $\eta_3\cdot\mathbf 1_{\{d(\cdot,x_0)\ge\eta_3\}}$. Hence
 $\eta_3\,\mu\{d(\cdot,x_0)\ge\eta_3\}\le\int f\,\mathrm d\mu=\int f\,\mathrm d\mu-f(x_0)\le\mathsf W_1(\mu,\delta_{x_0})\le C\eta_2$,
 and since $\{\eta_3\le d(\cdot,x_0)\}=B(x_0,\eta_3)^c$ this is $1-\mu(B(x_0,\eta_3))\le C\eta_2/\eta_3$ for a
-probability measure. The Lipschitz bound is kernel-checked, but the middle inequality is Kantorovich-Rubinstein
-duality, supplied here by the labeled $W_1$ axiom `W1_ge_of_lipschitz`; so the node as a whole is **axiomatised**.
+probability measure. The middle inequality is Kantorovich-Rubinstein duality, which was supplied by a labeled
+$W_1$ axiom but is **now the proved theorem** `ofReal_integral_sub_le_W1` (from the from-scratch $W_1$ coupling
+development); the node as a whole is a clean kernel proof.
 
 ```lean
 /-- The truncated-distance bump `f(x) = min(η₃, d(x, x₀))`. -/

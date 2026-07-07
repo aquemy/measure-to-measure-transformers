@@ -13,7 +13,7 @@ cap's mass onto a separate pole `ω`, up to a small `W₂` error. The exact targ
 `μ.map (capCollapseMap z ω cos R)`.
 
 Writing `Φ = flowMap [gatedBlock hz hω …] T` and `g = capCollapseMap z ω cos R`, the map-coupling
-axiom `Axioms.W2_map_le_L2` (with `measureFlow θ T μ = μ.map Φ`) gives
+theorem `Axioms.W2_map_le_L2` (with `measureFlow θ T μ = μ.map Φ`) gives
 `W₂(measureFlow θ T μ, μ.map g) ≤ √(∫ ‖Φ x − g x‖² dμ)`, and the displacement is controlled a.e.:
 
 * **off the cap** (`⟪z,x⟫ ≤ cos R`): `Φ x = x = g x` (L2 `flowMap_gatedBlock_id_of_inner_le`, general

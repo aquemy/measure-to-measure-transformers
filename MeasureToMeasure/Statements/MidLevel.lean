@@ -509,8 +509,8 @@ theorem lemma_B_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (_hd : 2 ≤
 /-- **Lemma B.1** (ball-chain retention). For a chain of `K+1` consecutively overlapping balls, `K`
 switches retain a `(1-ε)^K` fraction of the mass initially in `ℬ₀` into the last ball `ℬ_K`.
 
-**Proved** (`math.axiomatised`, the only axioms are `lemma_B_2` and the structural flow algebra): a
-genuine induction on `K`. The base case is the identity schedule (`idParams`); each step composes a
+**Proved** (`math.machine-checked`: rests on the proved theorem `lemma_B_2` and the structural flow
+algebra, no remaining axiom): a genuine induction on `K`. The base case is the identity schedule (`idParams`); each step composes a
 single-ball `lemma_B_2` transport via `comp`, using `measureFlow_comp` to carry the previous mass
 forward, `measure_mono` to pass from `ℬ_k ∩ ℬ_{k+1}` to `ℬ_{k+1}`, and `switches_comp` for the budget.
 

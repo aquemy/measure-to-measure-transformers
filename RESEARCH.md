@@ -60,17 +60,22 @@
 | 2026-07-04 | F: prove (M5 complete) | Section 3.3 disentanglement geometry machine-checked | Strict spherical caps are geodesically convex (`geodesicConvex_inner_cap`), ball-to-cap polarization bridges (`inner_cap_of_mem_ball`, `dist_le_of_inner_cap`), cap disjointness from `2r`-separation, and the two separation transfers: `geodesicHull_disjoint_of_separated_balls` (hulls of clusters in `2r`-separated `r`-balls are disjoint) and `barycenter_not_sameRay_of_separated_balls` (their barycenters are non-colinear; strict via the a.e. argument `inner_barycenter_gt`, normalization controlled by `norm_barycenter_le_one`). The geometry the paper uses without proof on p. 17 ('shrunk until achieving the separation') is now kernel-checked; `exists_disentangling_balls` owes only mean-field dynamics (M3b) and the family/fixing-clause composition (M8b path) |
 
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
-Of the 30 blueprint nodes: **13 clean** (machine-checked), **17 axiom** (rest on a labeled axiom).
-No node is `sorryAx` (zero `sorry` repo-wide). Representative:
+The `Axioms/` layer (`W2`, `W1`, `measureFlow`, `flowMap`) is now concrete definitions with proved
+properties, and many former mid-level axioms have been discharged. As of the M3b-existence Wasserstein
+sub-campaign (PRs #126-141, `main` at `f54a228`+), the **axiom inventory is 10**, all traceable to
+`exists_meanFieldFlow` plus the eight `Statements/` mid-level axioms below. No node is `sorryAx` (zero
+`sorry` repo-wide). Regenerate the exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`).
+Representative:
 
 | Node (`\lean{}` name) | Status | Notes |
 | --- | --- | --- |
-| `MeasureToMeasure.Leaves.*` (L1-L6, L8, L9, L10, L11, L11′) | clean | the self-contained leaf cores; L8 `markov_bound` machine-checked since the `W₁` discharge |
-| `MeasureToMeasure.Axioms.W2` | axiom | opaque `W₂` (Mathlib has no OT) |
-| `MeasureToMeasure.Axioms.measureFlow` / `flowMap` | axiom | continuity-equation flow (no Mathlib solver) |
-| `MeasureToMeasure.Leaves.lemma_5_2` (L7) | axiom | rests on `W2` / `W2_map_le_L2` |
-| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_2,3_3,3_4,prop_4_2,lemma_5_1,5_4,lemma_B_2}` | axiom | placeholder mid-level axioms |
-| `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_2_2,prop_3_1,prop_4_1,lemma_B_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
+| `MeasureToMeasure.Leaves.*` (L1-L11′) | clean | the self-contained leaf cores; L7 `lemma_5_2` and L8 `markov_bound` machine-checked since the `W₂`/`W₁` discharge |
+| `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
+| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse) |
+| `MeasureToMeasure.Foundations.meanFieldFlow_unique` | clean | McKean-Vlasov uniqueness discharged (F20, PR #98); only `exists_meanFieldFlow` remains on that side |
+| `MeasureToMeasure.Foundations.exists_meanFieldFlow` | **axiom** | mean-field existence (M3b); the Wasserstein-completeness substrate is now banked (PRs #126-141) |
+| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,lemma_3_4_part2,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining nine mid-level axioms |
+| `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
 **Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
 the CKC history but *absent from* `blueprint/src/content.tex`. The 12 curated foundation results tracked
@@ -668,6 +673,21 @@ there by `sphere_bijOn`) closes the pointwise equality everywhere. The two bridg
 (`attnStep_eq_map_blockFlow`, `attnMeasureFlow_singleton_eq_map_blockFlow`) moved to
 `MeanFieldWellPosed.lean` (downstream of the theorem). Only `exists_meanFieldFlow` (existence) remains
 axiomatic on the mean-field side.
+
+**DISCHARGED (2026-07-05, inventory 11 → 10).** `lemma_3_4_part1` (App. B.3 Part 1: two measures made
+non-colinear, on the *linear* layer) is now a kernel-clean **theorem**
+(`MeasureToMeasure.Statements.lemma_3_4_part1`, PR #116), via a mass-gap cap-collapse: block-stacking
+gives the "large `T`" regime honestly, `2 ≤ d` is derived from `μ ≠ ν`, and the `_hbar`
+(equal-barycenter) / `_hd` hypotheses are retained only for paper-statement fidelity (unused in the
+proof). This took the statement-layer axiom inventory from 11 to **10**, the current count.
+
+**M3b-existence Wasserstein substrate (2026-07-05/06, no count change — infrastructure).** The
+completeness the McKean-Vlasov Picard fixed point needs is now banked kernel-clean (PRs #126-141):
+the `SphereProb`↔`ProbabilityMeasure ↥sphere` bridge (S1), the `W₁` finiteness + pseudometric on
+sphere-supported probabilities (S2), the `weak ⇒ W₁` crux via an elementary cell-rounding coupling
+(S3b, Mathlib has no optimal transport), and `CompleteSpace (SphereProb d)` (S4). These do not change
+the axiom count (they are staging toward discharging `exists_meanFieldFlow`); see
+`exists-meanfieldflow-campaign` in the project memory.
 
 ### Verdict
 
