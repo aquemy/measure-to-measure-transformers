@@ -36,9 +36,11 @@ variable {d : ℕ}
 finite `W₂` cost), then that same `θ` drives the mixture `∑ αₖ • Pₖ` `W₂`-within `ε` of the discrete
 measure `∑ αₖ • δ_{x k}`. Pure consequence of the linear flow's distributivity
 (`measureFlow_sum_smul`) and mixture-convexity of `W₂` (`W2_convexCombo_le`); the schedule, the
-switch budget, and the per-piece transport are supplied by the caller. -/
+switch budget, and the per-piece transport are supplied by the caller. `_hP` is retained for
+statement fidelity to the paper's probability-mixture setting, even though neither consequence needs
+it (both are unconditional pushforward/gluing facts). -/
 theorem measureFlow_W2_discrete_of_perPiece {M : ℕ} (θ : Params d) (T : ℝ)
-    (P : Fin M → Measure (Eucl d)) (hP : ∀ k, IsProbabilityMeasure (P k))
+    (P : Fin M → Measure (Eucl d)) (_hP : ∀ k, IsProbabilityMeasure (P k))
     (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (x : Fin M → Eucl d) {ε : ℝ} (hε : 0 ≤ ε)
     (hfin : ∀ k, MeasureToMeasure.W2 (measureFlow θ T (P k)) (Measure.dirac (x k)) ≠ ⊤)
@@ -46,10 +48,7 @@ theorem measureFlow_W2_discrete_of_perPiece {M : ℕ} (θ : Params d) (T : ℝ)
     Axioms.W2 (measureFlow θ T (∑ k, α k • P k))
         (∑ k, α k • Measure.dirac (x k)) ≤ ε := by
   rw [measureFlow_sum_smul]
-  refine Axioms.W2_convexCombo_le α (fun k => measureFlow θ T (P k)) (fun k => Measure.dirac (x k))
-    hα ε hε (fun k => ?_) (fun k => ?_) hfin hpiece
-  · haveI := hP k
-    exact isProbabilityMeasure_measureFlow θ T (P k)
-  · infer_instance
+  exact Axioms.W2_convexCombo_le α (fun k => measureFlow θ T (P k)) (fun k => Measure.dirac (x k))
+    hα ε hε hfin hpiece
 
 end MeasureToMeasure.Leaves

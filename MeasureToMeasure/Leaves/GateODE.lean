@@ -27,10 +27,12 @@ open MeasureToMeasure
 variable {d : ℕ}
 
 /-- L2 (algebra of B.5): for unit `x` and unit `ω`, projecting the scaled drift `g•ω` and pairing
-with `ω` gives the logistic factor `g(1 - ⟪x,ω⟫²)`. -/
-theorem gate_inner_identity {x ω : Eucl d} (hx : x ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ) :
+with `ω` gives the logistic factor `g(1 - ⟪x,ω⟫²)`. `_hx` is retained for statement fidelity to the
+paper's "unit `x`" hypothesis, even though `projector_inner_sub_sq` no longer needs it (the identity
+is unconditional). -/
+theorem gate_inner_identity {x ω : Eucl d} (_hx : x ∈ sphere d) (hω : ω ∈ sphere d) (g : ℝ) :
     ⟪tangentialProjector x (g • ω), ω⟫ = g * (1 - ⟪x, ω⟫ ^ 2) := by
-  rw [tangentialProjector_smul, real_inner_smul_left, projector_inner_sub_sq hx ω,
+  rw [tangentialProjector_smul, real_inner_smul_left, projector_inner_sub_sq x ω,
     norm_eq_one_of_mem_sphere hω, one_pow]
 
 /-- L2 (the gate ODE B.5): along a path `x(t)` on the sphere whose velocity is the projected gated
