@@ -6,3 +6,4 @@ import ForMathlib.UnitSphereGeodesic
 import ForMathlib.SeparatingHyperplane
 import ForMathlib.BallProjection
 import ForMathlib.AtomlessSplitting
+import ForMathlib.DiscreteTV
