@@ -26,7 +26,7 @@ Readiness checklist (see the `lean-math:mathlib-ready` skill and its
 ## Staged
 
 The first four files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]`;
-all six are `#print axioms`-clean.
+all seven are `#print axioms`-clean.
 
 | File / declaration | Statement | Imports | Readiness |
 | --- | --- | --- | --- |
@@ -36,6 +36,7 @@ all six are `#print axioms`-clean.
 | `BallProjection.lean` -- `ballProj` (+ `_eq_self`, `norm_ballProj_le`, `ballProj_variational`, `lipschitzWith_ballProj`) | The metric projection `ballProj x = (‖x‖ ⊔ 1)⁻¹ • x` onto the closed unit ball: identity inside, radial retraction outside; its variational inequality and `1`-Lipschitz nonexpansiveness (firm nonexpansiveness + Cauchy-Schwarz) | `Mathlib.Analysis.InnerProductSpace.Basic`, `Mathlib.Topology.MetricSpace.Lipschitz` | ready; genuine Mathlib gap (only the subspace orthogonal projection exists, not the closed-ball metric projection) |
 | `AtomlessSplitting.lean` (namespace `MeasureTheory`) -- `exists_measurableSet_subset_measure_eq_real` / `_eq` (Sierpiński IVT, real line + standard Borel space), `exists_disjoint_subset_measure_eq`, `exists_probability_decomposition` | Sierpiński's intermediate-value theorem for nonatomic measures (the range of `μ` on measurable subsets of `E` is `[0, μ E]`) and its consequences: prescribed-mass disjoint partitions, probability-measure decompositions | `Mathlib.MeasureTheory.Measure.Typeclasses.NoAtoms`, `.Restrict`, `.Dirac`, `Mathlib.MeasureTheory.Constructions.Polish.{Basic,EmbeddingReal}`, `Mathlib.MeasureTheory.Integral.{DominatedConvergence,Bochner.Set}`, `Mathlib.Algebra.BigOperators.Fin`, `Mathlib.Data.Fin.Tuple.Basic` | ready; classical named theorem (Sierpiński 1922) absent from Mathlib; needs `[StandardBorelSpace X]`, not bare `NoAtoms` (documented countable-cocountable counterexample) |
 | `DiscreteTV.lean` (namespace `MeasureTheory.Measure`) -- `sum_min_le_inf_univ`, `tv_map_le` | Total-variation facts for the residual mass `(μ − μ ⊓ ν)(univ)`: a discrete lower bound on a finite measurable-singleton space, and that pushforward by a measurable map contracts it | `Mathlib.MeasureTheory.Measure.Dirac`, `Mathlib.MeasureTheory.Measure.Sub` | ready; fully generic, no project dependency |
+| `Pigeonhole.lean` (namespace `Metric`) -- `exists_ne_in_ball` | A nonempty open ball in a nontrivial normed space contains a point distinct from any prescribed `a`: no map can be forced to a single value on it | `Mathlib.Analysis.Normed.Module.Basic` | ready; fully generic, small and self-contained |
 
 ## Candidates under evaluation (not staged)
 

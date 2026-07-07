@@ -7,3 +7,4 @@ import ForMathlib.SeparatingHyperplane
 import ForMathlib.BallProjection
 import ForMathlib.AtomlessSplitting
 import ForMathlib.DiscreteTV
+import ForMathlib.Pigeonhole
