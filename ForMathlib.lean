@@ -5,3 +5,4 @@ import ForMathlib.TangentialProjector
 import ForMathlib.UnitSphereGeodesic
 import ForMathlib.SeparatingHyperplane
 import ForMathlib.BallProjection
+import ForMathlib.AtomlessSplitting

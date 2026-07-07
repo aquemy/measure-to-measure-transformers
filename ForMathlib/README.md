@@ -25,8 +25,8 @@ Readiness checklist (see the `lean-math:mathlib-ready` skill and its
 
 ## Staged
 
-All four files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]` and are
-`#print axioms`-clean.
+The first four files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]`;
+all five are `#print axioms`-clean.
 
 | File / declaration | Statement | Imports | Readiness |
 | --- | --- | --- | --- |
@@ -34,6 +34,7 @@ All four files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSp
 | `UnitSphereGeodesic.lean` -- `InnerProductGeometry.{inner_le_one_of_norm_eq_one, neg_one_le_inner_of_norm_eq_one, angle_eq_arccos_inner_of_norm_eq_one, cos_angle_of_norm_eq_one}` | On the unit sphere the paper's `arccos⟪x,y⟫` **is** Mathlib's `InnerProductGeometry.angle`; plus the Cauchy-Schwarz bounds `⟪x,y⟫ ∈ [-1,1]` | `Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic` | ready; reuses `angle`, does not shadow it |
 | `SeparatingHyperplane.lean` -- `InnerProductGeometry.inner_lt_cos_of_lt_angle` | `0 ≤ θ`, `θ < angle ω x` ⟹ `⟪ω,x⟫ < cos θ` for unit vectors (cosine strictly antitone on `[0,π]`); the paper-constant specialization (`θ = π/8 + τ`) lives in `MeasureToMeasure/Leaves/SeparatingHyperplane.lean` | `ForMathlib.UnitSphereGeodesic` | ready; constant-free threshold form |
 | `BallProjection.lean` -- `ballProj` (+ `_eq_self`, `norm_ballProj_le`, `ballProj_variational`, `lipschitzWith_ballProj`) | The metric projection `ballProj x = (‖x‖ ⊔ 1)⁻¹ • x` onto the closed unit ball: identity inside, radial retraction outside; its variational inequality and `1`-Lipschitz nonexpansiveness (firm nonexpansiveness + Cauchy-Schwarz) | `Mathlib.Analysis.InnerProductSpace.Basic`, `Mathlib.Topology.MetricSpace.Lipschitz` | ready; genuine Mathlib gap (only the subspace orthogonal projection exists, not the closed-ball metric projection) |
+| `AtomlessSplitting.lean` (namespace `MeasureTheory`) -- `exists_measurableSet_subset_measure_eq_real` / `_eq` (Sierpiński IVT, real line + standard Borel space), `exists_disjoint_subset_measure_eq`, `exists_probability_decomposition` | Sierpiński's intermediate-value theorem for nonatomic measures (the range of `μ` on measurable subsets of `E` is `[0, μ E]`) and its consequences: prescribed-mass disjoint partitions, probability-measure decompositions | `Mathlib.MeasureTheory.Measure.Typeclasses.NoAtoms`, `.Restrict`, `.Dirac`, `Mathlib.MeasureTheory.Constructions.Polish.{Basic,EmbeddingReal}`, `Mathlib.MeasureTheory.Integral.{DominatedConvergence,Bochner.Set}`, `Mathlib.Algebra.BigOperators.Fin`, `Mathlib.Data.Fin.Tuple.Basic` | ready; classical named theorem (Sierpiński 1922) absent from Mathlib; needs `[StandardBorelSpace X]`, not bare `NoAtoms` (documented countable-cocountable counterexample) |
 
 ## Candidates under evaluation (not staged)
 
