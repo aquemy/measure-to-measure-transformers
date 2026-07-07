@@ -106,6 +106,19 @@ Closes: claim:exp-eN-name
 The `Depends-On` line is what wires the experiment to the proof in the dependency graph; the
 `Verified-By` line names the script that produced the verdict; `Seed` makes the run reproducible.
 
+## Claim registration timing (in-flight campaigns)
+
+Not every kernel-clean Lean leaf gets a `claims.toml` slug the moment it lands. A multi-leaf
+*campaign* toward discharging one axiom (e.g. the M3b-existence Wasserstein sub-campaign: the
+`SphereRounding` / `WeakToTV` / `WeakToW1` / `SphereProbSeqCompact` / `SphereProbComplete` /
+`WassersteinTV` staging leaves) banks its intermediate lemmas with CKC commit footers
+(`Lean:` / `Status:`) but **registers claim slugs only at discharge time** — when the campaign's
+target axiom actually flips to a theorem and the leaves acquire their role in the ClaimGraph. Until
+then the staging files carry a one-line campaign banner in their header ("M3b staging: consumed when
+`exists_meanFieldFlow` is discharged; see RESEARCH.md") so a reachability audit does not read them as
+abandonware. This keeps `claims.toml` a curated record of *nodes that matter to the blueprint*, not a
+mirror of every banked lemma; the CKC footers are the durable per-leaf provenance in the meantime.
+
 ## Axiom admission protocol
 
 Kernel checks are honest about the statement *as written*; they say nothing about whether the

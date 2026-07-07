@@ -192,9 +192,9 @@ evidence = "F11 (shared atom) + F13 (Bijective unsatisfiable, paper erratum E2);
 
 [claims.lem-5-2]
 kind      = "conjecture"
-statement = "Lemma 5.2 (linearized OT bound): W2(T1_# mu, T2_# mu) <= ||T1 - T2||_{L2(mu)} for measurable T1, T2 with T1 bijective."
-status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_5_2"
+statement = "Lemma 5.2 (linearized OT bound): W2(T1_# mu, T2_# mu) <= ||T1 - T2||_{L2(mu)} for measurable T1, T2 with T1 bijective. Machine-checked in Lean and canonically tracked by [claims.leaf-coupling-bound] (MeasureToMeasure.Leaves.lemma_5_2); this paper node kept for the arXiv cross-reference."
+status    = "math.machine-checked"
+# canonical Lean node: [claims.leaf-coupling-bound] -> MeasureToMeasure.Leaves.lemma_5_2
 paper     = "Lem 5.2, p.24"
 created   = "2026-06-30"
 
@@ -241,7 +241,7 @@ evidence = "F12 (d=1 fixed poles; whole-sphere radii) + F15 (paper quantifier or
 kind      = "conjecture"
 statement = "Lemma A.1: the support condition (1.5) can be removed at O(eta) cost in W2 by a curated input perturbation."
 status    = "math.proved-informal"
-lean      = "MeasureToMeasure.lemma_a_1"
+# paper-only node: no Lean declaration yet (planned name MeasureToMeasure.lemma_a_1)
 paper     = "Lem A.1, p.30"
 created   = "2026-06-30"
 
@@ -249,7 +249,7 @@ created   = "2026-06-30"
 kind      = "conjecture"
 statement = "Proposition 6.2: for generic i.i.d. discrete inputs, a single constant parameter disentangles all measures almost surely (limit clusters are distinct)."
 status    = "math.proved-informal"
-lean      = "MeasureToMeasure.prop_6_2"
+# paper-only node: no Lean declaration yet (planned name MeasureToMeasure.prop_6_2)
 paper     = "Prop 6.2, p.29"
 created   = "2026-06-30"
 
@@ -407,8 +407,8 @@ evidence = "F12; disproof Regression/Refuted/F12_ClusterToPoint.lean; adapter Re
 
 [claims.axiom-w2-convexity]
 kind      = "conjecture"
-statement = "Convexity of W2 under mixtures: for probability measures with shared weights, W2(sum a_k P_k, sum a_k Q_k) is at most the uniform bound on the component distances (gluing of couplings, W2(mix)^2 <= sum a_k W2(P_k,Q_k)^2). Standard optimal-transport fact, absent from Mathlib."
-status    = "math.axiomatised"
+statement = "Convexity of W2 under mixtures: for probability measures with shared weights, W2(sum a_k P_k, sum a_k Q_k) is at most the uniform bound on the component distances (gluing of couplings, W2(mix)^2 <= sum a_k W2(P_k,Q_k)^2). Standard optimal-transport fact, absent from Mathlib. DISCHARGED (now a proved theorem over the ENNReal Kantorovich cost with finiteness hypotheses; the Axioms layer name is historical). Canonically tracked by [claims.wasserstein-w2-convexity]."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Axioms.W2_convexCombo_le"
 paper     = "Prop 2.2 (OT mixture bound)"
 created   = "2026-07-01"
@@ -668,8 +668,8 @@ created   = "2026-07-03"
 
 [claims.lemma-b2-ball-signature]
 kind      = "theorem"
-statement = "Fidelity fix: restrict the lemma_B_2 axiom from arbitrary sets to geodesic balls (milestone M4, soundness). The lemma_B_2 axiom previously quantified the (1-eps) mass-retention over ARBITRARY sets B0, B1 -- an over-general (unsound) statement, since the ReLU-gated characteristic funnels a spherical CAP toward its overlap with another cap and steers no arbitrary set into another. lemma_B_2 now takes centers z0, z1 on the sphere and radii R0, R1 and quantifies over the genuine geodesic balls geodesicBall z0 R0 = {x in sphere | d_g(z0,x) < R0} (new def in Foundations/GeodesicDistance.lean), matching Appendix B. lemma_B_1 (proved by induction from lemma_B_2) is threaded through: its chain is now a sequence of geodesic balls B(z_k, R_k) with centers on the sphere. The ripple is fully contained in Statements/MidLevel.lean (lemma_B_1 has no external consumers; the Appendix-B chain is not wired into theorem_1_1/1_2, whose axiom set is cluster_to_point / exists_disentangling_balls / exists_parked_schedule / lemma_5_4). This is the fidelity half of lemma_B_2 slice 4; the ball signature is exactly what the eventual dynamical discharge (gatedBlock + logistic_flow_reach + exists_closed_sublevel_mass_ge) will prove. lemma_B_1 remains machine-checked (rests only on lemma_B_2 + the structural flow algebra); full audit passes."
-status    = "math.axiomatised"
+statement = "Fidelity fix: restrict the lemma_B_2 axiom from arbitrary sets to geodesic balls (milestone M4, soundness). The lemma_B_2 axiom previously quantified the (1-eps) mass-retention over ARBITRARY sets B0, B1 -- an over-general (unsound) statement, since the ReLU-gated characteristic funnels a spherical CAP toward its overlap with another cap and steers no arbitrary set into another. lemma_B_2 now takes centers z0, z1 on the sphere and radii R0, R1 and quantifies over the genuine geodesic balls geodesicBall z0 R0 = {x in sphere | d_g(z0,x) < R0} (new def in Foundations/GeodesicDistance.lean), matching Appendix B. lemma_B_1 (proved by induction from lemma_B_2) is threaded through: its chain is now a sequence of geodesic balls B(z_k, R_k) with centers on the sphere. The ripple is fully contained in Statements/MidLevel.lean (lemma_B_1 has no external consumers; the Appendix-B chain is not wired into theorem_1_1/1_2, whose axiom set is cluster_to_point / exists_disentangling_balls / exists_parked_schedule / lemma_5_4). This is the fidelity half of lemma_B_2 slice 4; the ball signature is exactly what the eventual dynamical discharge (gatedBlock + logistic_flow_reach + exists_closed_sublevel_mass_ge) will prove. lemma_B_1 remains machine-checked (rests only on lemma_B_2 + the structural flow algebra); full audit passes. DISCHARGED (M4, 2026-07-03): lemma_B_2 is now a proved theorem (Statements/MidLevel.lean, via Leaves.gated_twoCap_retention); this fidelity-record node is retained for the ball-signature soundness history. Canonically tracked as machine-checked by [claims.lem-b-2]."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Statements.lemma_B_2"
 paper     = "Lemma B.2 / B.1 (geodesic-ball transport); Appendix B"
 created   = "2026-07-03"
