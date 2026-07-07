@@ -11,7 +11,7 @@ of one block `b`, each run for `t`, compose to `b` run for `n · t`:
 
 This is exactly the device that lets a **fixed** flow time `t` realise an **arbitrarily long**
 effective reach: the paper's App. B.3 collapse ("take `T` large enough") is recovered, at the fixed
-`T` the axiom `lemma_3_4_part1` hands us, by stacking enough identical gated blocks. Equivalently
+`T` the theorem `lemma_3_4_part1` hands us, by stacking enough identical gated blocks. Equivalently
 `flowMap (List.replicate n b) t = flowMap [b] (n · t)`.
 -/
 
