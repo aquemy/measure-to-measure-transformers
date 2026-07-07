@@ -1,7 +1,8 @@
 # ForMathlib -- Mathlib-ready staging
 
 Kernel-clean, general-purpose leaves shaped so they *could* be upstreamed to Mathlib: minimal
-imports (only Mathlib, never the project prelude), generic names, a namespace mirroring the theory
+imports (only Mathlib and, where one file's content genuinely builds on another's, a sibling
+`ForMathlib/` module -- never the project prelude), generic names, a namespace mirroring the theory
 path, conformant style, passing linters. **Preparation only** -- nothing here has been contributed to
 Mathlib; upstreaming is a human decision, not something the pipeline does on its own.
 
@@ -21,7 +22,9 @@ Readiness checklist (see the `lean-math:mathlib-ready` skill and its
       `tangentialProjector_eq_starProjection` ties the projector to `Submodule.starProjection`)
 - [x] Minimal imports; no project-prelude dependency
 - [x] Apache-2.0 header + `Authors:` line; module + declaration docstrings
-- [ ] Linters clean; lines <= 100 cols (lines checked locally; Mathlib's linter suite not yet run)
+- [x] Linters clean; lines <= 100 cols (`lake exe lint-style ForMathlib` -- Mathlib's own text-based
+      style linter, vendored via the `mathlib` dependency -- reports zero errors; `lake lint`
+      (Batteries runLinter) also passes)
 
 ## Staged
 
