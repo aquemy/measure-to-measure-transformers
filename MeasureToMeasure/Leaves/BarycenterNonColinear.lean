@@ -34,6 +34,22 @@ restricted Theorem 1.2 (empirical targets). For a general probability measure th
 ingredient is the standard fact "the barycenter lies in the closed convex hull of the support"; that
 single measure-theoretic step is the documented residual (it does not reintroduce the optimal-transport
 axioms). Everything in this file is kernel-checked.
+
+## Relation to the other non-colinearity leaves (not duplicates)
+
+Four "barycenters are non-colinear" lemmas exist across the codebase; each is a distinct
+generalization or specialization, not a copy of another:
+
+* `barycenter_noncolinear_of_disjoint_hull` (here) — the empirical case, from disjoint geodesic
+  hulls directly (claim `leaf-barycenter-noncolinear`).
+* `barycenter_noncolinear_of_disjoint_hull_general` (here) — generalizes it to arbitrary probability
+  measures via `Convex.integral_mem` (claim `leaf-barycenter-noncolinear-general`).
+* `GeodesicHullConvex.barycenter_noncolinear_of_separated` — a *corollary* of the empirical case
+  above, specialized to hulls separated by a hyperplane through the origin (claim
+  `geodesic-hull-disjoint`).
+* `GeodesicHullConvex.barycenter_not_sameRay_of_separated_balls` — an independent, quantitative
+  *measure*-form proof via strict spherical caps, for the Section 3.3 ball-separation setting (claim
+  `separation-transfer-3-3`); it does not go through the hull lemmas above.
 -/
 
 namespace MeasureToMeasure.Leaves
