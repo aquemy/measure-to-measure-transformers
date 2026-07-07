@@ -21,6 +21,8 @@ Construction: order the cover centres as `Fin M`; `s y` = least index `i` with `
 the finite membership pattern `y ↦ (i ↦ y ∈ Bᵢ) : Eucl d → (Fin M → Bool)`), `g i` = a sphere point of
 `Bᵢ`. `s` is **locally constant off `⋃ᵢ frontier Bᵢ`** (the membership pattern is locally constant
 there), so every cell frontier lands in that `μ`-null set.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Metric Set Filter Topology

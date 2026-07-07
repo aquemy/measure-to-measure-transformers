@@ -17,6 +17,8 @@ This is the tool that makes `id : (SphereProb, W₁) → (P(sphere), weak)` cont
 forces integral-convergence against every Lipschitz test function, and on the compact sphere Lipschitz
 functions determine weak convergence. The **hard** direction (weak ⇒ `W₁`) and the completeness
 transport are the following leaves (S3b/S4).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

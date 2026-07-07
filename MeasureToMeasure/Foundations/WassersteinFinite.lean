@@ -17,6 +17,8 @@ finiteness `W2_ne_top_of_ae_norm_le`:
 * `W1_le_two_of_sphere_supported`, `W1_ne_top_of_sphere_supported` — the `R = 1` specialization,
   which **discharges the `W1 μ ν ≠ ⊤` hypotheses** that pervade the field's measure moduli and makes
   `(W1 μ ν).toReal` a genuine (bounded) metric value on `SphereProb d`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

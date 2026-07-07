@@ -45,6 +45,8 @@ So both the analytic moduli and the measure-coupling bound are now machine-check
 representation of the flow trajectory — whose velocity's time-continuity the `deriv` clause does not
 carry — plus an integral Grönwall and an a.e.-to-everywhere transfer), which Mathlib `v4.31.0`
 cannot express directly for the measure-coupled field.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 namespace MeasureToMeasure.Foundations

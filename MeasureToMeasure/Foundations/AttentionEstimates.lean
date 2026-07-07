@@ -44,6 +44,8 @@ in `RESEARCH.md` (M3b plan). They are named here as future work, not as results 
   `v4.31.0` supplies Prokhorov (`MeasureTheory.Measure.Prokhorov`) and the Lévy-Prokhorov
   metrization; what is missing is the bridge "`W₂` topology = weak topology on a compact base"
   (comparisons between `W₂` and the Lévy-Prokhorov distance).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 namespace MeasureToMeasure.Foundations

@@ -27,6 +27,8 @@ radial-tangency with gate `attnGate`), and `attnFieldExt_eq_field_of_mem_sphere`
 sphere the extended field is exactly `p.field ν`. This is the well-posedness datum the frozen-field
 flow (E2b: `Block.isPicardLindelof` + `SphereFlow.sphere_invariant`) will consume; the Picard fixed
 point over the measure trajectory (E3+) then closes `exists_meanFieldFlow`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

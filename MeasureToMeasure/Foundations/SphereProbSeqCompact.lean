@@ -16,6 +16,8 @@ type is compact + first-countable, so the subsequence extraction runs there and 
 This is what the completeness proof uses to promote a `W₁`-Cauchy sequence to a convergent one:
 compactness supplies the limit of a subsequence, and `tendsto_W1_of_tendsto` (the crux) upgrades weak
 subsequential convergence to `W₁`, after which Cauchyness gives full convergence.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Filter Topology

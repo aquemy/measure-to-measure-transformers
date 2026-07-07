@@ -15,6 +15,8 @@ Self-contained total-variation facts used in the `weak ⇒ W₁` crux assembly (
 * `tv_map_le` — **pushforward contracts total variation**: `(a_#f − a_#f ⊓ b_#f)(univ) ≤
   (a − a ⊓ b)(univ)`. Lets the crux replace the `Eucl d`-valued rounding `r = rep ∘ sel` by the
   finite-valued `sel`, so the discrete lower bound above applies on `Fin M`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

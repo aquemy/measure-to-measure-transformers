@@ -18,6 +18,8 @@ firm nonexpansiveness (`ballProj_variational` + Cauchy–Schwarz).
 
 `-- ForMathlib candidate:` the whole file is generic (any real inner product space), independent of
 the paper's construction.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open scoped RealInnerProductSpace

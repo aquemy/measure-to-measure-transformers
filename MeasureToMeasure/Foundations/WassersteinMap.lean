@@ -20,6 +20,8 @@ Toward the hard direction of the `W₁ ↔ weak` comparison (leaf S3b, `exists_m
   diam-`≤ ε` partition. The a.e. form is the one the crux consumes (the measure is sphere-supported).
 
 All mirror the banked `W₂` proofs with `edist` in place of `edist²` and no root exponent.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

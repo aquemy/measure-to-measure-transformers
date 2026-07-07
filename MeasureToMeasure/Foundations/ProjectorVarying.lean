@@ -22,6 +22,8 @@ generalizations this leaf needs, all field-independent geometry (`-- ForMathlib 
   is bounded by `5C` and `(5L + 4C)`-Lipschitz on the ball of radius `2`. The Lipschitz split is
   `P_x^⊥(w x - w y)` (linearity in the argument, projector bound `5` on the ball) plus
   `P_x^⊥(w y) - P_y^⊥(w y)` (base-point modulus, `‖x‖ + ‖y‖ ≤ 4`).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open scoped RealInnerProductSpace

@@ -20,6 +20,8 @@ residual `1 − shared → 0`.
 Combined (next leaf) with `tv_map_le` — which contracts `TV(r_#·)` for the fused rounding
 `r = g ∘ sel` onto this `Fin M` residual — and `W1_le_two_mul_tv`, this drives the middle term of the
 `weak ⇒ W₁` triangle to `0`.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Set Filter Topology

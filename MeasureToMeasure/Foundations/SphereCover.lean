@@ -17,6 +17,8 @@ radius `< ε` whose frontiers are `μ`-null, then takes a finite subcover.
 The `μ`-null-frontier radius at each centre comes from Mathlib's `exists_null_frontier_thickening`
 (`thickening r {x} = ball x r`), which encodes that only countably many radii give a positive-measure
 sphere; the finite subcover from `isCompact_sphere` (`Eucl d` is a proper space).
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory Metric

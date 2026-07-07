@@ -17,6 +17,8 @@ so the block field's integral-curve derivative `attnFieldExt p ν (Φ^t x)` is e
 This is the inner step of the mean-field Picard iteration: it solves the characteristic ODE at a fixed
 `ν`; the remaining existence work (E-crux/E3) makes `ν` self-consistent with the pushforward
 trajectory `(Φ_t)_# μ₀`, via a fixed point in the measure variable.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory

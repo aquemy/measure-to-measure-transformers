@@ -23,6 +23,8 @@ with the round-trips `MeasurableEmbedding.comap_map` (`comap ∘ map = id`) and 
 (`map ∘ comap = restrict`, which equals the identity on a sphere-supported measure). This is the
 carrier identification; the genuinely new analytic content (comparing `W₁` with the weak/Lévy–
 Prokhorov metric) is the following leaves.
+
+M3b staging: consumed when `exists_meanFieldFlow` is discharged; see RESEARCH.md.
 -/
 
 open MeasureTheory
