@@ -7,10 +7,10 @@ Claim 2 (Appendix B.5, p.39) states: if `W₂(μ, δ_{x₀}) ≤ η₂` then `1 
 a measure `W₂`-close to a Dirac puts almost all its mass near `x₀`. The proof is a Markov inequality
 driven by a Lipschitz bump and Kantorovich-Rubinstein duality.
 
-We formalize it over the `W₁` axiom (`W1_ge_of_lipschitz`, the KR-duality direction the paper uses),
-so the result's status is `math.axiomatised`. What is **machine-checked here** is the whole argument
-*given* that axiom: the truncated-distance bump `f(x) = min(η₃, d(x,x₀))` is `1`-Lipschitz, vanishes
-at `x₀`, and dominates `η₃ · 𝟙_{d(·,x₀) ≥ η₃}`, whence
+We formalize it over `W1_ge_of_lipschitz` (the KR-duality direction the paper uses), now a **proved
+theorem** (the from-scratch `W₁` coupling development), so the whole argument is machine-checked: the
+truncated-distance bump `f(x) = min(η₃, d(x,x₀))` is `1`-Lipschitz, vanishes at `x₀`, and dominates
+`η₃ · 𝟙_{d(·,x₀) ≥ η₃}`, whence
 `η₃ · μ{d(·,x₀) ≥ η₃} ≤ ∫ f dμ = ∫ f dμ - f(x₀) ≤ W₁(μ, δ_{x₀}) ≤ C η₂`.
 The set `{x | η₃ ≤ d(x, x₀)}` is the complement of the open ball `B(x₀, η₃)`, so for a probability
 measure this is exactly `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`.
@@ -47,8 +47,8 @@ theorem distBump_eq_outside {x₀ : Eucl d} {η₃ : ℝ} {x : Eucl d} (hx : η�
 
 /-- **Lemma L8 / Claim 2 (Markov bound).** For a probability measure with
 `W₁(μ, δ_{x₀}) ≤ C η₂`, the mass at geodesic/Euclidean distance `≥ η₃` from `x₀` is at most
-`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Rests on the `W₁` axiom (KR duality):
-status `math.axiomatised`. -/
+`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Machine-checked via the proved theorem
+`W1_ge_of_lipschitz` (KR duality). -/
 theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 < η₃)
     (hfin : MeasureToMeasure.W1 μ (Measure.dirac x₀) ≠ ⊤)
