@@ -25,7 +25,7 @@ Readiness checklist (see the `lean-math:mathlib-ready` skill and its
 
 ## Staged
 
-All three files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]` and are
+All four files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]` and are
 `#print axioms`-clean.
 
 | File / declaration | Statement | Imports | Readiness |
@@ -33,6 +33,7 @@ All three files generalize to `{E : Type*} [NormedAddCommGroup E] [InnerProductS
 | `TangentialProjector.lean` -- `InnerProductGeometry.tangentialProjector` (+ `_apply`, `_add`, `_smul`, `_self_of_norm_eq_one`, `_symm`, `_idem_of_norm_eq_one`, `inner_tangentialProjector_self_eq_norm_sq_sub_inner_sq`, `tangentialProjector_eq_starProjection`) | The rank-one-complement projector `P_x v = v - ⟪x,v⟫•x` and its identities (linearity, annihilates a unit `x`, self-adjoint, idempotent, `⟪P_x v,v⟫ = ‖v‖²-⟪x,v⟫²`), bridged to Mathlib's `(ℝ ∙ x)ᗮ.starProjection` | `Mathlib.Analysis.InnerProductSpace.Basic`, `Mathlib.Analysis.InnerProductSpace.Projection.Basic` | ready; bridge lemma ties the closed form to the bundled `Submodule.starProjection` API |
 | `UnitSphereGeodesic.lean` -- `InnerProductGeometry.{inner_le_one_of_norm_eq_one, neg_one_le_inner_of_norm_eq_one, angle_eq_arccos_inner_of_norm_eq_one, cos_angle_of_norm_eq_one}` | On the unit sphere the paper's `arccos⟪x,y⟫` **is** Mathlib's `InnerProductGeometry.angle`; plus the Cauchy-Schwarz bounds `⟪x,y⟫ ∈ [-1,1]` | `Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic` | ready; reuses `angle`, does not shadow it |
 | `SeparatingHyperplane.lean` -- `InnerProductGeometry.inner_lt_cos_of_lt_angle` | `0 ≤ θ`, `θ < angle ω x` ⟹ `⟪ω,x⟫ < cos θ` for unit vectors (cosine strictly antitone on `[0,π]`); the paper-constant specialization (`θ = π/8 + τ`) lives in `MeasureToMeasure/Leaves/SeparatingHyperplane.lean` | `ForMathlib.UnitSphereGeodesic` | ready; constant-free threshold form |
+| `BallProjection.lean` -- `ballProj` (+ `_eq_self`, `norm_ballProj_le`, `ballProj_variational`, `lipschitzWith_ballProj`) | The metric projection `ballProj x = (‖x‖ ⊔ 1)⁻¹ • x` onto the closed unit ball: identity inside, radial retraction outside; its variational inequality and `1`-Lipschitz nonexpansiveness (firm nonexpansiveness + Cauchy-Schwarz) | `Mathlib.Analysis.InnerProductSpace.Basic`, `Mathlib.Topology.MetricSpace.Lipschitz` | ready; genuine Mathlib gap (only the subspace orthogonal projection exists, not the closed-ball metric projection) |
 
 ## Candidates under evaluation (not staged)
 
