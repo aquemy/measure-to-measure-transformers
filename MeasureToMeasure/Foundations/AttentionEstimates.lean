@@ -1,5 +1,6 @@
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.Wasserstein
+import MeasureToMeasure.Foundations.WassersteinFinite
 import MeasureToMeasure.Foundations.GatedBlock
 
 /-!
@@ -18,10 +19,12 @@ measures — the point modulus and the measure-side dual-pairing tool:
   `‖A_B[μ](x) - A_B[μ](y)‖ ≤ 2 ‖B‖ e^{4‖B‖} ‖x - y‖`;
 * a vector-valued Kantorovich-Rubinstein bound (`ofReal_norm_integral_sub_le_W1`): for a
   `c`-Lipschitz vector integrand, `‖∫ g dμ - ∫ g dν‖ ≤ c · W₁(μ, ν)` -- the measure-side tool
-  (the scalar form `ofReal_integral_sub_le_W1` is the existing KR machinery);
-* the `W₁` diameter bound (`W1_le_of_ae_norm_le`, `W1_ne_top_of_sphere_supported`): probability
-  measures a.e.-supported in the radius-`R` ball are within `W₁ ≤ 2R`, so sphere-supported pairs
-  have `W₁ ≤ 2 < ⊤` and the iteration works in a genuine (pseudo)metric.
+  (the scalar form `ofReal_integral_sub_le_W1` is the existing KR machinery).
+
+The `W₁` diameter bound (`W1_le_of_ae_norm_le`, `W1_ne_top_of_sphere_supported`) lives in
+`WassersteinFinite.lean` (imported here): probability measures a.e.-supported in the radius-`R` ball
+are within `W₁ ≤ 2R`, so sphere-supported pairs have `W₁ ≤ 2 < ⊤` and the iteration works in a
+genuine (pseudo)metric.
 
 ## Remaining for M3b (NOT in this file)
 
@@ -398,35 +401,8 @@ theorem ofReal_norm_integral_sub_le_W1 {g : Eucl d → Eucl d} {c : ℝ≥0}
       _ = (c : ℝ≥0∞) * transportCost π := by
           rw [ofReal_integral_eq_lintegral_ofReal hcost hnonneg, hlint]
 
-/-- **`W₁` diameter bound.** Probability measures a.e.-supported in the ball of radius `R` are
-within `W₁`-distance `2R` (via the product coupling); in particular sphere-supported pairs have
-`W₁ ≤ 2 < ⊤`. -/
-theorem W1_le_of_ae_norm_le (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
-    [IsProbabilityMeasure ν] {R : ℝ} (hμ : ∀ᵐ x ∂μ, ‖x‖ ≤ R) (hν : ∀ᵐ y ∂ν, ‖y‖ ≤ R) :
-    W1 μ ν ≤ ENNReal.ofReal (2 * R) := by
-  refine le_trans (W1_le_transportCost (isCoupling_prod μ ν)) ?_
-  have hae : ∀ᵐ p ∂(μ.prod ν), edist p.1 p.2 ≤ ENNReal.ofReal (2 * R) := by
-    have h1 : ∀ᵐ p ∂(μ.prod ν), ‖p.1‖ ≤ R := Measure.quasiMeasurePreserving_fst.ae hμ
-    have h2 : ∀ᵐ p ∂(μ.prod ν), ‖p.2‖ ≤ R := Measure.quasiMeasurePreserving_snd.ae hν
-    filter_upwards [h1, h2] with p hp1 hp2
-    rw [edist_dist]
-    refine ENNReal.ofReal_le_ofReal ?_
-    rw [dist_eq_norm]
-    calc ‖p.1 - p.2‖ ≤ ‖p.1‖ + ‖p.2‖ := norm_sub_le _ _
-      _ ≤ 2 * R := by linarith
-  calc transportCost (μ.prod ν) = ∫⁻ p, edist p.1 p.2 ∂(μ.prod ν) := rfl
-    _ ≤ ∫⁻ _, ENNReal.ofReal (2 * R) ∂(μ.prod ν) := lintegral_mono_ae hae
-    _ = ENNReal.ofReal (2 * R) := by simp
-
-/-- Sphere-supported probability measures are within `W₁ ≤ 2`, in particular at finite `W₁`. -/
-theorem W1_ne_top_of_sphere_supported (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
-    [IsProbabilityMeasure ν] (hμ : μ (sphere d)ᶜ = 0) (hν : ν (sphere d)ᶜ = 0) :
-    W1 μ ν ≠ ⊤ := by
-  have hμa : ∀ᵐ x ∂μ, ‖x‖ ≤ 1 :=
-    ae_of_sphere_supported hμ fun z hz => (norm_eq_one_of_mem_sphere hz).le
-  have hνa : ∀ᵐ y ∂ν, ‖y‖ ≤ 1 :=
-    ae_of_sphere_supported hν fun z hz => (norm_eq_one_of_mem_sphere hz).le
-  exact ne_top_of_le_ne_top (by simp) (W1_le_of_ae_norm_le μ ν hμa hνa)
+-- `W1_le_of_ae_norm_le` / `W1_ne_top_of_sphere_supported` moved to `WassersteinFinite.lean`
+-- (leaf S2a of the M3b-existence sub-campaign) to avoid duplicating the diameter-bound proof.
 
 end VectorKR
 

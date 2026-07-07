@@ -74,7 +74,7 @@ theorem norm_tangentialProjector_le {x : Eucl d} (hx : x ∈ sphere d) (v : Eucl
     rw [inner_sub_right, real_inner_smul_right, hperp, mul_zero, sub_zero]
   have hsq : ‖tangentialProjector x v‖ ^ 2 = ‖v‖ ^ 2 - ⟪x, v⟫ ^ 2 := by
     rw [← real_inner_self_eq_norm_sq (tangentialProjector x v), hself,
-      projector_inner_sub_sq hx]
+      projector_inner_sub_sq x]
   have hle : ‖tangentialProjector x v‖ ^ 2 ≤ ‖v‖ ^ 2 := by
     rw [hsq]; nlinarith [sq_nonneg (⟪x, v⟫ : ℝ)]
   exact le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg v) hle
@@ -737,7 +737,7 @@ theorem velocity_continuousOn [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sph
     have hxs : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hx
     have hxs₀ : Φ s₀ x ∈ sphere d := (hΦ.sphere_bijOn s₀ hs₀).mapsTo hx
     have hW1ne : W1 (μ₀.map (Φ s)) (μ₀.map (Φ s₀)) ≠ ⊤ :=
-      W1_ne_top_of_sphere_supported _ _ hνsS hνs₀S
+      W1_ne_top_of_sphere_supported hνsS hνs₀S
     -- Point modulus at the measure `(Φ_s)_#μ₀`.
     have hpt : ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Φ s₀ x)‖
         ≤ Cp * ‖Φ s x - Φ s₀ x‖ := by
@@ -1001,7 +1001,7 @@ theorem meanFlowDist_le_integral [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (
     have hpΦ : Φ s x ∈ sphere d := (hΦ.sphere_bijOn s hs).mapsTo hx
     have hpΨ : Ψ s x ∈ sphere d := (hΨ.sphere_bijOn s hs).mapsTo hx
     have hW1ne : W1 (μ₀.map (Φ s)) (μ₀.map (Ψ s)) ≠ ⊤ :=
-      W1_ne_top_of_sphere_supported _ _ hΦsS hΨsS
+      W1_ne_top_of_sphere_supported hΦsS hΨsS
     have hpt : ‖p.field (μ₀.map (Φ s)) (Φ s x) - p.field (μ₀.map (Φ s)) (Ψ s x)‖
         ≤ Cp * ‖Φ s x - Ψ s x‖ := by
       have h := norm_field_sub_point_le p (μ₀.map (Φ s)) hΦsS hpΦ hpΨ

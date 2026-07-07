@@ -495,7 +495,12 @@ the rim before reaching the overlap, and adversarial mass concentrated near the 
 probability hypothesis is equally load-bearing: for an infinite measure stacking mass `c_k → ∞` on
 points approaching the rim from inside, any single finite-amplitude block moves the near-rim atoms
 too slowly to reach the overlap in time `T`, so the transported mass stays finite while
-`(1-ε)·μ(ℬ₀) = ⊤`. The paper has both: `μ₀ ∈ P(S^{d-1})` and small caps (Appendix B chains). -/
+`(1-ε)·μ(ℬ₀) = ⊤`. The paper has both: `μ₀ ∈ P(S^{d-1})` and small caps (Appendix B chains).
+
+`_hd : 2 ≤ d` is retained for statement fidelity to the paper's ambient dimension, even though the
+discharge (`gated_twoCap_retention`) does not need it: the sub-hemisphere-radius and probability
+restrictions above are what carry the soundness (the `d = 1` degeneracy is a *different*, non-generic
+failure mode this hypothesis would have guarded against had the discharge route needed it). -/
 theorem lemma_B_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (_hd : 2 ≤ d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (z₀ z₁ : Eucl d) (hz₀ : z₀ ∈ sphere d) (hz₁ : z₁ ∈ sphere d) (R₀ R₁ : ℝ)

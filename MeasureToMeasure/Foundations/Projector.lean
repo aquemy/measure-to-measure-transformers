@@ -54,10 +54,11 @@ theorem tangentialProjector_idem {x : Eucl d} (hx : x ∈ sphere d) (v : Eucl d)
     tangentialProjector x (tangentialProjector x v) = tangentialProjector x v :=
   InnerProductGeometry.tangentialProjector_idem_of_norm_eq_one (norm_eq_one_of_mem_sphere hx) v
 
-/-- The key quadratic identity (L1): for a unit vector `x`,
-`⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²`. This is the scalar that appears in the gate ODE (B.5)
-and the barycenter ODE (B.9). -/
-theorem projector_inner_sub_sq {x : Eucl d} (_hx : x ∈ sphere d) (v : Eucl d) :
+/-- The key quadratic identity (L1): `⟪P_x^⊥ v, v⟫ = ‖v‖² - ⟪x, v⟫²`, for ANY `x` (the identity is
+unconditional; no unit-vector hypothesis is needed — matching the ForMathlib generalization). This is
+the scalar that appears in the gate ODE (B.5) and the barycenter ODE (B.9), both stated for `x` on the
+sphere. -/
+theorem projector_inner_sub_sq (x : Eucl d) (v : Eucl d) :
     ⟪tangentialProjector x v, v⟫ = ‖v‖ ^ 2 - ⟪x, v⟫ ^ 2 :=
   InnerProductGeometry.inner_tangentialProjector_self_eq_norm_sq_sub_inner_sq x v
 

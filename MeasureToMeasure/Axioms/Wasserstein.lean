@@ -96,10 +96,11 @@ theorem W1_ge_of_lipschitz (μ ν : Measure (Eucl d)) (f : Eucl d → ℝ) (hf :
 /-- Convexity of `W₂` under mixtures: if every component pair is within `ε` (and at finite `W₂`), so is
 the mixture. The gluing-of-couplings estimate `W₂(∑ aₖ Pₖ, ∑ aₖ Qₖ) ≤ ε`, discharged from
 `Foundations.W2_convexCombo_le`. The per-component finiteness lets each `ℝ` bound `W2 (P k) (Q k) ≤ ε`
-lift to the `ℝ≥0∞` bound `Foundations.W2 (P k) (Q k) ≤ ofReal ε` the `ℝ≥0∞` lemma consumes. -/
+lift to the `ℝ≥0∞` bound `Foundations.W2 (P k) (Q k) ≤ ofReal ε` the `ℝ≥0∞` lemma consumes. No
+probability-measure hypothesis on `P`/`Q` is needed — the underlying `Foundations.W2_convexCombo_le`
+is unconditional. -/
 theorem W2_convexCombo_le {M : ℕ} (a : Fin M → ℝ≥0∞) (P Q : Fin M → Measure (Eucl d))
     (ha : ∑ k, a k = 1) (ε : ℝ) (hε : 0 ≤ ε)
-    (_hP : ∀ k, IsProbabilityMeasure (P k)) (_hQ : ∀ k, IsProbabilityMeasure (Q k))
     (hfin : ∀ k, MeasureToMeasure.W2 (P k) (Q k) ≠ ⊤)
     (hbound : ∀ k, W2 (P k) (Q k) ≤ ε) :
     W2 (∑ k, a k • P k) (∑ k, a k • Q k) ≤ ε := by
