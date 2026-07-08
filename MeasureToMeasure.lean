@@ -39,6 +39,7 @@ import MeasureToMeasure.Foundations.FrozenFieldFlow
 import MeasureToMeasure.Foundations.AttnFieldMeasureLipschitz
 import MeasureToMeasure.Foundations.AttnFieldTrajectoryContinuous
 import MeasureToMeasure.Foundations.TrajectoryFieldPicardLindelof
+import MeasureToMeasure.Foundations.TrajectoryFieldSphereInvariant
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
