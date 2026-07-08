@@ -37,6 +37,7 @@ import MeasureToMeasure.Foundations.MeanFieldExistence
 import MeasureToMeasure.Foundations.FrozenFieldBlock
 import MeasureToMeasure.Foundations.FrozenFieldFlow
 import MeasureToMeasure.Foundations.AttnFieldMeasureLipschitz
+import MeasureToMeasure.Foundations.AttnFieldTrajectoryContinuous
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
