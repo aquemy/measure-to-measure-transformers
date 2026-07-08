@@ -42,6 +42,7 @@ import MeasureToMeasure.Foundations.TrajectoryFieldPicardLindelof
 import MeasureToMeasure.Foundations.TrajectoryFieldSphereInvariant
 import MeasureToMeasure.Foundations.TrajectoryFlow
 import MeasureToMeasure.Foundations.TrajectoryFlowPushforward
+import MeasureToMeasure.Foundations.SelfConsistencyStep
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
