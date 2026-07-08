@@ -45,6 +45,7 @@ import MeasureToMeasure.Foundations.TrajectoryFlowPushforward
 import MeasureToMeasure.Foundations.SelfConsistencyStep
 import MeasureToMeasure.Foundations.TrajectoryFlowFTC
 import MeasureToMeasure.Foundations.SelfConsistencyGronwall
+import MeasureToMeasure.Foundations.SelfConsistencyBielecki
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
