@@ -36,6 +36,7 @@ import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
 import MeasureToMeasure.Foundations.FrozenFieldBlock
 import MeasureToMeasure.Foundations.FrozenFieldFlow
+import MeasureToMeasure.Foundations.AttnFieldMeasureLipschitz
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
