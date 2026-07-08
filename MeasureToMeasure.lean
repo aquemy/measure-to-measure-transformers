@@ -30,6 +30,7 @@ import MeasureToMeasure.Foundations.SphereW1Weak
 import MeasureToMeasure.Foundations.SphereProbIdOfIndiscernibles
 import MeasureToMeasure.Foundations.BieleckiMetric
 import MeasureToMeasure.Foundations.SphereProbComplete
+import MeasureToMeasure.Foundations.BieleckiMetricSpace
 import MeasureToMeasure.Foundations.BallProjection
 import MeasureToMeasure.Foundations.ProjectorVarying
 import MeasureToMeasure.Foundations.MeanFieldExistence
