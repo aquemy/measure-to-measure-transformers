@@ -89,6 +89,7 @@ import MeasureToMeasure.Leaves.BarycenterBoundaryGap
 import MeasureToMeasure.Leaves.TaylorRemainderBound
 import MeasureToMeasure.Leaves.OrthantBoundaryGap
 import MeasureToMeasure.Leaves.DivergenceFormula
+import MeasureToMeasure.Leaves.ExtremalBoundaryPoint
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
