@@ -86,6 +86,7 @@ import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterBoundaryGap
+import MeasureToMeasure.Leaves.TaylorRemainderBound
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
