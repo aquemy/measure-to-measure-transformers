@@ -51,6 +51,7 @@ import MeasureToMeasure.Foundations.SelfConsistencyContraction
 import MeasureToMeasure.Foundations.SelfConsistencyFixedPoint
 import MeasureToMeasure.Foundations.TrajectoryFlowInjective
 import MeasureToMeasure.Foundations.TrajectoryFlowSurjective
+import MeasureToMeasure.Foundations.AttnStepExistence
 import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics

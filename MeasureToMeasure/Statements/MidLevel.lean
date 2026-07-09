@@ -7,6 +7,7 @@ import MeasureToMeasure.Leaves.OrthantRotation
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.Attention
+import MeasureToMeasure.Foundations.AttnStepExistence
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
