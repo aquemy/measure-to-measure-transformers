@@ -32,21 +32,22 @@ This file provides the faithful interface:
   `d/dt Φ_t x = field (μ₀.map Φ_t) (Φ_t x)` on the sphere, starting from the identity, each time
   slice measurable, Lipschitz, and a bijection of the sphere (the regularity the paper's
   `φ^t` carries, eq. (B.2)).
-* `exists_meanFieldFlow` -- the sole remaining axiom here: EXISTENCE of the McKean-Vlasov
-  characteristic flow on the sphere for sphere-supported probability data. Its companion
-  `meanFieldFlow_unique` (UNIQUENESS) is now a THEOREM (`MeanFieldWellPosed.meanFieldFlow_unique`),
-  machine-checked via the measure-averaged Grönwall route. Mathlib `v4.31.0`
-  has no mean-field / measure-dependent ODE existence theory; this is the honest completion of M3
-  (the linear characteristic flow of `Foundations/FlowMap.lean` covers the measure-independent
-  special case).
-* `AttnSchedule`, `attnMeasureFlow` -- the solution operator of a schedule, by folding the
-  per-block flow; composition over `++` is definitional (`attnMeasureFlow_append`).
+* `AttnSchedule`, `switches`, `durationSum` -- a piecewise-constant schedule and its bookkeeping;
+  composition over `++` is definitional.
+* `isMeanFieldFlow_blockFlow` -- for a block with `V = 0` the field is measure-independent
+  (`AttnParams.field_of_V_eq_zero`); any linear `Block` whose field agrees with it on the sphere
+  realizes a mean-field flow.
 
-**The linear bridge (`attnStep_eq_map_blockFlow`):** for a block with `V = 0` the field is
-measure-independent (`AttnParams.field_of_V_eq_zero`); any linear `Block` whose field agrees with
-it on the sphere realizes a mean-field flow (`isMeanFieldFlow_blockFlow`), so by `meanFieldFlow_unique`
-the attention step *is* the linear pushforward -- the Appendix-B gated machinery (M4) transfers
-unchanged to this interface.
+**`exists_meanFieldFlow`, `attnStep`, `attnMeasureFlow`, and the linear bridge
+(`attnStep_eq_map_blockFlow`) now live in `Foundations/AttnStepExistence.lean`**, downstream of
+this file: `exists_meanFieldFlow` was the sole remaining axiom here (EXISTENCE of the McKean-Vlasov
+characteristic flow on the sphere for sphere-supported probability data), now `math.machine-checked`
+via a genuine Picard iteration in the joint (point, `W₁`) variable (M3b existence campaign). Its
+companion `meanFieldFlow_unique` (UNIQUENESS) is a THEOREM (`MeanFieldWellPosed.meanFieldFlow_unique`),
+machine-checked via the measure-averaged Grönwall route. The proof needs the whole M3b chain, which
+itself needs `AttnParams`/`IsMeanFieldFlow` from here, so `attnStep`/`attnMeasureFlow` (which consume
+the theorem) had to relocate downstream rather than stay in this file -- see
+`AttnStepExistence.lean`'s module docstring for the full story.
 -/
 
 namespace MeasureToMeasure.Foundations
@@ -128,35 +129,9 @@ structure IsMeanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
   deriv : ∀ x ∈ sphere d, ∀ t ∈ Set.Icc 0 p.duration,
     HasDerivAt (fun s => Φ s x) (p.field (μ₀.map (Φ t)) (Φ t x)) t
 
-/-- **Well-posedness of the self-attention mean-field flow (existence).** For every Transformer
-block and every sphere-supported probability datum there is a mean-field flow. AXIOM
-(`math.axiomatised`): this is the McKean-Vlasov well-posedness on the sphere underlying the
-paper's eq. (1.3) ("the unique solution `μ ∈ C⁰([0,T]; P(𝕊^{d-1}))`", Theorem 1.1) -- the field
-is Lipschitz in `x` and (by the bounded-Lipschitz kernel) Lipschitz in `μ` for `W₂`, so a
-Picard-Lindelöf iteration on the product of the point and measure variables converges; Mathlib
-`v4.31.0` has no mean-field ODE theory to express this. The measure-independent case (`V = 0`)
-is *proved* in `Foundations/FlowMap.lean` (milestone M3); this axiom is the genuinely nonlinear
-remainder (M3b).
-
-The field's Lipschitz moduli are now machine-checked, so the **analytic** content of this axiom is
-discharged: the *point* modulus is `MeanFieldWellPosed.norm_field_sub_point_le` (the field's own
-modulus — the base-point projector `P_x^⊥` and the coordinatewise ReLU included, built over
-`AttentionEstimates.attnAvg_sub_le_of_norm_le`), and the
-*measure* modulus is `MeanFieldWellPosed.norm_field_sub_measure_W1_le`
-(`‖field μ x − field ν x‖ ≤ ‖V‖·(e^{2‖B‖}+e^{4‖B‖})(1+‖B‖)·(W₁ μ ν).toReal`), obtained from the
-self-attention average's `W₁`-modulus `attnAvg_sub_measure_le` via the on-sphere Kantorovich-
-Rubinstein bound (the softmax integrands are Lipschitz only on the sphere, but every coupling of
-sphere-supported measures sits on `sphere × sphere`). The measure-trajectory coupling bound is now
-machine-checked too (`MeanFieldWellPosed.W1_toReal_map_le_integral_norm`:
-`(W₁(f_#μ, g_#μ)).toReal ≤ ∫ ‖f − g‖ ∂μ`). The Grönwall argument for `meanFieldFlow_unique` is now
-FULLY machine-checked (`MeanFieldWellPosed.meanFieldFlow_unique`, via the measure-averaged
-antiderivative Grönwall + `ODE_solution_unique_of_mem_Icc_right`); what remains axiomatic is only the
-EXISTENCE half — a Picard iteration in the joint (point, `W₁`) variable, not yet expressible in
-Mathlib `v4.31.0` for the measure-coupled field. -/
-axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
-    [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ
-
+-- `exists_meanFieldFlow` (well-posedness/existence of the self-attention mean-field flow) was the
+-- sole remaining axiom here; it now lives, discharged as a theorem, in `AttnStepExistence.lean` --
+-- see the module docstring above and that file's docstring for the full story.
 
 /-- A piecewise-constant Transformer schedule: the list of constant blocks. -/
 abbrev AttnSchedule (d : ℕ) := List (AttnParams d)
@@ -195,75 +170,6 @@ theorem durationSum_nonneg (θ : AttnSchedule d) : 0 ≤ durationSum θ := by
 
 end AttnSchedule
 
-/-- One block step of the measure-level solution operator: push `μ` forward along the block's
-mean-field flow at its duration. Junk branch: off sphere-supported probability data the step is
-the identity (every downstream statement carries the sphere-probability hypotheses). -/
-noncomputable def attnStep (p : AttnParams d) (μ : Measure (Eucl d)) : Measure (Eucl d) :=
-  if h : IsProbabilityMeasure μ ∧ μ (sphere d)ᶜ = 0 then
-    μ.map ((@exists_meanFieldFlow d p μ h.1 h.2).choose p.duration)
-  else μ
-
-/-- The solution operator of a schedule: fold the per-block steps left-to-right (run the first
-block first). -/
-noncomputable def attnMeasureFlow (θ : AttnSchedule d) (μ : Measure (Eucl d)) :
-    Measure (Eucl d) :=
-  θ.foldl (fun ν p => attnStep p ν) μ
-
-@[simp] theorem attnMeasureFlow_nil (μ : Measure (Eucl d)) :
-    attnMeasureFlow ([] : AttnSchedule d) μ = μ := rfl
-
-/-- Composition of schedules is concatenation: running `θ ++ ψ` is running `θ`, then `ψ`. -/
-theorem attnMeasureFlow_append (θ ψ : AttnSchedule d) (μ : Measure (Eucl d)) :
-    attnMeasureFlow (θ ++ ψ) μ = attnMeasureFlow ψ (attnMeasureFlow θ μ) :=
-  List.foldl_append ..
-
-/-- One step preserves probability (on sphere-supported probability data). -/
-theorem isProbabilityMeasure_attnStep (p : AttnParams d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    IsProbabilityMeasure (attnStep p μ) := by
-  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
-  have hspec := (@exists_meanFieldFlow d p μ ‹_› hs).choose_spec
-  have hm := hspec.measurable p.duration ⟨p.duration_nonneg, le_rfl⟩
-  exact ⟨by rw [Measure.map_apply hm MeasurableSet.univ, Set.preimage_univ]; exact measure_univ⟩
-
-/-- One step preserves sphere support: the flow maps the sphere into itself. -/
-theorem attnStep_supportedIn_sphere (p : AttnParams d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    (attnStep p μ) (sphere d)ᶜ = 0 := by
-  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
-  have hspec := (@exists_meanFieldFlow d p μ ‹_› hs).choose_spec
-  have hdur : p.duration ∈ Set.Icc 0 p.duration := ⟨p.duration_nonneg, le_rfl⟩
-  have hms : MeasurableSet (sphere d)ᶜ := Metric.isClosed_sphere.measurableSet.compl
-  rw [Measure.map_apply (hspec.measurable p.duration hdur) hms]
-  refine measure_mono_null (fun x hx => ?_) hs
-  simp only [Set.mem_preimage, Set.mem_compl_iff] at hx ⊢
-  exact fun hxs => hx ((hspec.sphere_bijOn p.duration hdur).mapsTo hxs)
-
-/-- The solution operator preserves probability and sphere support along the whole schedule. -/
-theorem attnMeasureFlow_prob_supportedIn_sphere (θ : AttnSchedule d) :
-    ∀ (μ : Measure (Eucl d)), IsProbabilityMeasure μ → μ (sphere d)ᶜ = 0 →
-      IsProbabilityMeasure (attnMeasureFlow θ μ) ∧ (attnMeasureFlow θ μ) (sphere d)ᶜ = 0 := by
-  induction θ with
-  | nil => exact fun μ hμ hs => ⟨hμ, hs⟩
-  | cons p rest ih =>
-    intro μ hμ hs
-    haveI := hμ
-    have h1 := isProbabilityMeasure_attnStep p μ hs
-    have h2 := attnStep_supportedIn_sphere p μ hs
-    simpa [attnMeasureFlow] using ih (attnStep p μ) h1 h2
-
-/-- The solution operator preserves probability (on sphere-supported probability data). -/
-theorem isProbabilityMeasure_attnMeasureFlow (θ : AttnSchedule d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    IsProbabilityMeasure (attnMeasureFlow θ μ) :=
-  (attnMeasureFlow_prob_supportedIn_sphere θ μ ‹_› hs).1
-
-/-- The solution operator preserves sphere support (on sphere-supported probability data). -/
-theorem attnMeasureFlow_supportedIn_sphere (θ : AttnSchedule d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    (attnMeasureFlow θ μ) (sphere d)ᶜ = 0 :=
-  (attnMeasureFlow_prob_supportedIn_sphere θ μ ‹_› hs).2
-
 /-! ### The linear bridge: measure-independent blocks realize the mean-field flow
 
 For `V = 0` the field ignores the measure, so the McKean-Vlasov system degenerates to the plain
@@ -299,15 +205,9 @@ theorem isMeanFieldFlow_blockFlow (b : Block d) (p : AttnParams d) (hV : p.V = 0
     exact b.blockCurve_isIntegralCurve x t
 
 
-/-! ### Transport-map extraction: every solution operator is a pushforward
-
-Each block step pushes the measure along its mean-field flow at the block's duration; composing
-the steps exhibits the whole schedule's action as one measurable pushforward, invertible on the
-sphere. This is the paper's flow-map convention (the Lipschitz invertible `φ^T : 𝕊^{d-1} → 𝕊^{d-1}`
-of eq. (B.2)), derived from the well-posedness interface, so downstream statements need not carry
-per-member transport-map clauses as axiom content. -/
-
-/-- A sphere-supported probability measure sees a nonempty sphere. -/
+/-- A sphere-supported probability measure sees a nonempty sphere. Used by
+`AttnStepExistence.attnStep_exists_map` (the transport-map extraction, relocated there along with
+`attnStep`/`attnMeasureFlow` since it needs the genuine `exists_meanFieldFlow` theorem). -/
 theorem sphere_nonempty_of_supported (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (hs : μ (sphere d)ᶜ = 0) : (sphere d).Nonempty := by
   rcases Set.eq_empty_or_nonempty (sphere d) with hempty | hne
@@ -316,79 +216,5 @@ theorem sphere_nonempty_of_supported (μ : Measure (Eucl d)) [IsProbabilityMeasu
     have : μ Set.univ = 0 := huniv ▸ hs
     simpa [this] using (measure_univ (μ := μ))
   · exact hne
-
-/-- **One step is a pushforward.** The block step of a sphere-supported probability measure is the
-pushforward along a measurable map that carries the sphere into itself and has a measurable
-left inverse there (the mean-field flow slice at the block's duration; its sphere restriction is a
-continuous bijection of a compact space, hence a homeomorphism). -/
-theorem attnStep_exists_map (p : AttnParams d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
-      attnStep p μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
-      ∀ x ∈ sphere d, Φinv (Φ x) = x := by
-  classical
-  have hspec := (@exists_meanFieldFlow d p μ ‹_› hs).choose_spec
-  set Φd := (@exists_meanFieldFlow d p μ ‹_› hs).choose p.duration with hΦd
-  have hdur : p.duration ∈ Set.Icc 0 p.duration := ⟨p.duration_nonneg, le_rfl⟩
-  have hmeas : Measurable Φd := hspec.measurable p.duration hdur
-  have hbij : Set.BijOn Φd (sphere d) (sphere d) := hspec.sphere_bijOn p.duration hdur
-  obtain ⟨L, hlip⟩ := hspec.lipschitz
-  have hcont : Continuous Φd := (hlip p.duration hdur).continuous
-  -- The sphere restriction is a continuous bijection of a compact T2 space: a homeomorphism.
-  haveI : CompactSpace (sphere d) := isCompact_iff_compactSpace.mp (isCompact_sphere 0 1)
-  let e : sphere d ≃ sphere d := hbij.equiv Φd
-  have hecont : Continuous (e : sphere d → sphere d) := by
-    have : Continuous fun x : sphere d => Φd (x : Eucl d) := hcont.comp continuous_subtype_val
-    exact Continuous.subtype_mk this _
-  let homeo : sphere d ≃ₜ sphere d := Continuous.homeoOfEquivCompactToT2 (f := e) hecont
-  -- Re-embed the sphere inverse as a global measurable map via a measurable retraction.
-  obtain ⟨z₀, hz₀⟩ := sphere_nonempty_of_supported μ hs
-  set πval : Eucl d → Eucl d := (sphere d).piecewise id fun _ => z₀ with hπval
-  have hπmeas : Measurable πval :=
-    Measurable.piecewise Metric.isClosed_sphere.measurableSet measurable_id measurable_const
-  have hπmem : ∀ y, πval y ∈ sphere d := by
-    intro y
-    by_cases hy : y ∈ sphere d <;> simp [hπval, hy, hz₀]
-  refine ⟨Φd, fun y => (homeo.symm ⟨πval y, hπmem y⟩ : Eucl d), hmeas,
-    (continuous_subtype_val.comp homeo.symm.continuous).measurable.comp
-      (hπmeas.subtype_mk (p := fun z => z ∈ sphere d)), ?_, hbij.mapsTo, ?_⟩
-  · rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
-  · intro x hx
-    have hΦx : Φd x ∈ sphere d := hbij.mapsTo hx
-    have hπ : πval (Φd x) = Φd x := by simp [hπval, hΦx]
-    have hval : (⟨πval (Φd x), hπmem (Φd x)⟩ : sphere d) = e ⟨x, hx⟩ :=
-      Subtype.ext (by show πval (Φd x) = ((e ⟨x, hx⟩ : sphere d) : Eucl d); rw [hπ]; rfl)
-    calc (homeo.symm ⟨πval (Φd x), hπmem (Φd x)⟩ : Eucl d)
-        = (homeo.symm (e ⟨x, hx⟩) : Eucl d) := by rw [hval]
-      _ = ((⟨x, hx⟩ : sphere d) : Eucl d) := by
-          have h2 : homeo.symm (e ⟨x, hx⟩) = ⟨x, hx⟩ := homeo.symm_apply_apply ⟨x, hx⟩
-          exact congrArg Subtype.val h2
-      _ = x := rfl
-
-/-- **The solution operator is a pushforward.** Along any schedule, a sphere-supported probability
-measure is pushed forward by one measurable map, sphere-to-sphere, with a measurable left inverse
-on the sphere: the composition of the per-block flow slices. This derives the transport-map clause
-the paper attaches to its flow maps (eq. (B.2)) once and for all. -/
-theorem attnMeasureFlow_exists_map (θ : AttnSchedule d) (μ : Measure (Eucl d))
-    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
-      attnMeasureFlow θ μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
-      ∀ x ∈ sphere d, Φinv (Φ x) = x := by
-  induction θ generalizing μ with
-  | nil =>
-    exact ⟨id, id, measurable_id, measurable_id, (Measure.map_id).symm,
-      Set.mapsTo_id _, fun x _ => rfl⟩
-  | cons p rest ih =>
-    obtain ⟨Φp, Φpinv, hΦpm, hΦpim, hΦpeq, hΦpto, hΦpinv⟩ := attnStep_exists_map p μ hs
-    haveI := isProbabilityMeasure_attnStep p μ hs
-    have hs' : (attnStep p μ) (sphere d)ᶜ = 0 := attnStep_supportedIn_sphere p μ hs
-    obtain ⟨Φr, Φrinv, hΦrm, hΦrim, hΦreq, hΦrto, hΦrinv⟩ := ih (attnStep p μ) hs'
-    refine ⟨Φr ∘ Φp, Φpinv ∘ Φrinv, hΦrm.comp hΦpm, hΦpim.comp hΦrim, ?_,
-      hΦrto.comp hΦpto, fun x hx => ?_⟩
-    · have hcons : attnMeasureFlow (p :: rest) μ = attnMeasureFlow rest (attnStep p μ) := rfl
-      rw [hcons, hΦreq, hΦpeq, Measure.map_map hΦrm hΦpm]
-    · have hpx : Φp x ∈ sphere d := hΦpto hx
-      simp only [Function.comp_apply]
-      rw [hΦrinv (Φp x) hpx, hΦpinv x hx]
 
 end MeasureToMeasure.Foundations

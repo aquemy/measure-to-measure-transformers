@@ -1193,37 +1193,10 @@ theorem meanFieldFlow_unique [IsProbabilityMeasure μ₀] (hμ₀S : μ₀ (sphe
 
 end MeanFieldUniqueness
 
-section MeanFieldBridge
-
-open MeasureTheory
-
-/-- **The linear bridge.** The attention step of a `V = 0` block coincides with the linear
-pushforward along any `Block` whose field matches on the sphere: the block flow is a mean-field
-flow (`isMeanFieldFlow_blockFlow`), uniqueness pins the chosen flow to it on the sphere, and sphere
-support upgrades the pointwise agreement to equality of pushforwards. First consumer of
-`meanFieldFlow_unique` (now a theorem). -/
-theorem attnStep_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0) (b : Block d)
-    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
-    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    attnStep p μ₀ = μ₀.map (b.blockFlow p.duration) := by
-  rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ₀›, hs⟩]
-  have hΦ := (@exists_meanFieldFlow d p μ₀ ‹_› hs).choose_spec
-  have heq := meanFieldFlow_unique hs hΦ (isMeanFieldFlow_blockFlow b p hV hagree μ₀)
-    p.duration ⟨p.duration_nonneg, le_rfl⟩
-  refine Measure.map_congr ?_
-  rw [Filter.EventuallyEq, ae_iff]
-  refine measure_mono_null (fun x hx => ?_) hs
-  simp only [Set.mem_setOf_eq, Set.mem_compl_iff] at hx ⊢
-  exact fun hxs => hx (heq x hxs)
-
-/-- The singleton-schedule form of the bridge: one `V = 0` piece is the linear block flow. -/
-theorem attnMeasureFlow_singleton_eq_map_blockFlow (p : AttnParams d) (hV : p.V = 0)
-    (b : Block d)
-    (hagree : ∀ y ∈ sphere d, b.field y = tangentialProjector y (p.W (reluVec (p.U y + p.b))))
-    (μ₀ : Measure (Eucl d)) [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    attnMeasureFlow [p] μ₀ = μ₀.map (b.blockFlow p.duration) :=
-  attnStep_eq_map_blockFlow p hV b hagree μ₀ hs
-
-end MeanFieldBridge
+-- `attnStep_eq_map_blockFlow`/`attnMeasureFlow_singleton_eq_map_blockFlow` (the linear bridge)
+-- moved to `AttnStepExistence.lean`, downstream of this file: they need `attnStep`/`attnMeasureFlow`,
+-- which need the genuine `exists_meanFieldFlow` theorem, which needs the whole M3b existence chain
+-- that itself imports this file. `meanFieldFlow_unique` above is unaffected -- it takes
+-- `IsMeanFieldFlow` hypotheses directly and is agnostic to how they were obtained.
 
 end MeasureToMeasure.Foundations
