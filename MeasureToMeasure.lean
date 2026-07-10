@@ -93,6 +93,7 @@ import MeasureToMeasure.Leaves.ExtremalBoundaryPoint
 import MeasureToMeasure.Leaves.MeanFieldPark
 import MeasureToMeasure.Leaves.GatedConvergence
 import MeasureToMeasure.Leaves.AtomlessDirection
+import MeasureToMeasure.Leaves.ThresholdExtraction
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
