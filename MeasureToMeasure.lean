@@ -95,6 +95,7 @@ import MeasureToMeasure.Leaves.GatedConvergence
 import MeasureToMeasure.Leaves.AtomlessDirection
 import MeasureToMeasure.Leaves.ThresholdExtraction
 import MeasureToMeasure.Leaves.SlabConnected
+import MeasureToMeasure.Leaves.ConnectedMassPartition
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound

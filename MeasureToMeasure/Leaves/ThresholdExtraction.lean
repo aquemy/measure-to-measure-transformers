@@ -212,13 +212,14 @@ theorem measure_proj_Iic_le_of_forall_lt (μ0 : Measure (Eucl d)) [IsProbability
 
 /-- **Exact threshold extraction.** For `μ0` supported on the sphere with atomless projection along
 `u` (Step A's conclusion), every target mass `m ∈ [0,1]` is hit EXACTLY by some threshold cut
-`{x | ⟪u,x⟫ ≤ t}` -- and that threshold itself carries no mass (`u`-atomlessness at `t` specifically),
-so consecutive thresholds can be glued into disjoint slabs without losing or double-counting mass. -/
+`{x | ⟪u,x⟫ ≤ t}`, with `t ∈ [-1,1]` -- and that threshold itself carries no mass (`u`-atomlessness
+at `t` specifically), so consecutive thresholds can be glued into disjoint slabs without losing or
+double-counting mass. -/
 theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] [NoAtoms μ0]
     (u : Metric.sphere (0:Eucl d) 1) (hμ0S : μ0 (sphere d)ᶜ = 0)
     (hatomless : ∀ c : ℝ, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = c} = 0)
     (m : ENNReal) (hm : m ≤ 1) :
-    ∃ t : ℝ, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = t} = 0 ∧
+    ∃ t : ℝ, -1 ≤ t ∧ t ≤ 1 ∧ μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = t} = 0 ∧
       μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ t} = m := by
   set F : ℝ → ENNReal := fun t => μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ t} with hFdef
   have hFmono : Monotone F := by
@@ -235,6 +236,7 @@ theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] 
   have hSbdd : BddBelow S := ⟨-1, fun t ht => (ht.1).1⟩
   set t : ℝ := sInf S with htdef
   have ht_le1 : t ≤ 1 := csInf_le hSbdd h1S
+  have ht_ge_neg1 : -1 ≤ t := le_csInf hSne (fun s hs => hs.1.1)
   have ht_lb : ∀ s ∈ S, t ≤ s := fun s hs => csInf_le hSbdd hs
   have hgap : ∀ s, t < s → m ≤ F s := by
     intro s hs
@@ -263,7 +265,7 @@ theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] 
       calc F s ≤ F (-1) := hFmono hsge.le
         _ = 0 := hF_neg1
         _ ≤ m := bot_le
-  refine ⟨t, hatomless t, le_antisymm ?_ ?_⟩
+  refine ⟨t, ht_ge_neg1, ht_le1, hatomless t, le_antisymm ?_ ?_⟩
   · exact measure_proj_Iic_le_of_forall_lt μ0 u m t (hatomless t) hbelow
   · exact measure_proj_Iic_ge_of_forall_gt μ0 u m t hgap
 
