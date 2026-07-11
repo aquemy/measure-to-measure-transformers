@@ -292,27 +292,33 @@ theorem scaledGatedBlock_protect_inner_ge {A : ℝ} (hA : 0 < A) {z₀ ω z₁ :
   simp only at this
   linarith
 
-/-- **A shared target ball survives one whole leg**, whether or not the point in question ever
-enters the leg's own source ball: if it does, `scaledGatedBlock_protect_inner_ge` traps it; if it
-doesn't, `scaledGatedBlock_z0_fixed_of_le` fixes it outright. Either way a point starting strictly
-inside `B(z₁,R₁)` ends up (non-strictly) inside it after the whole leg -- exactly the fact needed to
-know one chain's delivered mass survives every OTHER chain's legs converging on the same target. -/
+/-- **A shared target ball survives one whole leg, strictly.** Whether or not the point in question
+ever enters the leg's own source ball: if it does, `scaledGatedBlock_protect_inner_ge` traps it; if
+it doesn't, `scaledGatedBlock_z0_fixed_of_le` fixes it outright. Either way a point starting
+strictly inside `B(z₁,R₁)` ends up STRICTLY inside it after the whole leg -- not just non-strictly,
+which matters: since `geodesicBall z₁ R₁` (open, by its own definition) coincides exactly with
+`{y | cosR₁ < ⟪z₁,y⟫}`, this makes the SAME open ball, at the SAME fixed radius, invariant under
+this leg -- so the SAME fact can be reapplied across many legs converging on the same target with no
+shrinking-radius bookkeeping (a non-strict conclusion would force exactly that: mass landing on the
+closed boundary after one leg would no longer satisfy a strict hypothesis for the next). Exactly the
+fact needed to know one chain's delivered mass survives every OTHER chain's legs converging on the
+same target. -/
 theorem scaledGatedBlock_z0_target_preserved {A : ℝ} (hA : 0 < A) {z₀ ω z₁ : Eucl d}
     (hz₀ : ‖z₀‖ = 1) (hω : ‖ω‖ = 1) {cosR cosR₁ : ℝ} (hcosR : 0 ≤ cosR) {T : ℝ} (hT : 0 ≤ T)
     (hωcap : cosR < (⟪ω, z₀⟫ : ℝ))
     (hcosR₁ : 0 ≤ cosR₁) (hω1cap : cosR₁ < (⟪ω, z₁⟫ : ℝ)) :
     ∀ y, y ∈ sphere d → y ≠ ω → y ≠ -ω → cosR₁ < (⟪y, z₁⟫ : ℝ) →
-      cosR₁ ≤ (⟪(scaledGatedBlock hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT).blockFlow T y, z₁⟫ : ℝ) := by
+      cosR₁ < (⟪(scaledGatedBlock hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT).blockFlow T y, z₁⟫ : ℝ) := by
   intro y hys hyne hyne' hycap
   by_cases hyz0 : cosR < (⟪y, z₀⟫ : ℝ)
   · have htrap := scaledGatedBlock_protect_inner_ge hA hz₀ hω hcosR hT hys hyne hyne' hyz0 hωcap
       hcosR₁ hycap hω1cap T (Set.mem_Icc.mpr ⟨hT, le_refl T⟩)
-    calc cosR₁ ≤ min (⟪y, z₁⟫ : ℝ) (⟪ω, z₁⟫ : ℝ) := le_min hycap.le hω1cap.le
+    calc cosR₁ < min (⟪y, z₁⟫ : ℝ) (⟪ω, z₁⟫ : ℝ) := lt_min hycap hω1cap
       _ ≤ _ := htrap
   · push_neg at hyz0
     rw [real_inner_comm] at hyz0
     rw [scaledGatedBlock_z0_fixed_of_le hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT hyz0 T]
-    exact hycap.le
+    exact hycap
 
 /-- Choosing the amplitude `A` from the log-odds budget, the `z₀`-localized gated flow maps the
 two-threshold source cap (`m` toward `ω`, `m₀` toward `z₀`) into the target cap `{b ≤ ⟪·,ω⟫}`.
