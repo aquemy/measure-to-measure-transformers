@@ -100,6 +100,7 @@ import MeasureToMeasure.Leaves.GatedBallLocalized
 import MeasureToMeasure.Leaves.GatedChainUnion
 import MeasureToMeasure.Leaves.GatedStarRetention
 import MeasureToMeasure.Leaves.GatedChainForest
+import MeasureToMeasure.Leaves.GatedForestToTarget
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
