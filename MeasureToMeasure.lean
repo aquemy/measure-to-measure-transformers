@@ -97,6 +97,7 @@ import MeasureToMeasure.Leaves.ThresholdExtraction
 import MeasureToMeasure.Leaves.SlabConnected
 import MeasureToMeasure.Leaves.ConnectedMassPartition
 import MeasureToMeasure.Leaves.GatedBallLocalized
+import MeasureToMeasure.Leaves.GatedChainUnion
 import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.MarkovBound
