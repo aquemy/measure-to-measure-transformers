@@ -201,6 +201,119 @@ theorem scaledGatedBlock_z0_fixed_of_le {A : ℝ} (hA : 0 ≤ A) {z₀ ω : Eucl
   rw [scaledGatedField, gatedField, gateFactor, reluGate]
   rw [max_eq_left (by linarith : (⟪z₀, x⟫ : ℝ) - cosR ≤ 0), mul_zero, zero_smul, smul_zero]
 
+/-- The gate ODE along the amplitude-scaled gated flow, tracked against a THIRD direction `v`,
+independent of both the gate's own center `z₀` and the push direction `ω`. Generalizes
+`hasDerivAt_inner_scaledFlow_other` (which hard-codes the tracked direction to the field's own
+`z₀`) so the SAME derivative computation applies to protecting an unrelated ball's mass from this
+leg's push, needed for chaining several ball-chains into a shared target (union-form step 3). -/
+theorem hasDerivAt_inner_scaledFlow_track {A : ℝ} {z₀ ω : Eucl d} (cosR : ℝ) (v : Eucl d)
+    (b : Block d) (hfield : b.field = scaledGatedField A z₀ ω cosR)
+    {x : Eucl d} {t : ℝ} :
+    HasDerivAt (fun s => (⟪b.blockFlow s x, v⟫ : ℝ))
+      ((A * gateFactor z₀ cosR (b.blockFlow t x)) *
+        (⟪ω, v⟫ - ⟪b.blockFlow t x, ω⟫ * ⟪b.blockFlow t x, v⟫)) t := by
+  have hcurve : HasDerivAt (b.blockCurve x) (b.field (b.blockCurve x t)) t :=
+    b.blockCurve_isIntegralCurve x t
+  have hvel : b.field (b.blockCurve x t)
+      = tangentialProjector (b.blockCurve x t)
+          ((A * gateFactor z₀ cosR (b.blockCurve x t)) • ω) := by
+    rw [hfield, scaledGatedField_eq_projector_smul]
+  exact gate_hasDerivAt_inner_other hcurve (A * gateFactor z₀ cosR (b.blockCurve x t)) hvel
+
+/-- **A third ball's mass is trapped, not just untouched.** If `x` and the push-target `ω` both sit
+strictly inside a THIRD ball `B(z₁,R₁)` (unrelated to this leg's own gate `z₀`/target `ω`-overlap),
+the trajectory NEVER drops below that ball's threshold either -- the SAME barrier argument as
+`scaledGatedBlock_z0_inner_ge`, but for an independent tracked direction. The two invariants
+combine: `scaledGatedBlock_z0_inner_ge` keeps the gate strictly active throughout (needed here for
+the derivative sign), and this one shows that activity can't push mass already resting near `z₁`
+out of `B(z₁,R₁)`. This is what lets several ball-chains converging on a SHARED target compose
+sequentially: a later leg's own push can only move points inside its own source ball, and any point
+already delivered to the shared target that also happens to sit there is provably pushed no lower
+in the target's own direction, not just left alone. -/
+theorem scaledGatedBlock_protect_inner_ge {A : ℝ} (hA : 0 < A) {z₀ ω z₁ : Eucl d} (hz₀ : ‖z₀‖ = 1)
+    (hω : ‖ω‖ = 1) {cosR cosR₁ : ℝ} (hcosR : 0 ≤ cosR) {T : ℝ} (hT : 0 ≤ T)
+    {x : Eucl d} (hx : x ∈ sphere d) (hne : x ≠ ω) (hne' : x ≠ -ω)
+    (hxcap : cosR < (⟪x, z₀⟫ : ℝ)) (hωcap : cosR < (⟪ω, z₀⟫ : ℝ))
+    (hcosR₁ : 0 ≤ cosR₁) (hx1cap : cosR₁ < (⟪x, z₁⟫ : ℝ)) (hω1cap : cosR₁ < (⟪ω, z₁⟫ : ℝ)) :
+    ∀ s ∈ Set.Icc (0:ℝ) T, min (⟪x, z₁⟫ : ℝ) (⟪ω, z₁⟫ : ℝ)
+      ≤ (⟪(scaledGatedBlock hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT).blockFlow s x, z₁⟫ : ℝ) := by
+  have hz₀s : z₀ ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hz₀]
+  have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hω]
+  set B := scaledGatedBlock hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT with hBdef
+  have hfield : B.field = scaledGatedField A z₀ ω cosR := rfl
+  set L1 := min (⟪x, z₁⟫ : ℝ) (⟪ω, z₁⟫ : ℝ) with hL1def
+  have hL1pos : 0 < L1 := lt_of_le_of_lt hcosR₁ (lt_min hx1cap hω1cap)
+  have hgateInv := scaledGatedBlock_z0_inner_ge hA hz₀ hω hcosR hT hx hne hne' hxcap hωcap
+  set f : ℝ → ℝ := fun t => -(⟪B.blockFlow t x, z₁⟫ : ℝ) with hfdef
+  set f' : ℝ → ℝ := fun t => -((A * gateFactor z₀ cosR (B.blockFlow t x)) *
+      (⟪ω, z₁⟫ - ⟪B.blockFlow t x, ω⟫ * ⟪B.blockFlow t x, z₁⟫)) with hf'def
+  have hfderiv : ∀ t : ℝ, HasDerivAt f (f' t) t := by
+    intro t
+    exact (hasDerivAt_inner_scaledFlow_track cosR z₁ B hfield (x := x) (t := t)).neg
+  have hkey : ∀ t ∈ Set.Ico (0:ℝ) T, f t = -L1 → f' t < 0 := by
+    intro t ht_mem heq
+    have hht : (⟪B.blockFlow t x, z₁⟫ : ℝ) = L1 := by
+      rw [hfdef] at heq; simp only at heq; linarith
+    have hgz0 : min (⟪x, z₀⟫ : ℝ) (⟪ω, z₀⟫ : ℝ) ≤ (⟪B.blockFlow t x, z₀⟫ : ℝ) :=
+      hgateInv t (Set.mem_Icc.mpr ⟨(Set.mem_Ico.mp ht_mem).1, (Set.mem_Ico.mp ht_mem).2.le⟩)
+    have hz0floor : cosR < min (⟪x, z₀⟫ : ℝ) (⟪ω, z₀⟫ : ℝ) := lt_min hxcap hωcap
+    have hz0strict : cosR < (⟪B.blockFlow t x, z₀⟫ : ℝ) := lt_of_lt_of_le hz0floor hgz0
+    have hsph : B.blockFlow t x ∈ sphere d :=
+      B.blockFlow_mem_sphere hx (Set.mem_Ico.mp ht_mem).1
+    have hgate_pos : 0 < gateFactor z₀ cosR (B.blockFlow t x) := by
+      rw [gateFactor_eq_reluGate_of_mem_sphere cosR hsph, reluGate, real_inner_comm]
+      exact lt_of_lt_of_le (by linarith) (le_max_right 0 _)
+    have hg_pos : 0 < A * gateFactor z₀ cosR (B.blockFlow t x) := mul_pos hA hgate_pos
+    have hu_lt : (⟪B.blockFlow t x, ω⟫ : ℝ) < 1 :=
+      (inner_scaledFlow_mem_Ioo hωs cosR B hfield hx hne hne' (Set.mem_Ico.mp ht_mem).1).2
+    have hcomp_pos : 0 < (⟪ω, z₁⟫ : ℝ) - ⟪B.blockFlow t x, ω⟫ * ⟪B.blockFlow t x, z₁⟫ := by
+      rw [hht]
+      have h1 : (⟪B.blockFlow t x, ω⟫ : ℝ) * L1 < 1 * L1 :=
+        mul_lt_mul_of_pos_right hu_lt hL1pos
+      have h2 : L1 ≤ (⟪ω, z₁⟫ : ℝ) := min_le_right _ _
+      linarith
+    rw [hf'def]
+    simp only
+    have := mul_pos hg_pos hcomp_pos
+    linarith
+  have hcont : ContinuousOn f (Set.Icc 0 T) := fun t _ => (hfderiv t).continuousAt.continuousWithinAt
+  have hderivwithin : ∀ t ∈ Set.Ico (0:ℝ) T, HasDerivWithinAt f (f' t) (Set.Ici t) t :=
+    fun t _ => (hfderiv t).hasDerivWithinAt
+  have hstart : f 0 ≤ (fun _ : ℝ => -L1) 0 := by
+    have hb0 : B.blockFlow 0 x = x := B.blockFlow_zero x
+    rw [hfdef]; simp only [hb0]
+    have : L1 ≤ (⟪x, z₁⟫ : ℝ) := min_le_left _ _
+    linarith
+  have hBderiv : ∀ t : ℝ, HasDerivAt (fun _ : ℝ => -L1) (0:ℝ) t := fun t => hasDerivAt_const t (-L1)
+  intro s hs
+  have hbound := image_le_of_deriv_right_lt_deriv_boundary hcont hderivwithin hstart hBderiv hkey hs
+  rw [hfdef] at hbound
+  have : (fun t => -(⟪B.blockFlow t x, z₁⟫ : ℝ)) s ≤ (fun _ : ℝ => -L1) s := hbound
+  simp only at this
+  linarith
+
+/-- **A shared target ball survives one whole leg**, whether or not the point in question ever
+enters the leg's own source ball: if it does, `scaledGatedBlock_protect_inner_ge` traps it; if it
+doesn't, `scaledGatedBlock_z0_fixed_of_le` fixes it outright. Either way a point starting strictly
+inside `B(z₁,R₁)` ends up (non-strictly) inside it after the whole leg -- exactly the fact needed to
+know one chain's delivered mass survives every OTHER chain's legs converging on the same target. -/
+theorem scaledGatedBlock_z0_target_preserved {A : ℝ} (hA : 0 < A) {z₀ ω z₁ : Eucl d}
+    (hz₀ : ‖z₀‖ = 1) (hω : ‖ω‖ = 1) {cosR cosR₁ : ℝ} (hcosR : 0 ≤ cosR) {T : ℝ} (hT : 0 ≤ T)
+    (hωcap : cosR < (⟪ω, z₀⟫ : ℝ))
+    (hcosR₁ : 0 ≤ cosR₁) (hω1cap : cosR₁ < (⟪ω, z₁⟫ : ℝ)) :
+    ∀ y, y ∈ sphere d → y ≠ ω → y ≠ -ω → cosR₁ < (⟪y, z₁⟫ : ℝ) →
+      cosR₁ ≤ (⟪(scaledGatedBlock hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT).blockFlow T y, z₁⟫ : ℝ) := by
+  intro y hys hyne hyne' hycap
+  by_cases hyz0 : cosR < (⟪y, z₀⟫ : ℝ)
+  · have htrap := scaledGatedBlock_protect_inner_ge hA hz₀ hω hcosR hT hys hyne hyne' hyz0 hωcap
+      hcosR₁ hycap hω1cap T (Set.mem_Icc.mpr ⟨hT, le_refl T⟩)
+    calc cosR₁ ≤ min (⟪y, z₁⟫ : ℝ) (⟪ω, z₁⟫ : ℝ) := le_min hycap.le hω1cap.le
+      _ ≤ _ := htrap
+  · push_neg at hyz0
+    rw [real_inner_comm] at hyz0
+    rw [scaledGatedBlock_z0_fixed_of_le hA.le hz₀ hω (by linarith : (-1:ℝ) ≤ cosR) hT hyz0 T]
+    exact hycap.le
+
 /-- Choosing the amplitude `A` from the log-odds budget, the `z₀`-localized gated flow maps the
 two-threshold source cap (`m` toward `ω`, `m₀` toward `z₀`) into the target cap `{b ≤ ⟪·,ω⟫}`.
 The two-threshold form is what `gated_twoCap_retention_localized` needs: `m₀` keeps the source cap
