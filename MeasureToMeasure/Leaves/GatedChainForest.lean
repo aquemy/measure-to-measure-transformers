@@ -31,11 +31,17 @@ double-counting arises here: arm targets (each arm's own last ball) are distinct
 disjoint, so this is simpler in that one respect despite tracking a growing LIST of guarantees
 rather than a single sum.
 
-M3b/mid-level staging: union-form step 3d; composing this with `gated_star_retention` (feeding
-each arm's own last ball in as that arm's "staging ball") is the next step, not yet built -- it
-additionally needs the target to be disjoint from every NON-last ball of every arm (a natural but
-not automatically-implied "well-formed chain" hypothesis), so that the target's own untouched
-region stays exactly the identity-outside-forest set.
+**`hchain`/`hdisjWithin` are bounded per-arm by `L i`** (`∀ i k, k < L i → …` /
+`∀ i j k, j+2≤k → k≤L i → …`), not unbounded over all `k : ℕ` -- an unbounded form would be
+unsatisfiable by any finite-length arm construction (pairwise-`≥2R`-separated points on the compact
+sphere must be finite, the same obstruction `gated_chainUnion_retention_bounded`
+(`GatedChainUnion.lean`) was built to fix). This theorem's own proof calls
+`gated_chainUnion_retention_bounded` per-arm directly (not the older unbounded
+`gated_chainUnion_retention`), so the bounded form here is not just a defensive restatement -- it
+is what the proof actually needs and produces.
+
+M3b/mid-level staging: union-form step 3d; composed with `gated_star_retention` in
+`gated_forest_to_target_retention` (`GatedForestToTarget.lean`).
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -48,15 +54,16 @@ variable {d : ℕ}
 
 /-- **`N+1` linear chains ("arms"), pairwise disjoint from each other**, compose into ONE schedule
 that simultaneously retains EVERY arm's own chain-union mass into that arm's own last ball. Each
-arm may internally overlap per its own chain structure (`hchain`/`hdisjWithin`, exactly as in
-`gated_chainUnion_retention`); `hdisjAcross` is the NEW hypothesis, requiring every ball of every
-arm to be disjoint from every ball of every OTHER arm. -/
+arm may internally overlap per its own chain structure (`hchain`/`hdisjWithin`, bounded per-arm by
+`L i` -- see the module docstring); `hdisjAcross` is the NEW hypothesis, requiring every ball of
+every arm to be disjoint from every ball of every OTHER arm. -/
 theorem gated_chainForest_retention (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (N : ℕ) (L : ℕ → ℕ) (z : ℕ → ℕ → Eucl d) (R : ℕ → ℕ → ℝ)
     (hz : ∀ i j, z i j ∈ sphere d) (hR : ∀ i j, R i j ∈ Set.Ioo 0 (Real.pi / 2))
-    (hchain : ∀ i k, (geodesicBall (z i k) (R i k) ∩ geodesicBall (z i (k + 1)) (R i (k + 1))).Nonempty)
-    (hdisjWithin : ∀ i j k, j + 2 ≤ k →
+    (hchain : ∀ i k, k < L i →
+      (geodesicBall (z i k) (R i k) ∩ geodesicBall (z i (k + 1)) (R i (k + 1))).Nonempty)
+    (hdisjWithin : ∀ i j k, j + 2 ≤ k → k ≤ L i →
       Disjoint (geodesicBall (z i j) (R i j)) (geodesicBall (z i k) (R i k)))
     (hdisjAcross : ∀ i i' j j', i ≠ i' →
       Disjoint (geodesicBall (z i j) (R i j)) (geodesicBall (z i' j') (R i' j'))) :
@@ -68,7 +75,7 @@ theorem gated_chainForest_retention (μ : Measure (Eucl d)) [IsProbabilityMeasur
   induction N with
   | zero =>
     obtain ⟨θ, hsw, hmass, hfix⟩ :=
-      gated_chainUnion_retention μ T ε hT hε (L 0) (z 0) (hz 0) (R 0) (hR 0) (hchain 0)
+      gated_chainUnion_retention_bounded μ T ε hT hε (L 0) (z 0) (hz 0) (R 0) (hR 0) (hchain 0)
         (hdisjWithin 0)
     have hU0 : (⋃ i ≤ 0, ⋃ j ≤ L i, geodesicBall (z i j) (R i j)) =
         (⋃ j ≤ L 0, geodesicBall (z 0 j) (R 0 j)) := by
@@ -97,7 +104,7 @@ theorem gated_chainForest_retention (μ : Measure (Eucl d)) [IsProbabilityMeasur
       obtain ⟨i, hin, j', -, hxj'⟩ := hx'
       exact (hdisjAcross (n + 1) i j j' (by omega)).ne_of_mem hxj hxj' rfl
     obtain ⟨ψ, hψsw, hψmass, hψfix⟩ :=
-      gated_chainUnion_retention (Axioms.measureFlow θ T μ) T ε hT hε (L (n + 1)) (z (n + 1))
+      gated_chainUnion_retention_bounded (Axioms.measureFlow θ T μ) T ε hT hε (L (n + 1)) (z (n + 1))
         (hz (n + 1)) (R (n + 1)) (hR (n + 1)) (hchain (n + 1)) (hdisjWithin (n + 1))
     have hAeq : (Axioms.measureFlow θ T μ) Anp1 = μ Anp1 := by
       apply measureFlow_eq_of_flowMap_eqOn θ hT.le μ hAnp1meas

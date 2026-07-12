@@ -44,7 +44,9 @@ open MeasureToMeasure
 variable {d : ℕ}
 
 /-- **`N+1` disjoint multi-leg chains converge on a shared target.** Each arm `i` is its own linear
-chain of `L i + 1` balls (`z i 0, …, z i (L i)`, per `gated_chainUnion_retention`'s own structure),
+chain of `L i + 1` balls (`z i 0, …, z i (L i)`, per `gated_chainUnion_retention`'s own structure;
+`hchain`/`hdisjWithin` bounded per-arm by `L i`, matching `gated_chainForest_retention`'s own
+bounded form -- see that file's module docstring for why the unbounded form is unsatisfiable),
 pairwise disjoint across arms (`hdisjAcross`); the target overlaps only each arm's own LAST ball
 (`hcapTarget`) and is disjoint from every earlier ball of every arm (`hdisjTarget`, the "well-formed
 chain" hypothesis this composition needs beyond the two pieces it's built from). A schedule of
@@ -55,8 +57,9 @@ theorem gated_forest_to_target_retention (μ : Measure (Eucl d)) [IsProbabilityM
     (z₁ : Eucl d) (hz₁ : z₁ ∈ sphere d) (R₁ : ℝ) (hR₁ : R₁ ∈ Set.Ioo 0 (Real.pi / 2))
     (N : ℕ) (L : ℕ → ℕ) (z : ℕ → ℕ → Eucl d) (R : ℕ → ℕ → ℝ)
     (hz : ∀ i j, z i j ∈ sphere d) (hR : ∀ i j, R i j ∈ Set.Ioo 0 (Real.pi / 2))
-    (hchain : ∀ i k, (geodesicBall (z i k) (R i k) ∩ geodesicBall (z i (k + 1)) (R i (k + 1))).Nonempty)
-    (hdisjWithin : ∀ i j k, j + 2 ≤ k →
+    (hchain : ∀ i k, k < L i →
+      (geodesicBall (z i k) (R i k) ∩ geodesicBall (z i (k + 1)) (R i (k + 1))).Nonempty)
+    (hdisjWithin : ∀ i j k, j + 2 ≤ k → k ≤ L i →
       Disjoint (geodesicBall (z i j) (R i j)) (geodesicBall (z i k) (R i k)))
     (hdisjAcross : ∀ i i' j j', i ≠ i' →
       Disjoint (geodesicBall (z i j) (R i j)) (geodesicBall (z i' j') (R i' j')))
