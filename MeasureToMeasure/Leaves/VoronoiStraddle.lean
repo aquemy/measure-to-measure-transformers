@@ -445,6 +445,79 @@ theorem exists_voronoiCell_straddle_chain_of_given_inner_ball {M : ℕ} (x : Fin
     exists_geodesicConvex_arc_chain_inner_ball hys hρ0 hps hqs hpdist hqdist hpq_ne.symm hpq_nane
   exact ⟨n, z, hz0, hzn ▸ hqk, hnpos, hzmem, hsub, hchain, hdisj⟩
 
+/-- **Extraction avoiding one extra point.** Like the usual "find a point of `voronoiCell x k`
+within `ρ` of `y`" extraction (via `mem_closure_iff`), but ALSO avoiding a caller-supplied
+`badpt ≠ y`. Removing a single point from an open target set keeps it open (complement of a
+closed singleton, in any T1 space) -- no manifold/no-isolated-points argument needed. -/
+theorem exists_voronoiCell_mem_avoiding {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) {y : Eucl d}
+    (hyk : y ∈ closure (voronoiCell x k)) (badpt : Eucl d) (hbad : badpt ≠ y) {ρ : ℝ} (hρ : 0 < ρ) :
+    ∃ z ∈ voronoiCell x k, geodesicDist y z < ρ ∧ z ≠ badpt := by
+  have hyclosed : y ∈ sphere d := by
+    have hcl : y ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x k) hyk
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  have hopen : IsOpen ({x' : Eucl d | geodesicDist y x' < ρ} \ {badpt}) := by
+    apply IsOpen.sdiff
+    · exact isOpen_lt (continuous_geodesicDist y) continuous_const
+    · exact isClosed_singleton
+  have hmemo : y ∈ ({x' : Eucl d | geodesicDist y x' < ρ} \ {badpt}) := by
+    constructor
+    · show geodesicDist y y < ρ
+      rw [geodesicDist, real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere hyclosed, one_pow,
+        Real.arccos_one]
+      linarith
+    · simp [Ne.symm hbad]
+  obtain ⟨z, hzmem, hzS⟩ := mem_closure_iff.mp hyk _ hopen hmemo
+  exact ⟨z, hzS, hzmem.1, hzmem.2⟩
+
+/-- **Straddle chain, from a GIVEN start, with an explicit radius, AVOIDING a caller-supplied
+point at the far end.** Same construction as `exists_voronoiCell_straddle_chain_of_given_inner_
+ball`, but the fresh endpoint `q` is additionally required to differ from `badpt` -- via `exists_
+voronoiCell_mem_avoiding` instead of the plain `mem_closure_iff` extraction. This is the tool for
+chaining relay hops: instantiate `badpt` with the NEXT hop's antipodal touching point so the
+chain's own exit point is guaranteed usable as the next hop's start (see `GatedRelayHop.lean`'s
+`exists_gated_voronoiCell_relay_hop`/`_avoiding` docstrings for the full picture). -/
+theorem exists_voronoiCell_straddle_chain_of_given_inner_ball_avoiding {M : ℕ} (x : Fin M → Eucl d)
+    {j k : Fin M} (hjkne : j ≠ k) {y : Eucl d} (hyj : y ∈ closure (voronoiCell x j))
+    (hyk : y ∈ closure (voronoiCell x k)) {ρ0 : ℝ} (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2))
+    {p : Eucl d} (hpj : p ∈ voronoiCell x j) (hpdist : geodesicDist y p < ρ0 / 2)
+    (badpt : Eucl d) (hbad : badpt ≠ y) :
+    ∃ (n : ℕ) (z : ℕ → Eucl d),
+      z 0 = p ∧ z n ∈ voronoiCell x k ∧ z n ≠ badpt ∧
+      0 < n ∧
+      (∀ i, z i ∈ sphere d) ∧
+      (∀ i, geodesicBall (z i) (ρ0 / 2) ⊆ geodesicBall y ρ0) ∧
+      (∀ i < n, (geodesicBall (z i) (ρ0 / 2) ∩ geodesicBall (z (i + 1)) (ρ0 / 2)).Nonempty) ∧
+      (∀ a b, a + 2 ≤ b → b ≤ n →
+        Disjoint (geodesicBall (z a) (ρ0 / 2)) (geodesicBall (z b) (ρ0 / 2))) := by
+  have hys : y ∈ sphere d := by
+    have hcl : y ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x j) hyj
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  obtain ⟨q, hqk, hqdist, hqbad⟩ :=
+    exists_voronoiCell_mem_avoiding x k hyk badpt hbad (show (0:ℝ) < ρ0/2 by linarith [hρ0.1])
+  have hps : p ∈ sphere d := voronoiCell_subset_sphere x j hpj
+  have hqs : q ∈ sphere d := voronoiCell_subset_sphere x k hqk
+  have hpq_ne : p ≠ q := by
+    intro heq
+    exact (voronoiCell_disjoint x hjkne).ne_of_mem hpj (heq ▸ hqk) heq
+  have hpqdist : geodesicDist p q < ρ0 := by
+    calc geodesicDist p q ≤ geodesicDist p y + geodesicDist y q :=
+          geodesicDist_triangle hps hys hqs
+      _ = geodesicDist y p + geodesicDist y q := by rw [geodesicDist_comm p y]
+      _ < ρ0 / 2 + ρ0 / 2 := by linarith
+      _ = ρ0 := by ring
+  have hpq_nane : q ≠ -p := by
+    intro heq
+    have : geodesicDist p q = Real.pi := by
+      rw [heq, geodesicDist, inner_neg_right, real_inner_self_eq_norm_sq,
+        norm_eq_one_of_mem_sphere hps, one_pow, show (-(1:ℝ)) = Real.cos Real.pi by
+          rw [Real.cos_pi], Real.arccos_cos Real.pi_pos.le (le_refl Real.pi)]
+    linarith [hpqdist, hρ0.2, Real.pi_pos]
+  obtain ⟨n, z, hnpos, hz0, hzn, hzmem, hsub, hchain, hdisj⟩ :=
+    exists_geodesicConvex_arc_chain_inner_ball hys hρ0 hps hqs hpdist hqdist hpq_ne.symm hpq_nane
+  exact ⟨n, z, hz0, hzn ▸ hqk, hzn ▸ hqbad, hnpos, hzmem, hsub, hchain, hdisj⟩
+
 /-- **A Voronoi cell is relatively open in the sphere.** The strict-inequality conditions defining
 it are each an ambient-open half-space, intersected finitely. -/
 theorem exists_isOpen_inter_voronoiCell {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) :
