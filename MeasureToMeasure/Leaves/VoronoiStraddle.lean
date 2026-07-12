@@ -222,4 +222,129 @@ theorem exists_voronoiCell_straddle_chain_of_given {M : ℕ} (x : Fin M → Eucl
       hpB hqB hpq_ne.symm hpq_nane
   exact ⟨n, z, Rad, hz0, hzn ▸ hqk, hnpos, hzmem, hRmem, hsub, hchain, hdisj⟩
 
+/-- **A Voronoi cell is relatively open in the sphere.** The strict-inequality conditions defining
+it are each an ambient-open half-space, intersected finitely. -/
+theorem exists_isOpen_inter_voronoiCell {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) :
+    ∃ U : Set (Eucl d), IsOpen U ∧ voronoiCell x k = sphere d ∩ U := by
+  refine ⟨⋂ k' : {k' : Fin M // k' ≠ k}, {y : Eucl d | (⟪x k'.1 - x k, y⟫ : ℝ) < 0}, ?_, ?_⟩
+  · exact isOpen_iInter_of_finite (fun k' => isOpen_lt (by fun_prop) continuous_const)
+  · ext y
+    simp only [voronoiCell, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter, Subtype.forall]
+    constructor
+    · rintro ⟨hys, hlt⟩
+      refine ⟨hys, fun k' hk' => ?_⟩
+      have := hlt k' hk'
+      rw [inner_sub_left]; linarith
+    · rintro ⟨hys, hlt⟩
+      refine ⟨hys, fun k' hk' => ?_⟩
+      have := hlt k' hk'
+      rw [inner_sub_left] at this; linarith
+
+/-- **A Voronoi cell never covers the whole sphere, given at least two distinct sphere-supported
+targets.** Any OTHER target's own point beats itself (Cauchy-Schwarz) against every cell but its
+own. -/
+theorem sphere_diff_voronoiCell_nonempty {M : ℕ} (hM : 1 < M) (x : Fin M → Eucl d)
+    (hx : ∀ l, x l ∈ sphere d) (k : Fin M) :
+    (sphere d \ voronoiCell x k).Nonempty := by
+  obtain ⟨k', hk'⟩ := Fintype.exists_ne_of_one_lt_card (α := Fin M) (by rwa [Fintype.card_fin]) k
+  refine ⟨x k', hx k', ?_⟩
+  rintro ⟨-, hlt⟩
+  have hlt' := hlt k' hk'
+  have hle : (⟪x k, x k'⟫ : ℝ) ≤ 1 := by
+    have h1 : ‖x k‖ = 1 := norm_eq_one_of_mem_sphere (hx k)
+    have h2 : ‖x k'‖ = 1 := norm_eq_one_of_mem_sphere (hx k')
+    calc (⟪x k, x k'⟫ : ℝ) ≤ ‖x k‖ * ‖x k'‖ := real_inner_le_norm _ _
+      _ = 1 := by rw [h1, h2, mul_one]
+  have heq : (⟪x k', x k'⟫ : ℝ) = 1 := by
+    rw [real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere (hx k'), one_pow]
+  linarith
+
+/-- **A within-cell chain from a given point to a freshly extracted point near a target boundary
+location.** Leaf-4 sub-campaign piece 2: the multi-hop concatenation needs, at each INTERMEDIATE
+cell of a path, a chain from wherever the incoming straddle hop left off to somewhere near the
+NEXT touching point -- entirely confined to that one cell (unlike the straddle hop itself, which
+crosses INTO the next cell). Reuses leaf 3's own `hextract` pattern (an ambient-open
+geodesic-distance neighborhood of the target location intersects the cell's closure), generalized
+off the straddling-specific two-point context into its own point. -/
+theorem exists_voronoiCell_connector_chain {M : ℕ} (x : Fin M → Eucl d) (hM : 1 < M)
+    (hx : ∀ l, x l ∈ sphere d)
+    {i : Fin M} {p : Eucl d} (hpi : p ∈ voronoiCell x i)
+    {y' : Eucl d} (hy'i : y' ∈ closure (voronoiCell x i))
+    (hp_ne : p ≠ y') (hp_nane : p ≠ -y') {ρ0' : ℝ} (hρ0' : ρ0' ∈ Set.Ioo 0 (Real.pi / 2)) :
+    ∃ (q' : Eucl d) (n : ℕ) (z : ℕ → Eucl d) (Rad : ℕ → ℝ),
+      z 0 = p ∧ z n = q' ∧ geodesicDist y' q' < ρ0' ∧
+      0 < n ∧
+      (∀ t, z t ∈ sphere d) ∧
+      (∀ t, Rad t ∈ Set.Ioo 0 (Real.pi / 2)) ∧
+      (∀ t, geodesicBall (z t) (Rad t) ⊆ voronoiCell x i) ∧
+      (∀ t < n, (geodesicBall (z t) (Rad t) ∩ geodesicBall (z (t + 1)) (Rad (t + 1))).Nonempty) ∧
+      (∀ a b, a + 2 ≤ b → b ≤ n →
+        Disjoint (geodesicBall (z a) (Rad a)) (geodesicBall (z b) (Rad b))) := by
+  have hps : p ∈ sphere d := voronoiCell_subset_sphere x i hpi
+  have hy's : y' ∈ sphere d := by
+    have hcl : y' ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x i) hy'i
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  have hinner : (⟪p, y'⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := by
+    rw [← real_inner_comm p y']
+    exact inner_mem_Ioo_of_ne hy's hps (Ne.symm hp_ne) (by
+      intro h; exact hp_nane (by rw [← neg_neg p, ← h]))
+  have hgdpos : 0 < geodesicDist p y' := by
+    rcases (geodesicDist_mem_Icc p y').1.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcos1 : Real.cos (geodesicDist p y') = 1 := by rw [← h0, Real.cos_zero]
+      rw [cos_geodesicDist hps hy's] at hcos1
+      exact absurd hcos1 hinner.2.ne
+  have hgdltpi : geodesicDist p y' < Real.pi := by
+    rcases (geodesicDist_mem_Icc p y').2.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcosm1 : Real.cos (geodesicDist p y') = -1 := by rw [h0, Real.cos_pi]
+      rw [cos_geodesicDist hps hy's] at hcosm1
+      exact absurd hcosm1 hinner.1.ne'
+  set δ : ℝ := min (geodesicDist p y') (Real.pi - geodesicDist p y') with hδdef
+  have hδpos : 0 < δ := lt_min hgdpos (by linarith)
+  set ε : ℝ := min ρ0' (δ / 2) with hεdef
+  have hεpos : 0 < ε := lt_min hρ0'.1 (by linarith)
+  have hεleρ0' : ε ≤ ρ0' := min_le_left _ _
+  have hεleδ2 : ε ≤ δ / 2 := min_le_right _ _
+  have hopen : IsOpen {x' : Eucl d | geodesicDist y' x' < ε} :=
+    isOpen_lt (continuous_geodesicDist y') continuous_const
+  have hmemo : y' ∈ {x' : Eucl d | geodesicDist y' x' < ε} := by
+    show geodesicDist y' y' < ε
+    rw [geodesicDist, real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere hy's, one_pow,
+      Real.arccos_one]
+    linarith
+  obtain ⟨q', hq'mem, hq'i⟩ := mem_closure_iff.mp hy'i _ hopen hmemo
+  have hq'dist : geodesicDist y' q' < ε := hq'mem
+  have hq's : q' ∈ sphere d := voronoiCell_subset_sphere x i hq'i
+  have hq'_ne : q' ≠ p := by
+    intro heq
+    have hcontra : geodesicDist p y' < δ / 2 := by
+      calc geodesicDist p y' = geodesicDist y' p := geodesicDist_comm p y'
+        _ = geodesicDist y' q' := by rw [heq]
+        _ < ε := hq'dist
+        _ ≤ δ / 2 := hεleδ2
+    have : δ ≤ geodesicDist p y' := hδdef ▸ min_le_left _ _
+    linarith
+  have hd_neg : geodesicDist y' (-p) = Real.pi - geodesicDist p y' := by
+    unfold geodesicDist
+    rw [inner_neg_right, ← real_inner_comm y' p, Real.arccos_neg]
+  have hq'_nane : q' ≠ -p := by
+    intro heq
+    have hcontra : Real.pi - geodesicDist p y' < δ / 2 := by
+      calc Real.pi - geodesicDist p y' = geodesicDist y' (-p) := hd_neg.symm
+        _ = geodesicDist y' q' := by rw [heq]
+        _ < ε := hq'dist
+        _ ≤ δ / 2 := hεleδ2
+    have : δ ≤ Real.pi - geodesicDist p y' := hδdef ▸ min_le_right _ _
+    linarith
+  obtain ⟨n, z, Rad, hnpos, hz0, hzn, hzmem, hRmem, hsub, hchain, hdisj⟩ :=
+    exists_geodesicConvex_arc_chain (geodesicConvex_voronoiCell hM x i)
+      (exists_isOpen_inter_voronoiCell x i) (sphere_diff_voronoiCell_nonempty hM x hx i)
+      hpi hq'i hq'_ne hq'_nane
+  exact ⟨q', n, z, Rad, hz0, hzn, hq'dist.trans_le hεleρ0', hnpos, hzmem, hRmem, hsub, hchain,
+    hdisj⟩
+
 end MeasureToMeasure.Leaves
