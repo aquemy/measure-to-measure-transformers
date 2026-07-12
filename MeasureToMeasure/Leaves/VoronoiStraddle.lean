@@ -101,6 +101,129 @@ theorem exists_uniform_margin_inner_ball {y : Eucl d} (hy : y ∈ sphere d) {ρ0
     _ < ρ0 / 2 + ρ0 / 2 := by linarith [harcin.2, hxd]
     _ = ρ0 := by ring
 
+/-- **Explicit-radius arc chain inside a ball, from two points near its center.** Specializes
+`exists_geodesicConvex_arc_chain` to `C := geodesicBall y ρ0` when `p, q` are both within `ρ0/2` of
+the center `y`: the chain radius is the EXPLICIT, KNOWN constant `ρ0/2` (from
+`exists_uniform_margin_inner_ball`) rather than an opaque value extracted from
+`exists_uniform_margin`. Proof is otherwise identical to `exists_geodesicConvex_arc_chain`'s own
+(from its `exists_valid_step_count` call onward) -- that proof only ever uses `R`'s membership in
+`(0, π/2)` and the "ball of radius R at every arc point ⊆ C" fact, never how `R` was obtained. Care
+is needed with `set Θ := geodesicDist p q`: it must run BEFORE `hRsub` is established, or `set`
+retroactively folds `geodesicDist p q` into `Θ` inside `hRsub`'s type too, breaking the later
+`hΘdef ▸ hns` substitution the tail of the proof (copied verbatim) relies on. -/
+theorem exists_geodesicConvex_arc_chain_inner_ball {y : Eucl d} (hy : y ∈ sphere d) {ρ0 : ℝ}
+    (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2)) {p q : Eucl d} (hps : p ∈ sphere d) (hqs : q ∈ sphere d)
+    (hp : geodesicDist y p < ρ0 / 2) (hq : geodesicDist y q < ρ0 / 2)
+    (hne : q ≠ p) (hne' : q ≠ -p) :
+    ∃ (n : ℕ) (z : ℕ → Eucl d),
+      0 < n ∧ z 0 = p ∧ z n = q ∧
+      (∀ k, z k ∈ sphere d) ∧
+      (∀ k, geodesicBall (z k) (ρ0 / 2) ⊆ geodesicBall y ρ0) ∧
+      (∀ k < n, (geodesicBall (z k) (ρ0 / 2) ∩ geodesicBall (z (k + 1)) (ρ0 / 2)).Nonempty) ∧
+      (∀ j k, j + 2 ≤ k → k ≤ n →
+        Disjoint (geodesicBall (z j) (ρ0 / 2)) (geodesicBall (z k) (ρ0 / 2))) := by
+  have hinnerqp : (⟪q, p⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := inner_mem_Ioo_of_ne hqs hps hne hne'
+  set Θ := geodesicDist p q with hΘdef
+  have hΘrange : Θ ∈ Set.Icc 0 Real.pi := geodesicDist_mem_Icc p q
+  have hcosΘ : Real.cos Θ = (⟪p, q⟫ : ℝ) := cos_geodesicDist hps hqs
+  have hinner : (⟪p, q⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := by
+    rw [real_inner_comm q p]
+    exact hinnerqp
+  have hΘpos : 0 < Θ := by
+    rcases hΘrange.1.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcos1 : Real.cos Θ = 1 := by rw [← h0, Real.cos_zero]
+      rw [hcosΘ] at hcos1
+      exact absurd hcos1 hinner.2.ne
+  have hΘltpi : Θ < Real.pi := by
+    rcases hΘrange.2.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcosm1 : Real.cos Θ = -1 := by rw [h0, Real.cos_pi]
+      rw [hcosΘ] at hcosm1
+      exact absurd hcosm1 hinner.1.ne'
+  set R := ρ0 / 2 with hRdef
+  have hRrange : R ∈ Set.Ioo (0 : ℝ) (Real.pi / 2) := by
+    rw [hRdef]; exact ⟨half_pos hρ0.1, by linarith [hρ0.2, Real.pi_pos]⟩
+  have hRsub : ∀ θ ∈ Set.Icc (0 : ℝ) (geodesicDist p q),
+      geodesicBall (geodesicArc p q θ) R ⊆ geodesicBall y ρ0 := by
+    rw [hRdef]; exact exists_uniform_margin_inner_ball hy hρ0 hps hqs hp hq hne hne'
+  obtain ⟨n, hnpos, hstepUB, hstepLB⟩ := exists_valid_step_count hΘpos hRrange.1
+  set s : ℝ := Θ / n with hsdef
+  have hspos : 0 < s := by rw [hsdef]; exact div_pos hΘpos (by exact_mod_cast hnpos)
+  have hns : (n : ℝ) * s = Θ := by rw [hsdef]; field_simp
+  set z : ℕ → Eucl d := fun k => geodesicArc p q (min k n * s) with hzdef
+  have hz0 : z 0 = p := by simp [hzdef, geodesicArc_zero]
+  have hzn : z n = q := by
+    have hstep : (n : ℝ) * s = Θ := by rw [hsdef]; field_simp
+    simp only [hzdef, min_self]
+    rw [hstep]
+    exact geodesicArc_geodesicDist hps hqs hne hne'
+  have hzmem : ∀ k, z k ∈ sphere d := fun k => geodesicArc_mem_sphere hps hqs hne hne' _
+  have hsub : ∀ k, geodesicBall (z k) R ⊆ geodesicBall y ρ0 := by
+    intro k
+    apply hRsub
+    have hmn : (↑(min k n) : ℝ) * s ≤ (n : ℝ) * s := by
+      gcongr
+      exact_mod_cast min_le_right k n
+    have hstep : (n : ℝ) * s = geodesicDist p q := hΘdef ▸ hns
+    exact ⟨by positivity, hstep ▸ hmn⟩
+  refine ⟨n, z, hnpos, hz0, hzn, hzmem, hRdef ▸ hsub, ?_, ?_⟩
+  · intro k hk
+    have hkn : min k n = k := min_eq_left (by omega)
+    have hk1n : min (k + 1) n = k + 1 := min_eq_left (by omega)
+    have hzk : z k = geodesicArc p q ((k : ℝ) * s) := by simp only [hzdef, hkn]
+    have hzk1 : z (k + 1) = geodesicArc p q (((k : ℝ) + 1) * s) := by
+      simp only [hzdef, hk1n]; congr 1; push_cast; ring
+    refine ⟨geodesicArc p q ((k : ℝ) * s + s / 2),
+      ⟨geodesicArc_mem_sphere hps hqs hne hne' _, ?_⟩,
+      geodesicArc_mem_sphere hps hqs hne hne' _, ?_⟩
+    · show geodesicDist (z k) (geodesicArc p q ((k : ℝ) * s + s / 2)) < R
+      rw [hzk]
+      have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+        (θ1 := (k : ℝ) * s) (θ2 := (k : ℝ) * s + s / 2) (by constructor <;> linarith [hRrange.2])
+      linarith [hd]
+    · show geodesicDist (z (k + 1)) (geodesicArc p q ((k : ℝ) * s + s / 2)) < R
+      rw [hzk1, geodesicDist_comm]
+      have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+        (θ1 := (k : ℝ) * s + s / 2) (θ2 := ((k : ℝ) + 1) * s) (by constructor <;> linarith [hRrange.2])
+      linarith [hd]
+  · intro j k hjk hkK
+    have hgoal : Disjoint (geodesicBall (z j) R) (geodesicBall (z k) R) := by
+      rcases hstepLB with hn1 | hRs
+      · exfalso; omega
+      · have hjn : j ≤ n := by omega
+        have hjeqmin : min j n = j := min_eq_left hjn
+        have hkeqmin : min k n = k := min_eq_left hkK
+        have hzj : z j = geodesicArc p q ((j : ℝ) * s) := by simp only [hzdef, hjeqmin]
+        have hzk : z k = geodesicArc p q ((k : ℝ) * s) := by simp only [hzdef, hkeqmin]
+        rw [Set.disjoint_left]
+        intro x hxj hxk
+        have hxjd : geodesicDist (z j) x < R := hxj.2
+        have hxkd : geodesicDist (z k) x < R := hxk.2
+        have htri : geodesicDist (z j) (z k) ≤ geodesicDist (z j) x + geodesicDist x (z k) :=
+          geodesicDist_triangle (hzmem j) hxj.1 (hzmem k)
+        have hxkd' : geodesicDist x (z k) < R := by rw [geodesicDist_comm]; exact hxkd
+        have hlt2R : geodesicDist (z j) (z k) < 2 * R := by linarith
+        have hjkreal : (j : ℝ) + 2 ≤ (k : ℝ) := by exact_mod_cast hjk
+        have hkjle : (k : ℝ) - (j : ℝ) ≤ (n : ℝ) := by
+          have h1 : (k : ℝ) ≤ (n : ℝ) := by exact_mod_cast hkK
+          have h2 : (0 : ℝ) ≤ (j : ℝ) := by positivity
+          linarith
+        have hub : ((k : ℝ) - (j : ℝ)) * s ≤ (n : ℝ) * s :=
+          mul_le_mul_of_nonneg_right hkjle hspos.le
+        have hub2 : ((k : ℝ) - (j : ℝ)) * s ≤ Θ := by rw [hns] at hub; exact hub
+        have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+          (θ1 := (j : ℝ) * s) (θ2 := (k : ℝ) * s) (by
+            constructor
+            · nlinarith [hspos]
+            · nlinarith [hub2, hΘltpi])
+        rw [hzj, hzk] at hlt2R
+        rw [hd] at hlt2R
+        nlinarith [hRs]
+    rwa [hRdef] at hgoal
+
 /-- **A geodesic ball of radius `≤ π` is relatively open in the sphere.** -/
 theorem exists_isOpen_inter_geodesicBall {z : Eucl d} (hz : z ∈ sphere d) {R : ℝ}
     (hR : R ∈ Set.Ioc 0 Real.pi) :
@@ -260,6 +383,67 @@ theorem exists_voronoiCell_straddle_chain_of_given {M : ℕ} (x : Fin M → Eucl
       (sphere_diff_geodesicBall_nonempty hys (hρ0.2.trans (by linarith [Real.pi_pos])))
       hpB hqB hpq_ne.symm hpq_nane
   exact ⟨n, z, Rad, hz0, hzn ▸ hqk, hnpos, hzmem, hRmem, hsub, hchain, hdisj⟩
+
+/-- **A short chain crossing between two adjacent Voronoi cells, from a GIVEN starting point,
+with an EXPLICIT, KNOWN chain radius `ρ0/2`.** Same conclusion shape as
+`exists_voronoiCell_straddle_chain_of_given`, but built on
+`exists_geodesicConvex_arc_chain_inner_ball` instead of the generic `exists_geodesicConvex_arc_chain`
+-- giving a chain radius that provably does not shrink as `p` is chosen closer to `y`, unlike
+`exists_voronoiCell_connector_chain`'s radius (forced small by the cell boundary, see that
+theorem's docstring). This is what closes leaf 4 piece 3: choosing the connector's own closeness
+parameter small enough relative to `ρ0` puts its last retained ball inside this chain's first ball
+(radius `ρ0/2`, known rather than opaque), letting `gated_chainUnion_retention_bounded` carry the
+connector's retained mass straight through -- the composed retention theorem itself (piece 4) is a
+separate, not-yet-built assembly step. -/
+theorem exists_voronoiCell_straddle_chain_of_given_inner_ball {M : ℕ} (x : Fin M → Eucl d)
+    {j k : Fin M} (hjkne : j ≠ k) {y : Eucl d} (hyj : y ∈ closure (voronoiCell x j))
+    (hyk : y ∈ closure (voronoiCell x k)) {ρ0 : ℝ} (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2))
+    {p : Eucl d} (hpj : p ∈ voronoiCell x j) (hpdist : geodesicDist y p < ρ0 / 2) :
+    ∃ (n : ℕ) (z : ℕ → Eucl d),
+      z 0 = p ∧ z n ∈ voronoiCell x k ∧
+      0 < n ∧
+      (∀ i, z i ∈ sphere d) ∧
+      (∀ i, geodesicBall (z i) (ρ0 / 2) ⊆ geodesicBall y ρ0) ∧
+      (∀ i < n, (geodesicBall (z i) (ρ0 / 2) ∩ geodesicBall (z (i + 1)) (ρ0 / 2)).Nonempty) ∧
+      (∀ a b, a + 2 ≤ b → b ≤ n →
+        Disjoint (geodesicBall (z a) (ρ0 / 2)) (geodesicBall (z b) (ρ0 / 2))) := by
+  have hys : y ∈ sphere d := by
+    have hcl : y ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x j) hyj
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  have hextract : ∀ (S : Set (Eucl d)) (_ : y ∈ closure S), ∃ z ∈ S, geodesicDist y z < ρ0 / 2 := by
+    intro S hyS
+    have hopen : IsOpen {x' : Eucl d | geodesicDist y x' < ρ0 / 2} :=
+      isOpen_lt (continuous_geodesicDist y) continuous_const
+    have hmemo : y ∈ {x' : Eucl d | geodesicDist y x' < ρ0 / 2} := by
+      show geodesicDist y y < ρ0 / 2
+      rw [geodesicDist, real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere hys, one_pow,
+        Real.arccos_one]
+      linarith [hρ0.1]
+    obtain ⟨z', hz'mem, hz'S⟩ := mem_closure_iff.mp hyS _ hopen hmemo
+    exact ⟨z', hz'S, hz'mem⟩
+  obtain ⟨q, hqk, hqdist⟩ := hextract (voronoiCell x k) hyk
+  have hps : p ∈ sphere d := voronoiCell_subset_sphere x j hpj
+  have hqs : q ∈ sphere d := voronoiCell_subset_sphere x k hqk
+  have hpq_ne : p ≠ q := by
+    intro heq
+    exact (voronoiCell_disjoint x hjkne).ne_of_mem hpj (heq ▸ hqk) heq
+  have hpqdist : geodesicDist p q < ρ0 := by
+    calc geodesicDist p q ≤ geodesicDist p y + geodesicDist y q :=
+          geodesicDist_triangle hps hys hqs
+      _ = geodesicDist y p + geodesicDist y q := by rw [geodesicDist_comm p y]
+      _ < ρ0 / 2 + ρ0 / 2 := by linarith
+      _ = ρ0 := by ring
+  have hpq_nane : q ≠ -p := by
+    intro heq
+    have : geodesicDist p q = Real.pi := by
+      rw [heq, geodesicDist, inner_neg_right, real_inner_self_eq_norm_sq,
+        norm_eq_one_of_mem_sphere hps, one_pow, show (-(1:ℝ)) = Real.cos Real.pi by
+          rw [Real.cos_pi], Real.arccos_cos Real.pi_pos.le (le_refl Real.pi)]
+    linarith [hpqdist, hρ0.2, Real.pi_pos]
+  obtain ⟨n, z, hnpos, hz0, hzn, hzmem, hsub, hchain, hdisj⟩ :=
+    exists_geodesicConvex_arc_chain_inner_ball hys hρ0 hps hqs hpdist hqdist hpq_ne.symm hpq_nane
+  exact ⟨n, z, hz0, hzn ▸ hqk, hnpos, hzmem, hsub, hchain, hdisj⟩
 
 /-- **A Voronoi cell is relatively open in the sphere.** The strict-inequality conditions defining
 it are each an ambient-open half-space, intersected finitely. -/
