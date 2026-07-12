@@ -7,6 +7,7 @@ import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.SphereFlow
 import MeasureToMeasure.Foundations.FlowMap
+import MeasureToMeasure.Foundations.GeodesicDisplacement
 import MeasureToMeasure.Foundations.Wasserstein
 import MeasureToMeasure.Foundations.SublevelMass
 import MeasureToMeasure.Foundations.LogisticReach
