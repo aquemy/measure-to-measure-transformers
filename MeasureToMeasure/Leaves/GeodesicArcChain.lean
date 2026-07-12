@@ -21,22 +21,27 @@ component of `q` orthogonal to `p`). This is the standard great-circle arc-lengt
 EXACTLY for `θ ∈ [0, π]` (no need to separately prove monotonicity of a chord-based parametrization),
 and `geodesicArc p q (geodesicDist p q) = q`.
 
-**Status: the discretization/chain-assembly (`exists_geodesicConvex_arc_chain` proper) is NOT yet
-built.** `exists_valid_step_count` below establishes the arithmetic (a step count `n` making the
-step size land in `[R, 2R)`), but assembling it into `z : ℕ → Eucl d`/`R : ℕ → ℝ` satisfying
-`gated_chainUnion_retention`'s hypotheses hit a genuine obstruction: `hchain`/`hdisj` there are
-stated for ALL `k : ℕ`, unbounded, and the sphere's compactness means no sequence can maintain a
-FIXED minimum pairwise separation for infinitely many index-gap-≥2 pairs (a basic packing fact) --
-so any valid infinite "tail" past the real chain endpoint must use SHRINKING radii, which is a
-real extra construction, not a bookkeeping detail. Worse: re-reading `gated_chainUnion_retention`'s
-own proof (`GatedChainUnion.lean`) shows its induction only ever invokes `hchain k`/`hdisj j (k+1)`
-for indices below the CURRENT `K` being proven -- the unbounded `∀ k` in its hypotheses is stronger
-than what the proof consumes, the same over-generalization pattern found repeatedly elsewhere this
-session. The right fix is a bounded-hypothesis variant of `gated_chainUnion_retention` (proved by
-literally the same induction, avoiding the infinite-tail problem entirely), not a cleverer tail
-construction here. See the `prop-2-2-steps-2-3-campaign` project notes for the full writeup.
+**Status: DONE.** `exists_geodesicConvex_arc_chain` assembles the arc-length parametrization, the
+uniform margin, and the step-count arithmetic into an explicit finite chain `z : ℕ → Eucl d`,
+`Rad : ℕ → ℝ` (`Rad` constant at the uniform margin `R`) with `z 0 = p`, `z n = q`, every ball a
+subset of `C`, consecutive balls overlapping, and index-gap-`≥2` balls disjoint -- matching
+`gated_chainUnion_retention_bounded`'s (`GatedChainUnion.lean`) hypothesis shape exactly (`K := n`),
+so a caller feeds this straight into it.
 
-M3b/mid-level staging: Stage 3 of the `prop_2_2` Steps 2-3 campaign; see project notes.
+Getting here needed a genuine detour: the natural target, `gated_chainUnion_retention`, states its
+`hchain`/`hdisj` for ALL `k : ℕ`, unbounded -- but the sphere's compactness means no sequence can
+maintain a FIXED minimum pairwise separation for infinitely many index-gap-≥2 pairs (a basic packing
+fact), so no naturally-extended infinite tail past the real chain's endpoint can satisfy it. Re-reading
+`gated_chainUnion_retention`'s own proof showed its induction only ever invokes `hchain k`/`hdisj j
+(k+1)` for indices below the CURRENT `K` being proven -- the unbounded `∀ k` in its hypotheses is
+stronger than what the proof consumes, the same over-generalization pattern found repeatedly
+elsewhere this session. `gated_chainUnion_retention_bounded` restates it with `hchain`/`hdisj` bounded
+by the target `K`, proved via the identical induction, which is what `exists_geodesicConvex_arc_chain`
+targets here -- no infinite tail needed at all, since the whole chain is finite (`n` balls) by
+construction. See the `prop-2-2-steps-2-3-campaign` project notes for the full writeup.
+
+M3b/mid-level staging: Stage 3 of the `prop_2_2` Steps 2-3 campaign, now COMPLETE; see project notes
+for Stage 4 (apply `gated_forest_to_target_retention` per piece) next.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -301,5 +306,115 @@ theorem exists_valid_step_count {Θ R : ℝ} (hΘpos : 0 < Θ) (hRpos : 0 < R) :
     · rw [le_div_iff₀ (by exact_mod_cast hn₀pos : (0 : ℝ) < (n₀ : ℝ))]
       rw [le_div_iff₀ hRpos] at hn₀le
       linarith
+
+theorem exists_geodesicConvex_arc_chain {C : Set (Eucl d)} (hC : GeodesicConvex C)
+    (hCopen : IsOpen C) (hCne : Cᶜ.Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C)
+    (hne : q ≠ p) (hne' : q ≠ -p) :
+    ∃ (n : ℕ) (z : ℕ → Eucl d) (Rad : ℕ → ℝ),
+      0 < n ∧ z 0 = p ∧ z n = q ∧
+      (∀ k, z k ∈ sphere d) ∧
+      (∀ k, Rad k ∈ Set.Ioo 0 (Real.pi / 2)) ∧
+      (∀ k, geodesicBall (z k) (Rad k) ⊆ C) ∧
+      (∀ k < n, (geodesicBall (z k) (Rad k) ∩ geodesicBall (z (k + 1)) (Rad (k + 1))).Nonempty) ∧
+      (∀ j k, j + 2 ≤ k → k ≤ n →
+        Disjoint (geodesicBall (z j) (Rad j)) (geodesicBall (z k) (Rad k))) := by
+  have hps : p ∈ sphere d := hC.subset_sphere hp
+  have hqs : q ∈ sphere d := hC.subset_sphere hq
+  have hinnerqp : (⟪q, p⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := inner_mem_Ioo_of_ne hqs hps hne hne'
+  set Θ := geodesicDist p q with hΘdef
+  have hΘrange : Θ ∈ Set.Icc 0 Real.pi := geodesicDist_mem_Icc p q
+  have hcosΘ : Real.cos Θ = (⟪p, q⟫ : ℝ) := cos_geodesicDist hps hqs
+  have hinner : (⟪p, q⟫ : ℝ) ∈ Set.Ioo (-1 : ℝ) 1 := by
+    rw [real_inner_comm q p]
+    exact hinnerqp
+  have hΘpos : 0 < Θ := by
+    rcases hΘrange.1.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcos1 : Real.cos Θ = 1 := by rw [← h0, Real.cos_zero]
+      rw [hcosΘ] at hcos1
+      exact absurd hcos1 hinner.2.ne
+  have hΘltpi : Θ < Real.pi := by
+    rcases hΘrange.2.lt_or_eq with h0 | h0
+    · exact h0
+    · exfalso
+      have hcosm1 : Real.cos Θ = -1 := by rw [h0, Real.cos_pi]
+      rw [hcosΘ] at hcosm1
+      exact absurd hcosm1 hinner.1.ne'
+  obtain ⟨R, hRrange, hRsub⟩ := exists_uniform_margin hC hCopen hCne hp hq hne hne'
+  obtain ⟨n, hnpos, hstepUB, hstepLB⟩ := exists_valid_step_count hΘpos hRrange.1
+  set s : ℝ := Θ / n with hsdef
+  have hspos : 0 < s := by rw [hsdef]; exact div_pos hΘpos (by exact_mod_cast hnpos)
+  have hns : (n : ℝ) * s = Θ := by rw [hsdef]; field_simp
+  set z : ℕ → Eucl d := fun k => geodesicArc p q (min k n * s) with hzdef
+  set Rad : ℕ → ℝ := fun _ => R with hRaddef
+  have hz0 : z 0 = p := by simp [hzdef, geodesicArc_zero]
+  have hzn : z n = q := by
+    have hstep : (n : ℝ) * s = Θ := by
+      rw [hsdef]; field_simp
+    simp only [hzdef, min_self]
+    rw [hstep]
+    exact geodesicArc_geodesicDist hps hqs hne hne'
+  have hzmem : ∀ k, z k ∈ sphere d := fun k => geodesicArc_mem_sphere hps hqs hne hne' _
+  have hRmem : ∀ k, Rad k ∈ Set.Ioo 0 (Real.pi / 2) := fun _ => hRrange
+  have hsub : ∀ k, geodesicBall (z k) (Rad k) ⊆ C := by
+    intro k
+    apply hRsub
+    have hmn : (↑(min k n) : ℝ) * s ≤ (n : ℝ) * s := by
+      gcongr
+      exact_mod_cast min_le_right k n
+    have hstep : (n : ℝ) * s = geodesicDist p q := hΘdef ▸ hns
+    exact ⟨by positivity, hstep ▸ hmn⟩
+  refine ⟨n, z, Rad, hnpos, hz0, hzn, hzmem, hRmem, hsub, ?_, ?_⟩
+  · intro k hk
+    have hkn : min k n = k := min_eq_left (by omega)
+    have hk1n : min (k + 1) n = k + 1 := min_eq_left (by omega)
+    have hzk : z k = geodesicArc p q ((k : ℝ) * s) := by simp only [hzdef, hkn]
+    have hzk1 : z (k + 1) = geodesicArc p q (((k : ℝ) + 1) * s) := by
+      simp only [hzdef, hk1n]; congr 1; push_cast; ring
+    refine ⟨geodesicArc p q ((k : ℝ) * s + s / 2),
+      ⟨geodesicArc_mem_sphere hps hqs hne hne' _, ?_⟩,
+      geodesicArc_mem_sphere hps hqs hne hne' _, ?_⟩
+    · show geodesicDist (z k) (geodesicArc p q ((k : ℝ) * s + s / 2)) < R
+      rw [hzk]
+      have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+        (θ1 := (k : ℝ) * s) (θ2 := (k : ℝ) * s + s / 2) (by constructor <;> linarith [hRrange.2])
+      linarith [hd]
+    · show geodesicDist (z (k + 1)) (geodesicArc p q ((k : ℝ) * s + s / 2)) < R
+      rw [hzk1, geodesicDist_comm]
+      have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+        (θ1 := (k : ℝ) * s + s / 2) (θ2 := ((k : ℝ) + 1) * s) (by constructor <;> linarith [hRrange.2])
+      linarith [hd]
+  · intro j k hjk hkK
+    rcases hstepLB with hn1 | hRs
+    · exfalso; omega
+    · have hjn : j ≤ n := by omega
+      have hjeqmin : min j n = j := min_eq_left hjn
+      have hkeqmin : min k n = k := min_eq_left hkK
+      have hzj : z j = geodesicArc p q ((j : ℝ) * s) := by simp only [hzdef, hjeqmin]
+      have hzk : z k = geodesicArc p q ((k : ℝ) * s) := by simp only [hzdef, hkeqmin]
+      rw [Set.disjoint_left]
+      intro x hxj hxk
+      have hxjd : geodesicDist (z j) x < R := hxj.2
+      have hxkd : geodesicDist (z k) x < R := hxk.2
+      have htri : geodesicDist (z j) (z k) ≤ geodesicDist (z j) x + geodesicDist x (z k) :=
+        geodesicDist_triangle (hzmem j) hxj.1 (hzmem k)
+      have hxkd' : geodesicDist x (z k) < R := by rw [geodesicDist_comm]; exact hxkd
+      have hlt2R : geodesicDist (z j) (z k) < 2 * R := by linarith
+      have hjkreal : (j : ℝ) + 2 ≤ (k : ℝ) := by exact_mod_cast hjk
+      have hkjle : (k : ℝ) - (j : ℝ) ≤ (n : ℝ) := by
+        have h1 : (k : ℝ) ≤ (n : ℝ) := by exact_mod_cast hkK
+        have h2 : (0 : ℝ) ≤ (j : ℝ) := by positivity
+        linarith
+      have hub : ((k : ℝ) - (j : ℝ)) * s ≤ (n : ℝ) * s := mul_le_mul_of_nonneg_right hkjle hspos.le
+      have hub2 : ((k : ℝ) - (j : ℝ)) * s ≤ Θ := by rw [hns] at hub; exact hub
+      have hd := geodesicDist_geodesicArc_geodesicArc hps hqs hne hne'
+        (θ1 := (j : ℝ) * s) (θ2 := (k : ℝ) * s) (by
+          constructor
+          · nlinarith [hspos]
+          · nlinarith [hub2, hΘltpi])
+      rw [hzj, hzk] at hlt2R
+      rw [hd] at hlt2R
+      nlinarith [hRs]
 
 end MeasureToMeasure.Leaves
