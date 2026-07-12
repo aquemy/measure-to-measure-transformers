@@ -98,6 +98,7 @@ import MeasureToMeasure.Leaves.SlabConnected
 import MeasureToMeasure.Leaves.ConnectedMassPartition
 import MeasureToMeasure.Leaves.VoronoiCell
 import MeasureToMeasure.Leaves.VoronoiAdjacency
+import MeasureToMeasure.Leaves.VoronoiStraddle
 import MeasureToMeasure.Leaves.GatedBallLocalized
 import MeasureToMeasure.Leaves.GatedChainUnion
 import MeasureToMeasure.Leaves.GatedStarRetention
