@@ -102,6 +102,7 @@ import MeasureToMeasure.Leaves.VoronoiAdjacency
 import MeasureToMeasure.Leaves.VoronoiStraddle
 import MeasureToMeasure.Leaves.GatedBallLocalized
 import MeasureToMeasure.Leaves.GatedChainUnion
+import MeasureToMeasure.Leaves.GatedRelayHop
 import MeasureToMeasure.Leaves.GatedStarRetention
 import MeasureToMeasure.Leaves.GatedChainForest
 import MeasureToMeasure.Leaves.GatedForestToTarget
