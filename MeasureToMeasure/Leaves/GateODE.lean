@@ -1,5 +1,4 @@
 import MeasureToMeasure.Foundations.Projector
-import MeasureToMeasure.Foundations.GeodesicDistance
 import Mathlib.Analysis.InnerProductSpace.Calculus
 
 /-!
@@ -13,10 +12,9 @@ In Lemma B.2 the parameters `U = -𝟙 zᵀ`, `b = cos(R) 𝟙`, `W 𝟙 = ω` g
 which is positive exactly on the active region `{x : ⟪z, x⟫ < cos R} = {x : d_g(z, x) > R}` (eq. B.4).
 This drives `⟪x, ω⟫` upward, i.e. pushes `x` toward `ω`.
 
-We kernel-check three facts:
+We kernel-check two facts:
 * `gate_inner_identity` (the algebra behind B.5): `⟪P_x^⊥ (g•ω), ω⟫ = g(1 - ⟪x,ω⟫²)`;
-* `gate_hasDerivAt_inner` (B.5 itself): the derivative of `⟪x(t), ω⟫` along the gated flow;
-* `gate_pos_iff_dist` (B.4): the active region on the geodesic sphere, `⟪z,x⟫ < cos R ↔ R < d_g(z,x)`.
+* `gate_hasDerivAt_inner` (B.5 itself): the derivative of `⟪x(t), ω⟫` along the gated flow.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -46,13 +44,5 @@ theorem gate_hasDerivAt_inner {x : ℝ → Eucl d} {ω : Eucl d} {t : ℝ} {x' :
   have h := hx.inner ℝ hconst
   rw [hode, gate_inner_identity hxs hω g] at h
   simpa using h
-
-/-- L2 (gate sign, B.4, geodesic form): the gate is active exactly outside the closed cap of radius
-`R` around `z`, i.e. on `{x : d_g(z, x) > R}`. -/
-theorem gate_pos_iff_dist {z x : Eucl d} (hz : z ∈ sphere d) (hx : x ∈ sphere d)
-    {R : ℝ} (hR : R ∈ Set.Icc (0 : ℝ) Real.pi) :
-    (⟪z, x⟫ : ℝ) < Real.cos R ↔ R < geodesicDist z x := by
-  rw [← cos_geodesicDist hz hx]
-  exact Real.strictAntiOn_cos.lt_iff_gt (geodesicDist_mem_Icc z x) hR
 
 end MeasureToMeasure.Leaves
