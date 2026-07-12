@@ -158,4 +158,68 @@ theorem exists_voronoiCell_straddle_chain {M : ℕ} (x : Fin M → Eucl d)
   intro i
   exact (hsub i).trans (fun a ha => ⟨ha.1, ha.2.trans_le hρle0⟩)
 
+/-- **A short chain crossing between two adjacent Voronoi cells, from a GIVEN starting point.**
+Leaf-4 sub-campaign piece 1: the multi-hop concatenation needs each straddle hop to continue from
+wherever the PREVIOUS piece (a within-cell connector chain) left off, not from a fresh point this
+lemma extracts itself -- so `p` is now a hypothesis (already known close to the touching point `y`,
+e.g. because the caller just built a chain ending there), and only the far endpoint `q` is freshly
+extracted. Same construction as `exists_voronoiCell_straddle_chain` otherwise; kept as a separate
+theorem rather than refactoring that one in place, since the self-extracting form is still directly
+useful as its own entry point. -/
+theorem exists_voronoiCell_straddle_chain_of_given {M : ℕ} (x : Fin M → Eucl d)
+    {j k : Fin M} (hjkne : j ≠ k) {y : Eucl d} (hyj : y ∈ closure (voronoiCell x j))
+    (hyk : y ∈ closure (voronoiCell x k)) {ρ0 : ℝ} (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2))
+    {p : Eucl d} (hpj : p ∈ voronoiCell x j) (hpdist : geodesicDist y p < ρ0 / 2) :
+    ∃ (n : ℕ) (z : ℕ → Eucl d) (Rad : ℕ → ℝ),
+      z 0 = p ∧ z n ∈ voronoiCell x k ∧
+      0 < n ∧
+      (∀ i, z i ∈ sphere d) ∧
+      (∀ i, Rad i ∈ Set.Ioo 0 (Real.pi / 2)) ∧
+      (∀ i, geodesicBall (z i) (Rad i) ⊆ geodesicBall y ρ0) ∧
+      (∀ i < n, (geodesicBall (z i) (Rad i) ∩ geodesicBall (z (i + 1)) (Rad (i + 1))).Nonempty) ∧
+      (∀ a b, a + 2 ≤ b → b ≤ n →
+        Disjoint (geodesicBall (z a) (Rad a)) (geodesicBall (z b) (Rad b))) := by
+  have hys : y ∈ sphere d := by
+    have hcl : y ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x j) hyj
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  have hextract : ∀ (S : Set (Eucl d)) (_ : y ∈ closure S), ∃ z ∈ S, geodesicDist y z < ρ0 / 2 := by
+    intro S hyS
+    have hopen : IsOpen {x' : Eucl d | geodesicDist y x' < ρ0 / 2} :=
+      isOpen_lt (continuous_geodesicDist y) continuous_const
+    have hmemo : y ∈ {x' : Eucl d | geodesicDist y x' < ρ0 / 2} := by
+      show geodesicDist y y < ρ0 / 2
+      rw [geodesicDist, real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere hys, one_pow,
+        Real.arccos_one]
+      linarith [hρ0.1]
+    obtain ⟨z', hz'mem, hz'S⟩ := mem_closure_iff.mp hyS _ hopen hmemo
+    exact ⟨z', hz'S, hz'mem⟩
+  obtain ⟨q, hqk, hqdist⟩ := hextract (voronoiCell x k) hyk
+  have hps : p ∈ sphere d := voronoiCell_subset_sphere x j hpj
+  have hqs : q ∈ sphere d := voronoiCell_subset_sphere x k hqk
+  have hpq_ne : p ≠ q := by
+    intro heq
+    exact (voronoiCell_disjoint x hjkne).ne_of_mem hpj (heq ▸ hqk) heq
+  have hpqdist : geodesicDist p q < ρ0 := by
+    calc geodesicDist p q ≤ geodesicDist p y + geodesicDist y q :=
+          geodesicDist_triangle hps hys hqs
+      _ = geodesicDist y p + geodesicDist y q := by rw [geodesicDist_comm p y]
+      _ < ρ0 / 2 + ρ0 / 2 := by linarith
+      _ = ρ0 := by ring
+  have hpq_nane : q ≠ -p := by
+    intro heq
+    have : geodesicDist p q = Real.pi := by
+      rw [heq, geodesicDist, inner_neg_right, real_inner_self_eq_norm_sq,
+        norm_eq_one_of_mem_sphere hps, one_pow, show (-(1:ℝ)) = Real.cos Real.pi by
+          rw [Real.cos_pi], Real.arccos_cos Real.pi_pos.le (le_refl Real.pi)]
+    linarith [hpqdist, hρ0.2, Real.pi_pos]
+  have hpB : p ∈ geodesicBall y ρ0 := ⟨hps, by linarith [hρ0.1]⟩
+  have hqB : q ∈ geodesicBall y ρ0 := ⟨hqs, by linarith [hρ0.1]⟩
+  obtain ⟨n, z, Rad, hnpos, hz0, hzn, hzmem, hRmem, hsub, hchain, hdisj⟩ :=
+    exists_geodesicConvex_arc_chain (geodesicConvex_geodesicBall hys ⟨hρ0.1, hρ0.2.le⟩)
+      (exists_isOpen_inter_geodesicBall hys ⟨hρ0.1, hρ0.2.le.trans (by linarith [Real.pi_pos])⟩)
+      (sphere_diff_geodesicBall_nonempty hys (hρ0.2.trans (by linarith [Real.pi_pos])))
+      hpB hqB hpq_ne.symm hpq_nane
+  exact ⟨n, z, Rad, hz0, hzn ▸ hqk, hnpos, hzmem, hRmem, hsub, hchain, hdisj⟩
+
 end MeasureToMeasure.Leaves
