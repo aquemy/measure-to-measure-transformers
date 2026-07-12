@@ -17,10 +17,20 @@ strict inequality in the first place.
 
 The price of using open cells is that they do not literally partition the sphere: points sitting
 exactly on a bisector (a positive-measure set is possible for adversarial `μ`, not just a
-measure-zero technicality) belong to no cell. This is not fixed here -- the *deficit/surplus
-transportation* step (Stage 1's next piece) treats any such leftover mass as an ordinary source a
-deficient target's chain can reach past its own cell boundary to collect, exactly like drawing from
-a neighboring cell's surplus. No closed-cell convexity lemma is needed anywhere in this design.
+measure-zero technicality) belong to no cell. Unlike an earlier draft of this design, this leftover
+mass canNOT simply be bolted on as an extra source fed into an otherwise cell-only supply/demand
+routing: if `Leftover := 1 - Σₖ μ(voronoiCell x k) > 0`, total deficit exceeds total surplus by
+EXACTLY `Leftover` (`Σ(αₖ-βₖ)⁺ - Σ(βₖ-αₖ)⁺ = Σ(αₖ-βₖ) = 1-Σβₖ = Leftover`, since `Σαₖ=1`), so a
+surplus-only routing graph is under-supplied by construction whenever boundary mass is positive.
+The fix is `voronoiCell'` below: a CLOSED, lexicographically tie-broken cell family that DOES
+partition the sphere exactly (`Σₖ μ(voronoiCell' x k) = 1`), giving a genuinely balanced
+transportation problem with no pseudo-source needed. `voronoiCell'` is not claimed to be
+geodesically convex (it generally is not, for the same reason a bare closed half-space at `c=0`
+fails); it is used only for the mass-accounting split. The actual geometric realization keeps using
+the proven-convex OPEN `voronoiCell x k` for each target's core arm, treating the small residual
+slice `voronoiCell' x k \ voronoiCell x k` as one more (thin, but positive-measure-capable) donor
+region reached by its own short chain -- structurally identical to reaching into a genuine
+surplus neighbor, not a special case.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -71,4 +81,48 @@ theorem voronoiCell_disjoint {M : ℕ} (x : Fin M → Eucl d) {k k' : Fin M} (hn
   rintro y ⟨-, hk⟩ ⟨-, hk'⟩
   exact absurd (hk k' hne.symm) (not_lt.mpr (hk' k hne).le)
 
-end MeasureToMeasure.Leaves
+/-- The **tie-broken closed Voronoi cell**: `k` such that `x k` maximizes `⟪·,y⟫` over all targets,
+with ties broken toward the SMALLEST index. Used only for exact mass accounting
+(`voronoiCell'_disjoint` + `voronoiCell'_covers` give a genuine partition of the sphere); NOT claimed
+geodesically convex. -/
+def voronoiCell' {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) : Set (Eucl d) :=
+  {y : Eucl d | y ∈ sphere d ∧ (∀ k' : Fin M, (⟪x k', y⟫ : ℝ) ≤ ⟪x k, y⟫) ∧
+    ∀ k' : Fin M, k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫}
+
+theorem voronoiCell_subset_voronoiCell' {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) :
+    voronoiCell x k ⊆ voronoiCell' x k := by
+  rintro y ⟨hys, hlt⟩
+  exact ⟨hys, fun k' => (eq_or_ne k' k).elim (fun h => h ▸ le_refl _) (fun h => (hlt k' h).le),
+    fun k' hk' => hlt k' hk'.ne⟩
+
+/-- **Tie-broken cells of distinct targets are disjoint.** If `k < k'` both claimed `y`, `k'`'s own
+tie-break (strict win against every smaller index, in particular `k`) contradicts `k`'s own global
+maximality (weakly beating `k'`). -/
+theorem voronoiCell'_disjoint {M : ℕ} (x : Fin M → Eucl d) {k k' : Fin M} (hne : k ≠ k') :
+    Disjoint (voronoiCell' x k) (voronoiCell' x k') := by
+  rw [Set.disjoint_left]
+  rintro y ⟨-, hmaxk, hstrictk⟩ ⟨-, hmaxk', hstrictk'⟩
+  rcases Fin.lt_or_lt_of_ne hne with hlt | hlt
+  · exact absurd (hstrictk' k hlt) (not_lt.mpr (hmaxk k'))
+  · exact absurd (hstrictk k' hlt) (not_lt.mpr (hmaxk' k))
+
+/-- **The tie-broken cells cover the sphere.** `Fin M` is finite, so `k ↦ ⟪x k, y⟫` attains a
+maximum; among all maximizers (a nonempty finite set), the smallest index is exactly the `k` with
+`y ∈ voronoiCell' x k`. -/
+theorem voronoiCell'_covers {M : ℕ} (hM : 0 < M) (x : Fin M → Eucl d) {y : Eucl d}
+    (hy : y ∈ sphere d) : ∃ k : Fin M, y ∈ voronoiCell' x k := by
+  set S : Finset (Fin M) := Finset.univ.filter (fun k => ∀ k' : Fin M, (⟪x k', y⟫ : ℝ) ≤ ⟪x k, y⟫)
+    with hSdef
+  have hSne : S.Nonempty := by
+    obtain ⟨k, -, hk⟩ := Finset.exists_max_image (Finset.univ : Finset (Fin M))
+      (fun k => (⟪x k, y⟫ : ℝ)) ⟨⟨0, hM⟩, Finset.mem_univ _⟩
+    exact ⟨k, Finset.mem_filter.mpr ⟨Finset.mem_univ k, fun k' => hk k' (Finset.mem_univ k')⟩⟩
+  refine ⟨S.min' hSne, hy, (Finset.mem_filter.mp (S.min'_mem hSne)).2, fun k' hk' => ?_⟩
+  by_contra hcon
+  push Not at hcon
+  have hmaxk0 := (Finset.mem_filter.mp (S.min'_mem hSne)).2
+  have heq : (⟪x (S.min' hSne), y⟫ : ℝ) = ⟪x k', y⟫ := le_antisymm hcon (hmaxk0 k')
+  have hk'mem : k' ∈ S := Finset.mem_filter.mpr ⟨Finset.mem_univ k',
+    fun k'' => heq ▸ (hmaxk0 k'' : (⟪x k'', y⟫ : ℝ) ≤ ⟪x (S.min' hSne), y⟫)⟩
+  exact absurd (S.min'_le k' hk'mem) (not_le.mpr hk')
+
