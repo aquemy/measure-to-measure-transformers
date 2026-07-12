@@ -1,4 +1,5 @@
 import MeasureToMeasure.Foundations.GeodesicConvex
+import MeasureToMeasure.Leaves.WassersteinDiracBound
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Inverse
 
 /-!
@@ -98,6 +99,30 @@ theorem geodesicDist_geodesicArc {p : Eucl d} (hp : p ∈ sphere d) (q : Eucl d)
     geodesicDist p (geodesicArc p q θ) = θ := by
   rw [geodesicDist, inner_geodesicArc hp, Real.arccos_cos hθ.1 hθ.2]
 
+/-- **Two points of the same arc are exactly `|θ2 - θ1|` apart.** The inner-product form: bilinear
+expansion collapses to `cos θ1 cos θ2 + sin θ1 sin θ2 = cos(θ2 - θ1)` since `p` and the tangent are
+orthonormal. -/
+theorem inner_geodesicArc_geodesicArc {p q : Eucl d} (hp : p ∈ sphere d) (hq : q ∈ sphere d)
+    (hne : q ≠ p) (hne' : q ≠ -p) (θ1 θ2 : ℝ) :
+    (⟪geodesicArc p q θ1, geodesicArc p q θ2⟫ : ℝ) = Real.cos (θ2 - θ1) := by
+  have hpn : ‖p‖ = 1 := norm_eq_one_of_mem_sphere hp
+  have htn : ‖geodesicTangent p q‖ = 1 :=
+    norm_eq_one_of_mem_sphere (geodesicTangent_mem_sphere hp hq hne hne')
+  have hort1 : (⟪p, geodesicTangent p q⟫ : ℝ) = 0 := inner_geodesicTangent_eq_zero hp q
+  have hort2 : (⟪geodesicTangent p q, p⟫ : ℝ) = 0 := by
+    rw [real_inner_comm]; exact hort1
+  simp only [geodesicArc, inner_add_left, inner_add_right, real_inner_smul_left,
+    real_inner_smul_right, real_inner_self_eq_norm_sq, hpn, htn, hort1, hort2]
+  rw [Real.cos_sub]
+  ring
+
+/-- **Geodesic distance between two points of the same arc is `|θ2 - θ1|`**, when both fall in
+`[0, π]` of separation. -/
+theorem geodesicDist_geodesicArc_geodesicArc {p q : Eucl d} (hp : p ∈ sphere d) (hq : q ∈ sphere d)
+    (hne : q ≠ p) (hne' : q ≠ -p) {θ1 θ2 : ℝ} (hsep : θ2 - θ1 ∈ Set.Icc 0 Real.pi) :
+    geodesicDist (geodesicArc p q θ1) (geodesicArc p q θ2) = θ2 - θ1 := by
+  rw [geodesicDist, inner_geodesicArc_geodesicArc hp hq hne hne', Real.arccos_cos hsep.1 hsep.2]
+
 theorem geodesicArc_geodesicDist {p q : Eucl d} (hp : p ∈ sphere d) (hq : q ∈ sphere d)
     (hne : q ≠ p) (hne' : q ≠ -p) : geodesicArc p q (geodesicDist p q) = q := by
   set Θ := geodesicDist p q with hΘdef
@@ -182,5 +207,57 @@ theorem geodesicArc_mem_of_geodesicConvex {C : Set (Eucl d)} (hC : GeodesicConve
     norm_eq_one_of_mem_sphere (geodesicArc_mem_sphere hps hqs hne hne' θ)
   have hmem := hC.2 p hp q hq a b hapos hbpos
   rwa [hcombo, hnorm1, inv_one, one_smul] at hmem
+
+/-- **Uniform positive margin along the arc.** For a geodesically convex OPEN `C` with `Cᶜ`
+nonempty, and non-antipodal `p, q ∈ C`, some `R ∈ (0, π/4)` works as a ball radius at EVERY point
+of the arc (endpoints included): the whole geodesic ball of radius `R` stays in `C`. Compactness of
+`[0, geodesicDist p q]` plus continuity and pointwise positivity of `θ ↦ Metric.infDist
+(geodesicArc p q θ) Cᶜ` gives a uniform positive AMBIENT margin `η`; the chord ≤ arc bridge
+(`norm_sub_le_geodesicDist`) converts this into a GEODESIC radius bound. -/
+theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C) (hCopen : IsOpen C)
+    (hCne : Cᶜ.Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C) (hne : q ≠ p) (hne' : q ≠ -p) :
+    ∃ R : ℝ, R ∈ Set.Ioo 0 (Real.pi / 2) ∧
+      ∀ θ ∈ Set.Icc (0 : ℝ) (geodesicDist p q), geodesicBall (geodesicArc p q θ) R ⊆ C := by
+  have hps : p ∈ sphere d := hC.subset_sphere hp
+  have hqs : q ∈ sphere d := hC.subset_sphere hq
+  set Θ := geodesicDist p q with hΘdef
+  have hΘnn : 0 ≤ Θ := (geodesicDist_mem_Icc p q).1
+  have harc_mem : ∀ θ ∈ Set.Icc (0 : ℝ) Θ, geodesicArc p q θ ∈ C := by
+    intro θ hθ
+    rcases eq_or_lt_of_le hθ.1 with h0 | h0
+    · rw [← h0, geodesicArc_zero]; exact hp
+    · rcases eq_or_lt_of_le hθ.2 with hΘeq | hΘlt
+      · rw [hΘeq, hΘdef, geodesicArc_geodesicDist hps hqs hne hne']; exact hq
+      · exact geodesicArc_mem_of_geodesicConvex hC hp hq hne hne' ⟨h0, hΘlt⟩
+  have hCclosed : IsClosed Cᶜ := hCopen.isClosed_compl
+  set f : ℝ → ℝ := fun θ => Metric.infDist (geodesicArc p q θ) Cᶜ with hfdef
+  have hfcont : ContinuousOn f (Set.Icc 0 Θ) :=
+    (Metric.continuous_infDist_pt Cᶜ).comp_continuousOn (continuous_geodesicArc p q).continuousOn
+  have hfpos : ∀ θ ∈ Set.Icc (0 : ℝ) Θ, 0 < f θ := by
+    intro θ hθ
+    rw [hfdef]
+    have hnotmem : geodesicArc p q θ ∉ Cᶜ := fun hcon => hcon (harc_mem θ hθ)
+    rw [← hCclosed.closure_eq] at hnotmem
+    exact (Metric.infDist_pos_iff_notMem_closure hCne).mp hnotmem
+  have hcompact : IsCompact (Set.Icc (0 : ℝ) Θ) := isCompact_Icc
+  have hIccne : (Set.Icc (0 : ℝ) Θ).Nonempty := ⟨0, le_refl 0, hΘnn⟩
+  obtain ⟨θ0, hθ0mem, hθ0min⟩ := hcompact.exists_isMinOn hIccne hfcont
+  set η : ℝ := f θ0 with hηdef
+  have hηpos : 0 < η := hfpos θ0 hθ0mem
+  refine ⟨min η (Real.pi / 4), ⟨lt_min hηpos (by positivity),
+    lt_of_le_of_lt (min_le_right _ _) (by linarith [Real.pi_pos])⟩, ?_⟩
+  intro θ hθ x hx
+  obtain ⟨hxs, hxdist⟩ := hx
+  have hxle : ‖geodesicArc p q θ - x‖ ≤ geodesicDist (geodesicArc p q θ) x :=
+    norm_sub_le_geodesicDist (hC.subset_sphere (harc_mem θ hθ)) hxs
+  have hxlt_min : ‖geodesicArc p q θ - x‖ < min η (Real.pi / 4) := lt_of_le_of_lt hxle hxdist
+  have hxlt_η : ‖geodesicArc p q θ - x‖ < η := lt_of_lt_of_le hxlt_min (min_le_left _ _)
+  by_contra hxnotC
+  have hinfle : Metric.infDist (geodesicArc p q θ) Cᶜ ≤ dist (geodesicArc p q θ) x :=
+    Metric.infDist_le_dist_of_mem hxnotC
+  rw [dist_eq_norm] at hinfle
+  have hmin_le : η ≤ f θ := hθ0min hθ
+  rw [hfdef] at hmin_le
+  linarith
 
 end MeasureToMeasure.Leaves
