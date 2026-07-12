@@ -332,8 +332,8 @@ theorem cos_geodesicDist {x y : Eucl d} (hx : x ∈ sphere d) (hy : y ∈ sphere
 <p>The self-attention average <span class="math inline">\(\mathscr A_{\mathbf B}[\mu]\)</span> integrates against the <em>evolving</em> measure: the velocity field depends on <span class="math inline">\(\mu(t)\)</span> itself, which is precisely what eq. (1.7) shows a linear continuity equation cannot replicate.</p>
 </div>
 <div class="our-work">
-<p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>The field (1.2) is a concrete <strong>definition</strong>: <code>AttnParams</code> packages the five parameters <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)\)</span> of one constant piece, <code>attnAvg</code> is the softmax average <span class="math inline">\(\mathscr A_{\mathbf B}\)</span>, and <code>AttnParams.field</code> assembles the projected velocity. A mean-field flow is the predicate <code>IsMeanFieldFlow</code> (initial condition, measurability, Lipschitz regularity, sphere bijectivity, and the characteristic ODE against the <em>pushforward-evolved</em> measure), and schedules compose by list concatenation (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>, <code>durationSum</code>, <code>switches</code> counting constant pieces). Exactly one axiom remains – existence of the mean-field flow for sphere-supported probability data (<code>exists_meanFieldFlow</code>): McKean-Vlasov well-posedness on the sphere, the honest remaining M3b gap. Its companion <code>meanFieldFlow_unique</code> (uniqueness) is now a machine-checked theorem, so what is left is purely the existence half. Every measure-dependent statement of the paper is stated over this layer; the linear <code>Block</code> flow hosts the paper’s <span class="math inline">\(\mathbf V\equiv0\)</span> sections. The two layers are bridged, kernel-checked on the predicate side: <code>isMeanFieldFlow_blockFlow</code> shows a linear <code>Block</code> matching a <span class="math inline">\(\mathbf V = 0\)</span> attention field on the sphere satisfies the mean-field predicate, and <code>attnStep_eq_map_blockFlow</code> (the first consumer of <code>meanFieldFlow_unique</code>) pins the attention step to the linear pushforward – so the discharged Appendix-B machinery acts on this layer too.</p>
+<p><strong>Our formalization.</strong> <span class="badge ok">machine-checked</span></p>
+<p>The field (1.2) is a concrete <strong>definition</strong>: <code>AttnParams</code> packages the five parameters <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)\)</span> of one constant piece, <code>attnAvg</code> is the softmax average <span class="math inline">\(\mathscr A_{\mathbf B}\)</span>, and <code>AttnParams.field</code> assembles the projected velocity. A mean-field flow is the predicate <code>IsMeanFieldFlow</code> (initial condition, measurability, Lipschitz regularity, sphere bijectivity, and the characteristic ODE against the <em>pushforward-evolved</em> measure), and schedules compose by list concatenation (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>, <code>durationSum</code>, <code>switches</code> counting constant pieces). <strong>Both halves of McKean-Vlasov well-posedness on the sphere are now machine-checked</strong>: uniqueness (<code>meanFieldFlow_unique</code>) and, since PR #173, existence too (<code>exists_meanFieldFlow</code>, via the self-consistency fixed point of leaf E3n transported through the padded point flow) – closing out the M3b-existence campaign, so this layer carries <strong>zero</strong> axioms. Every measure-dependent statement of the paper is stated over this layer; the linear <code>Block</code> flow hosts the paper’s <span class="math inline">\(\mathbf V\equiv0\)</span> sections. The two layers are bridged, kernel-checked on the predicate side: <code>isMeanFieldFlow_blockFlow</code> shows a linear <code>Block</code> matching a <span class="math inline">\(\mathbf V = 0\)</span> attention field on the sphere satisfies the mean-field predicate, and <code>attnStep_eq_map_blockFlow</code> (a consumer of <code>meanFieldFlow_unique</code>) pins the attention step to the linear pushforward – so the discharged Appendix-B machinery acts on this layer too.</p>
 <pre class="lean"><code>/-- One constant-in-time Transformer block (paper eq. (1.2)). -/
 structure AttnParams (d : ℕ) where
   V B W U : Eucl d →L[ℝ] Eucl d
@@ -345,12 +345,17 @@ structure AttnParams (d : ℕ) where
 noncomputable def attnAvg (B : Eucl d →L[ℝ] Eucl d) (μ : Measure (Eucl d)) (x : Eucl d) : Eucl d :=
   (∫ z, Real.exp ⟪B x, z⟫ ∂μ)⁻¹ • ∫ z, Real.exp ⟪B x, z⟫ • z ∂μ
 
-/-- Mean-field well-posedness (McKean-Vlasov on the sphere): the single remaining
-infrastructure axiom. -/
-axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
+/-- **Well-posedness of the self-attention mean-field flow (existence).** For every Transformer
+block and every sphere-supported probability datum there is a mean-field flow: the fixed point of
+the self-consistency map (leaf E3n), transported through the padded point flow. Formerly the axiom
+`exists_meanFieldFlow`; now machine-checked. -/
+theorem exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
     [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    ∃ Φ, IsMeanFieldFlow p μ₀ Φ</code></pre>
-<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/Attention.lean" class="lean-src"><code>Foundations/Attention.lean</code></a></p>
+    ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ := by
+  obtain ⟨η, hfix⟩ := exists_selfConsistent_trajectory p p.duration_nonneg μ₀ hs
+  exact ⟨meanFieldFlowCandidate p p.duration_nonneg η,
+    isMeanFieldFlow_meanFieldFlowCandidate p p.duration_nonneg μ₀ hs η hfix rfl⟩</code></pre>
+<p><a href="https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/AttnStepExistence.lean" class="lean-src"><code>Foundations/AttnStepExistence.lean</code></a></p>
 </div>
 </section>
 </section>
@@ -747,12 +752,22 @@ theorem distBump_lipschitz (x₀ : Eucl d) (η₃ : ℝ) : LipschitzWith 1 (dist
   simp only [distBump, Real.dist_eq, NNReal.coe_one, one_mul] at hmin ⊢
   exact hmin.trans (abs_dist_sub_le x y x₀)
 
+theorem distBump_nonneg {x₀ : Eucl d} {η₃ : ℝ} (hη₃ : 0 ≤ η₃) (x : Eucl d) :
+    0 ≤ distBump x₀ η₃ x :=
+  le_min hη₃ dist_nonneg
+
+/-- On the complement of the ball the bump saturates at `η₃`. -/
+theorem distBump_eq_outside {x₀ : Eucl d} {η₃ : ℝ} {x : Eucl d} (hx : η₃ ≤ dist x x₀) :
+    distBump x₀ η₃ x = η₃ :=
+  min_eq_left hx
+
 /-- **Lemma L8 / Claim 2 (Markov bound).** For a probability measure with
 `W₁(μ, δ_{x₀}) ≤ C η₂`, the mass at geodesic/Euclidean distance `≥ η₃` from `x₀` is at most
-`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Rests on the `W₁` axiom (KR duality):
-status `math.axiomatised`. -/
+`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Machine-checked via the proved theorem
+`W1_ge_of_lipschitz` (KR duality). -/
 theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 &lt; η₃)
+    (hfin : W1 μ (Measure.dirac x₀) ≠ ⊤)
     (hW1 : W1 μ (Measure.dirac x₀) ≤ C * η₂) :
     μ.real {x | η₃ ≤ dist x x₀} ≤ C * η₂ / η₃ := by
   set s : Set (Eucl d) := {x | η₃ ≤ dist x x₀} with hs
@@ -780,8 +795,16 @@ theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
   have hdirac : ∫ x, distBump x₀ η₃ x ∂(Measure.dirac x₀) = 0 := by
     rw [integral_dirac]
     simp [distBump, min_eq_right hη₃.le]
-  -- KR duality (axiom): ∫ bump dμ - ∫ bump dδ ≤ W₁
+  -- the bump is integrable against the Dirac (finite measure, bounded function)
+  have hbump_int_dirac : Integrable (distBump x₀ η₃) (Measure.dirac x₀) := by
+    refine Integrable.mono' (integrable_const η₃)
+      (distBump_lipschitz x₀ η₃).continuous.aestronglyMeasurable ?_
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_of_nonneg (distBump_nonneg hη₃.le x)]
+    exact min_le_left _ _
+  -- KR duality (now a theorem): ∫ bump dμ - ∫ bump dδ ≤ W₁
   have hdual := W1_ge_of_lipschitz μ (Measure.dirac x₀) (distBump x₀ η₃) (distBump_lipschitz x₀ η₃)
+    hbump_int hbump_int_dirac hfin
   rw [hdirac, sub_zero] at hdual
   -- assemble: η₃ · μ(s) ≤ ∫ bump dμ ≤ W₁ ≤ C η₂
   have hmono : μ.real s * η₃ ≤ ∫ x, distBump x₀ η₃ x ∂μ := by
@@ -872,7 +895,7 @@ theorem lemma_B_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 2 ≤ 
 </div>
 <div class="our-work">
 <p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>The authors’ strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure self-attention drift (<span class="math inline">\(\mathbf W=0\)</span>, <span class="math inline">\(\mathbf V=I_d\)</span>) the hull’s diameter is strictly decreasing while its mass stays inside it, so the measure contracts to a single Dirac, the exponential contraction giving the <span class="math inline">\(O(\log\tfrac1\varepsilon)\)</span> time. Because the drift is genuinely <strong>measure-dependent</strong> (self-attention averages against the evolving measure), the statement lives on the mean-field attention layer (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>) introduced by the F14 restatement — a statement over the measure-independent linear flow would be about the wrong dynamics. It is a labeled <code>axiom</code>: the diameter monotonicity and the LaSalle/Hartman-Grobman convergence are the milestone-M6 build, on top of the single mean-field well-posedness axiom (<code>exists_meanFieldFlow</code>). The clustering itself carries a one-piece (<code>switches θ ≤ 1</code>) budget, the paper’s single constant parameter <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)\)</span>. The conclusion is validated numerically by experiment <strong>E2</strong>.</p>
+<p>The authors’ strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure self-attention drift (<span class="math inline">\(\mathbf W=0\)</span>, <span class="math inline">\(\mathbf V=I_d\)</span>) the hull’s diameter is strictly decreasing while its mass stays inside it, so the measure contracts to a single Dirac, the exponential contraction giving the <span class="math inline">\(O(\log\tfrac1\varepsilon)\)</span> time. Because the drift is genuinely <strong>measure-dependent</strong> (self-attention averages against the evolving measure), the statement lives on the mean-field attention layer (<code>AttnSchedule</code>, <code>attnMeasureFlow</code>) introduced by the F14 restatement — a statement over the measure-independent linear flow would be about the wrong dynamics. It is a labeled <code>axiom</code>: the diameter monotonicity and the LaSalle/Hartman-Grobman convergence are the milestone-M6 build; the mean-field well-posedness pair it sits on top of (<code>exists_meanFieldFlow</code> / <code>meanFieldFlow_unique</code>) is itself now fully machine-checked, so <code>prop_2_1</code> is the only axiom in its own footprint. The clustering itself carries a one-piece (<code>switches θ ≤ 1</code>) budget, the paper’s single constant parameter <span class="math inline">\((\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)\)</span>. The conclusion is validated numerically by experiment <strong>E2</strong>.</p>
 <pre class="lean"><code>/-- **Proposition 2.1** (clustering to a point). A sphere-supported probability measure in an open
 hemisphere can be driven arbitrarily `W₂`-close to a Dirac mass at a sphere point, with one
 constant attention piece. AXIOM (`math.axiomatised`): the LaSalle/Hartman-Grobman convergence
@@ -1008,7 +1031,7 @@ theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [Is
 </div>
 <div class="our-work">
 <p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>Disentanglement is where the measure dependence of self-attention is <strong>essential</strong>: the paper’s own eq. (1.7) proves a measure-independent (linear) flow cannot separate overlapping inputs — two equal measures are carried to the same image by any single map. The fidelity audit (finding F14) showed the earlier linear statement of this node was refutable for exactly that reason, so the dynamical content now lives on the mean-field attention layer as the axiom <code>exists_disentangling_balls</code>: under a <strong>shared missing direction</strong> (the positive-gap form of (1.4)) and <strong>pairwise distinct</strong> inputs (the paper’s standing assumption), one attention schedule concentrates each measure into its own ball around a unit direction, <code>2r</code>-separated, together with the per-member transport-map form of (B.2). <code>prop_3_1</code> is then <strong>proved</strong> from it: the carrier balls are pairwise disjoint (<code>Metric.ball_disjoint_ball</code>) and each lies in an open hemisphere (Cauchy-Schwarz) — the geometric packaging the paper leaves implicit. Its badge is <code>axiomatised</code> because the effective status inherits the axiom: <code>#print axioms prop_3_1</code> lists exactly <code>exists_disentangling_balls</code> and the mean-field well-posedness axiom <code>exists_meanFieldFlow</code>.</p>
+<p>Disentanglement is where the measure dependence of self-attention is <strong>essential</strong>: the paper’s own eq. (1.7) proves a measure-independent (linear) flow cannot separate overlapping inputs — two equal measures are carried to the same image by any single map. The fidelity audit (finding F14) showed the earlier linear statement of this node was refutable for exactly that reason, so the dynamical content now lives on the mean-field attention layer as the axiom <code>exists_disentangling_balls</code>: under a <strong>shared missing direction</strong> (the positive-gap form of (1.4)) and <strong>pairwise distinct</strong> inputs (the paper’s standing assumption), one attention schedule concentrates each measure into its own ball around a unit direction, <code>2r</code>-separated, together with the per-member transport-map form of (B.2). <code>prop_3_1</code> is then <strong>proved</strong> from it: the carrier balls are pairwise disjoint (<code>Metric.ball_disjoint_ball</code>) and each lies in an open hemisphere (Cauchy-Schwarz) — the geometric packaging the paper leaves implicit. Its badge is <code>axiomatised</code> because the effective status inherits the axiom: <code>#print axioms prop_3_1</code> lists exactly <code>exists_disentangling_balls</code> (the mean-field well-posedness pair it used to also rest on, <code>exists_meanFieldFlow</code> / <code>meanFieldFlow_unique</code>, is now fully machine-checked).</p>
 <pre class="lean"><code>/-- Shared missing direction (eq. 1.4, positive-gap form): one unit `ω` and one gap `δ &gt; 0`
 work for every member of the family. -/
 def SharedMissingDirection {N : ℕ} (μ : Fin N → Measure (Eucl d)) : Prop :=
@@ -1144,11 +1167,11 @@ axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d �
 </div>
 <div class="our-work">
 <p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single <span class="math inline">\(\psi\)</span> by Lemma 5.1, approximate <span class="math inline">\(\psi\)</span> by a flow map by Lemma 5.4, and bound the resulting <span class="math inline">\(W_2\)</span> error by the coupling Lemma 5.2. We <strong>prove</strong> the theorem by assembly over the mean-field axiom layer: disentangle the inputs (<code>prop_3_1</code>), match each disentangled measure to its target through the per-member transport-map form of <code>exists_disentangling_balls</code>, approximate by <code>lemma_5_4</code>, bound with the machine-checked coupling lemma, and combine the per-member schedules with <code>exists_parked_schedule</code>. The <code>W₂</code> bookkeeping is machine-checked; <code>#print axioms theorem_1_2</code> lists exactly <code>exists_meanFieldFlow</code>, <code>exists_disentangling_balls</code>, <code>exists_parked_schedule</code>, <code>lemma_5_4</code>. The target missing direction (<code>_hmiss₁</code>, the second half of (1.5)) is retained in the statement for fidelity even though this assembly absorbs the target-disentanglement step into the parking axiom.</p>
+<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.1) composes the three stages above: disentangle both families by Proposition 3.1, transfer the transport maps into a single <span class="math inline">\(\psi\)</span> by Lemma 5.1, approximate <span class="math inline">\(\psi\)</span> by a flow map by Lemma 5.4, and bound the resulting <span class="math inline">\(W_2\)</span> error by the coupling Lemma 5.2. We <strong>prove</strong> the theorem by assembly over the mean-field axiom layer: disentangle the inputs (<code>prop_3_1</code>), match each disentangled measure to its target through the per-member transport-map form of <code>exists_disentangling_balls</code>, approximate by <code>lemma_5_4</code>, bound with the machine-checked coupling lemma, and combine the per-member schedules with <code>exists_parked_schedule</code>. The <code>W₂</code> bookkeeping is machine-checked; <code>#print axioms theorem_1_2</code> lists exactly <code>exists_disentangling_balls</code>, <code>exists_parked_schedule</code>, <code>lemma_5_4</code> (the mean-field layer itself is now axiom-free). The target missing direction (<code>_hmiss₁</code>, the second half of (1.5)) is retained in the statement for fidelity even though this assembly absorbs the target-disentanglement step into the parking axiom.</p>
 <pre class="lean"><code>/-- **Theorem 1.2** (general targets). If every input/target pair is matchable by a measurable
 sphere-valued transport map and the families share missing directions, a single attention schedule
 steers each input to within `ε` of its target in `W₂`. PROVED by assembly (effective
-`math.axiomatised`; footprint: exists_meanFieldFlow, exists_disentangling_balls,
+`math.axiomatised`; footprint: exists_disentangling_balls,
 exists_parked_schedule, lemma_5_4). -/
 theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε)
@@ -1176,11 +1199,11 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
 </div>
 <div class="our-work">
 <p><strong>Our formalization.</strong> <span class="badge axiom">axiomatised</span></p>
-<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 (<span class="math inline">\(\|\theta_1\| \lesssim dN/T\)</span>), cluster each now-disjoint single-hemisphere measure to within <span class="math inline">\(\delta\)</span> of a point by Proposition 2.1 (<span class="math inline">\(T_\delta = O(\log 1/\delta)\)</span>, <span class="math inline">\(\|\theta_2\| \lesssim \log 1/\delta\)</span>), then match the ensemble of cluster atoms <span class="math inline">\(x_0^i\)</span> to the targets <span class="math inline">\(y^i\)</span> by Proposition 4.1 (<span class="math inline">\(\|\theta_3\| \lesssim N/T\)</span>); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment <strong>E6</strong>, while the negative control <strong>E7</strong> shows that a single <em>linear</em> continuity equation cannot achieve it — the same obstruction that finding F14 turned into a kernel refutation of the earlier linear statement of this very node, and the reason the theorem now lives on the mean-field attention layer. We <strong>prove</strong> it by assembly: disentangle (<code>prop_3_1</code>), cluster each disentangled measure to its on-sphere target (<code>cluster_to_point</code>), and combine the per-member schedules (<code>exists_parked_schedule</code>); <code>#print axioms theorem_1_1</code> lists exactly <code>exists_meanFieldFlow</code>, <code>cluster_to_point</code>, <code>exists_disentangling_balls</code>, <code>exists_parked_schedule</code>. The paper’s standing assumption of pairwise distinct inputs is the explicit hypothesis <code>hne</code> — with identical inputs no single flow can separate them. The <span class="math inline">\(O(d\,N)\)</span> switch count is deliberately deferred (the paper’s constant is unspecified; inventing one risks a false axiom) and the norm bound is now <em>expressible</em> (attention blocks carry genuine operators) but not yet threaded — both documented in the roadmap, not silently encoded.</p>
+<p>The paper’s proof (Geshkovski, Rigollet, Ruiz-Balet, §5.2) is the simpler Dirac-target specialization: disentangle by Proposition 3.1 (<span class="math inline">\(\|\theta_1\| \lesssim dN/T\)</span>), cluster each now-disjoint single-hemisphere measure to within <span class="math inline">\(\delta\)</span> of a point by Proposition 2.1 (<span class="math inline">\(T_\delta = O(\log 1/\delta)\)</span>, <span class="math inline">\(\|\theta_2\| \lesssim \log 1/\delta\)</span>), then match the ensemble of cluster atoms <span class="math inline">\(x_0^i\)</span> to the targets <span class="math inline">\(y^i\)</span> by Proposition 4.1 (<span class="math inline">\(\|\theta_3\| \lesssim N/T\)</span>); Lemma 5.4 is not needed. The end-to-end construction is validated numerically by experiment <strong>E6</strong>, while the negative control <strong>E7</strong> shows that a single <em>linear</em> continuity equation cannot achieve it — the same obstruction that finding F14 turned into a kernel refutation of the earlier linear statement of this very node, and the reason the theorem now lives on the mean-field attention layer. We <strong>prove</strong> it by assembly: disentangle (<code>prop_3_1</code>), cluster each disentangled measure to its on-sphere target (<code>cluster_to_point</code>), and combine the per-member schedules (<code>exists_parked_schedule</code>); <code>#print axioms theorem_1_1</code> lists exactly <code>cluster_to_point</code>, <code>exists_disentangling_balls</code>, <code>exists_parked_schedule</code> (the mean-field layer itself is now axiom-free). The paper’s standing assumption of pairwise distinct inputs is the explicit hypothesis <code>hne</code> — with identical inputs no single flow can separate them. The <span class="math inline">\(O(d\,N)\)</span> switch count is deliberately deferred (the paper’s constant is unspecified; inventing one risks a false axiom) and the norm bound is now <em>expressible</em> (attention blocks carry genuine operators) but not yet threaded — both documented in the roadmap, not silently encoded.</p>
 <pre class="lean"><code>/-- **Theorem 1.1** (Dirac targets). If the targets are on-sphere point masses `δ_{x i}` and the
 pairwise-distinct sphere-supported inputs share a missing direction, a single attention schedule
 steers each input to within `ε` of its target in `W₂`. PROVED by assembly (effective
-`math.axiomatised`; footprint: exists_meanFieldFlow, cluster_to_point,
+`math.axiomatised`; footprint: cluster_to_point,
 exists_disentangling_balls, exists_parked_schedule). -/
 theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
     (T ε : ℝ) (hT : 0 &lt; T) (hε : 0 &lt; ε) (hmiss : SharedMissingDirection μ₀)

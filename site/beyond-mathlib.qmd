@@ -26,12 +26,12 @@ then sharpened the picture in an important way: the M3 flow is a **linear** (mea
 pushforward, and the paper's own eq. (1.7) proves such dynamics cannot disentangle overlapping
 measures -- so the measure-dependent statements were **restated over a mean-field attention layer**
 (M3b): the paper's velocity field (1.2) as a concrete definition, with a well-posedness
-axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKean-Vlasov gap --
-of which the **uniqueness half (`meanFieldFlow_unique`) is now a machine-checked theorem**
-(a measure-averaged Grönwall argument on the sphere), leaving only *existence*
-(`exists_meanFieldFlow`) axiomatised.
-Today `#print axioms theorem_1_1` lists exactly that existence axiom plus the *paper-level*
-dynamical statements (`cluster_to_point`, `exists_disentangling_balls`, `exists_parked_schedule`;
+axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKean-Vlasov gap.
+**Both halves are now machine-checked theorems** -- uniqueness first (a measure-averaged Grönwall
+argument on the sphere), then existence (the self-consistency fixed point of leaf E3n, transported
+through the padded point flow) -- so the mean-field layer itself carries **zero** axioms.
+Today `#print axioms theorem_1_1` lists exactly the *paper-level* dynamical statements
+(`cluster_to_point`, `exists_disentangling_balls`, `exists_parked_schedule`;
 `theorem_1_2` swaps `cluster_to_point` for `lemma_5_4`), each encoding a result from the paper's
 Sections 2--5 that rests on classical theorems (LaSalle invariance, Hartman-Grobman linearization)
 Mathlib does not yet have. This page is the public roadmap for that program -- and, increasingly,
@@ -53,23 +53,26 @@ a record of it.
   *derived* from Mathlib's `IsPicardLindelof.of_time_independent` + Grönwall, with the sphere kept
   invariant by the radial-tangency identity. This layer is **linear** in the measure -- the honest
   home for the paper's `V ≡ 0` (perceptron-only) sections (§4, Appendix B).
-- **M3b -- Mean-field attention layer: [uniqueness machine-checked, existence axiom]{.badge .partial} (findings F14, F20).** The
+- **M3b -- Mean-field attention layer: [done]{.badge .ok} (machine-checked; findings F14, F20).** The
   fidelity audit kernel-refuted the family-level statements when read over the linear flow -- two
   identical inputs cannot enter disjoint balls under one pushforward map, exactly the paper's
   eq. (1.7) obstruction. The fix is structural: the paper's measure-dependent velocity (1.2) -- the
   softmax attention average plus perceptron, tangentially projected -- is now a concrete definition
   (`AttnParams`, `attnAvg`, `AttnParams.field`), a mean-field flow is a predicate
   (`IsMeanFieldFlow`), and the well-posedness of that flow was an axiom pair -- existence and
-  uniqueness. The **uniqueness half (`meanFieldFlow_unique`) is now a discharged theorem**: found
-  unsound off the sphere (**F20**) and repaired to the paper's `μ₀ ∈ P(𝕊^{d-1})` datum, then closed
-  by a decomposed campaign -- the field's full joint `(point, W₁)`-modulus, an integral-form
+  uniqueness. **Both halves are now discharged theorems.** Uniqueness (`meanFieldFlow_unique`) was
+  found unsound off the sphere (**F20**) and repaired to the paper's `μ₀ ∈ P(𝕊^{d-1})` datum, then
+  closed by a decomposed campaign -- the field's full joint `(point, W₁)`-modulus, an integral-form
   Grönwall, an FTC representation, a Fubini-averaged distance, and an `ODE_solution_unique` transfer.
-  Only *existence* (`exists_meanFieldFlow`) -- McKean-Vlasov well-posedness on the sphere, which
-  additionally needs Picard-Lindelöf plus Wasserstein completeness of $\mathcal P(\mathbb S^{d-1})$ --
-  remains axiomatised, the true remaining M3 gap. All measure-dependent statements (Prop 2.1, Lemma 3.3, the
-  disentanglement, Lemmas 5.4, parking, Theorems 1.1/1.2) now live on this layer. The two layers
+  Existence (`exists_meanFieldFlow`) -- McKean-Vlasov well-posedness on the sphere, which
+  additionally needed Picard-Lindelöf plus Wasserstein completeness of $\mathcal P(\mathbb S^{d-1})$ --
+  followed via the same leaf-decomposition template: the Wasserstein-completeness substrate (the
+  `SphereProb` bridge, `W₁` finiteness, the `weak ⇒ W₁` crux, `CompleteSpace (SphereProb d)`) fed a
+  self-consistency fixed point, transported through the padded point flow. The mean-field layer now
+  carries **zero** axioms. All measure-dependent statements (Prop 2.1, Lemma 3.3, the
+  disentanglement, Lemmas 5.4, parking, Theorems 1.1/1.2) live on this layer. The two layers
   are bridged: a `V = 0` attention step *is* the linear block-flow pushforward
-  (`attnStep_eq_map_blockFlow`, the first consumer of `meanFieldFlow_unique`), so the
+  (`attnStep_eq_map_blockFlow`, a consumer of `meanFieldFlow_unique`), so the
   machine-checked Appendix-B transport acts on the mean-field layer as well.
 - **M4 -- Per-point transport (Appendix B): [done]{.badge .ok} (machine-checked).** The full
   mass-transport chain is discharged: `lemma_B_2` (the single overlapping ball pair) is a **proved
@@ -119,7 +122,7 @@ matches the kernel. The full re-usability discipline is catalogued in the `lean-
 The axioms do not fall independently -- they discharge in a definite dependency order. Eight
 milestones (M1--M8), one linchpin, and one standalone first target:
 
-![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, and M5 are all discharged; the mean-field layer M3b has its uniqueness half machine-checked (only existence remains); the dynamical layer -- M6, the M7 tail (Lemma 5.4), and the M8b parking / §3.3 assembly (whose §3.4 Part 1 leaf is now machine-checked) -- plus the top-level assembly are what is left. (The live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
+![The de-axiomatization build DAG, in the house sketch style. M8a (green) was the standalone first target; the linchpin M3 (gold), M1, M2, M4, M5, and now M3b (both existence and uniqueness) are all discharged; the dynamical layer -- M6, the M7 tail (Lemma 5.4), and the M8b parking / §3.3 assembly (whose §3.4 Part 1 leaf is now machine-checked) -- plus the top-level assembly are what is left. (The live per-node status is on the [claim graph](claimgraph.qmd).)](diagrams/build-dag.ink.svg){width=100%}
 
 ::: {.callout-note collapse="true"}
 ## The same graph, precise (D2 source)
@@ -133,7 +136,9 @@ carrying the full edge set (e.g. the direct `M1 → M7`, `M2 → M7`, and `M5 �
 
 ## What's left, and how to finish
 
-**10 named axioms remain.** They fall into three groups by *how* each is closed:
+**9 named axioms remain**, all in `Statements/` -- the mean-field layer (M3b) is now fully
+discharged (see *Progress so far* above), so every remaining axiom is a *paper-level* statement, not
+infrastructure. They fall into three groups by *how* each is closed:
 
 **Tier 1 -- constructive assembly (decomposition-tractable; the pieces already exist).**
 
@@ -169,9 +174,11 @@ carrying the full edge set (e.g. the direct `M1 → M7`, `M2 → M7`, and `M5 �
 
 **Tier 2 -- infrastructure builds (a genuine new layer of Mathlib-level theory).**
 
-- `exists_meanFieldFlow` (the mean-field *existence* half) -- Picard-Lindelöf plus **Wasserstein
-  completeness of $\mathcal P(\mathbb S^{d-1})$**. The Lipschitz-in-$(x, W_1)$ moduli are already
-  machine-checked from the uniqueness campaign, so the same leaf-decomposition applies.
+- `exists_meanFieldFlow` (the mean-field *existence* half) -- **[machine-checked]{.badge .ok}**.
+  Picard-Lindelöf plus **Wasserstein completeness of $\mathcal P(\mathbb S^{d-1})$**: the
+  Lipschitz-in-$(x, W_1)$ moduli from the uniqueness campaign fed the same leaf-decomposition
+  template, closing with a self-consistency fixed point transported through the padded point flow.
+  This took the axiom count to **9** and closed out M3b entirely.
 - `prop_2_1`, `cluster_to_point` -- the M6 LaSalle/Lyapunov convergence theory.
 - `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
 - `lemma_3_3`, `lemma_3_4_part2` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the
@@ -197,7 +204,7 @@ optimal-transport and mean-field *layers*; the measure-theoretic substrate benea
 | --- | --- | --- |
 | Nonatomic prescribed-mass splitting (Sierpiński) | absent (only an interval-*average* IVT) | **[done]{.badge .ok}** -- built on `NoAtoms` + IVT (M8a) |
 | Per-block characteristic (linear) flow | absent (`Kernel`, `Measure.map` exist) | **[done]{.badge .ok}** -- built on `IsPicardLindelof` + Grönwall (M3) |
-| Mean-field (McKean-Vlasov) attention flow | absent | **[uniqueness proved, existence axiom]{.badge .partial}** -- field + flow predicate defined; `meanFieldFlow_unique` machine-checked, only `exists_meanFieldFlow` remains (M3b) |
+| Mean-field (McKean-Vlasov) attention flow | absent | **[done]{.badge .ok}** -- field + flow predicate defined; both `meanFieldFlow_unique` and `exists_meanFieldFlow` machine-checked (M3b) |
 | Optimal transport / Wasserstein / Kantorovich | absent | **[done]{.badge .ok}** -- coupling-based `W₂` over the ENNReal cost (M2) |
 | Geodesic convexity on the sphere | absent (`Sphere`, Riemannian metric exist) | **[done]{.badge .ok}** -- caps, hulls, and the Section 3.3 separation transfer (M5) |
 | ReLU-gated cap transport (Appendix B) | absent | **[done]{.badge .ok}** -- Lemmas B.1/B.2 machine-checked (M4) |
