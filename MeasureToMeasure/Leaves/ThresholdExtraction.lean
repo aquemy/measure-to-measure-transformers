@@ -40,7 +40,7 @@ variable {d : ℕ}
 /-- **The antipodal boundary carries no mass.** For `μ0` supported on the sphere, the "below -1"
 level set of `⟪u,·⟩` is exactly the single antipodal point `{-u}` (Cauchy-Schwarz equality case),
 which is atomless. -/
-theorem measure_proj_le_neg_one (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] [NoAtoms μ0]
+theorem measure_proj_le_neg_one (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0] [NoAtoms μ0]
     (u : Metric.sphere (0:Eucl d) 1) (hμ0S : μ0 (sphere d)ᶜ = 0) :
     μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ -1} = 0 := by
   have hun : ‖(u:Eucl d)‖ = 1 := by
@@ -73,10 +73,11 @@ theorem measure_proj_le_neg_one (μ0 : Measure (Eucl d)) [IsProbabilityMeasure �
   exact nonpos_iff_eq_zero.mp hle
 
 /-- **The "at most 1" level set is everything.** For `μ0` supported on the sphere, `⟪u,·⟩ ≤ 1`
-always (Cauchy-Schwarz), so this level set has full measure. -/
-theorem measure_proj_le_one (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0]
+always (Cauchy-Schwarz), so this level set has full measure (all of `μ0`'s own total mass, not
+necessarily `1` -- `μ0` need only be finite, not a probability measure). -/
+theorem measure_proj_le_one (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0]
     (u : Metric.sphere (0:Eucl d) 1) (hμ0S : μ0 (sphere d)ᶜ = 0) :
-    μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ 1} = 1 := by
+    μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ 1} = μ0 Set.univ := by
   have hun : ‖(u:Eucl d)‖ = 1 := by
     have := u.2; rw [Metric.mem_sphere, dist_eq_norm, sub_zero] at this; exact this
   have hcompl : {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ 1}ᶜ ⊆ (sphere d)ᶜ := by
@@ -96,13 +97,13 @@ theorem measure_proj_le_one (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0]
   have hmeas : MeasurableSet {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ 1} :=
     measurableSet_le (by fun_prop) measurable_const
   have := measure_add_measure_compl (μ := μ0) hmeas
-  rw [hnull, add_zero, measure_univ] at this
+  rw [hnull, add_zero] at this
   exact this
 
 /-- **Right-continuity of the threshold measure** (general fact, needs no atomlessness): if every
 `s > t` already reaches mass `m`, so does `t` itself -- via `Antitone.measure_iInter` on the shrinking
 family `Iic (t + 1/(n+1))`, whose intersection is exactly `Iic t`. -/
-theorem measure_proj_Iic_ge_of_forall_gt (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0]
+theorem measure_proj_Iic_ge_of_forall_gt (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0]
     (u : Metric.sphere (0:Eucl d) 1) (m : ENNReal) (t : ℝ)
     (hgap : ∀ s, t < s → m ≤ μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ s}) :
     m ≤ μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ t} := by
@@ -152,7 +153,7 @@ below mass `m`, so does `t` itself -- via `Monotone.measure_iUnion` on the growi
 `Iic (t - 1/(n+1))`, whose union is `Iio t`, plus the hypothesis that `{x | ⟪u,x⟫ = t}` is null
 (so `Iic t`'s measure doesn't jump past `Iio t`'s). This is exactly where Step A's genericity is
 consumed. -/
-theorem measure_proj_Iic_le_of_forall_lt (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0]
+theorem measure_proj_Iic_le_of_forall_lt (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0]
     (u : Metric.sphere (0:Eucl d) 1) (m : ENNReal) (t : ℝ)
     (hatomless : μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = t} = 0)
     (hbelow : ∀ s, s < t → μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ s} ≤ m) :
@@ -211,14 +212,17 @@ theorem measure_proj_Iic_le_of_forall_lt (μ0 : Measure (Eucl d)) [IsProbability
     linarith
 
 /-- **Exact threshold extraction.** For `μ0` supported on the sphere with atomless projection along
-`u` (Step A's conclusion), every target mass `m ∈ [0,1]` is hit EXACTLY by some threshold cut
-`{x | ⟪u,x⟫ ≤ t}`, with `t ∈ [-1,1]` -- and that threshold itself carries no mass (`u`-atomlessness
-at `t` specifically), so consecutive thresholds can be glued into disjoint slabs without losing or
-double-counting mass. -/
-theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] [NoAtoms μ0]
+`u` (Step A's conclusion), every target mass `m` up to `μ0`'s own total mass is hit EXACTLY by some
+threshold cut `{x | ⟪u,x⟫ ≤ t}`, with `t ∈ [-1,1]` -- and that threshold itself carries no mass
+(`u`-atomlessness at `t` specifically), so consecutive thresholds can be glued into disjoint slabs
+without losing or double-counting mass. `μ0` need only be finite, not a probability measure -- this
+is what lets the SAME generic direction `u` (a property of the ambient measure alone, surviving
+restriction to any measurable subset) be reused for a threshold-sweep restricted to a single Voronoi
+cell, simultaneously for every cell, rather than needing a fresh direction per cell. -/
+theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0] [NoAtoms μ0]
     (u : Metric.sphere (0:Eucl d) 1) (hμ0S : μ0 (sphere d)ᶜ = 0)
     (hatomless : ∀ c : ℝ, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = c} = 0)
-    (m : ENNReal) (hm : m ≤ 1) :
+    (m : ENNReal) (hm : m ≤ μ0 Set.univ) :
     ∃ t : ℝ, -1 ≤ t ∧ t ≤ 1 ∧ μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = t} = 0 ∧
       μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ t} = m := by
   set F : ℝ → ENNReal := fun t => μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) ≤ t} with hFdef
@@ -229,7 +233,7 @@ theorem exists_threshold_eq (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] 
     simp only [Set.mem_setOf_eq] at hx ⊢
     linarith
   have hF_neg1 : F (-1) = 0 := measure_proj_le_neg_one μ0 u hμ0S
-  have hF_1 : F 1 = 1 := measure_proj_le_one μ0 u hμ0S
+  have hF_1 : F 1 = μ0 Set.univ := measure_proj_le_one μ0 u hμ0S
   set S : Set ℝ := {t ∈ Set.Icc (-1:ℝ) 1 | m ≤ F t} with hSdef
   have h1S : (1:ℝ) ∈ S := by rw [hSdef]; exact ⟨⟨by norm_num, le_refl 1⟩, hF_1 ▸ hm⟩
   have hSne : S.Nonempty := ⟨1, h1S⟩

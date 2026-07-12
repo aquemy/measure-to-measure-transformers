@@ -103,11 +103,13 @@ theorem measure_slab_inter_slab_eq_zero (μ0 : Measure (Eucl d))
 /-- **Simultaneous threshold extraction over a whole index family.** Bundles Step B's per-target
 threshold (`exists_threshold_eq`) over an entire strictly monotone family of cumulative targets via
 `choose`; the resulting threshold function is itself monotone, since strict monotonicity of the
-targets plus monotonicity of the underlying CDF pins down the order of their preimages. -/
-theorem exists_thresholds (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] [NoAtoms μ0]
+targets plus monotonicity of the underlying CDF pins down the order of their preimages. `μ0` need
+only be finite (not a probability measure), and the targets bounded by `μ0`'s own total mass rather
+than a fixed `1` -- letting this be reused with `μ0` restricted to a single Voronoi cell. -/
+theorem exists_thresholds (μ0 : Measure (Eucl d)) [IsFiniteMeasure μ0] [NoAtoms μ0]
     (u : Metric.sphere (0:Eucl d) 1) (hμ0S : μ0 (sphere d)ᶜ = 0)
     (hatomless : ∀ c : ℝ, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫ : ℝ) = c} = 0)
-    {N : ℕ} (m : Fin N → ENNReal) (hm1 : ∀ k, m k ≤ 1) (hmmono : StrictMono m) :
+    {N : ℕ} (m : Fin N → ENNReal) (hm1 : ∀ k, m k ≤ μ0 Set.univ) (hmmono : StrictMono m) :
     ∃ t : Fin N → ℝ, Monotone t ∧ (∀ k, -1 ≤ t k ∧ t k ≤ 1) ∧
       (∀ k, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫:ℝ) ≤ t k} = m k) ∧
       (∀ k, μ0 {x : Eucl d | (⟪(u:Eucl d), x⟫:ℝ) = t k} = 0) := by
@@ -143,8 +145,10 @@ theorem exists_connected_mass_partition (μ0 : Measure (Eucl d)) [IsProbabilityM
       (∀ j k, j ≠ k → μ0 (P j ∩ P k) = 0) := by
   haveI : NeZero d := ⟨by omega⟩
   obtain ⟨u, hatomless⟩ := exists_atomless_direction μ0
-  have hm1 : ∀ k : Fin (M+1), m k ≤ 1 := by
+  have hunivone : μ0 Set.univ = 1 := measure_univ
+  have hm1 : ∀ k : Fin (M+1), m k ≤ μ0 Set.univ := by
     intro k
+    rw [hunivone]
     rcases eq_or_lt_of_le (Fin.le_last k) with heq | hlt
     · rw [heq, hmlast]
     · exact (hmmono hlt).le.trans_eq hmlast
