@@ -228,14 +228,20 @@ theorem geodesicArc_mem_of_geodesicConvex {C : Set (Eucl d)} (hC : GeodesicConve
   have hmem := hC.2 p hp q hq a b hapos hbpos
   rwa [hcombo, hnorm1, inv_one, one_smul] at hmem
 
-/-- **Uniform positive margin along the arc.** For a geodesically convex OPEN `C` with `Cᶜ`
+/-- **Uniform positive margin along the arc.** For a geodesically convex `C` that is RELATIVELY
+open in the sphere (`C = sphere d ∩ U` for some ambient-open `U` -- `C` itself is NEVER
+ambient-open, since it sits inside the sphere, which has empty ambient interior for `d ≥ 1`; the
+relevant "complement" is likewise the RELATIVE one, `sphere d \ C`, not the ambient `Cᶜ`, which is
+always all of `Eucl d` minus a sliver and hence useless for a margin argument), with `sphere d \ C`
 nonempty, and non-antipodal `p, q ∈ C`, some `R ∈ (0, π/4)` works as a ball radius at EVERY point
 of the arc (endpoints included): the whole geodesic ball of radius `R` stays in `C`. Compactness of
 `[0, geodesicDist p q]` plus continuity and pointwise positivity of `θ ↦ Metric.infDist
-(geodesicArc p q θ) Cᶜ` gives a uniform positive AMBIENT margin `η`; the chord ≤ arc bridge
-(`norm_sub_le_geodesicDist`) converts this into a GEODESIC radius bound. -/
-theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C) (hCopen : IsOpen C)
-    (hCne : Cᶜ.Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C) (hne : q ≠ p) (hne' : q ≠ -p) :
+(geodesicArc p q θ) (sphere d \ C)` gives a uniform positive AMBIENT margin `η`; the chord ≤ arc
+bridge (`norm_sub_le_geodesicDist`) converts this into a GEODESIC radius bound. -/
+theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C)
+    (hCopen : ∃ U : Set (Eucl d), IsOpen U ∧ C = sphere d ∩ U)
+    (hCne : (sphere d \ C).Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C)
+    (hne : q ≠ p) (hne' : q ≠ -p) :
     ∃ R : ℝ, R ∈ Set.Ioo 0 (Real.pi / 2) ∧
       ∀ θ ∈ Set.Icc (0 : ℝ) (geodesicDist p q), geodesicBall (geodesicArc p q θ) R ⊆ C := by
   have hps : p ∈ sphere d := hC.subset_sphere hp
@@ -249,14 +255,20 @@ theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C) (hCopen
     · rcases eq_or_lt_of_le hθ.2 with hΘeq | hΘlt
       · rw [hΘeq, hΘdef, geodesicArc_geodesicDist hps hqs hne hne']; exact hq
       · exact geodesicArc_mem_of_geodesicConvex hC hp hq hne hne' ⟨h0, hΘlt⟩
-  have hCclosed : IsClosed Cᶜ := hCopen.isClosed_compl
-  set f : ℝ → ℝ := fun θ => Metric.infDist (geodesicArc p q θ) Cᶜ with hfdef
+  obtain ⟨U, hUopen, hCU⟩ := hCopen
+  have hCclosed : IsClosed (sphere d \ C) := by
+    have heq : sphere d \ C = sphere d ∩ Uᶜ := by
+      rw [hCU]; ext y; simp only [Set.mem_sdiff, Set.mem_inter_iff, Set.mem_compl_iff]; tauto
+    rw [heq]
+    exact Metric.isClosed_sphere.inter hUopen.isClosed_compl
+  set f : ℝ → ℝ := fun θ => Metric.infDist (geodesicArc p q θ) (sphere d \ C) with hfdef
   have hfcont : ContinuousOn f (Set.Icc 0 Θ) :=
-    (Metric.continuous_infDist_pt Cᶜ).comp_continuousOn (continuous_geodesicArc p q).continuousOn
+    (Metric.continuous_infDist_pt (sphere d \ C)).comp_continuousOn
+      (continuous_geodesicArc p q).continuousOn
   have hfpos : ∀ θ ∈ Set.Icc (0 : ℝ) Θ, 0 < f θ := by
     intro θ hθ
     rw [hfdef]
-    have hnotmem : geodesicArc p q θ ∉ Cᶜ := fun hcon => hcon (harc_mem θ hθ)
+    have hnotmem : geodesicArc p q θ ∉ sphere d \ C := fun hcon => hcon.2 (harc_mem θ hθ)
     rw [← hCclosed.closure_eq] at hnotmem
     exact (Metric.infDist_pos_iff_notMem_closure hCne).mp hnotmem
   have hcompact : IsCompact (Set.Icc (0 : ℝ) Θ) := isCompact_Icc
@@ -273,8 +285,8 @@ theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C) (hCopen
   have hxlt_min : ‖geodesicArc p q θ - x‖ < min η (Real.pi / 4) := lt_of_le_of_lt hxle hxdist
   have hxlt_η : ‖geodesicArc p q θ - x‖ < η := lt_of_lt_of_le hxlt_min (min_le_left _ _)
   by_contra hxnotC
-  have hinfle : Metric.infDist (geodesicArc p q θ) Cᶜ ≤ dist (geodesicArc p q θ) x :=
-    Metric.infDist_le_dist_of_mem hxnotC
+  have hinfle : Metric.infDist (geodesicArc p q θ) (sphere d \ C) ≤ dist (geodesicArc p q θ) x :=
+    Metric.infDist_le_dist_of_mem ⟨hxs, hxnotC⟩
   rw [dist_eq_norm] at hinfle
   have hmin_le : η ≤ f θ := hθ0min hθ
   rw [hfdef] at hmin_le
@@ -308,7 +320,8 @@ theorem exists_valid_step_count {Θ R : ℝ} (hΘpos : 0 < Θ) (hRpos : 0 < R) :
       linarith
 
 theorem exists_geodesicConvex_arc_chain {C : Set (Eucl d)} (hC : GeodesicConvex C)
-    (hCopen : IsOpen C) (hCne : Cᶜ.Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C)
+    (hCopen : ∃ U : Set (Eucl d), IsOpen U ∧ C = sphere d ∩ U)
+    (hCne : (sphere d \ C).Nonempty) {p q : Eucl d} (hp : p ∈ C) (hq : q ∈ C)
     (hne : q ≠ p) (hne' : q ≠ -p) :
     ∃ (n : ℕ) (z : ℕ → Eucl d) (Rad : ℕ → ℝ),
       0 < n ∧ z 0 = p ∧ z n = q ∧
