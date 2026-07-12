@@ -244,6 +244,29 @@ theorem Block.blockFlow_dist_le (b : Block d) {t : ℝ} (ht : 0 ≤ t) (x y : Eu
     (b.blockCurve_isIntegralCurve y) ht
   simpa only [b.blockCurve_zero, Block.blockFlow] using h
 
+/-- **Absolute displacement bound.** A single block moves any point by at most `bound * t` over
+time `t ≥ 0` -- unconditional, no ball/region hypothesis: a direct mean-value consequence of the
+global speed bound `field_le` (`‖x(t) - x(0)‖ ≤ (sup ‖x'‖) · t`, via
+`norm_image_sub_le_of_norm_deriv_le_segment'`). Unlike `blockFlow_dist_le` (which bounds how far two
+*nearby* trajectories drift apart), this bounds how far *one* trajectory moves from its own start --
+the tool for showing a switch disturbs an already-placed point by only a small, computable amount,
+even where the block's target region isn't disjoint from that point. -/
+theorem Block.blockFlow_dist_self_le (b : Block d) {t : ℝ} (ht : 0 ≤ t) (x : Eucl d) :
+    dist (b.blockFlow t x) x ≤ (b.bound : ℝ) * t := by
+  have hcurve := b.blockCurve_isIntegralCurve x
+  have hb0 : b.blockCurve x 0 = x := b.blockCurve_zero x
+  have hderiv : ∀ s ∈ Set.Icc (0:ℝ) t,
+      HasDerivWithinAt (b.blockCurve x) (b.field (b.blockCurve x s)) (Set.Icc 0 t) s := by
+    intro s _
+    exact (hcurve s).hasDerivWithinAt
+  have hbound : ∀ s ∈ Set.Ico (0:ℝ) t, ‖b.field (b.blockCurve x s)‖ ≤ (b.bound : ℝ) := by
+    intro s _
+    exact b.field_le _
+  have hmvt := norm_image_sub_le_of_norm_deriv_le_segment' hderiv hbound t (Set.right_mem_Icc.mpr ht)
+  rw [hb0, sub_zero] at hmvt
+  show dist (b.blockCurve x t) x ≤ (b.bound : ℝ) * t
+  rwa [dist_eq_norm]
+
 /-- The point flow is Lipschitz (hence continuous and measurable) in the initial value, for `t ≥ 0`. -/
 theorem Block.lipschitzWith_blockFlow (b : Block d) {t : ℝ} (ht : 0 ≤ t) :
     LipschitzWith (Real.exp (b.lipConst * t)).toNNReal (b.blockFlow t) := by
@@ -306,6 +329,29 @@ theorem flowMap_mem_sphere (θ : Params d) {t : ℝ} (ht : 0 ≤ t) :
     intro x hx
     rw [flowMap_cons, Function.comp_apply]
     exact ih (b.blockFlow_mem_sphere hx ht)
+
+/-- **Schedule-level absolute displacement bound.** The whole schedule moves any point by at most
+`t * (sum of the blocks' bounds)`, for `t ≥ 0` -- unconditional, no ball/region/disjointness
+hypothesis on `x` or on the schedule at all. List induction chaining `blockFlow_dist_self_le` per
+block through the triangle inequality. This is the tool for bounding how much a schedule handling
+ONE piece of a composite construction can possibly disturb mass another piece already placed, even
+when their target regions are not disjoint -- turning "the two regions must not overlap" into "the
+overlap can only cost at most this much, computable up front." -/
+theorem flowMap_dist_self_le (θ : Params d) {t : ℝ} (ht : 0 ≤ t) (x : Eucl d) :
+    dist (flowMap θ t x) x ≤ t * (θ.map Block.bound).sum := by
+  induction θ generalizing x with
+  | nil => simp
+  | cons b θ ih =>
+      rw [flowMap_cons]
+      simp only [Function.comp_apply, List.map_cons, List.sum_cons]
+      calc dist (flowMap θ t (b.blockFlow t x)) x
+          ≤ dist (flowMap θ t (b.blockFlow t x)) (b.blockFlow t x) + dist (b.blockFlow t x) x :=
+            dist_triangle _ _ _
+        _ ≤ t * (θ.map Block.bound).sum + (b.bound : ℝ) * t := by
+            gcongr
+            · exact ih (b.blockFlow t x)
+            · exact b.blockFlow_dist_self_le ht x
+        _ = t * ((b.bound : ℝ) + (θ.map Block.bound).sum) := by ring
 
 /-!
 ## Time reversal
