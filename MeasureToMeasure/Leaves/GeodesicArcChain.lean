@@ -21,12 +21,27 @@ component of `q` orthogonal to `p`). This is the standard great-circle arc-lengt
 EXACTLY for `θ ∈ [0, π]` (no need to separately prove monotonicity of a chord-based parametrization),
 and `geodesicArc p q (geodesicDist p q) = q`.
 
+**Status: the discretization/chain-assembly (`exists_geodesicConvex_arc_chain` proper) is NOT yet
+built.** `exists_valid_step_count` below establishes the arithmetic (a step count `n` making the
+step size land in `[R, 2R)`), but assembling it into `z : ℕ → Eucl d`/`R : ℕ → ℝ` satisfying
+`gated_chainUnion_retention`'s hypotheses hit a genuine obstruction: `hchain`/`hdisj` there are
+stated for ALL `k : ℕ`, unbounded, and the sphere's compactness means no sequence can maintain a
+FIXED minimum pairwise separation for infinitely many index-gap-≥2 pairs (a basic packing fact) --
+so any valid infinite "tail" past the real chain endpoint must use SHRINKING radii, which is a
+real extra construction, not a bookkeeping detail. Worse: re-reading `gated_chainUnion_retention`'s
+own proof (`GatedChainUnion.lean`) shows its induction only ever invokes `hchain k`/`hdisj j (k+1)`
+for indices below the CURRENT `K` being proven -- the unbounded `∀ k` in its hypotheses is stronger
+than what the proof consumes, the same over-generalization pattern found repeatedly elsewhere this
+session. The right fix is a bounded-hypothesis variant of `gated_chainUnion_retention` (proved by
+literally the same induction, avoiding the infinite-tail problem entirely), not a cleverer tail
+construction here. See the `prop-2-2-steps-2-3-campaign` project notes for the full writeup.
+
 M3b/mid-level staging: Stage 3 of the `prop_2_2` Steps 2-3 campaign; see project notes.
 -/
 
 namespace MeasureToMeasure.Leaves
 
-open Set
+open Set MeasureTheory
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -149,7 +164,7 @@ theorem continuous_geodesicArc (p q : Eucl d) : Continuous (geodesicArc p q) := 
   fun_prop
 
 /-- **The whole open arc lies in `C`.** For `θ` strictly between `0` and `geodesicDist p q`,
-`geodesicArc p q θ` is exactly the normalized positive combination `a • p + b • q` with
+`geodesicArc p q θ` is exactly the normalized positive chord combination `a • p + b • q` with
 `a = sin(Θ-θ)/sin Θ > 0`, `b = sin θ / sin Θ > 0` (`Θ := geodesicDist p q`), so `GeodesicConvex C`'s
 chord-closure gives membership directly. -/
 theorem geodesicArc_mem_of_geodesicConvex {C : Set (Eucl d)} (hC : GeodesicConvex C)
@@ -259,5 +274,32 @@ theorem exists_uniform_margin {C : Set (Eucl d)} (hC : GeodesicConvex C) (hCopen
   have hmin_le : η ≤ f θ := hθ0min hθ
   rw [hfdef] at hmin_le
   linarith
+
+/-- **A valid step count exists.** For `Θ, R > 0`, some `n ≥ 1` makes the step size `Θ/n` land in
+the window `[R, 2R)` needed for consecutive balls to overlap while index-gap-≥2 balls stay
+disjoint -- EXCEPT when `n = 1` is forced (short arc, `Θ < R`), where only the upper bound
+matters (disjointness is vacuous with only two indices). `n = 1` if `Θ < R`; otherwise
+`n = ⌊Θ/R⌋₊` (`≥ 1` since `Θ ≥ R`). -/
+theorem exists_valid_step_count {Θ R : ℝ} (hΘpos : 0 < Θ) (hRpos : 0 < R) :
+    ∃ n : ℕ, 0 < n ∧ Θ / n < 2 * R ∧ (n = 1 ∨ R ≤ Θ / n) := by
+  rcases lt_or_ge Θ R with hcase | hcase
+  · refine ⟨1, one_pos, ?_, Or.inl rfl⟩
+    rw [Nat.cast_one, div_one]
+    linarith
+  · set n₀ : ℕ := ⌊Θ / R⌋₊ with hn₀def
+    have hΘRge1 : (1 : ℝ) ≤ Θ / R := by rw [le_div_iff₀ hRpos]; linarith
+    have hn₀pos : 0 < n₀ := Nat.floor_pos.mpr hΘRge1
+    have hn₀le : (n₀ : ℝ) ≤ Θ / R := Nat.floor_le (by positivity)
+    have hn₀lt : Θ / R < (n₀ : ℝ) + 1 := Nat.lt_floor_add_one (Θ / R)
+    refine ⟨n₀, hn₀pos, ?_, Or.inr ?_⟩
+    · rw [div_lt_iff₀ (by exact_mod_cast hn₀pos : (0 : ℝ) < (n₀ : ℝ))]
+      have h1 : Θ < R * (n₀ : ℝ) + R := by
+        rw [div_lt_iff₀ hRpos] at hn₀lt
+        nlinarith
+      have h2 : (1 : ℝ) ≤ (n₀ : ℝ) := by exact_mod_cast hn₀pos
+      nlinarith
+    · rw [le_div_iff₀ (by exact_mod_cast hn₀pos : (0 : ℝ) < (n₀ : ℝ))]
+      rw [le_div_iff₀ hRpos] at hn₀le
+      linarith
 
 end MeasureToMeasure.Leaves
