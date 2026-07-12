@@ -106,6 +106,7 @@ import MeasureToMeasure.Leaves.BarycenterWasserstein
 import MeasureToMeasure.Leaves.WassersteinCompare
 import MeasureToMeasure.Leaves.WassersteinDiracBound
 import MeasureToMeasure.Leaves.WassersteinWeightDiff
+import MeasureToMeasure.Leaves.DeficitRouting
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Statements.MainResults
