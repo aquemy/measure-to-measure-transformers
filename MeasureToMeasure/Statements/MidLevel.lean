@@ -6,6 +6,7 @@ import MeasureToMeasure.Leaves.GatedTwoCap
 import MeasureToMeasure.Leaves.OrthantRotation
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
+import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttnStepExistence
 
@@ -686,12 +687,41 @@ constant (§1.4.3), deferred rather than invented.
 **Fidelity (soundness):** probability, atomless, sphere support, and on-sphere targets are the
 paper's hypotheses (`μ₀ ∈ P(S^{d-1})` atomless, targets `δ_{x_k}` with `x_k ∈ S^{d-1}`); `d ≥ 3`
 matches the ball-chain construction's room requirement (cf. `lemma_B_2`'s `d ≥ 2` plus the
-routing/parking obstruction at `d = 2`, finding F12). -/
+routing/parking obstruction at `d = 2`, finding F12).
+
+**Fidelity fix (F21, 2026-07-12):** the paper's own statement (p.12) additionally requires
+`x_k^i ∈ conv_g supp μ_0^i` -- each target lies in the geodesic convex hull of the INPUT's support --
+which this axiom had dropped, making it strictly more general than what the paper establishes (a
+counterexample-shaped instance: `d ≥ 3`, `μ` concentrated in a tiny cap near `z`, `M = 2` with
+`x_1 ≈ z`, `x_2 = -z` antipodal, `α_2 = 0.9` -- no construction keyed to `μ`'s own geometry can
+reach `x_2`, since essentially none of `μ`'s mass is anywhere near it). Restored below as `hxhull`,
+the intersection-of-closed-convex-supersets characterization of the hull (`∀ s`, CLOSED and
+geodesically convex and carrying `μ`'s full mass, `x k ∈ s`) -- equivalent to (closed) hull
+membership since `GeodesicConvex` is closed under arbitrary intersection (`geodesicConvex_iInter`)
+and closedness is too, so this needs no new hull operator. The `IsClosed` conjunct matters: without
+it, a set can drop individual `μ`-null boundary points of `supp μ` (e.g. an arc minus one endpoint)
+and stay geodesically convex while still carrying full mass, making the bare measure-only form
+subtly STRONGER than the paper's hull (excludes points that ARE in `supp μ`) rather than equal to
+it; requiring `IsClosed` recovers exactly `⋂ {closed convex s | s ⊇ supp μ}` (closed + full-measure
+⟺ `⊇ supp μ`, by minimality of the topological support among closed full-measure sets), the standard
+closed convex hull of a closed generating set. This is NOT a repeat of the per-piece open-hemisphere
+clause finding F12 removed from `exists_atomless_partition`/`prop_2_2` (inconsistent at `M = 1`: it
+forced the WHOLE support into a half-space, false for any centrally-symmetric `μ` -- see "Fidelity
+corrections made while closing" in `RESEARCH.md`): a blanket hemisphere hypothesis can be outright
+FALSE for such `μ`, whereas `hxhull`'s universal-over-supersets form instead DEGENERATES to no
+constraint (vacuously true, not False) exactly when `supp μ` admits no proper closed geodesically-
+convex cover -- it cannot reproduce that inconsistency. No constructive kernel refutation of the
+pre-fix axiom is recorded (witnessing it would require exhibiting, for the counterexample instance
+above, that NO piecewise-constant schedule of ANY length reaches `ε`-closeness -- a
+universally-quantified non-existence claim, non-constructive in Lean); this is a fidelity tightening
+in the sense of F19/F20, not a `Regression/Refuted/` disproof. The axiom remains `math.axiomatised`;
+`hxhull` is additive (no downstream caller in this codebase). -/
 axiom prop_2_2 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d)
     (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hatomless : ∀ x : Eucl d, μ {x} = 0)
     (hμsupp : supportedIn μ (sphere d))
     (M : ℕ) (x : Fin M → Eucl d) (hx : ∀ k, x k ∈ sphere d)
+    (hxhull : ∀ k, ∀ s : Set (Eucl d), IsClosed s → GeodesicConvex s → supportedIn μ s → x k ∈ s)
     (α : Fin M → ℝ≥0∞) (hα : ∑ k, α k = 1)
     (hα0 : ∀ k, α k ≠ 0)
     (ν_target : Measure (Eucl d))
