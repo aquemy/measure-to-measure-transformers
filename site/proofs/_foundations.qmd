@@ -100,7 +100,7 @@ continuity equation cannot replicate.
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
 The field (1.2) is a concrete **definition**: `AttnParams` packages the five parameters
 $(\mathbf V,\mathbf B,\mathbf W,\mathbf U,b)$ of one constant piece, `attnAvg` is the softmax
@@ -108,15 +108,15 @@ average $\mathscr A_{\mathbf B}$, and `AttnParams.field` assembles the projected
 mean-field flow is the predicate `IsMeanFieldFlow` (initial condition, measurability, Lipschitz
 regularity, sphere bijectivity, and the characteristic ODE against the *pushforward-evolved*
 measure), and schedules compose by list concatenation (`AttnSchedule`, `attnMeasureFlow`,
-`durationSum`, `switches` counting constant pieces). Exactly one axiom remains -- existence
-of the mean-field flow for sphere-supported probability data (`exists_meanFieldFlow`):
-McKean-Vlasov well-posedness on the sphere, the honest remaining M3b gap. Its companion
-`meanFieldFlow_unique` (uniqueness) is now a machine-checked theorem, so what is left is purely
-the existence half. Every measure-dependent statement of the paper is stated over this
+`durationSum`, `switches` counting constant pieces). **Both halves of McKean-Vlasov well-posedness
+on the sphere are now machine-checked**: uniqueness (`meanFieldFlow_unique`) and, since PR #173,
+existence too (`exists_meanFieldFlow`, via the self-consistency fixed point of leaf E3n
+transported through the padded point flow) -- closing out the M3b-existence campaign, so this
+layer carries **zero** axioms. Every measure-dependent statement of the paper is stated over this
 layer; the linear `Block` flow hosts the paper's $\mathbf V\equiv0$ sections. The two layers are
 bridged, kernel-checked on the predicate side: `isMeanFieldFlow_blockFlow` shows a linear `Block`
 matching a $\mathbf V = 0$ attention field on the sphere satisfies the mean-field predicate, and
-`attnStep_eq_map_blockFlow` (the first consumer of `meanFieldFlow_unique`) pins the attention step
+`attnStep_eq_map_blockFlow` (a consumer of `meanFieldFlow_unique`) pins the attention step
 to the linear pushforward -- so the discharged Appendix-B machinery acts on this layer too.
 
 ```lean
@@ -131,12 +131,17 @@ structure AttnParams (d : ℕ) where
 noncomputable def attnAvg (B : Eucl d →L[ℝ] Eucl d) (μ : Measure (Eucl d)) (x : Eucl d) : Eucl d :=
   (∫ z, Real.exp ⟪B x, z⟫ ∂μ)⁻¹ • ∫ z, Real.exp ⟪B x, z⟫ • z ∂μ
 
-/-- Mean-field well-posedness (McKean-Vlasov on the sphere): the single remaining
-infrastructure axiom. -/
-axiom exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
+/-- **Well-posedness of the self-attention mean-field flow (existence).** For every Transformer
+block and every sphere-supported probability datum there is a mean-field flow: the fixed point of
+the self-consistency map (leaf E3n), transported through the padded point flow. Formerly the axiom
+`exists_meanFieldFlow`; now machine-checked. -/
+theorem exists_meanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d))
     [IsProbabilityMeasure μ₀] (hs : μ₀ (sphere d)ᶜ = 0) :
-    ∃ Φ, IsMeanFieldFlow p μ₀ Φ
+    ∃ Φ : ℝ → Eucl d → Eucl d, IsMeanFieldFlow p μ₀ Φ := by
+  obtain ⟨η, hfix⟩ := exists_selfConsistent_trajectory p p.duration_nonneg μ₀ hs
+  exact ⟨meanFieldFlowCandidate p p.duration_nonneg η,
+    isMeanFieldFlow_meanFieldFlowCandidate p p.duration_nonneg μ₀ hs η hfix rfl⟩
 ```
 
-[`Foundations/Attention.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/Attention.lean){.lean-src}
+[`Foundations/AttnStepExistence.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Foundations/AttnStepExistence.lean){.lean-src}
 :::

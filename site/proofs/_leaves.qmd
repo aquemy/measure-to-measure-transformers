@@ -618,12 +618,22 @@ theorem distBump_lipschitz (x₀ : Eucl d) (η₃ : ℝ) : LipschitzWith 1 (dist
   simp only [distBump, Real.dist_eq, NNReal.coe_one, one_mul] at hmin ⊢
   exact hmin.trans (abs_dist_sub_le x y x₀)
 
+theorem distBump_nonneg {x₀ : Eucl d} {η₃ : ℝ} (hη₃ : 0 ≤ η₃) (x : Eucl d) :
+    0 ≤ distBump x₀ η₃ x :=
+  le_min hη₃ dist_nonneg
+
+/-- On the complement of the ball the bump saturates at `η₃`. -/
+theorem distBump_eq_outside {x₀ : Eucl d} {η₃ : ℝ} {x : Eucl d} (hx : η₃ ≤ dist x x₀) :
+    distBump x₀ η₃ x = η₃ :=
+  min_eq_left hx
+
 /-- **Lemma L8 / Claim 2 (Markov bound).** For a probability measure with
 `W₁(μ, δ_{x₀}) ≤ C η₂`, the mass at geodesic/Euclidean distance `≥ η₃` from `x₀` is at most
-`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Rests on the `W₁` axiom (KR duality):
-status `math.axiomatised`. -/
+`C η₂ / η₃`. Equivalently `1 - μ(B(x₀, η₃)) ≤ C η₂ / η₃`. Machine-checked via the proved theorem
+`W1_ge_of_lipschitz` (KR duality). -/
 theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (x₀ : Eucl d) (η₂ η₃ C : ℝ) (hη₃ : 0 < η₃)
+    (hfin : W1 μ (Measure.dirac x₀) ≠ ⊤)
     (hW1 : W1 μ (Measure.dirac x₀) ≤ C * η₂) :
     μ.real {x | η₃ ≤ dist x x₀} ≤ C * η₂ / η₃ := by
   set s : Set (Eucl d) := {x | η₃ ≤ dist x x₀} with hs
@@ -651,8 +661,16 @@ theorem markov_bound (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
   have hdirac : ∫ x, distBump x₀ η₃ x ∂(Measure.dirac x₀) = 0 := by
     rw [integral_dirac]
     simp [distBump, min_eq_right hη₃.le]
-  -- KR duality (axiom): ∫ bump dμ - ∫ bump dδ ≤ W₁
+  -- the bump is integrable against the Dirac (finite measure, bounded function)
+  have hbump_int_dirac : Integrable (distBump x₀ η₃) (Measure.dirac x₀) := by
+    refine Integrable.mono' (integrable_const η₃)
+      (distBump_lipschitz x₀ η₃).continuous.aestronglyMeasurable ?_
+    filter_upwards with x
+    rw [Real.norm_eq_abs, abs_of_nonneg (distBump_nonneg hη₃.le x)]
+    exact min_le_left _ _
+  -- KR duality (now a theorem): ∫ bump dμ - ∫ bump dδ ≤ W₁
   have hdual := W1_ge_of_lipschitz μ (Measure.dirac x₀) (distBump x₀ η₃) (distBump_lipschitz x₀ η₃)
+    hbump_int hbump_int_dirac hfin
   rw [hdirac, sub_zero] at hdual
   -- assemble: η₃ · μ(s) ≤ ∫ bump dμ ≤ W₁ ≤ C η₂
   have hmono : μ.real s * η₃ ≤ ∫ x, distBump x₀ η₃ x ∂μ := by

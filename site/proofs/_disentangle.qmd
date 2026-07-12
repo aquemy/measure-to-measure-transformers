@@ -244,8 +244,9 @@ own ball around a unit direction, `2r`-separated, together with the per-member t
 of (B.2). `prop_3_1` is then **proved** from it: the carrier balls are pairwise disjoint
 (`Metric.ball_disjoint_ball`) and each lies in an open hemisphere (Cauchy-Schwarz) — the geometric
 packaging the paper leaves implicit. Its badge is `axiomatised` because the effective status
-inherits the axiom: `#print axioms prop_3_1` lists exactly `exists_disentangling_balls` and the
-mean-field well-posedness axiom `exists_meanFieldFlow`.
+inherits the axiom: `#print axioms prop_3_1` lists exactly `exists_disentangling_balls` (the
+mean-field well-posedness pair it used to also rest on, `exists_meanFieldFlow` /
+`meanFieldFlow_unique`, is now fully machine-checked).
 
 ```lean
 /-- Shared missing direction (eq. 1.4, positive-gap form): one unit `ω` and one gap `δ > 0`

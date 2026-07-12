@@ -222,3 +222,56 @@
 | 220 | 2026-07-06 | `formalize` | formalize~(foundations): probability measures on the sphere are sequentially compact (M3b existence, leaf S4a) | `MeasureToMeasure.exists_subseq_tendsto_probabilityMeasure_sphere` |
 | 221 | 2026-07-06 | `formalize` | formalize~(foundations): the W₁ space of sphere-supported probabilities is complete (M3b existence, leaf S4) | `MeasureToMeasure.instCompleteSpaceSphereProb` |
 | 222 | 2026-07-07 | `chore` | chore(claims): reconcile stale claims.toml status against the kernel (D1-D3, D9) | `claims` |
+| 223 | 2026-07-07 | `docs` | docs(status): refresh blueprint tags, site partials, and the RESEARCH.md ledger against the kernel (D4-D8, D10) | `status` |
+| 224 | 2026-07-07 | `refactor` | refactor(foundations): dedupe the W1 diameter bound and drop dead hypotheses (S1, S3) | `foundations` |
+| 225 | 2026-07-07 | `refactor` | refactor(foundations): make the Eucl d tangential projector an abbrev for the ForMathlib generic (S4) | `foundations` |
+| 226 | 2026-07-07 | `docs` | docs(leaves): cross-reference the four non-colinearity leaves as distinct, not duplicate (S2) | `leaves` |
+| 227 | 2026-07-07 | `refactor` | refactor(leaves): delete dead gate_pos_iff, inline three single-use helpers (S6) | `leaves` |
+| 228 | 2026-07-07 | `docs` | docs(foundations): banner the M3b-existence staging cluster against reachability audits (S5) | `foundations` |
+| 229 | 2026-07-07 | `port` | port(formathlib): stage the closed-unit-ball metric projection (Part 3, ranked #1) | `formathlib` |
+| 230 | 2026-07-07 | `port` | port(formathlib): stage Sierpinski's atomless intermediate-value theorem (Part 3, ranked #2) | `formathlib` |
+| 231 | 2026-07-07 | `port` | port(formathlib): stage the measure-infimum total-variation tools (Part 3, ranked #3) | `formathlib` |
+| 232 | 2026-07-07 | `port` | port(formathlib): stage the nontrivial-normed-space pigeonhole fact (Part 3, ranked #4) | `formathlib` |
+| 233 | 2026-07-07 | `docs` | docs(formathlib): reconcile the sibling-import claim and close the linter-readiness box | `formathlib` |
+| 234 | 2026-07-07 | `docs` | docs(leaves): fix two more stale axiom references D8 missed (MarkovBound, FlowStack) | `leaves` |
+| 235 | 2026-07-08 | `formalize` | formalize~(foundations): SphereProb d is a genuine MetricSpace, not just a pseudometric (M3b existence, leaf S2b) | `foundations` |
+| 236 | 2026-07-08 | `formalize` | formalize~(foundations): the Bielecki-weighted metric on C([0,T], SphereProb d) (M3b existence, leaf E3a) | `foundations` |
+| 237 | 2026-07-08 | `formalize` | formalize~(foundations): package bieleckiDist as a genuine MetricSpace + CompleteSpace instance (M3b existence, leaf E3b) | `foundations` |
+| 238 | 2026-07-08 | `formalize` | formalize~(foundations): lift the field's measure-Lipschitz modulus off the sphere, globally (M3b existence, leaf E3c) | `foundations` |
+| 239 | 2026-07-08 | `formalize` | formalize~(foundations): continuity in time of the field along a trajectory (M3b existence, leaf E3d) | `foundations` |
+| 240 | 2026-07-08 | `formalize` | formalize~(foundations): Picard-Lindelöf for the field along a candidate trajectory (M3b existence, leaf E3e) | `foundations` |
+| 241 | 2026-07-08 | `formalize` | formalize~(foundations): sphere invariance of the trajectory-composed integral curve (M3b existence, leaf E3f) | `foundations` |
+| 242 | 2026-07-08 | `formalize` | formalize~(foundations): the trajectory-composed point flow, and its sphere invariance (M3b existence, leaf E3g) | `foundations` |
+| 243 | 2026-07-08 | `formalize` | formalize~(foundations): the trajectory-flow pushforward map, sphere-supported and measurable (M3b existence, leaf E3h) | `foundations` |
+| 244 | 2026-07-08 | `formalize` | formalize~(foundations): the self-consistency step map, continuous in time (M3b existence, leaf E3i) | `foundations` |
+| 245 | 2026-07-08 | `formalize` | formalize~(foundations): the FTC representation of the trajectory-composed flow (M3b existence, leaf E3j) | `foundations` |
+| 246 | 2026-07-08 | `formalize` | formalize~(foundations): a Grönwall bound comparing the self-consistency map at two trial trajectories (M3b existence, leaf E3k) | `foundations` |
+| 247 | 2026-07-08 | `formalize` | formalize~(foundations): the genuine McKean-Vlasov contraction estimate via a from-scratch variable-forcing Grönwall (M3b existence, leaf E3l) | `foundations` |
+| 248 | 2026-07-08 | `formalize` | formalize~(foundations): transfer the McKean-Vlasov contraction to the bieleckiDist level (M3b existence, leaf E3m) | `foundations` |
+| 249 | 2026-07-08 | `formalize` | formalize~(foundations): the self-consistency map has a fixed point, existence of the McKean-Vlasov trajectory (M3b existence, leaf E3n) | `foundations` |
+| 250 | 2026-07-08 | `formalize` | formalize~(foundations): the padded trajectory flow has genuine HasDerivAt at every t in [0,T] (M3b existence, leaf E3o) | `foundations` |
+| 251 | 2026-07-08 | `formalize` | formalize~(foundations): injectivity on the sphere and the fixed-point self-consistency identity (M3b existence, leaf E3p) | `foundations` |
+| 252 | 2026-07-08 | `formalize` | formalize~(foundations): surjectivity on the sphere via a backward Picard-Lindelof flow (M3b existence, leaf E3q) | `foundations` |
+| 253 | 2026-07-09 | `formalize` | formalize~(foundations): discharge exists_meanFieldFlow, the McKean-Vlasov mean-field flow existence axiom (M3b existence campaign close, leaf E3r) | `foundations` |
+| 254 | 2026-07-09 | `formalize` | formalize~(leaves): a quantitative boundary point for a colinear-but-unequal barycenter pair (lemma_3_4_part2, leaf 1) | `leaves` |
+| 255 | 2026-07-09 | `formalize` | formalize~(leaves): a uniform O(τ²) Taylor remainder for the barycenter-alignment flow (lemma_3_4_part2, leaf 2) (#176) | `leaves` |
+| 256 | 2026-07-09 | `formalize` | formalize~(leaves): the orthant hypothesis makes leaf 1's boundary-point gap double-sided (lemma_3_4_part2, leaf 3) (#177) | `leaves` |
+| 257 | 2026-07-09 | `formalize` | formalize~(leaves): the local perturbative divergence formula for two barycenter-alignment flows (lemma_3_4_part2, leaf 4) (#178) | `leaves` |
+| 258 | 2026-07-09 | `formalize` | formalize~(leaves): an extremal boundary point carrying the same double-sided gap (lemma_3_4_part2, leaf 5) (#179) | `leaves` |
+| 259 | 2026-07-09 | `formalize` | formalize~(leaves): the mean-field parking primitive (exists_parked_schedule, leaf 1) (#181) | `leaves` |
+| 260 | 2026-07-10 | `formalize` | formalize~(leaves): elementary gathering convergence, no Hartman-Grobman needed (prop_4_2, leaf 1) (#183) | `leaves` |
+| 261 | 2026-07-10 | `formalize` | formalize~(leaves): generic direction with atomless scalar projection (prop_2_2, Step A) (#185) | `leaves` |
+| 262 | 2026-07-10 | `formalize` | formalize~(leaves): exact threshold extraction via IVT on a continuous CDF (prop_2_2, Step B) (#187) | `leaves` |
+| 263 | 2026-07-10 | `formalize` | formalize~(leaves): spherical slabs are connected for d>=3 (prop_2_2, Step C) (#189) | `leaves` |
+| 264 | 2026-07-10 | `formalize` | formalize~(leaves): assemble the connected-prescribed-mass partition (prop_2_2, final assembly) (#191) | `leaves` |
+| 265 | 2026-07-11 | `formalize` | formalize~(leaves): gated flow localized to the ball's own center (lemma_B_1/B_2 union-form step 1) (#193) | `leaves` |
+| 266 | 2026-07-11 | `formalize` | formalize~(leaves): localized-gate two-cap retention, faithful to paper's Lemma B.2 (union-form step 1) (#195) | `MeasureToMeasure.Leaves.gated_twoCap_retention_localized` |
+| 267 | 2026-07-11 | `formalize` | formalize~(leaves): union-tracking ball-chain retention, faithful to paper's Lemma B.1 (union-form step 2) (#197) | `MeasureToMeasure.Leaves.gated_chainUnion_retention` |
+| 268 | 2026-07-11 | `formalize` | formalize~(leaves): a shared target ball's mass survives a later leg's own gated push (union-form step 3a) (#199) | `MeasureToMeasure.Leaves.scaledGatedBlock_z0_target_preserved` |
+| 269 | 2026-07-11 | `formalize` | formalize~(leaves): strengthen scaledGatedBlock_z0_target_preserved to a strict conclusion (union-form step 3b) (#200) | `MeasureToMeasure.Leaves.scaledGatedBlock_z0_target_preserved` |
+| 270 | 2026-07-11 | `formalize` | formalize~(leaves): several disjoint balls converging on a shared target (union-form step 3c) (#202) | `MeasureToMeasure.Leaves.gated_star_retention` |
+| 271 | 2026-07-11 | `formalize` | formalize~(leaves): several disjoint linear chains compose simultaneously (union-form step 3d) (#204) | `MeasureToMeasure.Leaves.gated_chainForest_retention` |
+| 272 | 2026-07-11 | `formalize` | formalize~(leaves): several disjoint multi-leg chains converge on a shared target (union-form step 3e) (#206) | `MeasureToMeasure.Leaves.gated_forest_to_target_retention` |
+| 273 | 2026-07-11 | `formalize` | formalize~(leaves): concentrated mass near a point bounds W2 to the Dirac there (prop_2_2 Stage 5) (#208) | `MeasureToMeasure.W2_dirac_le_of_geodesicBall_mass` |
+| 274 | 2026-07-11 | `formalize` | formalize~(leaves): two discrete measures on the same points are W2-close when weights are close (prop_2_2 Stage 1 reframe) (#210) | `MeasureToMeasure.W2_diracSum_le_of_weight_diff` |
+| 275 | 2026-07-12 | `fix` | fix(statements)!: prop_2_2 requires targets within the geodesic convex hull of the input support (F21) (#211) | `statements` |

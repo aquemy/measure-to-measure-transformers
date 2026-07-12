@@ -220,8 +220,9 @@ giving the $O(\log\tfrac1\varepsilon)$ time. Because the drift is genuinely **me
 attention layer (`AttnSchedule`, `attnMeasureFlow`) introduced by the F14 restatement — a
 statement over the measure-independent linear flow would be about the wrong dynamics. It is a
 labeled `axiom`: the diameter monotonicity and the LaSalle/Hartman-Grobman convergence are the
-milestone-M6 build, on top of the single mean-field well-posedness axiom
-(`exists_meanFieldFlow`). The clustering itself carries a one-piece (`switches θ ≤ 1`) budget,
+milestone-M6 build; the mean-field well-posedness pair it sits on top of
+(`exists_meanFieldFlow` / `meanFieldFlow_unique`) is itself now fully machine-checked, so
+`prop_2_1` is the only axiom in its own footprint. The clustering itself carries a one-piece (`switches θ ≤ 1`) budget,
 the paper's single constant parameter $(\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)$.
 The conclusion is validated numerically by experiment **E2**.
 
