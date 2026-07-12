@@ -201,4 +201,35 @@ theorem reflTransGen_voronoiAdjacent {M : ℕ} (hd : 2 ≤ d) (hM : 0 < M) (x : 
   · exact hkG1c (hkey G1 k (h1 (hx k)))
   · exact (hkey G1ᶜ j (h2 (hx j))) hjG1
 
+/-- **An explicit finite chain of pairwise-touching cells between any two targets.** Extracted
+from `Relation.ReflTransGen` by induction on its own `refl`/`tail` structure: `refl` gives the
+trivial length-`0` chain, `tail` extends a chain by one more touching step at the end, matching
+`ReflTransGen`'s own right-growing shape. -/
+theorem exists_voronoiCell_path {M : ℕ} {x : Fin M → Eucl d} {j k : Fin M}
+    (h : Relation.ReflTransGen (voronoiAdjacent x) j k) :
+    ∃ (L : ℕ) (p : ℕ → Fin M), p 0 = j ∧ p L = k ∧
+      ∀ t < L, voronoiAdjacent x (p t) (p (t + 1)) := by
+  induction h with
+  | refl => exact ⟨0, fun _ => j, rfl, rfl, fun t ht => absurd ht (by omega)⟩
+  | @tail b c h1 h2 ih =>
+    obtain ⟨L, p, hp0, hpL, hstep⟩ := ih
+    refine ⟨L + 1, Function.update p (L + 1) c, ?_, ?_, ?_⟩
+    · rwa [Function.update_of_ne (by omega)]
+    · rw [Function.update_self]
+    · intro t ht
+      rcases lt_or_eq_of_le (Nat.lt_succ_iff.mp ht) with htL | htL
+      · rw [Function.update_of_ne (by omega), Function.update_of_ne (by omega)]
+        exact hstep t htL
+      · subst htL
+        rw [Function.update_of_ne (by omega), Function.update_self, hpL]
+        exact h2
+
+/-- **Any two targets are joined by an explicit finite chain of pairwise-touching cells.**
+Leaves 1+2 combined: the entry point relay leaf 3/4 actually call. -/
+theorem exists_voronoiCell_path_of_targets {M : ℕ} (hd : 2 ≤ d) (hM : 0 < M) (x : Fin M → Eucl d)
+    (hx : ∀ k, x k ∈ sphere d) (hxinj : Function.Injective x) (j k : Fin M) :
+    ∃ (L : ℕ) (p : ℕ → Fin M), p 0 = j ∧ p L = k ∧
+      ∀ t < L, voronoiAdjacent x (p t) (p (t + 1)) :=
+  exists_voronoiCell_path (reflTransGen_voronoiAdjacent hd hM x hx hxinj j k)
+
 end MeasureToMeasure.Leaves
