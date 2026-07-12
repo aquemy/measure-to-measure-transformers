@@ -62,6 +62,45 @@ theorem geodesicConvex_geodesicBall {z : Eucl d} (hz : z ∈ sphere d) {R : ℝ}
   have hc : (0 : ℝ) ≤ Real.cos R := Real.cos_nonneg_of_mem_Icc ⟨by linarith [hR.1], hR.2⟩
   exact geodesicConvex_inner_cap z hc
 
+/-- **Uniform margin between two nearby points inside a common ball, direct (non-compactness)
+proof.** For `p, q` both within `ρ0/2` of a center `y`, the WHOLE geodesic arc between them stays
+within a uniform GEODESIC margin `ρ0/2` of the LARGER ball `geodesicBall y ρ0` -- since the
+tighter `geodesicBall y (ρ0/2)` is itself geodesically convex and contains both endpoints, one
+triangle inequality suffices; no worst-point search / compactness needed, unlike
+`exists_uniform_margin` (`GeodesicArcChain.lean`). This gives an EXPLICIT, known radius `ρ0/2`
+-- independent of how close `p`/`q` individually sit to `y` -- which `exists_uniform_margin`'s
+opaque existential conclusion cannot offer a caller. Motivated by leaf 4 piece 3 of the relay
+campaign: piece 2's connector-chain radius shrinks to match `geodesicDist q' y'` (forced by the
+cell's own shape near the boundary), but piece 1's straddle chain, confined to a FIXED-size ball
+around `y'` rather than a boundary-shrinking cell, has no analogous reason to shrink -- this lemma
+confirms that intuition for the margin step, though the full chain-assembly replacement for
+`exists_geodesicConvex_arc_chain` using this explicit radius is not yet built (see
+`prop-2-2-steps-2-3-campaign` project notes). -/
+theorem exists_uniform_margin_inner_ball {y : Eucl d} (hy : y ∈ sphere d) {ρ0 : ℝ}
+    (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2)) {p q : Eucl d} (hps : p ∈ sphere d) (hqs : q ∈ sphere d)
+    (hp : geodesicDist y p < ρ0 / 2) (hq : geodesicDist y q < ρ0 / 2)
+    (hne : q ≠ p) (hne' : q ≠ -p) :
+    ∀ θ ∈ Set.Icc (0 : ℝ) (geodesicDist p q),
+      geodesicBall (geodesicArc p q θ) (ρ0 / 2) ⊆ geodesicBall y ρ0 := by
+  have hpin : p ∈ geodesicBall y (ρ0 / 2) := ⟨hps, hp⟩
+  have hqin : q ∈ geodesicBall y (ρ0 / 2) := ⟨hqs, hq⟩
+  have hconv : GeodesicConvex (geodesicBall y (ρ0 / 2)) :=
+    geodesicConvex_geodesicBall hy ⟨by linarith [hρ0.1], by linarith [hρ0.2, Real.pi_pos]⟩
+  intro θ hθ
+  have harcin : geodesicArc p q θ ∈ geodesicBall y (ρ0 / 2) := by
+    rcases eq_or_lt_of_le hθ.1 with h0 | h0
+    · rw [← h0, geodesicArc_zero]; exact hpin
+    · rcases eq_or_lt_of_le hθ.2 with hΘeq | hΘlt
+      · rw [hΘeq, geodesicArc_geodesicDist hps hqs hne hne']; exact hqin
+      · exact geodesicArc_mem_of_geodesicConvex hconv hpin hqin hne hne' ⟨h0, hΘlt⟩
+  intro x hx
+  obtain ⟨hxs, hxd⟩ := hx
+  refine ⟨hxs, ?_⟩
+  calc geodesicDist y x ≤ geodesicDist y (geodesicArc p q θ) + geodesicDist (geodesicArc p q θ) x :=
+        geodesicDist_triangle hy harcin.1 hxs
+    _ < ρ0 / 2 + ρ0 / 2 := by linarith [harcin.2, hxd]
+    _ = ρ0 := by ring
+
 /-- **A geodesic ball of radius `≤ π` is relatively open in the sphere.** -/
 theorem exists_isOpen_inter_geodesicBall {z : Eucl d} (hz : z ∈ sphere d) {R : ℝ}
     (hR : R ∈ Set.Ioc 0 Real.pi) :
