@@ -171,4 +171,59 @@ theorem exists_gated_voronoiCell_relay_hop {M : ℕ} (x : Fin M → Eucl d) (hM 
       hy's hy'notin hρ0 hqcloseZ n₂ z₂ (hz20.trans hz1n.symm) hz2mem hsub2 hchain2 hdisj2
   exact ⟨z₂ n₂, n₁, z₁, Rad₁, n₂, θ, hz2n, hsw, hmass⟩
 
+/-- **One full relay hop, AVOIDING a caller-supplied point at the exit.** Same as `exists_gated_
+voronoiCell_relay_hop`, but the exit point `q''` is additionally guaranteed `≠ badpt` -- the tool
+for chaining relay hops in an induction: instantiate `badpt` with the NEXT hop's antipodal touching
+point so this hop's exit point is always usable as the next hop's start (`p ≠ -y'_next`; `p ≠
+y'_next` is separately automatic, see `exists_gated_voronoiCell_relay_hop`'s docstring for why).
+This closes the multi-hop gap documented there: the single remaining obstacle to leaf 4 piece 4's
+full induction was a missing "extract avoiding one point" primitive, now built
+(`exists_voronoiCell_mem_avoiding`, `VoronoiStraddle.lean`). -/
+theorem exists_gated_voronoiCell_relay_hop_avoiding {M : ℕ} (x : Fin M → Eucl d) (hM : 1 < M)
+    (hx : ∀ l, x l ∈ sphere d)
+    (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    {i k : Fin M} (hik : i ≠ k)
+    {p : Eucl d} (hpi : p ∈ voronoiCell x i)
+    {y' : Eucl d} (hy'i : y' ∈ closure (voronoiCell x i)) (hy'k : y' ∈ closure (voronoiCell x k))
+    (hp_ne : p ≠ y') (hp_nane : p ≠ -y')
+    {ρ0 : ℝ} (hρ0 : ρ0 ∈ Set.Ioo 0 (Real.pi / 2))
+    (badpt : Eucl d) (hbad : badpt ≠ y') :
+    ∃ (q'' : Eucl d) (n₁ : ℕ) (z₁ : ℕ → Eucl d) (Rad₁ : ℕ → ℝ) (n₂ : ℕ) (θ : Params d),
+      q'' ∈ voronoiCell x k ∧ q'' ≠ badpt ∧
+      switches θ ≤ n₁ + n₂ ∧
+      (1 - ENNReal.ofReal ε) ^ (n₁ + n₂) * μ (⋃ t ≤ n₁, geodesicBall (z₁ t) (Rad₁ t)) ≤
+        Axioms.measureFlow θ T μ (geodesicBall q'' (ρ0 / 2)) := by
+  have hρ0half : ρ0 / 2 ∈ Set.Ioo (0 : ℝ) (Real.pi / 2) :=
+    ⟨half_pos hρ0.1, by linarith [hρ0.2, Real.pi_pos]⟩
+  obtain ⟨q', n₁, z₁, Rad₁, hz10, hz1n, hqclose, hn1pos, hz1mem, hRad1mem, hsub1, hchain1, hdisj1⟩ :=
+    exists_voronoiCell_connector_chain x hM hx hpi hy'i hp_ne hp_nane hρ0half
+  have hq's : q' ∈ sphere d := by rw [← hz1n]; exact hz1mem n₁
+  have hself0 : geodesicDist q' q' = 0 := by
+    rw [geodesicDist, real_inner_self_eq_norm_sq, norm_eq_one_of_mem_sphere hq's, one_pow,
+      Real.arccos_one]
+  have hq'i : q' ∈ voronoiCell x i := by
+    have hself : q' ∈ geodesicBall (z₁ n₁) (Rad₁ n₁) := by
+      rw [hz1n]; exact ⟨hq's, by rw [hself0]; exact (hRad1mem n₁).1⟩
+    exact hsub1 n₁ hself
+  have hy's : y' ∈ sphere d := by
+    have hcl : y' ∈ closure (Metric.sphere (0 : Eucl d) 1) :=
+      closure_mono (voronoiCell_subset_sphere x i) hy'i
+    rwa [Metric.isClosed_sphere.closure_eq] at hcl
+  have hy'notin : y' ∉ voronoiCell x i := by
+    intro hy'in
+    obtain ⟨U, hUopen, hUeq⟩ := exists_isOpen_inter_voronoiCell x i
+    have hy'U : y' ∈ U := (hUeq ▸ hy'in).2
+    obtain ⟨w, hwU, hwk⟩ := mem_closure_iff.mp hy'k U hUopen hy'U
+    have hws : w ∈ sphere d := voronoiCell_subset_sphere x k hwk
+    have hwi : w ∈ voronoiCell x i := by rw [hUeq]; exact ⟨hws, hwU⟩
+    exact (voronoiCell_disjoint x hik).ne_of_mem hwi hwk rfl
+  have hqcloseZ : geodesicDist y' (z₁ n₁) < ρ0 / 2 := by rw [hz1n]; exact hqclose
+  obtain ⟨n₂, z₂, hz20, hz2n, hz2bad, hn2pos, hz2mem, hsub2, hchain2, hdisj2⟩ :=
+    exists_voronoiCell_straddle_chain_of_given_inner_ball_avoiding x hik hy'i hy'k hρ0 hq'i hqclose
+      badpt hbad
+  obtain ⟨θ, hsw, hmass⟩ :=
+    gated_relay_hop_retention μ T ε hT hε n₁ z₁ Rad₁ hz1mem hRad1mem hsub1 hchain1 hdisj1
+      hy's hy'notin hρ0 hqcloseZ n₂ z₂ (hz20.trans hz1n.symm) hz2mem hsub2 hchain2 hdisj2
+  exact ⟨z₂ n₂, n₁, z₁, Rad₁, n₂, θ, hz2n, hz2bad, hsw, hmass⟩
+
 end MeasureToMeasure.Leaves
