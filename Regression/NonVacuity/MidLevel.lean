@@ -385,6 +385,146 @@ example : True := by
   have _h := lemma_3_4_part2 μ ν 1 one_pos hne hμs hνs hμo hνo hcol
   trivial
 
+/-! ### prop_2_2 (`hxhull`, F21) -/
+
+/-- A point on the great-circle arc `t ↦ (cos t, sin t, 0)` in `Eucl 3`. -/
+noncomputable def arcPt (t : ℝ) : Eucl 3 := WithLp.toLp 2 ![Real.cos t, Real.sin t, 0]
+
+theorem arcPt_apply_zero (t : ℝ) : arcPt t 0 = Real.cos t := rfl
+theorem arcPt_apply_one (t : ℝ) : arcPt t 1 = Real.sin t := rfl
+theorem arcPt_apply_two (t : ℝ) : arcPt t 2 = 0 := rfl
+
+/-- The arc lies on the unit sphere: `cos²+ sin²+0² = 1`. -/
+theorem arcPt_mem_sphere (t : ℝ) : arcPt t ∈ MeasureToMeasure.sphere 3 := by
+  have hnorm : ‖arcPt t‖ = 1 := by
+    rw [EuclideanSpace.norm_eq]
+    simp only [Fin.sum_univ_three, arcPt_apply_zero, arcPt_apply_one, arcPt_apply_two,
+      Real.norm_eq_abs, sq_abs]
+    rw [show Real.cos t ^ 2 + Real.sin t ^ 2 + (0 : ℝ) ^ 2
+        = Real.sin t ^ 2 + Real.cos t ^ 2 by ring, Real.sin_sq_add_cos_sq, Real.sqrt_one]
+  exact mem_sphere_zero_iff_norm.mpr hnorm
+
+theorem arcPt_continuous : Continuous arcPt := by
+  unfold arcPt
+  fun_prop
+
+/-- The arc is injective on `[0, π/4]` (a fortiori on `[0, π]`, where `cos` already is). -/
+theorem arcPt_injOn : Set.InjOn arcPt (Set.Icc (0 : ℝ) (Real.pi / 4)) := by
+  have hsub : Set.Icc (0 : ℝ) (Real.pi / 4) ⊆ Set.Icc (0 : ℝ) Real.pi :=
+    fun x hx => ⟨hx.1, hx.2.trans (by linarith [Real.pi_pos])⟩
+  intro t1 h1 t2 h2 heq
+  have hcos : Real.cos t1 = Real.cos t2 := by
+    have h := congrFun (congrArg (fun (v : Eucl 3) i => v i) heq) 0
+    rwa [arcPt_apply_zero, arcPt_apply_zero] at h
+  exact Real.injOn_cos (hsub h1) (hsub h2) hcos
+
+/-- The uniform (Lebesgue-based) probability measure on the arc `t ∈ [0, π/4]`, pushed onto the
+sphere: atomless (F21's `hxhull` witness needs a genuinely atomless `μ`, not a Dirac). -/
+noncomputable def arcMeasure : Measure (Eucl 3) :=
+  (ENNReal.ofReal (Real.pi / 4))⁻¹ • (volume.restrict (Set.Icc (0 : ℝ) (Real.pi / 4))).map arcPt
+
+theorem arcMeasure_ofReal_ne : (ENNReal.ofReal (Real.pi / 4)) ≠ 0 ∧ (ENNReal.ofReal (Real.pi / 4)) ≠ ⊤ :=
+  ⟨(ENNReal.ofReal_pos.mpr (by linarith [Real.pi_pos])).ne', ENNReal.ofReal_ne_top⟩
+
+theorem arcMeasure_apply (s : Set (Eucl 3)) (hs : MeasurableSet s) :
+    arcMeasure s = (ENNReal.ofReal (Real.pi / 4))⁻¹ *
+      volume (arcPt ⁻¹' s ∩ Set.Icc (0 : ℝ) (Real.pi / 4)) := by
+  rw [arcMeasure, Measure.smul_apply, smul_eq_mul,
+    Measure.map_apply arcPt_continuous.measurable hs, Measure.restrict_apply' measurableSet_Icc]
+
+instance arcMeasure_isProbabilityMeasure : IsProbabilityMeasure arcMeasure := by
+  constructor
+  rw [arcMeasure_apply Set.univ MeasurableSet.univ]
+  simp only [Set.preimage_univ, Set.univ_inter]
+  rw [Real.volume_Icc, sub_zero,
+    ENNReal.inv_mul_cancel arcMeasure_ofReal_ne.1 arcMeasure_ofReal_ne.2]
+
+/-- `arcMeasure` is atomless: any singleton pulls back, via injectivity on `[0, π/4]`, to at most
+one point of `ℝ`, which is Lebesgue-null. -/
+theorem arcMeasure_atomless (y : Eucl 3) : arcMeasure {y} = 0 := by
+  rw [arcMeasure_apply {y} (measurableSet_singleton y)]
+  have hsub : arcPt ⁻¹' {y} ∩ Set.Icc (0 : ℝ) (Real.pi / 4) ⊆
+      {t ∈ Set.Icc (0:ℝ) (Real.pi/4) | arcPt t = y} := fun t ht => ⟨ht.2, ht.1⟩
+  rcases Set.eq_empty_or_nonempty {t ∈ Set.Icc (0:ℝ) (Real.pi/4) | arcPt t = y} with he | ⟨t0, ht0⟩
+  · have : arcPt ⁻¹' {y} ∩ Set.Icc (0 : ℝ) (Real.pi / 4) = ∅ :=
+      Set.subset_eq_empty (he ▸ hsub) he
+    rw [this]; simp
+  · have hset : {t ∈ Set.Icc (0:ℝ) (Real.pi/4) | arcPt t = y} = {t0} := by
+      ext t
+      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff]
+      constructor
+      · rintro ⟨ht, hty⟩
+        exact arcPt_injOn ht ht0.1 (hty.trans ht0.2.symm)
+      · rintro rfl; exact ht0
+    have hfinal : arcPt ⁻¹' {y} ∩ Set.Icc (0 : ℝ) (Real.pi / 4) = {t0} :=
+      Set.Subset.antisymm (hset ▸ hsub) (by
+        rw [Set.singleton_subset_iff]; exact ⟨ht0.2, ht0.1⟩)
+    rw [hfinal, Real.volume_singleton, mul_zero]
+
+/-- `arcMeasure` is supported on the sphere: `arcPt` never leaves it. -/
+theorem arcMeasure_supportedIn_sphere : supportedIn arcMeasure (MeasureToMeasure.sphere 3) := by
+  show arcMeasure (MeasureToMeasure.sphere 3)ᶜ = 0
+  have hms : MeasurableSet (MeasureToMeasure.sphere 3)ᶜ :=
+    (Metric.isClosed_sphere (x := (0 : Eucl 3)) (ε := 1)).measurableSet.compl
+  rw [arcMeasure_apply _ hms]
+  have hpre : arcPt ⁻¹' (MeasureToMeasure.sphere 3)ᶜ ∩ Set.Icc (0 : ℝ) (Real.pi / 4) = ∅ := by
+    ext t
+    simp only [Set.mem_inter_iff, Set.mem_preimage, Set.mem_compl_iff, Set.mem_empty_iff_false,
+      iff_false, not_and]
+    intro hns _
+    exact absurd (arcPt_mem_sphere t) hns
+  rw [hpre]; simp
+
+/-- **The `hxhull` witness (F21).** A closed set carrying `arcMeasure`'s full mass must contain
+`arcPt 0`: if not, its (open, `arcPt` continuous) preimage-complement contains an open ball around
+`0`, whose intersection with `[0, π/4]` is a one-sided interval of positive length -- forcing
+`arcMeasure sᶜ > 0`, contradicting full support. -/
+theorem arcPt_zero_mem_of_closed_convex_supportedIn {s : Set (Eucl 3)} (hsc : IsClosed s)
+    (hsupp : supportedIn arcMeasure s) : arcPt 0 ∈ s := by
+  by_contra hnot
+  have hmeas : MeasurableSet s := hsc.measurableSet
+  have hcompl : arcMeasure sᶜ = 0 := hsupp
+  rw [arcMeasure_apply _ hmeas.compl] at hcompl
+  have hvol0 : volume (arcPt ⁻¹' sᶜ ∩ Set.Icc (0 : ℝ) (Real.pi / 4)) = 0 := by
+    rcases mul_eq_zero.mp hcompl with h | h
+    · exact absurd h (ENNReal.inv_ne_zero.mpr arcMeasure_ofReal_ne.2)
+    · exact h
+  have h0mem : (0 : ℝ) ∈ arcPt ⁻¹' sᶜ := by
+    simp only [Set.mem_preimage, Set.mem_compl_iff]; exact hnot
+  have hopen : IsOpen (arcPt ⁻¹' sᶜ) := hsc.isOpen_compl.preimage arcPt_continuous
+  obtain ⟨δ, hδpos, hball⟩ := Metric.isOpen_iff.mp hopen 0 h0mem
+  set δ' : ℝ := min δ (Real.pi / 8) with hδ'def
+  have hδ'pos : 0 < δ' := lt_min hδpos (by linarith [Real.pi_pos])
+  have hsubset : Set.Ico (0 : ℝ) δ' ⊆ arcPt ⁻¹' sᶜ ∩ Set.Icc (0 : ℝ) (Real.pi / 4) := by
+    intro t ht
+    have htball : t ∈ Metric.ball (0 : ℝ) δ := by
+      rw [Metric.mem_ball, Real.dist_eq, sub_zero, abs_of_nonneg ht.1]
+      exact ht.2.trans_le (min_le_left _ _)
+    refine ⟨hball htball, ht.1, ?_⟩
+    exact (calc t < δ' := ht.2
+      _ ≤ Real.pi / 8 := min_le_right _ _
+      _ ≤ Real.pi / 4 := by linarith [Real.pi_pos]).le
+  have hpos : 0 < volume (Set.Ico (0 : ℝ) δ') := by
+    rw [Real.volume_Ico]; exact ENNReal.ofReal_pos.mpr (by linarith)
+  have hle : volume (Set.Ico (0 : ℝ) δ') ≤ volume (arcPt ⁻¹' sᶜ ∩ Set.Icc (0 : ℝ) (Real.pi / 4)) :=
+    measure_mono hsubset
+  rw [hvol0] at hle
+  exact absurd hle (not_le.mpr hpos)
+
+/-- Non-vacuity of `prop_2_2`: the atomless arc measure `arcMeasure`, single target `arcPt 0`
+(weight `1`), horizon `T = 1`, tolerance `ε = 1`. `hxhull` is discharged by
+`arcPt_zero_mem_of_closed_convex_supportedIn` -- no geometric fact about the target beyond lying in
+the support is needed, since `M = 1` puts the sole target exactly there. -/
+example : True := by
+  haveI := arcMeasure_isProbabilityMeasure
+  have _h := prop_2_2 arcMeasure (le_refl 3) 1 1 one_pos one_pos
+    arcMeasure_atomless arcMeasure_supportedIn_sphere
+    1 (fun _ => arcPt 0) (fun _ => arcPt_mem_sphere 0)
+    (fun _ s hsc _ hsupp => arcPt_zero_mem_of_closed_convex_supportedIn hsc hsupp)
+    (fun _ => 1) (by simp) (fun _ => one_ne_zero)
+    (Measure.dirac (arcPt 0)) (by simp)
+  trivial
+
 /-! ### exists_parked_schedule -/
 
 /-- Non-vacuity of `exists_parked_schedule`: the singleton family `δ_{e₀}` on `𝕊² ⊂ ℝ³`, already

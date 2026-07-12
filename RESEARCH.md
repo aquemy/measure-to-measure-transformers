@@ -61,20 +61,19 @@
 
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
 The `Axioms/` layer (`W2`, `W1`, `measureFlow`, `flowMap`) is now concrete definitions with proved
-properties, and many former mid-level axioms have been discharged. As of the M3b-existence Wasserstein
-sub-campaign (PRs #126-141, `main` at `f54a228`+), the **axiom inventory is 10**, all traceable to
-`exists_meanFieldFlow` plus the eight `Statements/` mid-level axioms below. No node is `sorryAx` (zero
-`sorry` repo-wide). Regenerate the exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`).
-Representative:
+properties, and many former mid-level axioms have been discharged. As of the `exists_meanFieldFlow`
+discharge (PR #173, 2026-07-09, 10 → **9**), the axiom inventory is fully mean-field-free: all nine
+remaining axioms live in `Statements/` (eight in `MidLevel.lean` plus `exists_disentangling_balls` in
+`MainResults.lean`). No node is `sorryAx` (zero `sorry` repo-wide). Regenerate the exact split with
+`scripts/audit.sh` (writes `.cache/axiom-report.txt`). Representative:
 
 | Node (`\lean{}` name) | Status | Notes |
 | --- | --- | --- |
 | `MeasureToMeasure.Leaves.*` (L1-L11′) | clean | the self-contained leaf cores; L7 `lemma_5_2` and L8 `markov_bound` machine-checked since the `W₂`/`W₁` discharge |
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
 | `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse) |
-| `MeasureToMeasure.Foundations.meanFieldFlow_unique` | clean | McKean-Vlasov uniqueness discharged (F20, PR #98); only `exists_meanFieldFlow` remains on that side |
-| `MeasureToMeasure.Foundations.exists_meanFieldFlow` | **axiom** | mean-field existence (M3b); the Wasserstein-completeness substrate is now banked (PRs #126-141) |
-| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,lemma_3_4_part2,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining nine mid-level axioms |
+| `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
+| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,lemma_3_4_part2,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining nine axioms, all statement-layer |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
 **Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
@@ -688,6 +687,50 @@ sphere-supported probabilities (S2), the `weak ⇒ W₁` crux via an elementary 
 (S3b, Mathlib has no optimal transport), and `CompleteSpace (SphereProb d)` (S4). These do not change
 the axiom count (they are staging toward discharging `exists_meanFieldFlow`); see
 `exists-meanfieldflow-campaign` in the project memory.
+
+**DISCHARGED (2026-07-09, inventory 10 → 9).** `exists_meanFieldFlow` (mean-field existence) is now
+a kernel-clean **theorem**, closing out the M3b-existence campaign the substrate above staged. The
+mean-field layer (`Foundations/Attention.lean` + `MeanFieldWellPosed.lean`) now carries zero axioms;
+the nine remaining axioms are all in `Statements/` (`prop_2_1`, `lemma_3_3`, `lemma_3_4_part2`,
+`prop_4_2`, `cluster_to_point`, `lemma_5_4`, `exists_parked_schedule`, `prop_2_2`,
+`exists_disentangling_balls`).
+
+### F21 (fidelity, recorded 2026-07-12) `prop_2_2` dropped the paper's target-reachability hypothesis
+
+Scoping the follow-on campaign toward `prop_2_2` (the paper's own Section 2 Step 1 exact-mass
+partition, needed for the assembly half already machine-checked as
+`Leaves.measureFlow_W2_discrete_of_perPiece`) surfaced that the axiom's signature is strictly more
+general than what Proposition 2.2 (p.12) actually states: the paper requires `x_k^i ∈ conv_g supp
+μ_0^i` -- every target lies in the geodesic convex hull of the INPUT measure's own support -- and
+this codebase's `prop_2_2` (`MidLevel.lean`) had no such hypothesis at all. Concrete instance the gap
+admits: `d ≥ 3`, `μ` concentrated in a tiny cap near a point `z`, `M = 2` targets `x_1 ≈ z` and
+`x_2 = -z` (antipodal), weight `α_2 = 0.9` -- essentially none of `μ`'s mass is anywhere near `x_2`,
+so no construction keyed to `μ`'s own geometry can plausibly reach it, yet the pre-fix axiom asserted
+a schedule always exists regardless. Like F19/F20, this is recorded as a reasoned soundness note, not
+a `Regression/Refuted/` disproof: witnessing it constructively would require proving that NO
+piecewise-constant schedule of any length reaches `ε`-closeness for the counterexample instance -- a
+universally-quantified non-existence claim, non-constructive in Lean.
+
+**Fix.** Restored as `hxhull : ∀ k, ∀ s, IsClosed s → GeodesicConvex s → supportedIn μ s → x k ∈ s`,
+the intersection-of-closed-convex-supersets characterization of the hull (no new hull operator
+needed, since `GeodesicConvex` and `IsClosed` are both closed under arbitrary intersection). The
+`IsClosed` conjunct is load-bearing, not decorative: dropping it lets a geodesically convex set
+exclude individual `μ`-null boundary points of `supp μ` (e.g. an arc minus one endpoint stays convex
+under the pairwise-chord definition) while still carrying full measure, making the bare
+measure-only form subtly STRONGER than the paper's hull rather than equal to it. This is explicitly
+NOT a repeat of the F12-era per-piece open-hemisphere clause removed from `exists_atomless_partition`
+/`prop_2_2` (inconsistent at `M = 1`, forcing the WHOLE support into a half-space -- false for any
+centrally-symmetric `μ`, see "Fidelity corrections made while closing" below): a blanket hemisphere
+hypothesis can be outright FALSE for such `μ`, whereas `hxhull`'s universal-over-supersets form
+DEGENERATES to no constraint (vacuously true, never False) exactly when `supp μ` admits no proper
+closed geodesically-convex cover, so it cannot reproduce that inconsistency. Non-vacuity witness
+(`Regression/NonVacuity/MidLevel.lean`, `arcMeasure`/`arcPt_zero_mem_of_closed_convex_supportedIn`):
+a genuinely atomless measure (Lebesgue-pushforward along a great-circle arc, not a Dirac) with target
+`arcPt 0` sitting exactly in its own support -- `hxhull` there reduces to "a closed full-measure
+subset of `[0, π/4]` contains `0`", proved directly (if not, the open complement contains a metric
+ball around `0`, whose intersection with `[0, π/4]` is a positive-length one-sided interval,
+contradicting full measure). The axiom remains `math.axiomatised`; `hxhull` is additive (`prop_2_2`
+has zero downstream callers in this codebase, confirmed by grep before the fix).
 
 ### Verdict
 
