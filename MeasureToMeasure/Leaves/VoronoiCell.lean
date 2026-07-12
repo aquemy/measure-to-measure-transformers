@@ -1,4 +1,5 @@
 import MeasureToMeasure.Foundations.GeodesicConvex
+import MeasureToMeasure.Foundations.SphereMeasureBridge
 
 /-!
 # Voronoi cells of a target family (`prop_2_2` Stage 1)
@@ -35,7 +36,7 @@ surplus neighbor, not a special case.
 
 namespace MeasureToMeasure.Leaves
 
-open Set
+open Set MeasureTheory
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -125,4 +126,55 @@ theorem voronoiCell'_covers {M : ℕ} (hM : 0 < M) (x : Fin M → Eucl d) {y : E
   have hk'mem : k' ∈ S := Finset.mem_filter.mpr ⟨Finset.mem_univ k',
     fun k'' => heq ▸ (hmaxk0 k'' : (⟪x k'', y⟫ : ℝ) ≤ ⟪x (S.min' hSne), y⟫)⟩
   exact absurd (S.min'_le k' hk'mem) (not_le.mpr hk')
+
+/-- The tie-broken cells are measurable: a finite conjunction of `≤`/`<` comparisons between
+continuous linear functionals of `y`, intersected with the (measurable) sphere. -/
+theorem measurableSet_voronoiCell' {M : ℕ} (x : Fin M → Eucl d) (k : Fin M) :
+    MeasurableSet (voronoiCell' x k) := by
+  refine (measurableSet_sphere d).inter (MeasurableSet.inter ?_ ?_)
+  · show MeasurableSet {y : Eucl d | ∀ k' : Fin M, (⟪x k', y⟫ : ℝ) ≤ ⟪x k, y⟫}
+    rw [Set.setOf_forall]
+    exact MeasurableSet.iInter fun k' => measurableSet_le
+      (f := fun y : Eucl d => (⟪x k', y⟫ : ℝ)) (g := fun y : Eucl d => (⟪x k, y⟫ : ℝ))
+      (by fun_prop) (by fun_prop)
+  · show MeasurableSet {y : Eucl d | ∀ k' : Fin M, k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫}
+    rw [Set.setOf_forall]
+    refine MeasurableSet.iInter fun k' => ?_
+    by_cases hlt : k' < k
+    · show MeasurableSet {y : Eucl d | k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫}
+      have heq2 : {y : Eucl d | k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫} =
+          {y : Eucl d | (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫} := by
+        ext y; simp [hlt]
+      rw [heq2]
+      exact measurableSet_lt (f := fun y : Eucl d => (⟪x k', y⟫ : ℝ))
+        (g := fun y : Eucl d => (⟪x k, y⟫ : ℝ)) (by fun_prop) (by fun_prop)
+    · show MeasurableSet {y : Eucl d | k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫}
+      have heq2 : {y : Eucl d | k' < k → (⟪x k', y⟫ : ℝ) < ⟪x k, y⟫} = Set.univ := by
+        ext y; simp [hlt]
+      rw [heq2]
+      exact MeasurableSet.univ
+
+/-- **The tie-broken cells exactly partition the sphere's mass.** For any sphere-supported
+probability measure, the cell masses sum to `1` -- the finite-additivity glue between
+`voronoiCell'_disjoint` (pairwise disjoint) and `voronoiCell'_covers` (covers the sphere) that
+`exists_deficit_routing`'s balanced-supply/demand hypothesis needs at its point of use. -/
+theorem sum_measure_voronoiCell' {M : ℕ} (hM : 0 < M) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] (hμS : μ (sphere d)ᶜ = 0) (x : Fin M → Eucl d) :
+    ∑ k, μ (voronoiCell' x k) = 1 := by
+  have hmeas : ∀ k, MeasurableSet (voronoiCell' x k) := measurableSet_voronoiCell' x
+  have hcompl : μ (⋃ k, voronoiCell' x k)ᶜ = 0 := by
+    apply measure_mono_null _ hμS
+    intro y hy
+    simp only [Set.mem_compl_iff, Set.mem_iUnion, not_exists] at hy
+    show y ∉ sphere d
+    intro hys
+    obtain ⟨k, hk⟩ := voronoiCell'_covers hM x hys
+    exact hy k hk
+  have hUnion : μ (⋃ k, voronoiCell' x k) = 1 := by
+    have hone := prob_add_prob_compl (μ := μ) (MeasurableSet.iUnion hmeas)
+    rwa [hcompl, add_zero] at hone
+  have hsum := measure_iUnion (μ := μ) (f := voronoiCell' x)
+    (fun k k' hne => voronoiCell'_disjoint x hne) hmeas
+  rw [hUnion, tsum_fintype] at hsum
+  exact hsum.symm
 
