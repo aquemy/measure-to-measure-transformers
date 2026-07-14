@@ -92,6 +92,7 @@ import MeasureToMeasure.Leaves.OrthantBoundaryGap
 import MeasureToMeasure.Leaves.DivergenceFormula
 import MeasureToMeasure.Leaves.ExtremalBoundaryPoint
 import MeasureToMeasure.Leaves.SupportPushforward
+import MeasureToMeasure.Leaves.ExtremalOutwardCap
 import MeasureToMeasure.Leaves.MeanFieldPark
 import MeasureToMeasure.Leaves.GatedConvergence
 import MeasureToMeasure.Leaves.AtomlessDirection
