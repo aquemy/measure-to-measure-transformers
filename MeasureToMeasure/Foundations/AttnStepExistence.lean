@@ -371,12 +371,16 @@ of eq. (B.2)), derived from the well-posedness interface, so downstream statemen
 per-member transport-map clauses as axiom content. -/
 
 /-- **One step is a pushforward.** The block step of a sphere-supported probability measure is the
-pushforward along a measurable map that carries the sphere into itself and has a measurable
-left inverse there (the mean-field flow slice at the block's duration; its sphere restriction is a
-continuous bijection of a compact space, hence a homeomorphism). -/
+pushforward along a measurable, CONTINUOUS map that carries the sphere into itself and has a
+measurable left inverse there (the mean-field flow slice at the block's duration; its sphere
+restriction is a continuous bijection of a compact space, hence a homeomorphism). Continuity of the
+forward map is threaded through explicitly (not just its sphere-inverse's continuity, already used
+internally to build the homeomorphism) because a later leaf (`support_map_eq_image_of_continuous`,
+towards `lemma_3_4_part2`) needs the forward map's own continuity to identify `support (μ.map Φ)`
+with `Φ '' (support μ)`. -/
 theorem attnStep_exists_map (p : AttnParams d) (μ : Measure (Eucl d))
     [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
+    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Continuous Φ ∧ Measurable Φinv ∧
       attnStep p μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
       ∀ x ∈ sphere d, Φinv (Φ x) = x := by
   classical
@@ -402,7 +406,7 @@ theorem attnStep_exists_map (p : AttnParams d) (μ : Measure (Eucl d))
   have hπmem : ∀ y, πval y ∈ sphere d := by
     intro y
     by_cases hy : y ∈ sphere d <;> simp [hπval, hy, hz₀]
-  refine ⟨Φd, fun y => (homeo.symm ⟨πval y, hπmem y⟩ : Eucl d), hmeas,
+  refine ⟨Φd, fun y => (homeo.symm ⟨πval y, hπmem y⟩ : Eucl d), hmeas, hcont,
     (continuous_subtype_val.comp homeo.symm.continuous).measurable.comp
       (hπmeas.subtype_mk (p := fun z => z ∈ sphere d)), ?_, hbij.mapsTo, ?_⟩
   · rw [attnStep, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
@@ -419,24 +423,26 @@ theorem attnStep_exists_map (p : AttnParams d) (μ : Measure (Eucl d))
       _ = x := rfl
 
 /-- **The solution operator is a pushforward.** Along any schedule, a sphere-supported probability
-measure is pushed forward by one measurable map, sphere-to-sphere, with a measurable left inverse
-on the sphere: the composition of the per-block flow slices. This derives the transport-map clause
-the paper attaches to its flow maps (eq. (B.2)) once and for all. -/
+measure is pushed forward by one measurable, CONTINUOUS map, sphere-to-sphere, with a measurable
+left inverse on the sphere: the composition of the per-block flow slices. This derives the
+transport-map clause the paper attaches to its flow maps (eq. (B.2)) once and for all. Continuity
+composes trivially through the induction (`hΦrc.comp hΦpc`) once `attnStep_exists_map` supplies it
+per block. -/
 theorem attnMeasureFlow_exists_map (θ : AttnSchedule d) (μ : Measure (Eucl d))
     [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
-    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
+    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Continuous Φ ∧ Measurable Φinv ∧
       attnMeasureFlow θ μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
       ∀ x ∈ sphere d, Φinv (Φ x) = x := by
   induction θ generalizing μ with
   | nil =>
-    exact ⟨id, id, measurable_id, measurable_id, (Measure.map_id).symm,
+    exact ⟨id, id, measurable_id, continuous_id, measurable_id, (Measure.map_id).symm,
       Set.mapsTo_id _, fun x _ => rfl⟩
   | cons p rest ih =>
-    obtain ⟨Φp, Φpinv, hΦpm, hΦpim, hΦpeq, hΦpto, hΦpinv⟩ := attnStep_exists_map p μ hs
+    obtain ⟨Φp, Φpinv, hΦpm, hΦpc, hΦpim, hΦpeq, hΦpto, hΦpinv⟩ := attnStep_exists_map p μ hs
     haveI := isProbabilityMeasure_attnStep p μ hs
     have hs' : (attnStep p μ) (sphere d)ᶜ = 0 := attnStep_supportedIn_sphere p μ hs
-    obtain ⟨Φr, Φrinv, hΦrm, hΦrim, hΦreq, hΦrto, hΦrinv⟩ := ih (attnStep p μ) hs'
-    refine ⟨Φr ∘ Φp, Φpinv ∘ Φrinv, hΦrm.comp hΦpm, hΦpim.comp hΦrim, ?_,
+    obtain ⟨Φr, Φrinv, hΦrm, hΦrc, hΦrim, hΦreq, hΦrto, hΦrinv⟩ := ih (attnStep p μ) hs'
+    refine ⟨Φr ∘ Φp, Φpinv ∘ Φrinv, hΦrm.comp hΦpm, hΦrc.comp hΦpc, hΦpim.comp hΦrim, ?_,
       hΦrto.comp hΦpto, fun x hx => ?_⟩
     · have hcons : attnMeasureFlow (p :: rest) μ = attnMeasureFlow rest (attnStep p μ) := rfl
       rw [hcons, hΦreq, hΦpeq, Measure.map_map hΦrm hΦpm]
