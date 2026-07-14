@@ -9,6 +9,8 @@ import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttnStepExistence
+import Mathlib.MeasureTheory.Measure.Support
+import Mathlib.Analysis.Convex.Intrinsic
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
@@ -263,12 +265,29 @@ the barycenters are genuine and the orthant support forces them nonzero, so the 
 Layer (F14): mean-field -- the paper's part-2 construction (§B.3) switches on the value matrix
 (`B ≡ 0` but `V ≠ 0`), so the field reads the flowing measures' barycenters. The conclusion pairs
 the two flows of the SAME schedule applied to the two measures (two separate mean-field systems
-sharing the parameters, as in the paper). -/
+sharing the parameters, as in the paper).
+
+**Two further fidelity hypotheses (`mean-field-axioms-retractability` sub-campaign), matching the
+paper's own invocation context for Part 2 rather than the general statement:** (1) `hsupp : μ.support
+= ν.support` -- the paper invokes Part 2 specifically when the two supports COINCIDE (Part 1, stated
+separately in `Statements/Lemma34Part1.lean`, handles `supp μ ≠ supp ν` via a different
+Wasserstein-continuity argument). (2) `hu`, footnote 7's non-degeneracy condition: the normalized
+barycenter direction lies in the INTRINSIC (relative-to-affine-span) interior of the ambient convex
+hull of the shared support -- `conv_g`'s open-hemisphere-faithful geodesic hull, expressed via
+Mathlib's general `intrinsicInterior`/`convexHull` (no finite-generator restriction, unlike this
+repo's own `Leaves.BarycenterNonColinear.geodesicHull`). Without this, the paper's own proof defers
+to Proposition 2.1 on a lower-dimensional sphere (the `σ_d(conv_g supp μ) = 0` case) instead of
+running Part 2's Taylor-divergence argument at all; the hypothesis rules that case out. Neither
+hypothesis was exercised by earlier kernel-refutation attempts (they were introduced by this
+sub-campaign's own re-reading of the paper, not by an adversarial review pass), so both are recorded
+here for the discharge, not retrofitted from a review finding. -/
 axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) :
+    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν)
+    (hsupp : μ.support = ν.support)
+    (hu : (‖barycenter μ‖⁻¹ • barycenter μ) ∈ intrinsicInterior ℝ (convexHull ℝ μ.support)) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
       ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)
 
