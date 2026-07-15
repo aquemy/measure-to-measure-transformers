@@ -34,14 +34,17 @@ open scoped RealInnerProductSpace ENNReal
 variable {d : ℕ} [NeZero d]
 
 set_option maxHeartbeats 1200000 in
-/-- **Lemma 3.4, Part 1, mean-field form.** For two distinct probability measures on `𝕊^{d-1} ∩
-Q₁^{d-1}` with equal barycenters and a common open carrier `U`, some mean-field schedule `θ` makes
-the flowed barycenters differ while fixing the sphere off `U`. -/
-theorem lemma_3_4_part1_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
+/-- **The mass-gap-cap-collapse construction, mean-field form, γ-INDEPENDENT.** For two distinct
+sphere-and-orthant-supported probability measures with a common open carrier `U`, some mean-field
+schedule `θ` makes the flowed barycenters differ while fixing the sphere off `U` -- with NO relation
+between `barycenter μ` and `barycenter ν` assumed. Matches the LINEAR layer's `lemma_3_4_part1`,
+whose own `_hbar : barycenter μ = barycenter ν` hypothesis is provably unused (the mass-gap cap only
+consumes `μ ≠ ν`): this mean-field form makes that generality explicit, since `lemma_3_4_part2`
+needs it for COLINEAR-UNEQUAL (not equal) barycenters, unlike `lemma_3_4_part1`'s own `γ₁ = 1` case. -/
+theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
     [IsProbabilityMeasure ν] (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (_hbar : barycenter μ = barycenter ν)
     (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
     ∃ θ : AttnSchedule d,
       barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
@@ -254,5 +257,20 @@ theorem lemma_3_4_part1_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasu
     have hxle : (⟪z, x⟫ : ℝ) ≤ cosR := not_lt.mp hxcap
     exact attnFlow_id_of_inner_le z ω cosR ((n : ℝ) * T) hnT0 hμs Φ hΦspec hxsphere hxle
       ⟨hnT0, le_rfl⟩
+
+/-- **Lemma 3.4, Part 1, mean-field form** (paper-faithful statement, `γ₁ = 1` case). Thin wrapper
+around `barycenter_ne_of_massGapCollapse_meanField`, which does not need the equal-barycenter
+hypothesis at all. -/
+theorem lemma_3_4_part1_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    [IsProbabilityMeasure ν] (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
+    (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
+    (_hbar : barycenter μ = barycenter ν)
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
+    ∃ θ : AttnSchedule d,
+      barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
+      ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
+        ∀ x ∈ sphere d, x ∉ U → Φ x = x :=
+  barycenter_ne_of_massGapCollapse_meanField μ ν T hT hne hμs hνs hμ hν U hUopen hμU hνU
 
 end MeasureToMeasure.Leaves
