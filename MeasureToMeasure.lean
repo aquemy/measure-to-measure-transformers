@@ -96,6 +96,7 @@ import MeasureToMeasure.Leaves.ExtremalOutwardCap
 import MeasureToMeasure.Leaves.AttnRescale
 import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
 import MeasureToMeasure.Leaves.Lemma34Part1MeanField
+import MeasureToMeasure.Leaves.OrthantRotationMeanField
 import MeasureToMeasure.Leaves.MeanFieldPark
 import MeasureToMeasure.Leaves.GatedConvergence
 import MeasureToMeasure.Leaves.AtomlessDirection
