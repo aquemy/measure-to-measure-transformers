@@ -16,10 +16,15 @@ import MeasureToMeasure.Axioms.ContinuityEquation
 `AttnParams.field` is already globally Lipschitz-on-the-sphere for any parameter choice); `gatedField`
 is the same formula composed with a `normCutoff` that equals `1` throughout the unit ball (needed on
 the LINEAR layer only for the AMBIENT `ℝ^d`-wide Picard-Lindelöf `Block` structure, irrelevant to
-`IsMeanFieldFlow`, which is characterized purely on-sphere). Since both flows solve the identical
-autonomous sphere-restricted ODE, ODE uniqueness (the SAME technique `MeanFieldPark.lean`'s own
-`attnFlow_id_of_inner_le` uses, comparing against a constant trajectory instead of `gatedBlock`'s)
-identifies the two flow MAPS on the sphere, hence the two PUSHFORWARD MEASURES, for a single block.
+`IsMeanFieldFlow`, which is characterized purely on-sphere).
+
+Rather than re-deriving ODE uniqueness from scratch, both bridges reuse the GENERAL machinery already
+built for the M3b well-posedness campaign (`Foundations/Attention.lean`'s `isMeanFieldFlow_blockFlow`,
+`Foundations/AttnStepExistence.lean`'s `attnStep_eq_map_blockFlow`): for ANY `V = 0` `AttnParams` `p`
+and ANY `Block b` whose field agrees with `p`'s perceptron-gate formula on the sphere, `b.blockFlow`
+IS a valid mean-field flow of `p`, and uniqueness (`meanFieldFlow_unique`) does the rest. `pPark`/
+`gatedBlock` (and their amplitude-scaled analogues `pParkScaled`/`scaledGatedBlock`) are exactly one
+instance of this generic fact, once the field-agreement is checked.
 
 The `n`-replicated-schedule extension turned out unnecessary: `lemma_3_4_part1`'s own proof already
 collapses `List.replicate n block` into a single block evaluated at the combined duration `n·T` (an
@@ -53,53 +58,35 @@ theorem pPark_field_eq_gatedField_of_mem_sphere {z ω : Eucl d} (hz : ‖z‖ = 
   rw [pPark_field, gatedField, gateFactor,
     normCutoff_eq_one (le_of_eq (norm_eq_one_of_mem_sphere hx)), one_mul, reluGate]
 
+/-- `gatedBlock`'s field matches `pPark`'s raw perceptron-gate formula on the sphere -- the
+hypothesis `attnStep_eq_map_blockFlow`/`isMeanFieldFlow_blockFlow` need. -/
+theorem gatedBlock_field_agree {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω‖ = 1) {cosR T : ℝ}
+    (hcosR : (-1 : ℝ) ≤ cosR) (hT : 0 ≤ T) (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] :
+    ∀ y ∈ sphere d, (gatedBlock hz hω hcosR hT).field y
+      = tangentialProjector y ((pPark z ω cosR T hT).W
+          (reluVec ((pPark z ω cosR T hT).U y + (pPark z ω cosR T hT).b))) := by
+  intro y hy
+  show gatedField z ω cosR y = _
+  rw [← pPark_field_eq_gatedField_of_mem_sphere hz hT hy μ0]
+  unfold AttnParams.field
+  rw [show (pPark z ω cosR T hT).V = (0 : Eucl d →L[ℝ] Eucl d) from rfl]
+  simp
+
 /-- **The point-level bridge.** Any mean-field flow of `pPark z ω cosR T hT` agrees, on the sphere,
 with the linear layer's `gatedBlock` point flow for the SAME `z, ω, cosR, T`: both solve the
-identical autonomous sphere-restricted ODE, so `ODE_solution_unique_of_mem_Icc_right` (the same tool
-`attnFlow_id_of_inner_le` uses) identifies the two trajectories. -/
+identical autonomous sphere-restricted ODE, so uniqueness (`meanFieldFlow_unique`, applied to
+`gatedBlock`'s point flow via `isMeanFieldFlow_blockFlow`) identifies the two trajectories. -/
 theorem attnFlow_eq_blockFlow_gatedBlock {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω‖ = 1) {cosR T : ℝ}
     (hcosR : (-1 : ℝ) ≤ cosR) (hT : 0 ≤ T)
     {μ0 : Measure (Eucl d)} [IsProbabilityMeasure μ0] (hμ0S : μ0 (sphere d)ᶜ = 0)
     (Φ : ℝ → Eucl d → Eucl d) (hΦ : IsMeanFieldFlow (pPark z ω cosR T hT) μ0 Φ)
     {x : Eucl d} (hx : x ∈ sphere d) {t : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) T) :
     Φ t x = (gatedBlock hz hω hcosR hT).blockFlow t x := by
-  set p := pPark z ω cosR T hT with hpdef
-  set b := gatedBlock hz hω hcosR hT with hbdef
-  set C : ℝ := (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
-    + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) with hCdef
-  have hC0 : 0 ≤ C := by rw [hCdef]; positivity
-  have hEq : Set.EqOn (fun s => Φ s x) (fun s => b.blockFlow s x) (Set.Icc (0 : ℝ) T) := by
-    refine ODE_solution_unique_of_mem_Icc_right
-      (v := fun s y => p.field (μ0.map (Φ s)) y) (s := fun _ => sphere d)
-      (K := C.toNNReal) ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-    · intro s hs
-      have hsIcc := Set.Ico_subset_Icc_self hs
-      haveI := isProbabilityMeasure_map_flow hΦ hsIcc
-      have hmapS := map_flow_sphere_support hμ0S hΦ hsIcc
-      rw [lipschitzOnWith_iff_dist_le_mul]
-      intro a ha bb hbb
-      rw [dist_eq_norm, dist_eq_norm]
-      calc ‖p.field (μ0.map (Φ s)) a - p.field (μ0.map (Φ s)) bb‖
-          ≤ C * ‖a - bb‖ := norm_field_sub_point_le p (μ0.map (Φ s)) hmapS ha hbb
-        _ = (C.toNNReal : ℝ) * ‖a - bb‖ := by rw [Real.coe_toNNReal C hC0]
-    · exact fun s hs => (hΦ.deriv x hx s hs).continuousAt.continuousWithinAt
-    · exact fun s hs => (hΦ.deriv x hx s (Set.Ico_subset_Icc_self hs)).hasDerivWithinAt
-    · exact fun s hs => (hΦ.sphere_bijOn s (Set.Ico_subset_Icc_self hs)).mapsTo hx
-    · exact fun s hs => (b.blockCurve_isIntegralCurve x s).continuousAt.continuousWithinAt
-    · intro s hs
-      have hsIcc := Set.Ico_subset_Icc_self hs
-      haveI := isProbabilityMeasure_map_flow hΦ hsIcc
-      have hbsph : b.blockFlow s x ∈ sphere d := b.blockFlow_mem_sphere hx hs.1
-      have hfeq : p.field (μ0.map (Φ s)) (b.blockFlow s x) = b.field (b.blockFlow s x) := by
-        show (pPark z ω cosR T hT).field (μ0.map (Φ s)) (b.blockFlow s x)
-          = gatedField z ω cosR (b.blockFlow s x)
-        exact pPark_field_eq_gatedField_of_mem_sphere hz hT hbsph (μ0.map (Φ s))
-      rw [hfeq]
-      exact (b.blockCurve_isIntegralCurve x s).hasDerivWithinAt
-    · exact fun s hs => b.blockFlow_mem_sphere hx (Set.Ico_subset_Icc_self hs).1
-    · show Φ 0 x = b.blockFlow 0 x
-      rw [hΦ.init, b.blockFlow_zero]; rfl
-  exact hEq ht
+  have hΨ : IsMeanFieldFlow (pPark z ω cosR T hT) μ0
+      (fun s => (gatedBlock hz hω hcosR hT).blockFlow s) :=
+    isMeanFieldFlow_blockFlow (gatedBlock hz hω hcosR hT) (pPark z ω cosR T hT) rfl
+      (gatedBlock_field_agree hz hω hcosR hT μ0) μ0
+  exact meanFieldFlow_unique hμ0S hΦ hΨ t ht x hx
 
 /-- **The measure-level bridge.** The mean-field flow of `[pPark z ω cosR T hT]` and the linear flow
 of `[gatedBlock hz hω hcosR hT]` push forward a sphere-supported probability measure to the SAME
@@ -109,22 +96,12 @@ theorem attnMeasureFlow_pPark_eq_measureFlow_gatedBlock {z ω : Eucl d} (hz : �
     {cosR T : ℝ} (hcosR : (-1 : ℝ) ≤ cosR) (hT : 0 ≤ T)
     {μ0 : Measure (Eucl d)} [IsProbabilityMeasure μ0] (hμ0S : μ0 (sphere d)ᶜ = 0) :
     attnMeasureFlow [pPark z ω cosR T hT] μ0 = measureFlow [gatedBlock hz hω hcosR hT] T μ0 := by
-  have hex := @exists_meanFieldFlow d (pPark z ω cosR T hT) μ0 ‹_› hμ0S
-  set Φ := hex.choose with hΦdef
-  have hΦspec : IsMeanFieldFlow (pPark z ω cosR T hT) μ0 Φ := hex.choose_spec
-  have hstep : attnStep (pPark z ω cosR T hT) μ0 = μ0.map (Φ (pPark z ω cosR T hT).duration) := by
-    unfold attnStep
-    rw [dif_pos ⟨‹_›, hμ0S⟩]
   show attnStep (pPark z ω cosR T hT) μ0 = _
-  rw [hstep, measureFlow]
-  have hdur : (pPark z ω cosR T hT).duration = T := rfl
-  have hflowsingle : flowMap [gatedBlock hz hω hcosR hT] T
-      = (gatedBlock hz hω hcosR hT).blockFlow T := by
-    rw [flowMap_cons, flowMap_nil]; rfl
-  rw [hflowsingle, hdur]
-  apply Measure.map_congr
-  filter_upwards [hμ0S] with x hx
-  exact attnFlow_eq_blockFlow_gatedBlock hz hω hcosR hT hμ0S Φ hΦspec hx ⟨hT, le_refl T⟩
+  rw [attnStep_eq_map_blockFlow (pPark z ω cosR T hT) rfl (gatedBlock hz hω hcosR hT)
+    (gatedBlock_field_agree hz hω hcosR hT μ0) μ0 hμ0S]
+  show μ0.map ((gatedBlock hz hω hcosR hT).blockFlow (pPark z ω cosR T hT).duration) = _
+  rw [show (pPark z ω cosR T hT).duration = T from rfl, measureFlow, flowMap_cons, flowMap_nil]
+  rfl
 
 end MeasureToMeasure.Leaves
 
@@ -195,6 +172,20 @@ theorem pParkScaled_field_eq_scaledGatedField_of_mem_sphere (A : ℝ) {z ω : Eu
   rw [pParkScaled_field, scaledGatedField, gatedField, gateFactor,
     normCutoff_eq_one (le_of_eq (norm_eq_one_of_mem_sphere hx)), one_mul, reluGate]
 
+/-- `scaledGatedBlock`'s field matches `pParkScaled`'s raw perceptron-gate formula on the sphere. -/
+theorem scaledGatedBlock_field_agree {A : ℝ} (hA : 0 ≤ A) {z ω : Eucl d} (hz : ‖z‖ = 1)
+    (hω : ‖ω‖ = 1) {cosR T : ℝ} (hcosR : (-1 : ℝ) ≤ cosR) (hT : 0 ≤ T)
+    (μ0 : Measure (Eucl d)) [IsProbabilityMeasure μ0] :
+    ∀ y ∈ sphere d, (scaledGatedBlock hA hz hω hcosR hT).field y
+      = tangentialProjector y ((pParkScaled A z ω cosR T hT).W
+          (reluVec ((pParkScaled A z ω cosR T hT).U y + (pParkScaled A z ω cosR T hT).b))) := by
+  intro y hy
+  show scaledGatedField A z ω cosR y = _
+  rw [← pParkScaled_field_eq_scaledGatedField_of_mem_sphere A hz hT hy μ0]
+  unfold AttnParams.field
+  rw [show (pParkScaled A z ω cosR T hT).V = (0 : Eucl d →L[ℝ] Eucl d) from rfl]
+  simp
+
 /-- **The point-level bridge, scaled form.** Any mean-field flow of `pParkScaled A z ω cosR T hT`
 agrees, on the sphere, with the linear layer's `scaledGatedBlock` point flow. -/
 theorem attnFlow_eq_blockFlow_scaledGatedBlock {A : ℝ} (hA : 0 ≤ A) {z ω : Eucl d} (hz : ‖z‖ = 1)
@@ -203,43 +194,11 @@ theorem attnFlow_eq_blockFlow_scaledGatedBlock {A : ℝ} (hA : 0 ≤ A) {z ω : 
     (Φ : ℝ → Eucl d → Eucl d) (hΦ : IsMeanFieldFlow (pParkScaled A z ω cosR T hT) μ0 Φ)
     {x : Eucl d} (hx : x ∈ sphere d) {t : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) T) :
     Φ t x = (scaledGatedBlock hA hz hω hcosR hT).blockFlow t x := by
-  set p := pParkScaled A z ω cosR T hT with hpdef
-  set b := scaledGatedBlock hA hz hω hcosR hT with hbdef
-  set C : ℝ := (‖p.V‖ * (2 * ‖p.B‖ * Real.exp (4 * ‖p.B‖)) + ‖p.W‖ * ‖p.U‖)
-    + 2 * (‖p.V‖ * Real.exp (2 * ‖p.B‖) + ‖p.W‖ * (‖p.U‖ + ‖p.b‖)) with hCdef
-  have hC0 : 0 ≤ C := by rw [hCdef]; positivity
-  have hEq : Set.EqOn (fun s => Φ s x) (fun s => b.blockFlow s x) (Set.Icc (0 : ℝ) T) := by
-    refine ODE_solution_unique_of_mem_Icc_right
-      (v := fun s y => p.field (μ0.map (Φ s)) y) (s := fun _ => sphere d)
-      (K := C.toNNReal) ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-    · intro s hs
-      have hsIcc := Set.Ico_subset_Icc_self hs
-      haveI := isProbabilityMeasure_map_flow hΦ hsIcc
-      have hmapS := map_flow_sphere_support hμ0S hΦ hsIcc
-      rw [lipschitzOnWith_iff_dist_le_mul]
-      intro a ha bb hbb
-      rw [dist_eq_norm, dist_eq_norm]
-      calc ‖p.field (μ0.map (Φ s)) a - p.field (μ0.map (Φ s)) bb‖
-          ≤ C * ‖a - bb‖ := norm_field_sub_point_le p (μ0.map (Φ s)) hmapS ha hbb
-        _ = (C.toNNReal : ℝ) * ‖a - bb‖ := by rw [Real.coe_toNNReal C hC0]
-    · exact fun s hs => (hΦ.deriv x hx s hs).continuousAt.continuousWithinAt
-    · exact fun s hs => (hΦ.deriv x hx s (Set.Ico_subset_Icc_self hs)).hasDerivWithinAt
-    · exact fun s hs => (hΦ.sphere_bijOn s (Set.Ico_subset_Icc_self hs)).mapsTo hx
-    · exact fun s hs => (b.blockCurve_isIntegralCurve x s).continuousAt.continuousWithinAt
-    · intro s hs
-      have hsIcc := Set.Ico_subset_Icc_self hs
-      haveI := isProbabilityMeasure_map_flow hΦ hsIcc
-      have hbsph : b.blockFlow s x ∈ sphere d := b.blockFlow_mem_sphere hx hs.1
-      have hfeq : p.field (μ0.map (Φ s)) (b.blockFlow s x) = b.field (b.blockFlow s x) := by
-        show (pParkScaled A z ω cosR T hT).field (μ0.map (Φ s)) (b.blockFlow s x)
-          = scaledGatedField A z ω cosR (b.blockFlow s x)
-        exact pParkScaled_field_eq_scaledGatedField_of_mem_sphere A hz hT hbsph (μ0.map (Φ s))
-      rw [hfeq]
-      exact (b.blockCurve_isIntegralCurve x s).hasDerivWithinAt
-    · exact fun s hs => b.blockFlow_mem_sphere hx (Set.Ico_subset_Icc_self hs).1
-    · show Φ 0 x = b.blockFlow 0 x
-      rw [hΦ.init, b.blockFlow_zero]; rfl
-  exact hEq ht
+  have hΨ : IsMeanFieldFlow (pParkScaled A z ω cosR T hT) μ0
+      (fun s => (scaledGatedBlock hA hz hω hcosR hT).blockFlow s) :=
+    isMeanFieldFlow_blockFlow (scaledGatedBlock hA hz hω hcosR hT) (pParkScaled A z ω cosR T hT) rfl
+      (scaledGatedBlock_field_agree hA hz hω hcosR hT μ0) μ0
+  exact meanFieldFlow_unique hμ0S hΦ hΨ t ht x hx
 
 /-- **The measure-level bridge, scaled form.** The mean-field flow of `[pParkScaled A z ω cosR T hT]`
 and the linear flow of `[scaledGatedBlock hA hz hω hcosR hT]` push forward a sphere-supported
@@ -249,22 +208,13 @@ theorem attnMeasureFlow_pParkScaled_eq_measureFlow_scaledGatedBlock {A : ℝ} (h
     {μ0 : Measure (Eucl d)} [IsProbabilityMeasure μ0] (hμ0S : μ0 (sphere d)ᶜ = 0) :
     attnMeasureFlow [pParkScaled A z ω cosR T hT] μ0
       = measureFlow [scaledGatedBlock hA hz hω hcosR hT] T μ0 := by
-  have hex := @exists_meanFieldFlow d (pParkScaled A z ω cosR T hT) μ0 ‹_› hμ0S
-  set Φ := hex.choose with hΦdef
-  have hΦspec : IsMeanFieldFlow (pParkScaled A z ω cosR T hT) μ0 Φ := hex.choose_spec
-  have hstep : attnStep (pParkScaled A z ω cosR T hT) μ0
-      = μ0.map (Φ (pParkScaled A z ω cosR T hT).duration) := by
-    unfold attnStep
-    rw [dif_pos ⟨‹_›, hμ0S⟩]
   show attnStep (pParkScaled A z ω cosR T hT) μ0 = _
-  rw [hstep, measureFlow]
-  have hdur : (pParkScaled A z ω cosR T hT).duration = T := rfl
-  have hflowsingle : flowMap [scaledGatedBlock hA hz hω hcosR hT] T
-      = (scaledGatedBlock hA hz hω hcosR hT).blockFlow T := by
-    rw [flowMap_cons, flowMap_nil]; rfl
-  rw [hflowsingle, hdur]
-  apply Measure.map_congr
-  filter_upwards [hμ0S] with x hx
-  exact attnFlow_eq_blockFlow_scaledGatedBlock hA hz hω hcosR hT hμ0S Φ hΦspec hx ⟨hT, le_refl T⟩
+  rw [attnStep_eq_map_blockFlow (pParkScaled A z ω cosR T hT) rfl
+    (scaledGatedBlock hA hz hω hcosR hT) (scaledGatedBlock_field_agree hA hz hω hcosR hT μ0) μ0 hμ0S]
+  show μ0.map ((scaledGatedBlock hA hz hω hcosR hT).blockFlow (pParkScaled A z ω cosR T hT).duration)
+    = _
+  rw [show (pParkScaled A z ω cosR T hT).duration = T from rfl, measureFlow, flowMap_cons,
+    flowMap_nil]
+  rfl
 
 end MeasureToMeasure.Leaves
