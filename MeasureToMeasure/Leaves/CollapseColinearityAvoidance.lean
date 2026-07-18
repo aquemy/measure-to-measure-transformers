@@ -39,6 +39,15 @@ cap-pole pigeonhole (`exists_pole_in_cap_ne`), the OTHER candidate angle is then
 q = 0`. The final assembly connecting these standalone lemmas to `Lemma34Part1MeanField.lean`'s actual
 `μ, ν, z, w, p, q, Sμ, Sν` instantiation, and wiring the 2-candidate pigeonhole through
 `angle_unique_of_colinear`, is NOT attempted here.
+
+**`gramGap`**: the actual flowed barycenters in `Lemma34Part1MeanField.lean` are only `W₂`-CLOSE to the
+IDEAL collapse targets `Sμ•ω+p`/`Sν•ω+q` (not equal to them), so composing cases A/B with that
+`W₂`-closeness needs a QUANTITATIVE, perturbation-stable non-colinearity margin, not just a bare `≠`.
+`ne_smul_of_gramGap_pos` provides the right bridge: the strict Cauchy-Schwarz/Lagrange gap
+`⟪A,B⟫² < ‖A‖²‖B‖²` implies `A ≠ γ₂•B` for every `γ₂`, UNCONDITIONALLY (no nonzero-`B` hypothesis
+needed, unlike a raw distance-to-line argument) -- and, being a polynomial inequality in `A,B`, is the
+natural target for a future Lipschitz/continuity perturbation-stability lemma (NOT yet built) that
+would convert cases A/B's ideal-target non-colinearity into a `W₂`-robust one.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -170,5 +179,17 @@ theorem angle_unique_of_colinear {z w p q : Eucl d} (hz : ‖z‖ = 1) (hw : ‖
     (r₀ * (⟪w, q⟫ : ℝ) - (⟪w, p⟫ : ℝ)) θ₁ θ₂ (sub_ne_zero.mpr hSne)
     (cos_eq_of_colinear hz hzw h1) (sin_eq_of_colinear hw hzw h1)
     (cos_eq_of_colinear hz hzw h2) (sin_eq_of_colinear hw hzw h2)
+
+/-- **The Lagrange/Cauchy-Schwarz gap.** A strictly positive gap `⟪A,B⟫² < ‖A‖²‖B‖²` rules out `A`
+being ANY scalar multiple of `B` -- the natural QUANTITATIVE, `W₂`-perturbation-friendly form of
+non-colinearity (a polynomial inequality in `A,B` jointly, unlike a raw distance-to-line argument,
+which needs `B ≠ 0` and behaves badly as `B → 0`). -/
+theorem ne_smul_of_gramGap_pos {A B : Eucl d}
+    (hgap : (⟪A, B⟫ : ℝ) ^ 2 < ‖A‖ ^ 2 * ‖B‖ ^ 2) (γ₂ : ℝ) : A ≠ γ₂ • B := by
+  intro h
+  rw [h] at hgap
+  simp only [real_inner_smul_left, norm_smul, real_inner_self_eq_norm_sq, Real.norm_eq_abs,
+    mul_pow, sq_abs] at hgap
+  nlinarith [hgap]
 
 end MeasureToMeasure.Leaves
