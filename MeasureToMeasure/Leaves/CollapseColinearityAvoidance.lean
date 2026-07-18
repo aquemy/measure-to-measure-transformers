@@ -192,4 +192,95 @@ theorem ne_smul_of_gramGap_pos {A B : Eucl d}
     mul_pow, sq_abs] at hgap
   nlinarith [hgap]
 
+set_option maxHeartbeats 1000000 in
+/-- **The gramGap survives `W₂`-scale perturbation.** If the IDEAL targets `A₀,B₀` (norms in
+`[m,1]`) have a Lagrange gap of at least `δ`, and the ACTUAL vectors `A,B` are within `rP,rQ` of
+them (`rP,rQ` small relative to `m²` and `δ`), the gap survives: `A,B` stay non-colinear. This is
+the bridge from cases A/B's IDEAL-target non-colinearity to `Lemma34Part1MeanField.lean`'s ACTUAL
+flowed barycenters, which are only `W₂`-close (not equal) to the collapse targets `Sμ•ω+p`,
+`Sν•ω+q`. Proof: bound `⟪A,B⟫²` above by `⟪A₀,B₀⟫² + O(rP+rQ)` (expand `⟪A,B⟫` around `⟪A₀,B₀⟫`,
+using `‖A₀‖,‖B₀‖≤1` to bound the cross terms) and `‖A‖²‖B‖²` below by `‖A₀‖²‖B₀‖² - O(rP+rQ)`
+(expand each squared norm around its ideal value, using `‖A₀‖,‖B₀‖≥m>0` -- via `rP,rQ≤m²/8` -- to
+keep the perturbed lower bounds on `‖A‖²,‖B‖²` nonnegative so their product bounds the true
+product); the two `O(rP+rQ)` slop terms are dominated by `δ` once `rP,rQ` are small enough
+(`20(rP+rQ)<δ` suffices, with comfortable room to spare). -/
+theorem gramGap_pos_of_perturbation {A₀ B₀ A B : Eucl d} {m : ℝ} (hm0 : 0 < m) (hm1 : m ≤ 1)
+    (hA0lb : m ≤ ‖A₀‖) (hA0 : ‖A₀‖ ≤ 1) (hB0lb : m ≤ ‖B₀‖) (hB0 : ‖B₀‖ ≤ 1)
+    {rP rQ δ : ℝ} (hrP : ‖A - A₀‖ ≤ rP) (hrQ : ‖B - B₀‖ ≤ rQ)
+    (hrPsmall : rP ≤ m ^ 2 / 8) (hrQsmall : rQ ≤ m ^ 2 / 8)
+    (hδ : (⟪A₀, B₀⟫ : ℝ) ^ 2 + δ ≤ ‖A₀‖ ^ 2 * ‖B₀‖ ^ 2)
+    (hsmall : 20 * (rP + rQ) < δ) :
+    (⟪A, B⟫ : ℝ) ^ 2 < ‖A‖ ^ 2 * ‖B‖ ^ 2 := by
+  have hrP0 : 0 ≤ rP := (norm_nonneg _).trans hrP
+  have hrQ0 : 0 ≤ rQ := (norm_nonneg _).trans hrQ
+  have hrPle1 : rP ≤ 1 := by nlinarith [hrPsmall, hm1]
+  have hrQle1 : rQ ≤ 1 := by nlinarith [hrQsmall, hm1]
+  have hA0nn : (0 : ℝ) ≤ ‖A₀‖ ^ 2 := sq_nonneg _
+  have hB0nn : (0 : ℝ) ≤ ‖B₀‖ ^ 2 := sq_nonneg _
+  have hA0sqle : ‖A₀‖ ^ 2 ≤ 1 := by nlinarith [hA0, norm_nonneg A₀]
+  have hB0sqle : ‖B₀‖ ^ 2 ≤ 1 := by nlinarith [hB0, norm_nonneg B₀]
+  have hABeq : (⟪A, B⟫ : ℝ) = ⟪A₀, B₀⟫ + ⟪A - A₀, B⟫ + ⟪A₀, B - B₀⟫ := by
+    rw [inner_sub_left, inner_sub_right]; ring
+  have hBnorm : ‖B‖ ≤ 1 + rQ := by
+    calc ‖B‖ = ‖B₀ + (B - B₀)‖ := by congr 1; abel
+      _ ≤ ‖B₀‖ + ‖B - B₀‖ := norm_add_le _ _
+      _ ≤ 1 + rQ := add_le_add hB0 hrQ
+  have hc1 : |(⟪A - A₀, B⟫ : ℝ)| ≤ rP * (1 + rQ) := by
+    calc |(⟪A - A₀, B⟫ : ℝ)| ≤ ‖A - A₀‖ * ‖B‖ := abs_real_inner_le_norm _ _
+      _ ≤ rP * (1 + rQ) := mul_le_mul hrP hBnorm (norm_nonneg _) hrP0
+  have hc2 : |(⟪A₀, B - B₀⟫ : ℝ)| ≤ rQ := by
+    calc |(⟪A₀, B - B₀⟫ : ℝ)| ≤ ‖A₀‖ * ‖B - B₀‖ := abs_real_inner_le_norm _ _
+      _ ≤ 1 * rQ := mul_le_mul hA0 hrQ (norm_nonneg _) zero_le_one
+      _ = rQ := one_mul rQ
+  have hA0B0 : |(⟪A₀, B₀⟫ : ℝ)| ≤ 1 := by
+    calc |(⟪A₀, B₀⟫ : ℝ)| ≤ ‖A₀‖ * ‖B₀‖ := abs_real_inner_le_norm _ _
+      _ ≤ 1 * 1 := mul_le_mul hA0 hB0 (norm_nonneg _) zero_le_one
+      _ = 1 := mul_one 1
+  set e : ℝ := rP * (1 + rQ) + rQ with hedef
+  have he0 : 0 ≤ e := by rw [hedef]; positivity
+  obtain ⟨hX1, hX2⟩ := abs_le.mp hc1
+  obtain ⟨hY1, hY2⟩ := abs_le.mp hc2
+  obtain ⟨hZ1, hZ2⟩ := abs_le.mp hA0B0
+  have hABsq : (⟪A, B⟫ : ℝ) ^ 2 ≤ (⟪A₀, B₀⟫ : ℝ) ^ 2 + e * (e + 2) := by
+    have hub : (⟪A, B⟫ : ℝ) ≤ ⟪A₀, B₀⟫ + e := by rw [hABeq, hedef]; linarith
+    have hlb : ⟪A₀, B₀⟫ - e ≤ (⟪A, B⟫ : ℝ) := by rw [hABeq, hedef]; linarith
+    nlinarith [hub, hlb, he0, hZ1, hZ2]
+  have hesmall : e ≤ 2 * (rP + rQ) := by rw [hedef]; nlinarith [hrPle1, hrQle1, hrP0, hrQ0]
+  have hehalf : e ≤ 1 / 2 := by
+    have hm2 : m ^ 2 ≤ 1 := by nlinarith [hm0, hm1]
+    have hrP8 : rP ≤ 1 / 8 := by linarith
+    have hrQ8 : rQ ≤ 1 / 8 := by linarith
+    rw [hedef]; nlinarith [hrP8, hrQ8, hrP0, hrQ0]
+  have heub : e * (e + 2) ≤ 5 * (rP + rQ) := by nlinarith [hesmall, he0, hehalf]
+  have hAnormlb : ‖A₀‖ ^ 2 - 2 * rP - rP ^ 2 ≤ ‖A‖ ^ 2 := by
+    have hAeq : A = A₀ + (A - A₀) := by abel
+    have heq : ‖A‖ ^ 2 = ‖A₀‖ ^ 2 + 2 * ⟪A₀, A - A₀⟫ + ‖A - A₀‖ ^ 2 := by
+      conv_lhs => rw [hAeq]
+      exact norm_add_sq_real A₀ (A - A₀)
+    have hcross : -(2 * rP) ≤ 2 * (⟪A₀, A - A₀⟫ : ℝ) := by
+      have hb : |(⟪A₀, A - A₀⟫ : ℝ)| ≤ 1 * rP :=
+        (abs_real_inner_le_norm _ _).trans (mul_le_mul hA0 hrP (norm_nonneg _) zero_le_one)
+      linarith [(abs_le.mp hb).1]
+    nlinarith [heq, hcross]
+  have hBnormlb : ‖B₀‖ ^ 2 - 2 * rQ - rQ ^ 2 ≤ ‖B‖ ^ 2 := by
+    have hBeq : B = B₀ + (B - B₀) := by abel
+    have heq : ‖B‖ ^ 2 = ‖B₀‖ ^ 2 + 2 * ⟪B₀, B - B₀⟫ + ‖B - B₀‖ ^ 2 := by
+      conv_lhs => rw [hBeq]
+      exact norm_add_sq_real B₀ (B - B₀)
+    have hcross : -(2 * rQ) ≤ 2 * (⟪B₀, B - B₀⟫ : ℝ) := by
+      have hb : |(⟪B₀, B - B₀⟫ : ℝ)| ≤ 1 * rQ :=
+        (abs_real_inner_le_norm _ _).trans (mul_le_mul hB0 hrQ (norm_nonneg _) zero_le_one)
+      linarith [(abs_le.mp hb).1]
+    nlinarith [heq, hcross]
+  have hAlbpos : 0 ≤ ‖A₀‖ ^ 2 - 2 * rP - rP ^ 2 := by nlinarith [hA0lb, hrPsmall, hm0, hm1]
+  have hBlbpos : 0 ≤ ‖B₀‖ ^ 2 - 2 * rQ - rQ ^ 2 := by nlinarith [hB0lb, hrQsmall, hm0, hm1]
+  have hprodlb : (‖A₀‖ ^ 2 - 2 * rP - rP ^ 2) * (‖B₀‖ ^ 2 - 2 * rQ - rQ ^ 2) ≤ ‖A‖ ^ 2 * ‖B‖ ^ 2 :=
+    mul_le_mul hAnormlb hBnormlb hBlbpos (hAlbpos.trans hAnormlb)
+  have hprodgap : ‖A₀‖ ^ 2 * ‖B₀‖ ^ 2 - 4 * (rP + rQ) ≤
+      (‖A₀‖ ^ 2 - 2 * rP - rP ^ 2) * (‖B₀‖ ^ 2 - 2 * rQ - rQ ^ 2) := by
+    nlinarith [mul_nonneg hrP0 hrQ0, sq_nonneg rP, sq_nonneg rQ,
+      mul_le_one₀ hA0sqle hB0nn hB0sqle, mul_le_one₀ hB0sqle hA0nn hA0sqle,
+      hA0nn, hB0nn, hrP0, hrQ0]
+  nlinarith [hABsq, hδ, hprodlb, hprodgap, heub, hsmall, hrP0, hrQ0]
+
 end MeasureToMeasure.Leaves
