@@ -304,4 +304,41 @@ theorem gramGap_pos_of_perturbation {A₀ B₀ A B : Eucl d} {m : ℝ} (hm0 : 0 
       hA0nn, hB0nn, hrP0, hrQ0]
   nlinarith [hABsq, hδ, hprodlb, hprodgap, heub, hsmall, hrP0, hrQ0]
 
+set_option maxHeartbeats 1000000 in
+/-- **`gramGap_pos_of_perturbation` with the norm lower bound derived for free.** The explicit
+`m ≤ ‖A₀‖, ‖B₀‖` hypotheses of `gramGap_pos_of_perturbation` are NOT an independent non-degeneracy
+condition that needs its own proof at call sites -- Cauchy-Schwarz gives `gramGap A₀ B₀ ≤ ‖A₀‖²‖B₀‖²`
+unconditionally, so `δ ≤ gramGap A₀ B₀ ≤ ‖A₀‖²‖B₀‖² ≤ ‖A₀‖²` (using `‖B₀‖ ≤ 1`) forces `‖A₀‖² ≥ δ`
+automatically, and symmetrically for `‖B₀‖`. Takes `m := √δ`. This closes what looked like a
+genuine open gap for wiring cases A/B into `Lemma34Part1MeanField.lean`'s construction: the
+collapse targets `Sμ•ω+p`, `Sν•ω+q` are ALREADY known `≤ 1` (`norm_barycenter_le_one`), so no
+separate lower-bound argument (e.g. forcing the cap pole `ω` into the orthant) is needed at all. -/
+theorem gramGap_pos_of_perturbation_free {A₀ B₀ A B : Eucl d}
+    (hA0 : ‖A₀‖ ≤ 1) (hB0 : ‖B₀‖ ≤ 1)
+    {rP rQ δ : ℝ} (hrP : ‖A - A₀‖ ≤ rP) (hrQ : ‖B - B₀‖ ≤ rQ)
+    (hδ : (⟪A₀, B₀⟫ : ℝ) ^ 2 + δ ≤ ‖A₀‖ ^ 2 * ‖B₀‖ ^ 2) (hδpos : 0 < δ)
+    (hrPsmall : rP ≤ δ / 8) (hrQsmall : rQ ≤ δ / 8) (hsmall : 20 * (rP + rQ) < δ) :
+    (⟪A, B⟫ : ℝ) ^ 2 < ‖A‖ ^ 2 * ‖B‖ ^ 2 := by
+  have hA0nn : (0 : ℝ) ≤ ‖A₀‖ ^ 2 := sq_nonneg _
+  have hB0nn : (0 : ℝ) ≤ ‖B₀‖ ^ 2 := sq_nonneg _
+  have hA0sqle : ‖A₀‖ ^ 2 ≤ 1 := by nlinarith [hA0, norm_nonneg A₀]
+  have hB0sqle : ‖B₀‖ ^ 2 ≤ 1 := by nlinarith [hB0, norm_nonneg B₀]
+  have hA0lbsq : δ ≤ ‖A₀‖ ^ 2 := by nlinarith [sq_nonneg (⟪A₀, B₀⟫ : ℝ), mul_le_one₀ hA0sqle hB0nn hB0sqle]
+  have hB0lbsq : δ ≤ ‖B₀‖ ^ 2 := by nlinarith [sq_nonneg (⟪A₀, B₀⟫ : ℝ), mul_le_one₀ hB0sqle hA0nn hA0sqle]
+  have hδle1 : δ ≤ 1 := hA0lbsq.trans hA0sqle
+  have hA0lb : Real.sqrt δ ≤ ‖A₀‖ := by
+    rw [show ‖A₀‖ = Real.sqrt (‖A₀‖ ^ 2) from (Real.sqrt_sq (norm_nonneg _)).symm]
+    exact Real.sqrt_le_sqrt hA0lbsq
+  have hB0lb : Real.sqrt δ ≤ ‖B₀‖ := by
+    rw [show ‖B₀‖ = Real.sqrt (‖B₀‖ ^ 2) from (Real.sqrt_sq (norm_nonneg _)).symm]
+    exact Real.sqrt_le_sqrt hB0lbsq
+  have hm0 : 0 < Real.sqrt δ := Real.sqrt_pos.mpr hδpos
+  have hm1 : Real.sqrt δ ≤ 1 := by
+    rw [show (1 : ℝ) = Real.sqrt 1 from Real.sqrt_one.symm]
+    exact Real.sqrt_le_sqrt hδle1
+  have hmsq : Real.sqrt δ ^ 2 = δ := Real.sq_sqrt hδpos.le
+  refine gramGap_pos_of_perturbation hm0 hm1 hA0lb hA0 hB0lb hB0 hrP hrQ ?_ ?_ hδ hsmall
+  · rw [hmsq]; exact hrPsmall
+  · rw [hmsq]; exact hrQsmall
+
 end MeasureToMeasure.Leaves
