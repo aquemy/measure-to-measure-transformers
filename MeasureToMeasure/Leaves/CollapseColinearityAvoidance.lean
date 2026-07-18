@@ -192,6 +192,27 @@ theorem ne_smul_of_gramGap_pos {A B : Eucl d}
     mul_pow, sq_abs] at hgap
   nlinarith [hgap]
 
+/-- **Converse of `ne_smul_of_gramGap_pos`.** If `B ≠ 0` and `A` is never a scalar multiple of `B`,
+the gramGap is strictly positive -- the Cauchy-Schwarz equality case
+(`norm_inner_eq_norm_tfae`) is exactly linear dependence, and `B ≠ 0` upgrades that to "`A` IS some
+scalar multiple of `B`". Closes the loop from cases A/B's `∀γ₂,A₀≠γ₂•B₀` conclusion to a usable
+`gramGap` hypothesis for `gramGap_pos_of_perturbation`. -/
+theorem gramGap_pos_of_ne_smul {A B : Eucl d} (hB0 : B ≠ 0) (hne : ∀ γ₂ : ℝ, A ≠ γ₂ • B) :
+    (⟪A, B⟫ : ℝ) ^ 2 < ‖A‖ ^ 2 * ‖B‖ ^ 2 := by
+  have hcs : |(⟪A, B⟫ : ℝ)| ≤ ‖A‖ * ‖B‖ := abs_real_inner_le_norm A B
+  have hne' : ‖A‖ * ‖B‖ ≠ |(⟪A, B⟫ : ℝ)| := by
+    intro heq
+    have heq' : |(⟪B, A⟫ : ℝ)| = ‖B‖ * ‖A‖ := by rw [real_inner_comm]; linarith
+    have h13 := (norm_inner_eq_norm_tfae ℝ B A).out 0 2
+    rw [Real.norm_eq_abs] at h13
+    rcases h13.mp heq' with h | ⟨r, hr⟩
+    · exact hB0 h
+    · exact hne r hr
+  have hlt : |(⟪A, B⟫ : ℝ)| < ‖A‖ * ‖B‖ := lt_of_le_of_ne hcs (Ne.symm hne')
+  have hAB2 : (⟪A, B⟫ : ℝ) ^ 2 = |(⟪A, B⟫ : ℝ)| ^ 2 := (sq_abs _).symm
+  rw [hAB2, ← mul_pow]
+  exact pow_lt_pow_left₀ hlt (abs_nonneg _) two_ne_zero
+
 set_option maxHeartbeats 1000000 in
 /-- **The gramGap survives `W₂`-scale perturbation.** If the IDEAL targets `A₀,B₀` (norms in
 `[m,1]`) have a Lagrange gap of at least `δ`, and the ACTUAL vectors `A,B` are within `rP,rQ` of
