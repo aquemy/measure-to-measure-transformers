@@ -341,4 +341,62 @@ theorem gramGap_pos_of_perturbation_free {A₀ B₀ A B : Eucl d}
   · rw [hmsq]; exact hrPsmall
   · rw [hmsq]; exact hrQsmall
 
+/-- `restComp` is 1-Lipschitz (it is the linear orthogonal projection onto the complement of
+`span{z,w}`, and orthogonal projections are nonexpansive). -/
+theorem restComp_lipschitz {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 1) (hzw : (⟪z, w⟫ : ℝ) = 0)
+    (A A₀ : Eucl d) : ‖restComp z w A - restComp z w A₀‖ ≤ ‖A - A₀‖ := by
+  have hlin : restComp z w A - restComp z w A₀ = restComp z w (A - A₀) := by
+    unfold restComp; simp only [inner_sub_right, sub_smul]; abel
+  rw [hlin]; unfold restComp
+  have hzz : (⟪z, z⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hz]; norm_num
+  have hww : (⟪w, w⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hw]; norm_num
+  set v := A - A₀
+  have hsq : ‖v - (⟪z, v⟫ : ℝ) • z - (⟪w, v⟫ : ℝ) • w‖ ^ 2
+      = ‖v‖ ^ 2 - (⟪z, v⟫ : ℝ) ^ 2 - (⟪w, v⟫ : ℝ) ^ 2 := by
+    rw [← real_inner_self_eq_norm_sq]
+    simp only [inner_sub_left, inner_sub_right, real_inner_smul_left, real_inner_smul_right,
+      hzz, hww, hzw]
+    rw [real_inner_comm z v, real_inner_comm w v, real_inner_comm z w, hzw,
+      real_inner_self_eq_norm_sq]
+    ring
+  have hle : ‖v - (⟪z, v⟫ : ℝ) • z - (⟪w, v⟫ : ℝ) • w‖ ^ 2 ≤ ‖v‖ ^ 2 := by
+    rw [hsq]; nlinarith [sq_nonneg ((⟪z, v⟫ : ℝ)), sq_nonneg ((⟪w, v⟫ : ℝ))]
+  nlinarith [hle, sq_nonneg (‖v - (⟪z, v⟫ : ℝ) • z - (⟪w, v⟫ : ℝ) • w‖ - ‖v‖),
+    norm_nonneg (v - (⟪z, v⟫ : ℝ) • z - (⟪w, v⟫ : ℝ) • w), norm_nonneg v]
+
+/-- `restComp` is norm-nonexpansive from the origin (specializes `restComp_lipschitz` to `A₀ = 0`). -/
+theorem restComp_norm_le {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 1) (hzw : (⟪z, w⟫ : ℝ) = 0)
+    (A : Eucl d) : ‖restComp z w A‖ ≤ ‖A‖ := by
+  have h0 : restComp z w (0 : Eucl d) = 0 := by unfold restComp; simp
+  have := restComp_lipschitz hz hw hzw A 0
+  rwa [h0, sub_zero, sub_zero] at this
+
+/-- **The direct case-A perturbation-stability lemma, avoiding `gramGap`'s `B₀ ≠ 0` requirement.**
+If the IDEAL rest-components `restComp z w A₀`, `restComp z w B₀` have a strict Lagrange gap `δ`,
+and `A,B` are `W₂`-close to `A₀,B₀`, the ACTUAL `A,B` stay non-colinear for every `γ₂` -- no nonzero
+hypothesis on `A₀` or `B₀` needed at all (unlike routing through `gramGap_pos_of_ne_smul`), since
+`ne_smul_of_restComp_not_smul`'s own argument never needed one. Applies
+`gramGap_pos_of_perturbation_free` to the REST-COMPONENTS (not the raw vectors), using
+`restComp_lipschitz`/`restComp_norm_le` to transfer the `W₂`-closeness and the `≤1` norm bound
+through the (1-Lipschitz, norm-nonexpansive) `restComp` projection. -/
+theorem ne_smul_of_restComp_gramGap_perturbation {z w A₀ B₀ A B : Eucl d}
+    (hz : ‖z‖ = 1) (hw : ‖w‖ = 1) (hzw : (⟪z, w⟫ : ℝ) = 0)
+    (hA0 : ‖A₀‖ ≤ 1) (hB0 : ‖B₀‖ ≤ 1)
+    {rP rQ δ : ℝ} (hrP : ‖A - A₀‖ ≤ rP) (hrQ : ‖B - B₀‖ ≤ rQ)
+    (hδ : (⟪restComp z w A₀, restComp z w B₀⟫ : ℝ) ^ 2 + δ
+            ≤ ‖restComp z w A₀‖ ^ 2 * ‖restComp z w B₀‖ ^ 2)
+    (hδpos : 0 < δ) (hrPsmall : rP ≤ δ / 8) (hrQsmall : rQ ≤ δ / 8) (hsmall : 20 * (rP + rQ) < δ)
+    (γ₂ : ℝ) : A ≠ γ₂ • B := by
+  have hrA0 : ‖restComp z w A₀‖ ≤ 1 := (restComp_norm_le hz hw hzw A₀).trans hA0
+  have hrB0 : ‖restComp z w B₀‖ ≤ 1 := (restComp_norm_le hz hw hzw B₀).trans hB0
+  have hrPc : ‖restComp z w A - restComp z w A₀‖ ≤ rP :=
+    (restComp_lipschitz hz hw hzw A A₀).trans hrP
+  have hrQc : ‖restComp z w B - restComp z w B₀‖ ≤ rQ :=
+    (restComp_lipschitz hz hw hzw B B₀).trans hrQ
+  have hcs : (⟪restComp z w A, restComp z w B⟫ : ℝ) ^ 2
+      < ‖restComp z w A‖ ^ 2 * ‖restComp z w B‖ ^ 2 :=
+    gramGap_pos_of_perturbation_free hrA0 hrB0 hrPc hrQc hδ hδpos hrPsmall hrQsmall hsmall
+  apply ne_smul_of_restComp_not_smul (z := z) (w := w)
+  exact ne_smul_of_gramGap_pos hcs
+
 end MeasureToMeasure.Leaves
