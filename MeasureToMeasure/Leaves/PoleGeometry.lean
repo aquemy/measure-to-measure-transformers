@@ -41,6 +41,42 @@ theorem exists_unit_orthogonal (hd : 2 ≤ d) {z : Eucl d} (hz0 : z ≠ 0) :
   · rw [norm_smul, norm_inv, Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _),
       inv_mul_cancel₀ (norm_ne_zero_iff.mpr hvne)]
 
+/-- **A unit vector orthogonal to TWO given vectors, when `3 ≤ d`.** Generalizes
+`exists_unit_orthogonal` (which only avoids `z`) via the same orthogonal-complement dimension-count,
+applied to `span{z,v}` (dimension `≤ 2`) instead of `span{z}` (dimension `1`): the complement then has
+dimension `≥ d-2 ≥ 1`. Staged for `lemma_3_4_part2`'s Gap 2 (`mean-field-axioms-retractability` project
+notes): choosing the cap-pole construction's auxiliary direction `w` orthogonal to BOTH the cap
+direction `z` and a leftover-mass integral `v` makes `v`'s component orthogonal to `span(z,w)` equal
+`v`'s component orthogonal to `z` alone (independent of `w`), sidestepping the worst degenerate
+sub-case of the non-colinearity argument whenever that component is nonzero. -/
+theorem exists_unit_orthogonal_two (hd : 3 ≤ d) {z : Eucl d} (hz0 : z ≠ 0) (v : Eucl d) :
+    ∃ w : Eucl d, (⟪z, w⟫ : ℝ) = 0 ∧ (⟪v, w⟫ : ℝ) = 0 ∧ ‖w‖ = 1 := by
+  classical
+  set S : Submodule ℝ (Eucl d) := Submodule.span ℝ {z, v} with hSdef
+  have hSdim : Module.finrank ℝ ↥S ≤ 2 := by
+    rw [hSdef]
+    calc Module.finrank ℝ ↥(Submodule.span ℝ ({z, v} : Set (Eucl d)))
+        ≤ ({z, v} : Set (Eucl d)).toFinset.card := finrank_span_le_card _
+      _ ≤ 2 := by
+          rw [Set.toFinset_insert, Set.toFinset_singleton]
+          exact (Finset.card_insert_le _ _).trans (by simp)
+  have hsum := Submodule.finrank_add_finrank_orthogonal (𝕜 := ℝ) (E := Eucl d) S
+  have hdim : Module.finrank ℝ (Eucl d) = d := by rw [finrank_euclideanSpace, Fintype.card_fin]
+  have hpos : 0 < Module.finrank ℝ ↥Sᗮ := by omega
+  have hnt : Nontrivial ↥Sᗮ := Module.finrank_pos_iff.mp hpos
+  obtain ⟨u, hune⟩ := exists_ne (0 : ↥Sᗮ)
+  have hvne : (u : Eucl d) ≠ 0 := fun h => hune (Submodule.coe_eq_zero.mp h)
+  have hzS : z ∈ S := Submodule.subset_span (by simp)
+  have hvS : v ∈ S := Submodule.subset_span (by simp)
+  have hortho := (Submodule.mem_orthogonal S (u : Eucl d)).mp u.2
+  have hzu : (⟪z, (u : Eucl d)⟫ : ℝ) = 0 := hortho z hzS
+  have hvu : (⟪v, (u : Eucl d)⟫ : ℝ) = 0 := hortho v hvS
+  refine ⟨‖(u : Eucl d)‖⁻¹ • (u : Eucl d), ?_, ?_, ?_⟩
+  · rw [real_inner_smul_right, hzu, mul_zero]
+  · rw [real_inner_smul_right, hvu, mul_zero]
+  · rw [norm_smul, norm_inv, Real.norm_eq_abs, abs_of_nonneg (norm_nonneg _),
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hvne)]
+
 /-- **Tangential Cauchy–Schwarz lower bound.** For unit `z, x, ω`,
 `⟪z,x⟫·⟪z,ω⟫ − √(1−⟪z,x⟫²)·√(1−⟪z,ω⟫²) ≤ ⟪x, ω⟫`. Proof: `⟪x,ω⟫ = ⟪z,x⟫⟪z,ω⟫ + ⟪x⊥, ω⊥⟫` with
 `x⊥ = x − ⟪z,x⟫z`, `ω⊥ = ω − ⟪z,ω⟫z`, and `⟪x⊥,ω⊥⟫ ≥ −‖x⊥‖‖ω⊥‖ = −√(1−⟪z,x⟫²)√(1−⟪z,ω⟫²)`. -/
