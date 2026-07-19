@@ -13,6 +13,13 @@ This leaf supplies the missing geometry: given a unit `w ⊥ z`, the two rotatio
 both strictly inside the cap (`⟪z, ω±⟫ = c > cos R`). Two distinct points cannot both equal `v`, so one
 of them is the pole. The unit `w ⊥ z` exists exactly when `2 ≤ d` (supplied by the assembly, which
 derives it from `μ ≠ ν`).
+
+The pole `ω` returned is literally `c·z ± s·w`, hence lies in `span{z,w}` — exposed as the extra
+conjunct `ω = ⟪z,ω⟫•z + ⟪w,ω⟫•w` (`hωspan` below), consumed by `lemma_3_4_part2`'s Gap 2 wiring
+(`Leaves/Lemma34Part1MeanField.lean`): since `Sμ•ω+p`'s component orthogonal to `span{z,w}`
+(`restComp z w`, `Leaves/CollapseColinearityAvoidance.lean`) only drops the `Sμ•ω` term when `ω`
+itself has zero rest-component, which needs exactly this span membership (not just a bound on
+`⟪z,ω⟫`, which alone doesn't pin `ω` into `span{z,w}` in dimension `> 2`).
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -24,10 +31,13 @@ variable {d : ℕ}
 /-- **Spherical-cap pigeonhole for the pole.** Given a unit `w` orthogonal to the unit cap direction
 `z`, and any forbidden vector `v`, there is a unit vector `ω` strictly inside the cap
 `{cos R < ⟪z, ·⟫}` with `ω ≠ v`. Realised by the two cap rotations `c·z ± s·w`, which are distinct unit
-vectors with `⟪z, ·⟫ = c > cos R`; at most one equals `v`. -/
+vectors with `⟪z, ·⟫ = c > cos R`; at most one equals `v`. The pole also comes with a `span{z,w}`
+membership certificate `hωspan`, needed by `lemma_3_4_part2`'s Gap 2 wiring to drop `ω`'s contribution
+from a rest-component (see the file docstring). -/
 theorem exists_pole_in_cap_ne {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 1)
     (hzw : (⟪z, w⟫ : ℝ) = 0) {cosR : ℝ} (hcosRlb : -1 ≤ cosR) (hcosR : cosR < 1) (v : Eucl d) :
-    ∃ ω : Eucl d, ‖ω‖ = 1 ∧ cosR < (⟪z, ω⟫ : ℝ) ∧ ω ≠ v := by
+    ∃ ω : Eucl d, ‖ω‖ = 1 ∧ cosR < (⟪z, ω⟫ : ℝ) ∧ ω ≠ v ∧
+      ω = (⟪z, ω⟫ : ℝ) • z + (⟪w, ω⟫ : ℝ) • w := by
   set c : ℝ := (1 + cosR) / 2 with hc
   have hc_lt : cosR < c := by rw [hc]; linarith
   have hc1 : c < 1 := by rw [hc]; linarith
@@ -54,6 +64,12 @@ theorem exists_pole_in_cap_ne {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 
   have hinner : ∀ ε : ℝ, (⟪z, c • z + ε • w⟫ : ℝ) = c := by
     intro ε
     simp only [inner_add_right, real_inner_smul_right, hzz, hzw]; ring
+  have hinnerw : ∀ ε : ℝ, (⟪w, c • z + ε • w⟫ : ℝ) = ε := by
+    intro ε
+    simp only [inner_add_right, real_inner_smul_right, hwz, hww]; ring
+  have hspan : ∀ ε : ℝ, c • z + ε • w
+      = (⟪z, c • z + ε • w⟫ : ℝ) • z + (⟪w, c • z + ε • w⟫ : ℝ) • w := by
+    intro ε; rw [hinner, hinnerw]
   -- the two rotations are distinct (differ by `2s • w`, `s > 0`, `w ≠ 0`)
   have hwne : w ≠ 0 := fun h => by simp [h] at hw
   have hdistinct : c • z + s • w ≠ c • z + (-s) • w := by
@@ -67,7 +83,7 @@ theorem exists_pole_in_cap_ne {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 
   -- at most one rotation equals `v`
   by_cases hv : c • z + s • w = v
   · exact ⟨c • z + (-s) • w, hnorm _ hnegs2, by rw [hinner]; exact hc_lt,
-      fun h => hdistinct (hv.trans h.symm)⟩
-  · exact ⟨c • z + s • w, hnorm _ hs2, by rw [hinner]; exact hc_lt, hv⟩
+      fun h => hdistinct (hv.trans h.symm), hspan (-s)⟩
+  · exact ⟨c • z + s • w, hnorm _ hs2, by rw [hinner]; exact hc_lt, hv, hspan s⟩
 
 end MeasureToMeasure.Leaves
