@@ -100,7 +100,7 @@ theorem lemma_3_4_part1 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [Is
         ← hSμ, ← hSν, h])
   set v : Eucl d := cc⁻¹ • (q - p) with hv
   -- the collapse pole: unit, strictly inside the cap, off `v`
-  obtain ⟨ω, hωnorm, hzωcap, hωne⟩ := Leaves.exists_pole_in_cap_ne hz hw hzw hcosRlb hcosR1 v
+  obtain ⟨ω, hωnorm, hzωcap, hωne, _⟩ := Leaves.exists_pole_in_cap_ne hz hw hzw hcosRlb hcosR1 v
   have hωs : ω ∈ sphere d := by rw [sphere, Metric.mem_sphere, dist_zero_right, hωnorm]
   set cval : ℝ := (⟪z, ω⟫ : ℝ) with hcval
   have hcval1 : cval ≤ 1 := by
