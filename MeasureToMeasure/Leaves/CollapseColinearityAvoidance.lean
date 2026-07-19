@@ -341,6 +341,36 @@ theorem gramGap_pos_of_perturbation_free {A₀ B₀ A B : Eucl d}
   · rw [hmsq]; exact hrPsmall
   · rw [hmsq]; exact hrQsmall
 
+/-- **Case B's direct perturbation-stability composition.** Unlike Case A (whose rest-components are
+`θ`-independent, so a single `δ` rules out colinearity at EVERY angle at once), Case B's own
+qualitative uniqueness (`angle_unique_of_colinear`) only rules out at most one of two CANDIDATE
+angles -- it gives no quantitative margin on the surviving candidate's own RAW ideal gramGap, and none
+can be derived generically (the "distance to bad" is a genuine extra quantity of the specific
+construction, not a consequence of the qualitative uniqueness alone: the bad angle can approach a safe
+candidate arbitrarily closely while staying formally distinct). What IS generic, however, is the
+perturbation-stability COMPOSITION itself: given a numeric `δ`-margin on the RAW ideal targets
+`Sμ•ω(θ)+p`, `Sν•ω(θ)+q` at the caller's chosen angle `θ` (however it was obtained -- e.g. computed
+directly from the construction's own `Sμ,Sν,p,q,z,w` at the safe candidate), the same
+`gramGap_pos_of_perturbation_free` + `ne_smul_of_gramGap_pos` bridge used by Case A's
+`ne_smul_of_restComp_gramGap_perturbation` applies verbatim to the RAW vectors (no `restComp` routing
+needed here, since `gramGap_pos_of_perturbation_free` never required a nonzero-vector side condition).
+-/
+theorem ne_smul_of_angle_gramGap_perturbation {z w p q A B : Eucl d}
+    (Sμ Sν θ : ℝ)
+    (hA0 : ‖Sμ • (Real.cos θ • z + Real.sin θ • w) + p‖ ≤ 1)
+    (hB0 : ‖Sν • (Real.cos θ • z + Real.sin θ • w) + q‖ ≤ 1)
+    {rP rQ δ : ℝ}
+    (hrP : ‖A - (Sμ • (Real.cos θ • z + Real.sin θ • w) + p)‖ ≤ rP)
+    (hrQ : ‖B - (Sν • (Real.cos θ • z + Real.sin θ • w) + q)‖ ≤ rQ)
+    (hδ : (⟪Sμ • (Real.cos θ • z + Real.sin θ • w) + p,
+            Sν • (Real.cos θ • z + Real.sin θ • w) + q⟫ : ℝ) ^ 2 + δ
+            ≤ ‖Sμ • (Real.cos θ • z + Real.sin θ • w) + p‖ ^ 2
+              * ‖Sν • (Real.cos θ • z + Real.sin θ • w) + q‖ ^ 2)
+    (hδpos : 0 < δ) (hrPsmall : rP ≤ δ / 8) (hrQsmall : rQ ≤ δ / 8) (hsmall : 20 * (rP + rQ) < δ)
+    (γ₂ : ℝ) : A ≠ γ₂ • B :=
+  ne_smul_of_gramGap_pos
+    (gramGap_pos_of_perturbation_free hA0 hB0 hrP hrQ hδ hδpos hrPsmall hrQsmall hsmall) γ₂
+
 /-- `restComp` is 1-Lipschitz (it is the linear orthogonal projection onto the complement of
 `span{z,w}`, and orthogonal projections are nonexpansive). -/
 theorem restComp_lipschitz {z w : Eucl d} (hz : ‖z‖ = 1) (hw : ‖w‖ = 1) (hzw : (⟪z, w⟫ : ℝ) = 0)
