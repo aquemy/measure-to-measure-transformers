@@ -9,7 +9,7 @@ import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.CollapseColinearityAvoidance
 import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
 import MeasureToMeasure.Leaves.AttnRescale
-import MeasureToMeasure.Statements.MidLevel
+import MeasureToMeasure.Statements.SupportedIn
 
 /-!
 # Lemma 3.4, Part 1 — mean-field analogue (`γ₁ = 1` case, on `AttnSchedule d`)
