@@ -121,6 +121,7 @@ import MeasureToMeasure.Leaves.DeficitRouting
 import MeasureToMeasure.Leaves.GeodesicArcChain
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
+import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
 import MeasureToMeasure.Statements.Lemma34Part1

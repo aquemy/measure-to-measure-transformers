@@ -4,11 +4,13 @@ import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Leaves.GatedTwoCap
 import MeasureToMeasure.Leaves.OrthantRotation
+import MeasureToMeasure.Leaves.Lemma34Part1MeanField
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttnStepExistence
+import MeasureToMeasure.Statements.SupportedIn
 import Mathlib.MeasureTheory.Measure.Support
 import Mathlib.Analysis.Convex.Intrinsic
 
@@ -69,14 +71,6 @@ open MeasureToMeasure.Foundations (AttnSchedule attnMeasureFlow)
 open scoped RealInnerProductSpace ENNReal
 
 variable {d : ℕ}
-
-/-- The open positive orthant `Q₁^{d-1} = 𝕊^{d-1} ∩ (ℝ_{>0})^d`, as a subset of `ℝ^d`. -/
-def orthant (d : ℕ) : Set (Eucl d) := {x | ∀ i, 0 < x i}
-
-/-- "The support of `μ` is contained in `S`", expressed measure-theoretically as `μ(Sᶜ) = 0` (no mass
-outside `S`). Avoids the (absent) packaged measure-support API while staying faithful. The barycenter
-`ℰ_μ[x] = ∫ x dμ` is reused from the L11 leaf (`MeasureToMeasure.Leaves.barycenter`). -/
-def supportedIn (μ : Measure (Eucl d)) (S : Set (Eucl d)) : Prop := μ Sᶜ = 0
 
 /-- A family of measures has pairwise disjoint supports: a family of carrier sets `S i` (each holding
 the full mass of `ν i`) that are pairwise disjoint. -/
@@ -280,16 +274,40 @@ to Proposition 2.1 on a lower-dimensional sphere (the `σ_d(conv_g supp μ) = 0`
 running Part 2's Taylor-divergence argument at all; the hypothesis rules that case out. Neither
 hypothesis was exercised by earlier kernel-refutation attempts (they were introduced by this
 sub-campaign's own re-reading of the paper, not by an adversarial review pass), so both are recorded
-here for the discharge, not retrofitted from a review finding. -/
-axiom lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+here for the discharge, not retrofitted from a review finding.
+
+**DISCHARGED** (2026-07-19) via `Leaves/Lemma34Part1MeanField.lean`'s `barycenter_nonColinear_of_massGapCollapse_meanField`
+(the mass-gap-cap-collapse construction, Case A route of `Leaves/CollapseColinearityAvoidance.lean`),
+applied with the carrier `U := Set.univ`. `_hcol, _hsupp, _hu` are the paper-faithful hypotheses
+that motivated the original axiom statement (kept for fidelity to Lemma 3.4 Part 2's actual scope
+-- COLINEAR-unequal barycenters with equal, non-degenerate supports) but are PROVABLY UNUSED by this
+proof: the construction only consumes `hne : μ ≠ ν` plus sphere/orthant support, γ-independently
+(matching `lemma_3_4_part1`'s own `_hbar` pattern). `hgenRest` is the genuine NEW hypothesis this
+discharge needed -- a rest-component non-degeneracy condition for every admissible mass-gap cap the
+Besicovitch-driven construction could produce (see `Leaves/Lemma34Part1MeanField.lean`'s docstring
+and the `mean-field-axioms-retractability` project notes for the full derivation and the residual
+degenerate case it does NOT exclude: leftover-mass integrals forced-parallel to the cap direction for
+EVERY admissible cap, for which no counterexample or proof of impossibility has yet been found). -/
+theorem lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν)
-    (hsupp : μ.support = ν.support)
-    (hu : (‖barycenter μ‖⁻¹ • barycenter μ) ∈ intrinsicInterior ℝ (convexHull ℝ μ.support)) :
+    (_hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν)
+    (_hsupp : μ.support = ν.support)
+    (_hu : (‖barycenter μ‖⁻¹ • barycenter μ) ∈ intrinsicInterior ℝ (convexHull ℝ μ.support))
+    (hgenRest : ∀ z : Eucl d, ‖z‖ = 1 → ∀ cosR : ℝ, cosR ∈ Set.Ioo (1 / 2 : ℝ) 1 →
+      ∀ w : Eucl d, ‖w‖ = 1 → (⟪z, w⟫ : ℝ) = 0 →
+      Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν) ≠ 0 ∧
+      ∀ c : ℝ, Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ)
+        ≠ c • Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν)) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
-      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)
+      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν) := by
+  have hd2 : 2 ≤ d := Leaves.two_le_d_of_distinct hne hμs hνs hμ hν
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨θ, hdur, hsw, hnoncol, -⟩ :=
+    Leaves.barycenter_nonColinear_of_massGapCollapse_meanField μ ν T hT hne hμs hνs hμ hν
+      Set.univ isOpen_univ (by simp [supportedIn]) (by simp [supportedIn]) hgenRest
+  exact ⟨θ, hdur, hsw, hnoncol⟩
 
 /-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, distinct inputs/targets, and the
 inactive points (the first `M-1`) already at their targets, at most `6` switches move every input to
@@ -648,18 +666,6 @@ theorem supportedIn_of_sum_smul {M : ℕ} (α : Fin M → ℝ≥0∞) (P : Fin M
     exact this
   have hk : α k * P k Sᶜ = 0 := (Finset.sum_eq_zero_iff.mp hsum) k (Finset.mem_univ k)
   exact (mul_eq_zero.mp hk).resolve_left (hα0 k)
-
-/-- The solution map preserves sphere support: pushing a sphere-supported measure forward by `flowMap`
-(which maps the sphere into itself for `t ≥ 0`) keeps the mass on the sphere. -/
-theorem measureFlow_supportedIn_sphere (θ : Params d) {T : ℝ} (hT : 0 ≤ T)
-    {ν : Measure (Eucl d)} (h : supportedIn ν (sphere d)) :
-    supportedIn (measureFlow θ T ν) (sphere d) := by
-  show (ν.map (flowMap θ T)) (sphere d)ᶜ = 0
-  have hms : MeasurableSet (sphere d)ᶜ := (Metric.isClosed_sphere.measurableSet).compl
-  rw [Measure.map_apply (measurable_flowMap θ hT) hms]
-  refine measure_mono_null (fun x hx => ?_) h
-  simp only [Set.mem_preimage, Set.mem_compl_iff] at hx ⊢
-  exact fun hxs => hx (flowMap_mem_sphere θ hT hxs)
 
 /-- A sphere-supported measure is a.e. bounded in norm by any `R ≥ 1` (on the sphere `‖y‖ = 1`). -/
 theorem ae_norm_le_of_supportedIn_sphere {ν : Measure (Eucl d)} {R : ℝ} (hR : 1 ≤ R)

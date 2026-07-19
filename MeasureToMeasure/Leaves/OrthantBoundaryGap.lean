@@ -1,5 +1,5 @@
 import MeasureToMeasure.Leaves.BarycenterBoundaryGap
-import MeasureToMeasure.Statements.MidLevel
+import MeasureToMeasure.Statements.SupportedIn
 
 /-!
 # The orthant hypothesis makes leaf 1's boundary-point gap double-sided (Lemma 3.4 Part 2 leaf 3)

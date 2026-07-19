@@ -1,4 +1,4 @@
-import MeasureToMeasure.Statements.MidLevel
+import MeasureToMeasure.Statements.SupportedIn
 
 /-!
 # Leaf (Lemma 3.4 Part 1, Path I assembly): distinct measures force `2 ≤ d`
