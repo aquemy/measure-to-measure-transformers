@@ -8,6 +8,7 @@ import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.CollapseColinearityAvoidance
 import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
+import MeasureToMeasure.Leaves.AttnRescale
 import MeasureToMeasure.Statements.MidLevel
 
 /-!
@@ -288,7 +289,21 @@ non-colinearity gap via `CollapseColinearityAvoidance.lean`'s Case A machinery
   `G²/32`-relative slack), giving `rP, rQ ≤ √(6ε) < δ/40`, which satisfies
   `ne_smul_of_restComp_gramGap_perturbation`'s smallness conditions (`rP, rQ ≤ δ/8`,
   `20(rP+rQ) < δ`) with comfortable room to spare; `n` is then chosen exactly as before (via
-  `exists_nat_ge`, which succeeds for any finite reach target since `b < 1` strictly). -/
+  `exists_nat_ge`, which succeeds for any finite reach target since `b < 1` strictly), except forced
+  to `n₀ + 1 ≥ 1` (a strictly larger reach target only helps, since `slope > 0`) so the schedule can be
+  time-rescaled to hit `T` EXACTLY.
+
+**The conclusion now matches `lemma_3_4_part2`'s exact `durationSum θ = T ∧ switches θ ≤ 2 ∧ ...`
+shape** (previously only proved for a schedule of duration `n·T`, `n` chosen by the reach budget, not
+literally `T`): `Leaves/AttnRescale.lean`'s `attnStep_rescale_eq` shows the SAME single block,
+rescaled by `n` (`AttnParams.rescale`, dividing `V, W` and duration by `n`), pushes a sphere-supported
+probability measure to the IDENTICAL final measure — so the schedule literally returned is
+`[block.rescale hnpos]` (duration EXACTLY `T`, `n ≠ 0` from the forcing above), with every fact already
+established about the un-rescaled `θ` (the non-colinearity conclusion, the `Φ`/fixed-off-`U` clause)
+transferred via this measure equality rather than re-derived. This closes BOTH outstanding wiring
+obligations flagged in the previous version of this docstring; only the `hgenRest` residual-degeneracy
+question (see `mean-field-axioms-retractability`) remains before `lemma_3_4_part2` itself could be
+discharged. -/
 theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eucl d))
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
@@ -299,7 +314,7 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
       Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν) ≠ 0 ∧
       ∀ c : ℝ, Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ)
         ≠ c • Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν)) :
-    ∃ θ : AttnSchedule d,
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
       (∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)) ∧
       ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x := by
@@ -511,10 +526,18 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
   set slope : ℝ := 2 * (m - cosR) * T with hslope
   have hslopepos : 0 < slope := by
     rw [hslope]; exact mul_pos (mul_pos two_pos (by linarith)) hT
-  obtain ⟨n, hn⟩ := exists_nat_ge ((logOdds b - logOdds mp) / slope)
-  rw [div_le_iff₀ hslopepos] at hn
+  -- `n` is forced to `≥ 1` (via `n₀ + 1`, not just `exists_nat_ge`'s raw witness) so the final
+  -- block can be time-rescaled to EXACTLY duration `T` (`AttnParams.rescale` divides by `n`,
+  -- needing `n ≠ 0`); a larger `n` only helps the reach bound (`slope > 0`), so this costs nothing.
+  obtain ⟨n₀, hn₀⟩ := exists_nat_ge ((logOdds b - logOdds mp) / slope)
+  rw [div_le_iff₀ hslopepos] at hn₀
+  set n : ℕ := n₀ + 1 with hndef
+  have hnpos : (0 : ℝ) < (n : ℝ) := by rw [hndef]; positivity
   have hnT0 : (0 : ℝ) ≤ (n : ℝ) * T := by positivity
   have hreach : logOdds b ≤ logOdds mp + 2 * (m - cosR) * ((n : ℝ) * T) := by
+    have hmono : (n₀ : ℝ) * slope ≤ (n : ℝ) * slope := by
+      rw [hndef]; push_cast
+      exact mul_le_mul_of_nonneg_right (by linarith) hslopepos.le
     have : 2 * (m - cosR) * ((n : ℝ) * T) = (n : ℝ) * slope := by rw [hslope]; ring
     rw [this]; linarith
   -- Mean-field flow: a SINGLE `pPark` block of combined duration `n * T`.
@@ -579,8 +602,28 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
       + Real.sqrt (2 * (1 - b)
         + 4 * (ν {x : Eucl d | cosR < (⟪z, x⟫ : ℝ) ∧ (⟪z, x⟫ : ℝ) < m}).toReal)) < δ := by
     linarith [hrPlt, hrQlt]
-  refine ⟨θ, ?_, ?_⟩
+  -- Rescale the single block to hit `T` EXACTLY (`n·T / n = T`), reusing every fact already
+  -- established about `θ` via `attnMeasureFlow_singleton_rescale_eq` (same resulting measure).
+  set θ' : AttnSchedule d := [(pPark z ω cosR ((n : ℝ) * T) hnT0).rescale hnpos] with hθ'def
+  have hθ'dur : AttnSchedule.durationSum θ' = T := by
+    rw [hθ'def]
+    simp only [AttnSchedule.durationSum, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil,
+      add_zero]
+    rw [AttnParams.rescale_duration]
+    show (n : ℝ) * T / (n : ℝ) = T
+    field_simp
+  have hθ'switches : AttnSchedule.switches θ' ≤ 2 := by
+    show [(pPark z ω cosR ((n : ℝ) * T) hnT0).rescale hnpos].length ≤ 2
+    simp
+  have hflowEqμ : attnMeasureFlow θ' μ = attnMeasureFlow θ μ := by
+    rw [hθ'def, hθdef]
+    exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos μ hμs
+  have hflowEqν : attnMeasureFlow θ' ν = attnMeasureFlow θ ν := by
+    rw [hθ'def, hθdef]
+    exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos ν hνs
+  refine ⟨θ', hθ'dur, hθ'switches, ?_, ?_⟩
   · intro γ₂
+    rw [hflowEqμ, hflowEqν]
     rw [hbaryμ] at hArP
     rw [hbaryν] at hBrQ
     exact Leaves.ne_smul_of_restComp_gramGap_perturbation hz hw hzw hA0norm hB0norm hArP hBrQ hδfinal
@@ -594,7 +637,8 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
       unfold attnStep
       rw [dif_pos ⟨‹_›, hμs⟩]
     refine ⟨Φd, hΦspec.measurable ((pPark z ω cosR ((n : ℝ) * T) hnT0).duration)
-      ⟨hnT0, le_rfl⟩, hΦstep, ?_⟩
+      ⟨hnT0, le_rfl⟩, ?_, ?_⟩
+    · rw [hflowEqμ]; exact hΦstep
     intro x hxsphere hxU
     have hxcap : ¬ (cosR < (⟪z, x⟫ : ℝ)) := fun hlt => hxU (hcapsub x hxsphere hlt)
     have hxle : (⟪z, x⟫ : ℝ) ≤ cosR := not_lt.mp hxcap
