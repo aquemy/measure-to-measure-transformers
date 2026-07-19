@@ -1,4 +1,5 @@
 import MeasureToMeasure.Foundations.Attention
+import MeasureToMeasure.Foundations.AttnStepExistence
 import MeasureToMeasure.Leaves.DivergenceFormula
 
 /-!
@@ -89,5 +90,43 @@ theorem isMeanFieldFlow_rescale {p : AttnParams d} {μ₀ : Measure (Eucl d)}
       exact AttnParams.field_rescale p hN _ _
     rw [hfield]
     exact hcomp
+
+/-- **Rescaling a block doesn't change its `attnStep`.** The `N`-rescaled block, run for its own
+(shorter) duration, pushes a sphere-supported probability measure forward to the SAME measure as
+the original block run for its own duration -- both are witnessed by reparametrized copies of the
+SAME underlying trajectory, and `meanFieldFlow_unique` identifies any two witnesses on the sphere.
+This is the piece that lets `lemma_3_4_part2`'s exact `durationSum θ = T` requirement be met: a
+schedule built as a single block of duration `n·T` (for the reach budget the mass-gap-cap-collapse
+construction needs) can be swapped for its `n`-rescaled form, of duration EXACTLY `T`, with no
+change to the resulting measure. -/
+theorem attnStep_rescale_eq (p : AttnParams d) [NeZero d] {N : ℝ} (hN : 0 < N)
+    (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
+    attnStep (p.rescale hN) μ = attnStep p μ := by
+  have hΦ := (@exists_meanFieldFlow d p μ ‹_› hs).choose_spec
+  set Φ := (@exists_meanFieldFlow d p μ ‹_› hs).choose with hΦdef
+  have hΨ : IsMeanFieldFlow (p.rescale hN) μ (fun s x => Φ (N * s) x) :=
+    isMeanFieldFlow_rescale hΦ hN
+  have heq := meanFieldFlow_unique hs (@exists_meanFieldFlow d (p.rescale hN) μ ‹_› hs).choose_spec
+    hΨ (p.rescale hN).duration ⟨(p.rescale hN).duration_nonneg, le_rfl⟩
+  unfold attnStep
+  rw [dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩, dif_pos ⟨‹IsProbabilityMeasure μ›, hs⟩]
+  refine Measure.map_congr ?_
+  rw [Filter.EventuallyEq, ae_iff]
+  refine measure_mono_null (fun x hx => ?_) hs
+  simp only [Set.mem_setOf_eq, Set.mem_compl_iff] at hx ⊢
+  intro hxs
+  apply hx
+  rw [heq x hxs]
+  show Φ (N * (p.rescale hN).duration) x = Φ p.duration x
+  congr 2
+  rw [AttnParams.rescale_duration]
+  field_simp
+
+/-- Singleton-schedule form of `attnStep_rescale_eq`: rescaling a single-block schedule's block
+doesn't change the resulting measure. -/
+theorem attnMeasureFlow_singleton_rescale_eq (p : AttnParams d) [NeZero d] {N : ℝ} (hN : 0 < N)
+    (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0) :
+    attnMeasureFlow [p.rescale hN] μ = attnMeasureFlow [p] μ :=
+  attnStep_rescale_eq p hN μ hs
 
 end MeasureToMeasure.Leaves
