@@ -48,7 +48,7 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
-    ∃ θ : AttnSchedule d,
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
       barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
       ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x := by
@@ -198,10 +198,18 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
   set slope : ℝ := 2 * (m - cosR) * T with hslope
   have hslopepos : 0 < slope := by
     rw [hslope]; exact mul_pos (mul_pos two_pos (by linarith)) hT
-  obtain ⟨n, hn⟩ := exists_nat_ge ((logOdds b - logOdds mp) / slope)
-  rw [div_le_iff₀ hslopepos] at hn
+  -- `n` is forced to `≥ 1` (via `n₀ + 1`, not just `exists_nat_ge`'s raw witness) so the final
+  -- block can be time-rescaled to EXACTLY duration `T` (`AttnParams.rescale` divides by `n`,
+  -- needing `n ≠ 0`); a larger `n` only helps the reach bound (`slope > 0`), so this costs nothing.
+  obtain ⟨n₀, hn₀⟩ := exists_nat_ge ((logOdds b - logOdds mp) / slope)
+  rw [div_le_iff₀ hslopepos] at hn₀
+  set n : ℕ := n₀ + 1 with hndef
+  have hnpos : (0 : ℝ) < (n : ℝ) := by rw [hndef]; positivity
   have hnT0 : (0 : ℝ) ≤ (n : ℝ) * T := by positivity
   have hreach : logOdds b ≤ logOdds mp + 2 * (m - cosR) * ((n : ℝ) * T) := by
+    have hmono : (n₀ : ℝ) * slope ≤ (n : ℝ) * slope := by
+      rw [hndef]; push_cast
+      exact mul_le_mul_of_nonneg_right (by linarith) hslopepos.le
     have : 2 * (m - cosR) * ((n : ℝ) * T) = (n : ℝ) * slope := by rw [hslope]; ring
     rw [this]; linarith
   -- Mean-field flow: a SINGLE `pPark` block of combined duration `n * T`.
@@ -235,8 +243,25 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
     rw [hbrμ]; exact measureFlow_supportedIn_sphere _ hnT0 hμs
   have hPνsphere : (attnMeasureFlow θ ν) (sphere d)ᶜ = 0 := by
     rw [hbrν]; exact measureFlow_supportedIn_sphere _ hnT0 hνs
-  refine ⟨θ, ?_, ?_⟩
-  · refine Leaves.barycenter_ne_of_W2_gap hPμsphere hPνsphere hαμs hανs hW2μ hW2ν ?_
+  -- Rescale the single block to hit `T` EXACTLY (`n·T / n = T`), reusing every fact already
+  -- established about `θ` via `attnMeasureFlow_singleton_rescale_eq` (same resulting measure).
+  set θ' : AttnSchedule d := [(pPark z ω cosR ((n : ℝ) * T) hnT0).rescale hnpos] with hθ'def
+  have hθ'dur : AttnSchedule.durationSum θ' = T := by
+    rw [hθ'def]
+    simp only [AttnSchedule.durationSum, List.map_cons, List.map_nil, List.sum_cons, List.sum_nil,
+      add_zero]
+    rw [AttnParams.rescale_duration]
+    show (n : ℝ) * T / (n : ℝ) = T
+    field_simp
+  have hflowEqμ : attnMeasureFlow θ' μ = attnMeasureFlow θ μ := by
+    rw [hθ'def, hθdef]
+    exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos μ hμs
+  have hflowEqν : attnMeasureFlow θ' ν = attnMeasureFlow θ ν := by
+    rw [hθ'def, hθdef]
+    exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos ν hνs
+  refine ⟨θ', hθ'dur, ?_, ?_⟩
+  · rw [hflowEqμ, hflowEqν]
+    refine Leaves.barycenter_ne_of_W2_gap hPμsphere hPνsphere hαμs hανs hW2μ hW2ν ?_
     rw [← hG]
     calc Real.sqrt (2 * (1 - b)
             + 4 * (μ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ) ∧ (⟪z, x⟫ : ℝ) < m}).toReal)
@@ -253,7 +278,8 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
       unfold attnStep
       rw [dif_pos ⟨‹_›, hμs⟩]
     refine ⟨Φd, hΦspec.measurable ((pPark z ω cosR ((n : ℝ) * T) hnT0).duration)
-      ⟨hnT0, le_rfl⟩, hΦstep, ?_⟩
+      ⟨hnT0, le_rfl⟩, ?_, ?_⟩
+    · rw [hflowEqμ]; exact hΦstep
     intro x hxsphere hxU
     have hxcap : ¬ (cosR < (⟪z, x⟫ : ℝ)) := fun hlt => hxU (hcapsub x hxsphere hlt)
     have hxle : (⟪z, x⟫ : ℝ) ≤ cosR := not_lt.mp hxcap
@@ -654,7 +680,7 @@ theorem lemma_3_4_part1_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasu
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
     (_hbar : barycenter μ = barycenter ν)
     (U : Set (Eucl d)) (hUopen : IsOpen U) (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
-    ∃ θ : AttnSchedule d,
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
       barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
       ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x :=
