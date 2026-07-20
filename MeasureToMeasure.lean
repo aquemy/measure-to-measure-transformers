@@ -126,4 +126,6 @@ import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
 import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
 import MeasureToMeasure.Leaves.GenRestNearBall
+import MeasureToMeasure.Leaves.UniformRadiusPacking
+import MeasureToMeasure.Leaves.UniformRadiusPackingUnit
 import MeasureToMeasure.Statements.Lemma34Part1
