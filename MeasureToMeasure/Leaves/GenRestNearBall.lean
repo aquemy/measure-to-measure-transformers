@@ -36,12 +36,12 @@ open MeasureToMeasure.Leaves (barycenter restComp)
 open MeasureToMeasure.Foundations (AttnSchedule attnMeasureFlow)
 open scoped RealInnerProductSpace
 
-variable {d : ℕ} [NeZero d]
+variable {d : ℕ}
 
 /-- **Phase-3-regime non-degeneracy**: `hgenRest`'s rest-component non-parallelism, but only
 required for measure pairs already confined to a SHARED small ball -- exactly the regime
 `exists_disentangling_balls`' Phase 3 actually needs. -/
-def GenRestNearBall (d : ℕ) [NeZero d] : Prop :=
+def GenRestNearBall (d : ℕ) : Prop :=
   ∀ (center : Eucl d) (ε' : ℝ), 0 < ε' →
     ∀ μ ν : Measure (Eucl d), [IsProbabilityMeasure μ] → [IsProbabilityMeasure ν] →
     μ ≠ ν →
@@ -59,7 +59,7 @@ def GenRestNearBall (d : ℕ) [NeZero d] : Prop :=
 already confined to a shared ball becomes fully non-colinear after some schedule, while fixing every
 point outside an arbitrary open carrier `U` -- retaining bystander-fixing (unlike the public
 `lemma_3_4_part2`, which discards it by fixing `U := Set.univ`). -/
-theorem exists_phase3_of_genRestNearBall (hgen : GenRestNearBall d)
+theorem exists_phase3_of_genRestNearBall [NeZero d] (hgen : GenRestNearBall d)
     (center : Eucl d) (ε' : ℝ) (hε' : 0 < ε') (μ ν : Measure (Eucl d))
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν] (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
