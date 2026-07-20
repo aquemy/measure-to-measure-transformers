@@ -125,4 +125,5 @@ import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
 import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
+import MeasureToMeasure.Leaves.GenRestNearBall
 import MeasureToMeasure.Statements.Lemma34Part1
