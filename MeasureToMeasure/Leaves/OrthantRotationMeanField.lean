@@ -67,10 +67,12 @@ set_option maxHeartbeats 1200000 in
 /-- **The two-phase rotation, mean-field form.** For `d ≥ 2`, a unit missing direction `ω`, a gap
 `δ ∈ (0,1]`, and any horizon `T > 0`, there is a two-block MEAN-FIELD schedule `θ` such that for
 every sphere-supported probability measure, the composed flow map carries every point missing `ω`
-by the gap `δ` into the orthant. -/
+by the gap `δ` into the orthant. Both phases run for time `T` (`pParkScaled`'s own `duration`
+field), so the total `durationSum θ = 2 * T`, exposed for callers that need to hit an exact
+horizon. -/
 theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : ‖ω‖ = 1)
     {δ : ℝ} (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {T : ℝ} (hT : 0 < T) :
-    ∃ θ : AttnSchedule d, AttnSchedule.switches θ = 2 ∧
+    ∃ θ : AttnSchedule d, AttnSchedule.switches θ = 2 ∧ AttnSchedule.durationSum θ = 2 * T ∧
       ∀ μ0 : Measure (Eucl d), [IsProbabilityMeasure μ0] → μ0 (sphere d)ᶜ = 0 →
       ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ0 = μ0.map Φ ∧
         Set.MapsTo Φ (sphere d) (sphere d) ∧
@@ -130,7 +132,11 @@ theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : �
   set p₂ := pParkScaled A₂ α α (-1 : ℝ) T hT.le with hp₂
   have hp₁dur : p₁.duration = T := rfl
   have hp₂dur : p₂.duration = T := rfl
-  refine ⟨[p₁, p₂], rfl, ?_⟩
+  have hdursum : AttnSchedule.durationSum ([p₁, p₂] : AttnSchedule d) = 2 * T := by
+    simp only [AttnSchedule.durationSum, List.map_cons, List.map_nil, List.sum_cons,
+      List.sum_nil, hp₁dur, hp₂dur]
+    ring
+  refine ⟨[p₁, p₂], rfl, hdursum, ?_⟩
   intro μ0 _ hμ0S
   obtain ⟨Φ₁, Φ₂, hΦ₁spec, hΦ₂spec, hcomp⟩ := attnMeasureFlow_two_eq_map_comp p₁ p₂ hμ0S
   refine ⟨Φ₂ p₂.duration ∘ Φ₁ p₁.duration, ?_, hcomp, ?_, ?_⟩

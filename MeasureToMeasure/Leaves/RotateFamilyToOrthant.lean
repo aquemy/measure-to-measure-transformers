@@ -32,7 +32,7 @@ theorem exists_rotate_family_to_orthant {N : ℕ} (μ₀ : Fin N → Measure (Eu
     (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (hd : 2 ≤ d)
     (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hmiss : SharedMissingDirection μ₀)
     (T : ℝ) (hT : 0 < T) :
-    ∃ θ₀ : AttnSchedule d, AttnSchedule.switches θ₀ = 2 ∧
+    ∃ θ₀ : AttnSchedule d, AttnSchedule.switches θ₀ = 2 ∧ AttnSchedule.durationSum θ₀ = 2 * T ∧
       ∀ i, supportedIn (attnMeasureFlow θ₀ (μ₀ i)) (sphere d) ∧
         supportedIn (attnMeasureFlow θ₀ (μ₀ i)) (orthant d) ∧
         ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ₀ (μ₀ i) = (μ₀ i).map Φ ∧
@@ -42,8 +42,8 @@ theorem exists_rotate_family_to_orthant {N : ℕ} (μ₀ : Fin N → Measure (Eu
   have hδ'0 : 0 < δ' := lt_min hδ0 one_pos
   have hδ'1 : δ' ≤ 1 := min_le_right _ _
   have hδ'le : δ' ≤ δ := min_le_left _ _
-  obtain ⟨θ₀, hsw, hall⟩ := exists_twoPhase_attnMapsTo_orthant hd hω hδ'0 hδ'1 hT
-  refine ⟨θ₀, hsw, fun i => ?_⟩
+  obtain ⟨θ₀, hsw, hdur, hall⟩ := exists_twoPhase_attnMapsTo_orthant hd hω hδ'0 hδ'1 hT
+  refine ⟨θ₀, hsw, hdur, fun i => ?_⟩
   obtain ⟨Φ, hΦmeas, hΦeq, hΦsphere, hΦorth⟩ := hall (μ₀ i) (hμs i)
   refine ⟨?_, ?_, Φ, hΦmeas, hΦeq, hΦsphere⟩
   · rw [supportedIn, hΦeq]
