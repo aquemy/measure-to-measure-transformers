@@ -73,6 +73,7 @@ theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : �
     ∃ θ : AttnSchedule d, AttnSchedule.switches θ = 2 ∧
       ∀ μ0 : Measure (Eucl d), [IsProbabilityMeasure μ0] → μ0 (sphere d)ᶜ = 0 →
       ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ0 = μ0.map Φ ∧
+        Set.MapsTo Φ (sphere d) (sphere d) ∧
         ∀ x ∈ sphere d, (⟪ω, x⟫ : ℝ) ≤ 1 - δ → ∀ i, 0 < Φ x i := by
   obtain ⟨α, c, hα, hc, hcoord, hαω⟩ := exists_unit_orthant_ne hd ω
   have hωs : ω ∈ sphere d := by
@@ -132,9 +133,11 @@ theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : �
   refine ⟨[p₁, p₂], rfl, ?_⟩
   intro μ0 _ hμ0S
   obtain ⟨Φ₁, Φ₂, hΦ₁spec, hΦ₂spec, hcomp⟩ := attnMeasureFlow_two_eq_map_comp p₁ p₂ hμ0S
-  refine ⟨Φ₂ p₂.duration ∘ Φ₁ p₁.duration, ?_, hcomp, ?_⟩
+  refine ⟨Φ₂ p₂.duration ∘ Φ₁ p₁.duration, ?_, hcomp, ?_, ?_⟩
   · exact (hΦ₂spec.measurable p₂.duration ⟨p₂.duration_nonneg, le_rfl⟩).comp
       (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩)
+  · exact (hΦ₂spec.sphere_bijOn p₂.duration ⟨p₂.duration_nonneg, le_rfl⟩).mapsTo.comp
+      (hΦ₁spec.sphere_bijOn p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).mapsTo
   intro x hxs hxgap i
   -- phase 1: identify the mean-field step with `B₁.blockFlow T` on the sphere
   have hΦ₁eq : Φ₁ p₁.duration x = B₁.blockFlow T x := by
