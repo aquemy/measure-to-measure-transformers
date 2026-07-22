@@ -80,6 +80,7 @@ import MeasureToMeasure.Leaves.MassGapBall
 import MeasureToMeasure.Leaves.BesicovitchTarget
 import MeasureToMeasure.Leaves.CapMassGap
 import MeasureToMeasure.Leaves.CapPole
+import MeasureToMeasure.Leaves.ArcAvoidsLine
 import MeasureToMeasure.Leaves.DistinctDim
 import MeasureToMeasure.Leaves.FlowStack
 import MeasureToMeasure.Leaves.PoleGeometry
