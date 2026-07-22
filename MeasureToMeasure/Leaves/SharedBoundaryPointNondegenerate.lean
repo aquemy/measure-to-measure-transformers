@@ -1,4 +1,5 @@
 import MeasureToMeasure.Leaves.SharpeningRateCompare
+import MeasureToMeasure.Leaves.TaylorRemainderBound
 import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Statements.SupportedIn
 import Mathlib.MeasureTheory.Measure.Support
@@ -23,12 +24,25 @@ projector's vanishing locus (`tangentialProjector x0 v = 0` iff `x0` and `v` are
 vectors, i.e. `x0 = ±v/‖v‖`) both degenerate. Since `barycenter μ0` and `barycenter ν0` are
 forced parallel by `hcol` (colinear barycenters), both degenerate exactly at `x0 ∈ {w, -w}` -- so
 avoiding that two-point set simultaneously kills all three degeneracies.
+
+`exists_Tstar_margin_pos` builds on that witness `x0` (consuming its full 4-conjunct hypothesis,
+correcting the earlier sketch's omission of the two `tangentialProjector`-nonzero conjuncts): it
+runs the `pAlign` block (`TaylorRemainderBound.lean`) independently on `μ0` and `ν0` from the same
+`x0` and shows the two trajectories genuinely diverge by time `τ0 := min T (κ/12)`, where
+`κ := (1 - γ1) * ‖tangentialProjector x0 (barycenter ν0)‖ > 0` is the leading-order rate gap
+(`colinear_tangentialProjector_eq` gives `tangentialProjector x0 (barycenter μ0) = γ1 •
+tangentialProjector x0 (barycenter ν0)`, so the two fields at `x0` differ by exactly `(γ1 - 1) •
+tangentialProjector x0 (barycenter ν0)`, nonzero since `γ1 < 1` and the projector is nonzero).
+Combining `norm_taylor_remainder_le`'s uniform `O(τ²)` remainder for both flows with the triangle
+inequality turns this `O(τ)` linear gap into a genuine positive margin `‖Φμ τ0 x0 - Φν τ0 x0‖ ≥
+τ0 κ / 2 > 0` for `τ0` small enough (`≤ κ/12` keeps the combined `6τ0²` error below half the
+linear term).
 -/
 
 namespace MeasureToMeasure.Leaves
 
 open MeasureTheory Set
-open MeasureToMeasure.Statements
+open MeasureToMeasure.Statements MeasureToMeasure.Foundations
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -125,5 +139,80 @@ theorem exists_shared_boundary_point_nondegenerate {μ0 ν0 : Measure (Eucl d)}
       rw [hνrel, tangentialProjector_smul]
       exact smul_ne_zero (mul_ne_zero (inv_ne_zero hγ1ne) hna) hTPw
     exact smul_ne_zero hγ1ne hne
+
+/-- **A strictly positive first-order divergence margin.** Running the same `pAlign` block
+independently on `μ0` and `ν0` from the shared non-degenerate boundary point `x0`
+(`exists_shared_boundary_point_nondegenerate`), the two trajectories genuinely separate by some
+time `τ ∈ (0, T]`: the `O(τ)` linear rate gap forced by `γ1 < 1` and colinear barycenters
+dominates the `O(τ²)` Taylor remainder for `τ` small enough. -/
+theorem exists_Tstar_margin_pos {T : ℝ} (hT : 0 < T)
+    {μ0 ν0 : Measure (Eucl d)} [IsProbabilityMeasure μ0] [IsProbabilityMeasure ν0] [NoAtoms μ0]
+    (hμs : supportedIn μ0 (sphere d)) (hνs : supportedIn ν0 (sphere d))
+    (hμint : Integrable (fun x : Eucl d => x) μ0) (hνint : Integrable (fun x : Eucl d => x) ν0)
+    {γ1 : ℝ} (hγ1 : γ1 ∈ Set.Ioo (0:ℝ) 1)
+    (hcol : barycenter μ0 = γ1 • barycenter ν0) (hνnz : barycenter ν0 ≠ 0)
+    {Φμ Φν : ℝ → Eucl d → Eucl d}
+    (hΦμ : IsMeanFieldFlow (pAlign T hT.le) μ0 Φμ) (hΦν : IsMeanFieldFlow (pAlign T hT.le) ν0 Φν) :
+    ∃ x0 : Eucl d, x0 ∈ μ0.support ∧ ∃ τ ∈ Set.Ioc (0:ℝ) T, 0 < ‖Φμ τ x0 - Φν τ x0‖ := by
+  obtain ⟨x0, hx0supp, _, hPν0, hPμ0⟩ :=
+    exists_shared_boundary_point_nondegenerate hμs hνs hγ1 hcol hνnz
+  have hx0sphere : x0 ∈ sphere d :=
+    Measure.support_subset_of_isClosed Metric.isClosed_sphere hμs hx0supp
+  set Pμ := tangentialProjector x0 (barycenter μ0) with hPμdef
+  set Pν := tangentialProjector x0 (barycenter ν0) with hPνdef
+  have hPμeq : Pμ = γ1 • Pν := colinear_tangentialProjector_eq hcol x0
+  have hγ1lt1 : γ1 < 1 := hγ1.2
+  -- `κ` is the leading-order (`O(τ)`) rate gap between the two flows at `x0`.
+  set κ : ℝ := (1 - γ1) * ‖Pν‖ with hκdef
+  have hκpos : 0 < κ := by
+    apply mul_pos
+    · linarith
+    · exact norm_pos_iff.mpr hPν0
+  set τ0 : ℝ := min T (κ / 12) with hτ0def
+  have hτ0pos : 0 < τ0 := lt_min hT (by linarith)
+  have hτ0leT : τ0 ≤ T := min_le_left _ _
+  have hτ0leκ12 : τ0 ≤ κ / 12 := min_le_right _ _
+  refine ⟨x0, hx0supp, τ0, ⟨hτ0pos, hτ0leT⟩, ?_⟩
+  have hτ0Icc : τ0 ∈ Set.Icc (0:ℝ) T := ⟨hτ0pos.le, hτ0leT⟩
+  have h1 := norm_taylor_remainder_le T hT.le μ0 hμs hμint Φμ hΦμ x0 hx0sphere hτ0Icc
+  have h2 := norm_taylor_remainder_le T hT.le ν0 hνs hνint Φν hΦν x0 hx0sphere hτ0Icc
+  -- The combined `O(τ²)` remainder for the DIFFERENCE of the two flows.
+  have hdiffbound : ‖(Φμ τ0 x0 - Φν τ0 x0) - τ0 • (Pμ - Pν)‖ ≤ 6 * τ0 ^ 2 := by
+    have heq : (Φμ τ0 x0 - Φν τ0 x0) - τ0 • (Pμ - Pν)
+        = (Φμ τ0 x0 - x0 - τ0 • Pμ) - (Φν τ0 x0 - x0 - τ0 • Pν) := by
+      rw [smul_sub]; abel
+    rw [heq]
+    calc ‖(Φμ τ0 x0 - x0 - τ0 • Pμ) - (Φν τ0 x0 - x0 - τ0 • Pν)‖
+        ≤ ‖Φμ τ0 x0 - x0 - τ0 • Pμ‖ + ‖Φν τ0 x0 - x0 - τ0 • Pν‖ := norm_sub_le _ _
+      _ ≤ 3 * τ0 ^ 2 + 3 * τ0 ^ 2 := add_le_add h1 h2
+      _ = 6 * τ0 ^ 2 := by ring
+  -- Reverse triangle inequality: the linear term's norm minus the remainder lower-bounds the gap.
+  have hlower : ‖τ0 • (Pμ - Pν)‖ - ‖(Φμ τ0 x0 - Φν τ0 x0) - τ0 • (Pμ - Pν)‖
+      ≤ ‖Φμ τ0 x0 - Φν τ0 x0‖ := by
+    have hh := norm_sub_norm_le (τ0 • (Pμ - Pν)) ((τ0 • (Pμ - Pν)) - (Φμ τ0 x0 - Φν τ0 x0))
+    have heq2 : (τ0 • (Pμ - Pν)) - ((τ0 • (Pμ - Pν)) - (Φμ τ0 x0 - Φν τ0 x0))
+        = Φμ τ0 x0 - Φν τ0 x0 := by abel
+    rw [heq2] at hh
+    have heq3 : ‖(τ0 • (Pμ - Pν)) - (Φμ τ0 x0 - Φν τ0 x0)‖
+        = ‖(Φμ τ0 x0 - Φν τ0 x0) - τ0 • (Pμ - Pν)‖ := norm_sub_rev _ _
+    rw [heq3] at hh
+    linarith
+  have hPμνnorm : ‖Pμ - Pν‖ = κ := by
+    rw [hPμeq]
+    have heqn : γ1 • Pν - Pν = (γ1 - 1) • Pν := by rw [sub_smul, one_smul]
+    rw [heqn, norm_smul, Real.norm_eq_abs]
+    rw [hκdef]
+    congr 1
+    rw [abs_of_neg (by linarith : γ1 - 1 < 0)]
+    ring
+  have hτPμν : ‖τ0 • (Pμ - Pν)‖ = τ0 * κ := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos hτ0pos, hPμνnorm]
+  have hfinal : τ0 * κ - 6 * τ0 ^ 2 ≤ ‖Φμ τ0 x0 - Φν τ0 x0‖ := by
+    rw [← hτPμν]
+    linarith [hdiffbound, hlower]
+  have hpos : 0 < τ0 * κ - 6 * τ0 ^ 2 := by
+    have h6 : 6 * τ0 ≤ κ / 2 := by linarith [hτ0leκ12]
+    nlinarith [hτ0pos, hκpos]
+  linarith [hfinal, hpos]
 
 end MeasureToMeasure.Leaves
