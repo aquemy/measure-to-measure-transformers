@@ -92,6 +92,7 @@ import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterBoundaryGap
 import MeasureToMeasure.Leaves.TaylorRemainderBound
 import MeasureToMeasure.Leaves.SharpeningRateCompare
+import MeasureToMeasure.Leaves.SharedBoundaryPointNondegenerate
 import MeasureToMeasure.Leaves.OrthantBoundaryGap
 import MeasureToMeasure.Leaves.DivergenceFormula
 import MeasureToMeasure.Leaves.ExtremalBoundaryPoint
