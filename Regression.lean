@@ -10,5 +10,6 @@ import Regression.Refuted.F12_ClusterToPoint
 import Regression.Refuted.F12_HeavyTails
 import Regression.Refuted.F14_IdenticalInputs
 import Regression.Refuted.F18_DimOne
+import Regression.Refuted.CapMassNonzeroNearBallDraft
 import Regression.NonVacuity.MidLevel
 import Regression.NonVacuity.MainResults

@@ -141,4 +141,31 @@ abbrev OldAttnDisentangleSig : Prop :=
       (∀ i j, i ≠ j → 2 * r ≤ dist (α i) (α j)) ∧
       (∀ i, supportedIn (attnMeasureFlow θ (μ₀ i)) (Metric.ball (α i) r))
 
+/-- **Draft, REJECTED before admission** (`disentangle_insert_colinear_phase4_gap` campaign, group
+G3, leaf `massGapCollapse_capMass_nonzero`): a `GenRestNearBall`-style blanket non-degeneracy
+hypothesis for the mass-gap-cap-collapse construction's cap **mass** (`Sμ`/`Sν` in
+`Lemma34Part1MeanField.lean`), as opposed to `GenRestNearBall`'s rest-component non-parallelism --
+"every cap witnessing a mass gap between `μ` and `ν`, restricted to the Phase-3/4 ball-confined
+regime, has BOTH sides' mass nonzero". This was never admitted as an axiom: caught by the
+admission protocol's own degenerate-instantiation-attack step and refuted below
+(`capMassNonzeroNearBallDraft_false`) using the exact rational-chord two-atom witness this
+project's own `lemma_3_4_part2` non-vacuity check already relies on
+(`Regression/NonVacuity/MidLevel.lean`) -- picking `z` to BE one of the two atoms always isolates
+it from the other measure's disjoint atom pair, so no hypothesis of this "works for every cap"
+shape can hold for a two-atom measure family, even though such families otherwise satisfy every
+other premise (`μ ≠ ν`, sphere/orthant/ball support, colinear barycenters `γ ∈ (0,1)`). No
+adapter in `Refutations/`: this signature was never a landed axiom, so there is no "current,
+narrower" statement to check against. -/
+abbrev DraftCapMassNonzeroNearBallSig : Prop :=
+  ∀ {d : ℕ} (center : Eucl d) (ε' : ℝ), 0 < ε' →
+    ∀ μ ν : Measure (Eucl d), IsProbabilityMeasure μ → IsProbabilityMeasure ν →
+    μ ≠ ν →
+    supportedIn μ (sphere d) → supportedIn ν (sphere d) →
+    supportedIn μ (orthant d) → supportedIn ν (orthant d) →
+    supportedIn μ (Metric.ball center ε') → supportedIn ν (Metric.ball center ε') →
+    (∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) →
+    ∀ z : Eucl d, ‖z‖ = 1 → ∀ cosR : ℝ, cosR ∈ Set.Ioo (1 / 2 : ℝ) 1 →
+      μ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} ≠ ν {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} →
+      μ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} ≠ 0 ∧ ν {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} ≠ 0
+
 end Regression
