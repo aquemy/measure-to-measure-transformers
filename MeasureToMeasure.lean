@@ -4,6 +4,7 @@ import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Foundations.Projector
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.AtomlessSplitting
+import MeasureToMeasure.Foundations.AtomlessPushforward
 import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.SphereFlow
 import MeasureToMeasure.Foundations.FlowMap
