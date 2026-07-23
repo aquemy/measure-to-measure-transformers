@@ -1,5 +1,6 @@
 -- Root module for the MeasureToMeasure formalization.
 -- Re-exports the foundations, axiom layer, and kernel-checked leaves.
+import MeasureToMeasure.Foundations.BijOnFixedComplement
 import MeasureToMeasure.Foundations.Sphere
 import MeasureToMeasure.Foundations.Projector
 import MeasureToMeasure.Foundations.GeodesicDistance
