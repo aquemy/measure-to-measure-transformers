@@ -2,6 +2,7 @@ import MeasureToMeasure.Leaves.RotateFamilyToOrthant
 import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
 import MeasureToMeasure.Leaves.OrthantBoundaryGap
 import MeasureToMeasure.Leaves.GeodesicHullConvex
+import MeasureToMeasure.Leaves.OrthantSphereAvoiding
 
 /-!
 # `exists_disentangling_balls`'s strong induction: the prefix invariant and its base case
@@ -233,5 +234,112 @@ theorem disentangle_insert_noncolinear {d N k : ℕ} (hk : k < N)
     obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hΦeq, -, hΦinv⟩ :=
       attnMeasureFlow_exists_map (θ ++ θ') (μ₀ i) (hμs i)
     exact ⟨Φ, Φinv, hΦm, hΦinvm, hΦeq, hΦinv⟩
+
+/-- **A scalar-multiple relation flips direction, given one side is nonzero.** If `w` is never a
+scalar multiple of `v` (for any real `c`) and `v ≠ 0`, then `v` is never a scalar multiple of `w`
+either: were `v = c • w`, `c = 0` would force `v = 0` (excluded), and `c ≠ 0` would give
+`w = c⁻¹ • v`, contradicting the hypothesis at `c⁻¹`. Used below to read the ORIGINAL family's
+non-colinearity with the poisoned-Dirac slot off `exists_dirac_avoiding_measure`'s one-directional
+avoidance guarantee. -/
+theorem ne_smul_flip_of_ne_zero {v w : Eucl d} (hv : v ≠ 0) (h : ∀ c : ℝ, w ≠ c • v) :
+    ∀ c : ℝ, v ≠ c • w := by
+  intro c hvw
+  rcases eq_or_ne c 0 with hc0 | hc0
+  · rw [hc0, zero_smul] at hvw; exact hv hvw
+  · exact h c⁻¹ (by rw [hvw, smul_smul, inv_mul_cancel₀ hc0, one_smul])
+
+/-- **G6/Phase-1 assembly: the colinear-pair shrink, poisoned-family trick.** Given a family `μ₀`
+whose ONLY colinearity failure is the pair `(j, k)` (`hnoncol` covers every pair not touching `k`;
+`hcol` records the `(j, k)` colinearity itself, the very premise of this branch), one schedule
+chunk `θ'` of any prescribed duration `T`:
+
+* confines BOTH `j` and `k` into a single shared ball around `j`'s barycenter direction, chosen
+  disjoint from every ball in a caller-supplied bystander family `β, r` (the already-placed balls),
+  and
+* leaves literally EVERY other family member (`i ≠ j`, `i ≠ k`) fixed pointwise.
+
+**The construction.** `lemma_3_3`'s own `hnoncol` hypothesis is a blanket `Pairwise` over the WHOLE
+family it is fed, so it cannot be called on `μ₀` directly (the very premise here is that `(j, k)`
+violates it). The fix: substitute `exists_dirac_avoiding_measure`'s witness `ρ` -- chosen to avoid
+every scalar multiple of every `μ₀ i`'s barycenter, `i : Fin N` -- at slot `k` only
+(`Function.update μ₀ k ρ`), and call `lemma_3_3` on this POISONED family with acted index `j`
+(untouched by the substitution, since `j ≠ k`) and companion `ν₀ := μ₀ k` (the REAL, unpoisoned
+member). The poisoned family satisfies `lemma_3_3`'s `hnoncol`: pairs avoiding `k` come from the
+hypothesis directly, pairs touching `k` come from `ρ`'s avoidance property (flipped via
+`ne_smul_flip_of_ne_zero` when `k` is on the right). The colinearity hypothesis `lemma_3_3` needs
+between the companion and the acted index (`hνcol`) is exactly `hcol`, unpoisoned, since `j ≠ k`
+leaves slot `j` untouched by the substitution. The resulting schedule's bystander-fixing clause
+(`∀ i, i ≠ j → attnMeasureFlow θ (μ₀'' i) = μ₀'' i`) reads off the REAL family's own bystander
+fact for every `i ≠ j, i ≠ k` (poisoning only touches slot `k`, which is excluded); slot `k`'s own
+fate is instead read off `lemma_3_3`'s shrinking conclusion on the companion `ν₀ = μ₀ k` directly,
+so the poisoned slot's own (fictional, uninformative) fixed-point fact is simply discarded. -/
+theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N : ℕ}
+    (j k : Fin N) (hjk : j ≠ k) (μ₀ : Fin N → Measure (Eucl d))
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (T : ℝ) (hT : 0 < T)
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hμo : ∀ i, supportedIn (μ₀ i) (orthant d))
+    (hnoncol : Pairwise (fun i i' : Fin N =>
+        i ≠ k → i' ≠ k → ∀ c : ℝ, barycenter (μ₀ i) ≠ c • barycenter (μ₀ i')))
+    (hcol : ∃ c : ℝ, barycenter (μ₀ k) = c • barycenter (μ₀ j))
+    {ι : Type*} [Fintype ι] [Nonempty ι] (β : ι → Eucl d) (r : ι → ℝ)
+    (hsep : ∀ i, r i < dist (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) (β i)) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      (∃ ε > 0, supportedIn (attnMeasureFlow θ (μ₀ j))
+          (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
+        supportedIn (attnMeasureFlow θ (μ₀ k))
+          (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
+        ∀ i, Disjoint (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε)
+          (Metric.ball (β i) (r i))) ∧
+      ∀ i, i ≠ j → i ≠ k → attnMeasureFlow θ (μ₀ i) = μ₀ i := by
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨ε, hεpos, hdisj⟩ :=
+    exists_ball_disjoint_of_dist_pos β r (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) hsep
+  obtain ⟨ρ, hρprob, hρs, hρo, hρavoid⟩ :=
+    exists_dirac_avoiding_measure hd (fun i : Fin N => barycenter (μ₀ i))
+  classical
+  set μ₀' : Fin N → Measure (Eucl d) := Function.update μ₀ k ρ with hμ₀'def
+  have hjk' : μ₀' j = μ₀ j := Function.update_of_ne hjk ρ μ₀
+  have hμ' : ∀ i, IsProbabilityMeasure (μ₀' i) := by
+    intro i
+    by_cases hik : i = k
+    · rw [hμ₀'def, hik, Function.update_self]; exact hρprob
+    · rw [hμ₀'def, Function.update_of_ne hik]; exact hμ i
+  have hμs' : ∀ i, supportedIn (μ₀' i) (sphere d) := by
+    intro i
+    by_cases hik : i = k
+    · rw [hμ₀'def, hik, Function.update_self]; exact hρs
+    · rw [hμ₀'def, Function.update_of_ne hik]; exact hμs i
+  have hμo' : ∀ i, supportedIn (μ₀' i) (orthant d) := by
+    intro i
+    by_cases hik : i = k
+    · rw [hμ₀'def, hik, Function.update_self]; exact hρo
+    · rw [hμ₀'def, Function.update_of_ne hik]; exact hμo i
+  have hbarynz : ∀ i : Fin N, barycenter (μ₀ i) ≠ 0 := by
+    intro i
+    haveI := hμ i
+    exact norm_pos_iff.mp (norm_barycenter_pos_of_orthant (hμs i)
+      (integrable_id_of_sphere_support (hμs i)) (hμo i))
+  have hnoncol' : Pairwise (fun i i' : Fin N => ∀ c : ℝ,
+      barycenter (μ₀' i) ≠ c • barycenter (μ₀' i')) := by
+    intro i i' hii'
+    by_cases hik : i = k
+    · by_cases hi'k : i' = k
+      · exact absurd (hik.trans hi'k.symm) hii'
+      · rw [hμ₀'def, hik, Function.update_self, Function.update_of_ne hi'k]
+        exact hρavoid i'
+    · by_cases hi'k : i' = k
+      · rw [hμ₀'def, hi'k, Function.update_self, Function.update_of_ne hik]
+        exact ne_smul_flip_of_ne_zero (hbarynz i) (hρavoid i)
+      · rw [hμ₀'def, Function.update_of_ne hik, Function.update_of_ne hi'k]
+        exact hnoncol hii' hik hi'k
+  have hcol' : ∃ c : ℝ, barycenter (μ₀ k) = c • barycenter (μ₀' j) := by
+    rw [hjk']; exact hcol
+  haveI := hμ k
+  obtain ⟨θ, hdur, hshrinkν, hshrinkμ, hfix⟩ :=
+    lemma_3_3 j μ₀' (μ₀ k) hμ' T ε hT hεpos hμs' hμo' (hμs k) (hμo k) hnoncol' hcol'
+  rw [hjk'] at hshrinkμ hshrinkν
+  refine ⟨θ, hdur, ⟨ε, hεpos, hshrinkμ, hshrinkν, hdisj⟩, ?_⟩
+  · intro i hij hik
+    have := hfix i hij
+    rwa [hμ₀'def, Function.update_of_ne hik] at this
 
 end MeasureToMeasure.Leaves
