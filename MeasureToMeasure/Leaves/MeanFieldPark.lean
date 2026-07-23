@@ -133,4 +133,35 @@ theorem attnFlow_id_of_inner_le (z ω : Eucl d) (cosR T : ℝ) (hT : 0 ≤ T) [N
       rw [hΦ.init]; rfl
   exact hEq ht
 
+/-- **Packaging: the whole mean-field flow of `pPark` fixes an off-cap sphere-supported measure.**
+The measure-generic form `attnFlow_id_of_inner_le` needs pointwise: any sphere-supported
+probability measure whose mass avoids the open cap `{x | cosR < ⟪z, x⟫}` is left EXACTLY fixed by
+the single-block schedule `[pPark z ω cosR T hT]`'s solution operator. This is the packaging both
+Phase 2 and Phase 3's `pPark`-tailed constructions need: it lets the tail block be inserted without
+disturbing any bystander mass that already avoids the cap. -/
+theorem attnMeasureFlow_pPark_eq_of_off_cap (z ω : Eucl d) (cosR T : ℝ) (hT : 0 ≤ T) [NeZero d]
+    (ρ : Measure (Eucl d)) [IsProbabilityMeasure ρ] (hρs : ρ (sphere d)ᶜ = 0)
+    (hρcap : ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0) :
+    attnMeasureFlow [pPark z ω cosR T hT] ρ = ρ := by
+  set p := pPark z ω cosR T hT with hpdef
+  have hΦ := (@exists_meanFieldFlow d p ρ ‹_› hρs).choose_spec
+  set Φ := (@exists_meanFieldFlow d p ρ ‹_› hρs).choose with hΦdef
+  show attnStep p ρ = ρ
+  unfold attnStep
+  rw [dif_pos ⟨‹IsProbabilityMeasure ρ›, hρs⟩]
+  have hid : ρ.map (Φ p.duration) = ρ.map (fun x => x) := by
+    refine Measure.map_congr ?_
+    rw [Filter.EventuallyEq, ae_iff]
+    have hnull : ρ ((sphere d)ᶜ ∪ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}) = 0 :=
+      measure_union_null hρs hρcap
+    refine measure_mono_null (fun x hx => ?_) hnull
+    simp only [Set.mem_setOf_eq] at hx
+    by_contra hxor
+    apply hx
+    simp only [Set.mem_union, Set.mem_compl_iff, Set.mem_setOf_eq, not_or, not_lt, not_not]
+      at hxor
+    obtain ⟨hxs, hxcap⟩ := hxor
+    exact attnFlow_id_of_inner_le z ω cosR T hT hρs Φ hΦ hxs hxcap ⟨p.duration_nonneg, le_rfl⟩
+  rw [hid, Measure.map_id']
+
 end MeasureToMeasure.Leaves
