@@ -1,6 +1,7 @@
 import MeasureToMeasure.Foundations.TrajectoryFlowSurjective
 import MeasureToMeasure.Foundations.TrajectoryFlowInjective
 import MeasureToMeasure.Foundations.SelfConsistencyFixedPoint
+import MeasureToMeasure.Foundations.AtomlessPushforward
 
 /-!
 # `exists_meanFieldFlow` discharged: the McKean-Vlasov mean-field flow exists (M3b existence,
@@ -449,6 +450,27 @@ theorem attnMeasureFlow_exists_map (θ : AttnSchedule d) (μ : Measure (Eucl d))
     · have hpx : Φp x ∈ sphere d := hΦpto hx
       simp only [Function.comp_apply]
       rw [hΦrinv (Φp x) hpx, hΦpinv x hx]
+
+/-- **Atomlessness propagates along the attention flow.** If `μ` is atomless and sphere-supported,
+so is `attnMeasureFlow θ μ` for any schedule `θ`. The transport map `Φ` from
+`attnMeasureFlow_exists_map` has a left inverse on the sphere, hence is injective there; combined
+with `noAtoms_pushforward_of_injOn` (`Foundations/AtomlessPushforward.lean`) this transports
+`NoAtoms` across the pushforward. Schedule-agnostic infrastructure: reusable for any downstream
+construction (e.g. a future `disentangle_insert_colinear`) that needs atomlessness preserved
+through the flow. -/
+theorem noAtoms_attnMeasureFlow_of_noAtoms (θ : AttnSchedule d) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] [NoAtoms μ] (hs : μ (sphere d)ᶜ = 0) :
+    NoAtoms (attnMeasureFlow θ μ) := by
+  obtain ⟨Φ, Φinv, hΦm, _hΦc, _hΦinvm, hΦeq, _hΦto, hΦinv⟩ := attnMeasureFlow_exists_map θ μ hs
+  have hinj : Set.InjOn Φ (sphere d) := by
+    intro x hx y hy hxy
+    have hx' := hΦinv x hx
+    have hy' := hΦinv y hy
+    calc x = Φinv (Φ x) := hx'.symm
+      _ = Φinv (Φ y) := by rw [hxy]
+      _ = y := hy'
+  rw [hΦeq]
+  exact noAtoms_pushforward_of_injOn hs hΦm hinj
 
 /-! ### The linear bridge, relocated from `MeanFieldWellPosed.lean`
 
