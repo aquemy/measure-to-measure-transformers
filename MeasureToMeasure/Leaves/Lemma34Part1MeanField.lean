@@ -362,8 +362,10 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
         ≠ c • Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν)) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
       (∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)) ∧
-      ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
-        ∀ x ∈ sphere d, x ∉ U → Φ x = x := by
+      (∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
+        ∀ x ∈ sphere d, x ∉ U → Φ x = x) ∧
+      ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ := by
   rw [supportedIn] at hμs hνs hμ hν hμU hνU
   -- Step 1: a mass-gap cap `{cos R < ⟪z, ·⟫}` inside the carrier `U`
   obtain ⟨z, cosR, hzsphere, hcosRhalf, hcosR1, hcapsub, hmassne⟩ :=
@@ -667,7 +669,7 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
   have hflowEqν : attnMeasureFlow θ' ν = attnMeasureFlow θ ν := by
     rw [hθ'def, hθdef]
     exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos ν hνs
-  refine ⟨θ', hθ'dur, hθ'switches, ?_, ?_⟩
+  refine ⟨θ', hθ'dur, hθ'switches, ?_, ?_, ?_⟩
   · intro γ₂
     rw [hflowEqμ, hflowEqν]
     rw [hbaryμ] at hArP
@@ -690,6 +692,24 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
     have hxle : (⟪z, x⟫ : ℝ) ≤ cosR := not_lt.mp hxcap
     exact attnFlow_id_of_inner_le z ω cosR ((n : ℝ) * T) hnT0 hμs Φ hΦspec hxsphere hxle
       ⟨hnT0, le_rfl⟩
+  · -- **Bystander-fixing conjunct.** Any sphere-supported probability measure whose mass avoids
+    -- the carrier `U` also avoids the mass-gap cap (`hcapsub` puts the cap inside `U`), so the
+    -- single-block schedule `θ` (equivalently its exact-duration rescale `θ'`) fixes it exactly,
+    -- via the just-banked `attnMeasureFlow_pPark_eq_of_off_cap` and the rescale bridge.
+    intro ρ _ hρs hρU
+    rw [supportedIn] at hρs
+    rw [supportedIn, compl_compl] at hρU
+    have hρcap : ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 := by
+      refine measure_mono_null (fun x hx => ?_) (measure_union_null hρU hρs)
+      by_cases hxs : x ∈ sphere d
+      · exact Or.inl (hcapsub x hxs hx)
+      · exact Or.inr hxs
+    have hflowEqρ : attnMeasureFlow θ' ρ = attnMeasureFlow θ ρ := by
+      rw [hθ'def, hθdef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos
+        ρ hρs
+    rw [hflowEqρ, hθdef]
+    exact attnMeasureFlow_pPark_eq_of_off_cap z ω cosR ((n : ℝ) * T) hnT0 ρ hρs hρcap
 
 set_option maxHeartbeats 1600000 in
 /-- **Caller-supplied-cap sibling of `barycenter_nonColinear_of_massGapCollapse_meanField`.** Same
