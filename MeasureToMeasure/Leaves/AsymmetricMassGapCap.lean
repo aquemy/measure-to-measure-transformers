@@ -132,4 +132,46 @@ axiom exists_cap_nu_mass_zero_at_shared_boundary {d : ℕ} [NeZero d] {μ0 ν0 :
     ∃ x0 : Eucl d, x0 ∈ μ0.support ∧ ∃ τ0 ∈ Set.Ioc (0:ℝ) T, ∃ cosR ∈ Set.Ioo (1/2 : ℝ) 1,
       (ν0.map (Φν τ0)) {x : Eucl d | cosR < (⟪Φμ τ0 x0, x⟫ : ℝ)} = 0
 
+/-! ## The literal target: an asymmetric mass-gap cap (`phase4_asymmetric_massgap_cap`, G4)
+
+Combines `cap_pos_mass_of_mem_support` (positivity, applied at the μ-flowed boundary point itself,
+where it holds trivially since `⟪z, z⟫ = ‖z‖² = 1 > cosR`) with
+`exists_cap_nu_mass_zero_at_shared_boundary` (the ν-nullity of that same cap) to produce, at a single
+witnessed time and cap, a mass split that is strictly positive for `μ0` and exactly zero for `ν0`. -/
+
+/-- **An asymmetric mass-gap cap.** There is a time `Tstar ∈ (0, T]` and a spherical cap of angular
+radius `arccos cosR < π/3` centered at some `z ∈ 𝕊^{d-1}` that the `μ0`-pushforward at `Tstar` gives
+positive mass, while the `ν0`-pushforward at the SAME `Tstar` gives exactly zero mass. This is the
+literal target of the `phase4_asymmetric_massgap_cap` sub-campaign, feeding the caller's `hmassne`
+via `ne_of_gt`. -/
+theorem exists_asymmetric_massgap_cap {d : ℕ} [NeZero d] {μ0 ν0 : Measure (Eucl d)}
+    [IsProbabilityMeasure μ0] [IsProbabilityMeasure ν0] [NoAtoms μ0]
+    (hμs : supportedIn μ0 (sphere d)) (hνs : supportedIn ν0 (sphere d))
+    (hsupp : μ0.support = ν0.support)
+    (hμint : Integrable (fun x : Eucl d => x) μ0) (hνint : Integrable (fun x : Eucl d => x) ν0)
+    {γ1 : ℝ} (hγ1 : γ1 ∈ Set.Ioo (0:ℝ) 1)
+    (hcol : barycenter μ0 = γ1 • barycenter ν0) (hνnz : barycenter ν0 ≠ 0)
+    {T : ℝ} (hT : 0 < T)
+    {Φμ Φν : ℝ → Eucl d → Eucl d}
+    (hΦμ : IsMeanFieldFlow (pAlign T hT.le) μ0 Φμ) (hΦν : IsMeanFieldFlow (pAlign T hT.le) ν0 Φν) :
+    ∃ Tstar ∈ Set.Ioc (0:ℝ) T, ∃ z ∈ sphere d, ∃ cosR ∈ Set.Ioo (1/2:ℝ) 1,
+      0 < (μ0.map (Φμ Tstar)) {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} ∧
+      (ν0.map (Φν Tstar)) {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 := by
+  obtain ⟨x0, hx0, τ0, hτ0, cosR, hcosR, hνzero⟩ :=
+    exists_cap_nu_mass_zero_at_shared_boundary hμs hνs hsupp hμint hνint hγ1 hcol hνnz hT hΦμ hΦν
+  have hτ0Icc : τ0 ∈ Set.Icc (0:ℝ) (pAlign (d := d) T hT.le).duration := by
+    rw [pAlign_duration]; exact ⟨hτ0.1.le, hτ0.2⟩
+  have hx0sphere : x0 ∈ sphere d :=
+    Measure.support_subset_of_isClosed Metric.isClosed_sphere (mem_ae_iff.mpr hμs) hx0
+  have hzsphere : Φμ τ0 x0 ∈ sphere d :=
+    (hΦμ.sphere_bijOn τ0 hτ0Icc).mapsTo hx0sphere
+  refine ⟨τ0, hτ0, Φμ τ0 x0, hzsphere, cosR, hcosR, ?_, hνzero⟩
+  obtain ⟨L, hL⟩ := hΦμ.lipschitz
+  have hcont : Continuous (Φμ τ0) := (hL τ0 hτ0Icc).continuous
+  have hmeas : Measurable (Φμ τ0) := hΦμ.measurable τ0 hτ0Icc
+  have hmem : cosR < (⟪Φμ τ0 x0, Φμ τ0 x0⟫ : ℝ) := by
+    rw [inner_self_eq_one_of_mem_sphere hzsphere]
+    exact hcosR.2
+  exact cap_pos_mass_of_mem_support hcont hmeas hx0 hmem
+
 end MeasureToMeasure.Leaves
