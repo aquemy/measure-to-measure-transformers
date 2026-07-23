@@ -1,4 +1,6 @@
 import MeasureToMeasure.Statements.SupportedIn
+import MeasureToMeasure.Leaves.OrthantBoundaryGap
+import MeasureToMeasure.Foundations.SphereMeasureBridge
 
 /-!
 # A generic point of `sphere d ∩ orthant d` avoiding any finite set of directions
@@ -24,6 +26,10 @@ supplies that point-level existence fact, independent of any measure-family book
   `d`, which forces injectivity after normalizing) gives `card ι + 1` pairwise-distinct points; since
   each bad line meets `sphere d ∩ orthant d` in at most one point (the lemma above), a pigeonhole
   argument (`Fintype.not_injective_of_card_lt`) finds a surviving candidate.
+* `exists_dirac_avoiding_measure` -- the measure-level wrapper Phase 1 actually plugs into
+  `lemma_3_3`'s family slot: a Dirac point mass at the avoiding point, packaged as a genuine
+  sphere-and-orthant-supported probability measure whose own barycenter (itself, for a Dirac)
+  avoids every scalar multiple of the finitely many "bad" directions.
 
 M3b/mid-level staging: consumed by `disentangle_insert_colinear`'s Phase 1 filler construction; see
 `Statements/MainResults.lean` and the `exists-disentangling-balls-campaign` project notes.
@@ -31,7 +37,7 @@ M3b/mid-level staging: consumed by `disentangle_insert_colinear`'s Phase 1 fille
 
 namespace MeasureToMeasure.Leaves
 
-open MeasureToMeasure MeasureToMeasure.Statements
+open MeasureTheory MeasureToMeasure MeasureToMeasure.Statements
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -176,5 +182,27 @@ theorem exists_orthant_sphere_avoiding (hd : 2 ≤ d) {ι : Type*} [Fintype ι] 
   have hpk1k2 : p k2 = p k1 :=
     orthant_sphere_scalar_eq (hps k2) (hpo k2) (hps k1) (hpo k1) _ hp2v
   exact hk12 (hpinj hpk1k2.symm)
+
+/-- **A placeholder probability measure avoiding a finite set of directions.** The measure-level
+wrapper `exists_disentangling_balls`'s Phase 1 filler actually needs: a Dirac point mass at
+`exists_orthant_sphere_avoiding`'s point is a genuine sphere-and-orthant-supported probability
+measure whose own barycenter (a Dirac's barycenter is just the point itself,
+`MeasureTheory.integral_dirac`) avoids every scalar multiple of the finitely many "bad" directions
+`v i`. Substituting this measure at the colinear pair's new-member slot lets `lemma_3_3`'s blanket
+`hnoncol` hypothesis survive over the WHOLE family even though the true family has exactly one
+colinear pair there -- the true member's own fate is read off separately, through `lemma_3_3`'s
+companion argument, not through this filler slot. -/
+theorem exists_dirac_avoiding_measure (hd : 2 ≤ d) {ι : Type*} [Fintype ι] (v : ι → Eucl d) :
+    ∃ ρ : Measure (Eucl d), IsProbabilityMeasure ρ ∧ ρ (sphere d)ᶜ = 0 ∧ ρ (orthant d)ᶜ = 0 ∧
+      ∀ i, ∀ c : ℝ, barycenter ρ ≠ c • v i := by
+  obtain ⟨p, hps, hpo, hpavoid⟩ := exists_orthant_sphere_avoiding hd v
+  refine ⟨Measure.dirac p, MeasureTheory.Measure.dirac.isProbabilityMeasure, ?_, ?_, ?_⟩
+  · rw [MeasureTheory.Measure.dirac_apply' _ (measurableSet_sphere d).compl]
+    simp [hps]
+  · rw [MeasureTheory.Measure.dirac_apply' _ isOpen_orthant.measurableSet.compl]
+    simp [hpo]
+  · have hbary : barycenter (Measure.dirac p) = p := MeasureTheory.integral_dirac (fun x => x) p
+    rw [hbary]
+    exact hpavoid
 
 end MeasureToMeasure.Leaves
