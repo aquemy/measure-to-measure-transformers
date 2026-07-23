@@ -266,4 +266,20 @@ example : True := by
     (T := 1) one_pos hΦμ hΦν
   trivial
 
+/-- **Non-vacuity of `exists_asymmetric_massgap_cap`.** Same witness data as above (this leaf takes
+literally the same hypotheses as the axiom it assembles from): a concrete asymmetric-mass-gap cap
+exists for `wMu0`/`wNu0`. -/
+example : True := by
+  haveI := wMu0_isProbabilityMeasure
+  haveI := wNu0_isProbabilityMeasure
+  haveI := wMu0_noAtoms
+  obtain ⟨Φμ, hΦμ⟩ := exists_meanFieldFlow (pAlign (1:ℝ) (by norm_num)) wMu0 wMu0_supportedIn_sphere
+  obtain ⟨Φν, hΦν⟩ := exists_meanFieldFlow (pAlign (1:ℝ) (by norm_num)) wNu0 wNu0_supportedIn_sphere
+  have _h := exists_asymmetric_massgap_cap
+    wMu0_supportedIn_sphere wNu0_supportedIn_sphere wMu0_wNu0_support_eq
+    wMu0_integrable wNu0_integrable
+    (γ1 := 1/2) (by norm_num) wMu0_wNu0_hcol wNu0_bary_ne_zero
+    (T := 1) one_pos hΦμ hΦν
+  trivial
+
 end Regression.NonVacuity
