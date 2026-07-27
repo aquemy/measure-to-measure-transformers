@@ -30,6 +30,10 @@ Downstream consumers needing only the abstract bounds `cosR < ⟪z, ω⟫ ≤ 1`
 pole primitive as a drop-in: every conjunct of `exists_pole_in_cap_ne`'s conclusion is reproduced
 here (norm, cap membership, `≠ v`, `span{z,w}` membership), plus the new colinearity-avoidance
 conjunct.
+
+Staging: zero consumers today. Built for the Phase-4 pole step of the planned non-vacuous
+`lemma_3_4_part2` re-discharge (the asymmetric-cap route, claim `cap-nu-null-b16`); see the
+`exists-disentangling-balls-campaign` project notes.
 -/
 
 namespace MeasureToMeasure.Leaves

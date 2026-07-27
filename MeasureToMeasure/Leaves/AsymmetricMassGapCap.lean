@@ -19,6 +19,10 @@ back to an open neighborhood of `x0` (since `hmem` puts `Φ x0`, hence `x0`, ins
 cap). Membership of `x0` in `μ.support` means every open neighborhood of `x0` carries positive
 `μ`-mass (`Measure.mem_support_iff_forall`), so the pulled-back cap does. `Measure.map_apply`
 transports this positive mass across the pushforward to the cap itself.
+
+Staging: the axiom's only consumer today is its own non-vacuity witness
+(`Regression/NonVacuity/AsymmetricMassGapCap.lean`); the planned non-vacuous `lemma_3_4_part2`
+re-discharge (claim `cap-nu-null-b16`) is its intended real consumer.
 -/
 
 namespace MeasureToMeasure.Leaves

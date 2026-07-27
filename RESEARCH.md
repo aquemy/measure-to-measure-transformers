@@ -751,7 +751,8 @@ the admissible `partTwoMu`/`partTwoNu` witness pair). Consequences, recorded hon
   Lemma 3.4 Part 2 is effectively OPEN; `claims.toml` keeps `math.axiomatised` (the conservative
   reading) pending a non-vacuous re-discharge via the Appendix B.3 asymmetric-cap route (F24).
 - The same closure is vacuous: `barycenter_nonColinear_of_massGapCollapse_meanField` (and its
-  `_callerCap` sibling), `exists_phase3_of_genRestNearBall`, and `DisentangleInductionStep.lean`'s
+  `_callerCap` sibling, ~340 lines with zero callers, deleted outright in the follow-up S1 hygiene
+  PR), `exists_phase3_of_genRestNearBall`, and `DisentangleInductionStep.lean`'s
   `exists_phase3_nonColinear_symm` / `exists_phase23_nonColinear` /
   `disentangle_insert_colinear_resolving`. All docstrings now say so.
 - GUARD HOLE: the non-vacuity witness for `lemma_3_4_part2` in `Regression/NonVacuity/MidLevel.lean`

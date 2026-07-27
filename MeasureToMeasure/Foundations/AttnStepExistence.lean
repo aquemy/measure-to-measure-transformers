@@ -5,7 +5,7 @@ import MeasureToMeasure.Foundations.AtomlessPushforward
 
 /-!
 # `exists_meanFieldFlow` discharged: the McKean-Vlasov mean-field flow exists (M3b existence,
-leaf E3r — campaign close)
+leaf E3r -- campaign close)
 
 This file **discharges the `exists_meanFieldFlow` axiom** of `Foundations/Attention.lean`,
 replacing it with a genuine theorem, and re-hosts everything built on top of it (`attnStep`,
@@ -13,7 +13,7 @@ replacing it with a genuine theorem, and re-hosts everything built on top of it 
 `MeanFieldWellPosed.lean`. The relocation is structural, not mathematical: `Attention.lean` sits
 *upstream* of the whole M3b existence campaign (`TrajectoryFieldPicardLindelof.lean` through
 `TrajectoryFlowSurjective.lean`, which all need `AttnParams`/`attnFieldExt`/`IsMeanFieldFlow` from
-it), so the existence proof — which consumes that entire campaign — cannot live inside
+it), so the existence proof -- which consumes that entire campaign -- cannot live inside
 `Attention.lean` itself without a circular import. It lives here instead, downstream of the whole
 chain, and everything that used to consume the axiom (`attnStep` etc.) moves here with it so that
 those definitions can use the genuine theorem instead of the axiom.
@@ -47,7 +47,7 @@ The five `IsMeanFieldFlow` fields:
 * `deriv`: `hasDerivAt_trajectoryFlowPadded` (E3o) gives the raw ODE derivative w.r.t.
   `trajectoryField`; the fixed-point self-consistency identity `eta_eq_pushforward` (E3p) identifies
   `η t` with the ACTUAL current pushforward `(Φ_t)_#μ₀`, and `attnFieldExt_eq_field_of_mem_sphere`
-  identifies `attnFieldExt` with `p.field` on the sphere — composing these turns the raw ODE
+  identifies `attnFieldExt` with `p.field` on the sphere -- composing these turns the raw ODE
   derivative into exactly the mean-field characteristic equation `IsMeanFieldFlow.deriv` demands.
 
 M3b staging note (now obsolete): `exists_meanFieldFlow` was the sole remaining axiom in
@@ -63,7 +63,7 @@ variable {d : ℕ}
 
 /-! ### The candidate flow: `trajectoryFlowPadded` extended off the ball, identity-corrected -/
 
-/-- `trajectoryFlowPadded`, extended off the closed unit ball via `ballProj` — globally continuous
+/-- `trajectoryFlowPadded`, extended off the closed unit ball via `ballProj` -- globally continuous
 and Lipschitz, exactly mirroring `trajectoryFlowExt` (leaf E3h) but for the padded (two-sided
 `HasDerivAt`) flow of leaf E3o. -/
 noncomputable def trajectoryFlowPaddedExt (p : AttnParams d) {T : ℝ} (hT : 0 ≤ T)
@@ -209,7 +209,7 @@ theorem sphere_bijOn_meanFieldFlowCandidate (p : AttnParams d) {T : ℝ} (hT : 0
     obtain ⟨x, hx, hxeq⟩ := trajectoryFlowPadded_surjOn p hT η ht hy
     exact ⟨x, hx, by rw [hfunEq hx]; exact hxeq⟩
 
-/-- Generic `IsMeanFieldFlow` constructor from its five fields — used to keep the anonymous
+/-- Generic `IsMeanFieldFlow` constructor from its five fields -- used to keep the anonymous
 constructor away from the large concrete proof terms at the call site. -/
 theorem mkIsMeanFieldFlow (p : AttnParams d) (μ₀ : Measure (Eucl d)) (Φ : ℝ → Eucl d → Eucl d)
     (hinit : Φ 0 = id)

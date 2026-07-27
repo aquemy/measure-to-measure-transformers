@@ -21,12 +21,12 @@ re-elaborate it with `Eucl d` in scope.
 The sketch this leaf was drawn from stated the conclusion as
 `{θ : ℝ | ∃ c, ...}.Finite` with `θ` ranging over *all* of `ℝ`. That statement is actually **false**
 whenever a solution exists at all: `Real.cos` and `Real.sin` are `2π`-periodic, so if `θ₀` solves the
-membership condition then so does every `θ₀ + 2πk`, `k : ℤ` — an infinite, not finite, set. This is
+membership condition then so does every `θ₀ + 2πk`, `k : ℤ` -- an infinite, not finite, set. This is
 not a corner case: a genuine witness exists under fully satisfiable hypotheses. Concretely, take any
 orthonormal triple `z, w, u` (so `u ∉ span{z,w}`, making `hnondeg` hold trivially since `β := u ∉
 span{z,w}`), set `q := z`, `β := u`, `s := 1`. Then for every `θ = π + 2πk`,
 `s • (cos θ • z + sin θ • w) + q = -z + z = 0 = 0 • β`, so *every* `θ` in that residue class is a
-solution — the claimed-finite set contains a countably infinite arithmetic progression. This was
+solution -- the claimed-finite set contains a countably infinite arithmetic progression. This was
 verified in isolation (a compiling `¬ Set.Finite` disproof of the literal sketch statement) before
 this file was written.
 
@@ -37,11 +37,14 @@ site, and strictly more general than fixing one period `[0, 2π)`: it holds for 
 angles a caller supplies, however positioned or however many periods wide).
 
 `hnondeg` is preserved EXACTLY as specified in the sketch, unweakened: it is exactly what rules out
-the genuinely degenerate configuration where `β ∈ span{z,w} ∧ q ∈ span{z,w}` — in that case the whole
+the genuinely degenerate configuration where `β ∈ span{z,w} ∧ q ∈ span{z,w}` -- in that case the whole
 affine circle can be identically the zero vector shifted into the line's span, and the "finitely many
 intersection points" claim would fail for a different, more fundamental reason (the entire circle
 coincides with points on the line's containing plane). Do not drop or weaken this hypothesis; a later
 group (G2) calls this lemma and needs precisely this non-degeneracy at its call site.
+
+Staging: consumed only by `Leaves/CapPoleAvoiding.lean`'s `exists_pole_in_cap_avoiding`, itself
+staged for the planned non-vacuous `lemma_3_4_part2` re-discharge; no other consumers today.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -51,7 +54,7 @@ open scoped InnerProductSpace
 /-- An affine circle of radius `s ≠ 0`, centered at `q`, inside the 2-plane `span{z, w}` (`z, w`
 orthonormal) meets a line through the origin `span{β}` in at most finitely many points, when
 restricted to any bounded range of angles `Set.Icc a b`. The non-degeneracy hypothesis `hnondeg`
-rules out `β` and `q` both lying in `span{z, w}` — the one configuration where the whole circle can
+rules out `β` and `q` both lying in `span{z, w}` -- the one configuration where the whole circle can
 satisfy the colinearity condition (see the module docstring for the fix from the original
 all-of-`ℝ` sketch, which is genuinely false without this restriction, due to `2π`-periodicity). -/
 theorem circle_meets_line_finite {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
