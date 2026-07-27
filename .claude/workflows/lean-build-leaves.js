@@ -281,49 +281,52 @@ const GROUP_SCHEMA = {
 const bankedSoFar = []
 const blockedGroupIds = new Set()
 
-const buildResults = await pipeline(
-  groups,
-  (group) => {
-    const blockedDep = (group.dependsOnGroups || []).find((g) => blockedGroupIds.has(g))
-    if (blockedDep) {
-      return Promise.resolve({
-        groupId: group.groupId,
-        leafResults: group.leaves.map((l) => ({ name: l.name, status: 'blocked-by-dependency', reason: `depends on blocked group ${blockedDep}` })),
-        summary: `skipped: depends on blocked group ${blockedDep}`,
-      })
-    }
-    return agent(
-      `Repo: ${REPO}\nTarget campaign: "${target}"\nGroup: ${group.groupId} -- ${group.rationale}\n` +
-      `Risk noted: ${group.risk || '(none noted)'}\n` +
-      `Leaves in this group (build them in order, each through the full cycle before starting the next):\n` +
-      `${JSON.stringify(group.leaves, null, 2)}\n\n` +
-      `Already banked earlier in this run (for context/reuse, do not re-derive): ${JSON.stringify(bankedSoFar)}\n\n` +
-      `${CYCLE}\n${GOTCHAS}\n\n` +
-      `Report one entry per leaf in this group with its final status. A 'partial' status means real ` +
-      `progress was made (e.g. a supporting lemma landed) but the named leaf itself did not fully ` +
-      `land -- explain what's missing in 'reason'.`,
-      // effort 'high', not 'xhigh': an earlier xhigh-effort run on this repo went silent for
-      // 30+ minutes between tool calls (likely long per-turn generation latency compounding with
-      // a large cached prompt), tripping the workflow harness's ~180s no-progress stall detector
-      // on every retry. Build work here is mostly mechanical (follow CYCLE, run gated tools) --
-      // it does not need xhigh's extra deliberation the way Investigate's synthesis does.
-      { label: `build:${group.groupId}`, phase: 'Build', schema: GROUP_SCHEMA, effort: 'high' }
-    )
-  },
-  (result, group) => {
-    if (!result) {
-      blockedGroupIds.add(group.groupId)
-      log(`group ${group.groupId}: agent returned no result, treating as blocked`)
-      return { groupId: group.groupId, leafResults: group.leaves.map((l) => ({ name: l.name, status: 'blocked', reason: 'build agent returned no result' })), summary: 'no result' }
-    }
-    const anyBlocked = result.leafResults.some((r) => r.status === 'blocked' || r.status === 'blocked-by-dependency')
-    if (anyBlocked) blockedGroupIds.add(group.groupId)
-    const merged = result.leafResults.filter((r) => r.status === 'merged').map((r) => r.name)
-    bankedSoFar.push(...merged)
-    log(`group ${group.groupId}: ${result.summary}`)
-    return result
+// STRICTLY SEQUENTIAL over groups: every build agent mutates the ONE shared working tree and git
+// HEAD (branch, commit, rebase), so two groups building at once collide (the repo's own
+// no-concurrent-mutating-forks memory). A pipeline() here let dependency-free groups run
+// concurrently; in the 2026-07-27 run one agent had to bypass the local commit hook via git
+// plumbing to dodge a sibling's checkout. Sequential also makes bankedSoFar genuinely cumulative.
+const buildResults = []
+for (const group of groups) {
+  const blockedDep = (group.dependsOnGroups || []).find((g) => blockedGroupIds.has(g))
+  if (blockedDep) {
+    buildResults.push({
+      groupId: group.groupId,
+      leafResults: group.leaves.map((l) => ({ name: l.name, status: 'blocked-by-dependency', reason: `depends on blocked group ${blockedDep}` })),
+      summary: `skipped: depends on blocked group ${blockedDep}`,
+    })
+    continue
   }
-)
+  const result = await agent(
+    `Repo: ${REPO}\nTarget campaign: "${target}"\nGroup: ${group.groupId} -- ${group.rationale}\n` +
+    `Risk noted: ${group.risk || '(none noted)'}\n` +
+    `Leaves in this group (build them in order, each through the full cycle before starting the next):\n` +
+    `${JSON.stringify(group.leaves, null, 2)}\n\n` +
+    `Already banked earlier in this run (for context/reuse, do not re-derive): ${JSON.stringify(bankedSoFar)}\n\n` +
+    `${CYCLE}\n${GOTCHAS}\n\n` +
+    `Report one entry per leaf in this group with its final status. A 'partial' status means real ` +
+    `progress was made (e.g. a supporting lemma landed) but the named leaf itself did not fully ` +
+    `land -- explain what's missing in 'reason'.`,
+    // effort 'high', not 'xhigh': an earlier xhigh-effort run on this repo went silent for
+    // 30+ minutes between tool calls (likely long per-turn generation latency compounding with
+    // a large cached prompt), tripping the workflow harness's ~180s no-progress stall detector
+    // on every retry. Build work here is mostly mechanical (follow CYCLE, run gated tools) --
+    // it does not need xhigh's extra deliberation the way Investigate's synthesis does.
+    { label: `build:${group.groupId}`, phase: 'Build', schema: GROUP_SCHEMA, effort: 'high' }
+  )
+  if (!result) {
+    blockedGroupIds.add(group.groupId)
+    log(`group ${group.groupId}: agent returned no result, treating as blocked`)
+    buildResults.push({ groupId: group.groupId, leafResults: group.leaves.map((l) => ({ name: l.name, status: 'blocked', reason: 'build agent returned no result' })), summary: 'no result' })
+    continue
+  }
+  const anyBlocked = result.leafResults.some((r) => r.status === 'blocked' || r.status === 'blocked-by-dependency')
+  if (anyBlocked) blockedGroupIds.add(group.groupId)
+  const merged = result.leafResults.filter((r) => r.status === 'merged').map((r) => r.name)
+  bankedSoFar.push(...merged)
+  log(`group ${group.groupId}: ${result.summary}`)
+  buildResults.push(result)
+}
 
 phase('Record')
 
