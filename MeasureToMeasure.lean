@@ -93,6 +93,7 @@ import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.BarycenterBoundaryGap
 import MeasureToMeasure.Leaves.TaylorRemainderBound
+import MeasureToMeasure.Leaves.PAlignTruncate
 import MeasureToMeasure.Leaves.SharpeningRateCompare
 import MeasureToMeasure.Leaves.SharedBoundaryPointNondegenerate
 import MeasureToMeasure.Leaves.OrthantBoundaryGap
