@@ -10,6 +10,7 @@ import Regression.Refuted.F12_ClusterToPoint
 import Regression.Refuted.F12_HeavyTails
 import Regression.Refuted.F14_IdenticalInputs
 import Regression.Refuted.F18_DimOne
+import Regression.Refuted.F26_HeavyTailsNoAtoms
 import Regression.Refuted.CapMassNonzeroNearBallDraft
 import Regression.Refuted.AsymmetricCapFromUnflowedSupport
 import Regression.Refuted.HgenRestUnconditionallyFalse
