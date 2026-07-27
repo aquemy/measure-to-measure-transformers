@@ -296,7 +296,18 @@ discharge carries no epistemic content and Lemma 3.4 Part 2 is effectively OPEN.
 re-discharge along the paper's own Appendix B.3 asymmetric-cap route (the
 `Leaves/AsymmetricMassGapCap.lean` staging chain plus the `exists_cap_nu_mass_zero_at_shared_boundary`
 axiom, eq. (B.16) p.36) is the planned replacement; until it lands, treat the statement's status as
-open, not machine-checked. -/
+open, not machine-checked.
+
+**VACUITY, SECOND WITNESS (finding F25, 2026-07-27):** `_hu` is ALSO kernel-unsatisfiable in
+conjunction with the support hypotheses, for every measure pair and every dimension
+(`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`): sphere-plus-orthant support makes the
+normalized barycenter unit-norm, a unit-norm point in the ambient intrinsic interior of a
+ball-confined hull forces the hull (hence both supports, via `hsupp`) to a singleton, and two
+probability measures with the same singleton support are the same Dirac mass, against `hne`. So
+even the pre-F22 hypothesis list (before `hgenRest` existed) had no instances, and the ambient
+`convexHull`/`intrinsicInterior` transcription of footnote 7 is itself the error: the paper's
+condition lives on the sphere-intrinsic geodesic hull `conv_g`. The re-discharge must drop `_hu`
+in this form. -/
 theorem lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))

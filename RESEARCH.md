@@ -75,7 +75,7 @@ remaining axioms live in `Statements/` (eight in `MidLevel.lean` plus `exists_di
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
 | `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining eight statement-layer axioms |
 | `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the ninth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
-| `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`): no instantiation exists, so the discharge carries no content and the statement is effectively OPEN |
+| `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
 **Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
@@ -791,6 +791,35 @@ exclusion for a general mean-field flow. Admitted 2026-07-23 as the leaf-layer a
 `Regression/NonVacuity/AsymmetricMassGapCap.lean`), consumed by `exists_asymmetric_massgap_cap`.
 This is the ninth live axiom and the designated foundation for `lemma_3_4_part2`'s non-vacuous
 re-discharge; registered as claim `cap-nu-null-b16`.
+
+### F25 (formalization erratum, recorded 2026-07-27) `lemma_3_4_part2`'s `_hu` hypothesis is kernel-unsatisfiable: the F22 vacuity was doubly determined
+
+The `_hu` hypothesis carried by `lemma_3_4_part2` since PR #260's hypothesis realignment, our
+transcription of the paper's footnote 7 non-degeneracy condition (p.34) as "the normalized
+barycenter direction lies in Mathlib's `intrinsicInterior` of the AMBIENT `convexHull` of the
+shared support", is UNSATISFIABLE in conjunction with the rest of the bundle, for every measure
+pair and every dimension. Kernel-checked in
+`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`: sphere-plus-orthant support makes the
+barycenter nonzero, so `u := ||E mu||^-1 E mu` is unit-norm; a unit-norm point in the intrinsic
+interior of a ball-confined hull forces the hull to the singleton `{u}` (the abstract strict-
+convexity leaf `Leaves/UnitSphereIntrinsicInterior.lean`, PR #304: a second hull point would place
+`u` strictly between two hull points, and the closed unit ball of an inner-product space is
+strictly convex); a probability measure whose support collapses to `{u}` is `dirac u`, and
+`supp mu = supp nu` then forces `mu = nu = dirac u`, against `mu /= nu`. The refutation is
+deliberately `NoAtoms`-free, so it covers the PRE-F22 hypothesis list too
+(`lemma_3_4_part2_pre_F22_bundle_unsatisfiable` mirrors the exact `Statements/MidLevel.lean`
+bundle up to and excluding `hgenRest`): the statement's hypotheses already had no instances
+BEFORE the `hgenRest` discharge was ever attempted, so the F22 vacuity was doubly determined.
+
+Honesty scope: this refutes OUR ambient-hull transcription, not the paper's footnote 7. The
+paper states its condition for `conv_g`, the geodesic hull INSIDE the sphere, whose relative
+interior is a sphere-intrinsic notion; the ambient intrinsic interior of a hull of sphere points
+can only touch the sphere at a degenerate singleton hull, so the transcription was wrong from
+the day it was introduced (a formalization erratum, not a paper gap; no `ERRATA.md` entry).
+Consequence for the non-vacuous re-discharge (this campaign): the replacement signature must
+DROP `_hu` in this ambient form; if the asymmetric-cap route needs footnote 7 at all, it must be
+re-transcribed sphere-intrinsically (e.g. via the geodesic-hull machinery of
+`Leaves/BarycenterNonColinear.lean` / `Foundations/GeodesicConvex.lean`).
 
 ### Verdict
 
