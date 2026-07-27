@@ -370,4 +370,178 @@ theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N :
     have := hfix i hij
     rwa [hμ₀'def, Function.update_of_ne hik] at this
 
+/-- **G6: the colinear insertion step.** Given `DisentangledPrefix` at `k` and a new member `k`
+whose (post-`θ`) barycenter direction IS colinear with some other member `j`'s, one more schedule
+chunk `θ'` (of any prescribed duration `T`) extends the invariant to `k + 1`: member `k` lands in a
+fresh ball disjoint from every already-placed ball and inside the open orthant, and the colinear
+partner `j` lands in that same ball (recorded as a separate conjunct, see the limitation note
+below). The sibling of `disentangle_insert_noncolinear` above, for the branch where that theorem's
+blanket `hnoncol` fails.
+
+**`j` must be a NOT-YET-PLACED member (`hjun : k < j`), and this is FORCED, not a convenience.**
+Suppose instead `j < k`, so `j` already owns a ball `B_j = ball (α j) (r j)`. The extended invariant
+demands BOTH (clause 3 at `j`) that `j`'s flowed measure still sit inside `B_j` AND (clause 4) that
+member `k`'s new ball be disjoint from `B_j`. Every route through `lemma_3_3` available here acts on
+the colinear PAIR at once: it drives `j` and `k` into one shared ball around `j`'s own barycenter
+direction. Whatever ball member `k` is finally given is therefore centred at a direction read off a
+measure living in that shared ball, hence meets `B_j` exactly when the shared ball does, so clause 3
+at `j` and clause 4 at `(j, k)` cannot both hold. The unplaced-partner restriction is what makes the
+branch consistent at all: unplaced members carry no ball commitment (module docstring), so nothing
+is violated by parking `j` alongside `k`.
+
+**Why one phase and not four.** The campaign's planned chain was Phase 1 (colinear-pair shrink,
+`exists_shrink_colinear_pair_disjoint_from_bystanders` above) -> Phase 2
+(`lemma_3_4_part1_meanField`, barycenters made unequal) -> Phase 3
+(`exists_phase3_of_genRestNearBall`, barycenters made fully non-colinear) -> Phase 4 (self-paired
+`lemma_3_3` repackaging of member `k` alone). With `j` unplaced -- which the paragraph above shows
+is the only consistent reading -- Phase 1 ALREADY discharges all five clauses of the extended
+invariant: clauses 1 and 5 are the schedule-generic `attnMeasureFlow_supportedIn_sphere` /
+`attnMeasureFlow_exists_map` facts (as in the non-colinear sibling), clause 2 follows from Phase 1's
+radius cap (PR #293) instantiated at the orthant slack `ε₀` of
+`Metric.isOpen_iff.mp isOpen_orthant ω hωmem`, which puts the confinement ball inside `orthant d`,
+together with Phase 1's unconditional bystander-fixing clause for every `i ∉ {j, k}`, and clauses 3
+and 4 are Phase 1's own confinement and bystander-disjointness conclusions. Phases 2-4 are therefore
+not invoked, and in particular this theorem carries NO `GenRestNearBall` gate: it is unconditional,
+unlike `exists_phase3_of_genRestNearBall`.
+
+**Limitation, stated plainly.** What this step does NOT do is BREAK the colinearity: `j` and `k`
+leave it sharing one ball and (for all this theorem says) still colinear. That is invisible in
+`DisentangledPrefix`, which records no colinearity data, so the invariant is genuinely established;
+but a later insertion step that wants to place `j` will find `j` sitting inside member `k`'s ball,
+and neither branch can then give `j` a disjoint ball. The extra conclusion conjunct
+`supportedIn (attnMeasureFlow (θ ++ θ') (μ₀ j)) (Metric.ball ω ε)` is exposed precisely so that a
+caller sees where `j` went instead of having to guess. Resolving the pair (rather than deferring it)
+means running Phases 2/3 BEFORE any shrink, on a caller-supplied open carrier `U` containing both
+members' mass and disjoint from every placed ball, and only then calling the non-colinear branch;
+that route needs `GenRestNearBall` plus a bundle of carrier hypotheses (bystanders supported in
+`Uᶜ`, bystanders non-colinear with every `U`-supported measure, and a `U`-uniform version of `hsep`)
+and is left for the induction's own assembly.
+
+**Hypothesis shapes.** `hnoncol` is Phase 1's own shape ("every pair not touching member `k` is
+non-colinear"): the branch's premise is that member `k` is the single colinearity offender.
+`hsep` mirrors the non-colinear sibling's (the already-placed radii are strictly smaller than their
+distance to the new confinement centre `ω`), and is fed to Phase 1 through the same
+`Option (Fin k)` padding that handles `k = 0`. -/
+theorem disentangle_insert_colinear (hd : 2 ≤ d) {N k : ℕ} (hk : k < N)
+    (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (θ : AttnSchedule d) (α : Fin k → Eucl d) (r : Fin k → ℝ)
+    (hinv : DisentangledPrefix d N k μ₀ θ α r)
+    (j : Fin N) (hjun : k < (j : ℕ))
+    (hnoncol : Pairwise fun i i' : Fin N => i ≠ (⟨k, hk⟩ : Fin N) → i' ≠ (⟨k, hk⟩ : Fin N) →
+        ∀ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ i)) ≠ c • barycenter (attnMeasureFlow θ (μ₀ i')))
+    (hcol : ∃ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ ⟨k, hk⟩))
+      = c • barycenter (attnMeasureFlow θ (μ₀ j)))
+    (hsep : ∀ i : Fin k, r i < dist
+        (‖barycenter (attnMeasureFlow θ (μ₀ j))‖⁻¹ • barycenter (attnMeasureFlow θ (μ₀ j))) (α i))
+    (T : ℝ) (hT : 0 < T) :
+    ∃ θ' : AttnSchedule d, AttnSchedule.durationSum θ' = T ∧
+      ∃ (ω : Eucl d) (ε : ℝ), 0 < ε ∧
+        supportedIn (attnMeasureFlow (θ ++ θ') (μ₀ j)) (Metric.ball ω ε) ∧
+        DisentangledPrefix d N (k + 1) μ₀ (θ ++ θ') (Fin.snoc α ω) (Fin.snoc r ε) := by
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨hsph, horth, hball, hballdisj, -⟩ := hinv
+  set kk : Fin N := ⟨k, hk⟩ with hkkdef
+  have hjk : j ≠ kk := by
+    intro h
+    rw [h, hkkdef] at hjun
+    simp at hjun
+  set μ₀' : Fin N → Measure (Eucl d) := fun i => attnMeasureFlow θ (μ₀ i) with hμ₀'def
+  have hμ' : ∀ i, IsProbabilityMeasure (μ₀' i) :=
+    fun i => haveI := hμ i; isProbabilityMeasure_attnMeasureFlow θ (μ₀ i) (hμs i)
+  haveI := hμ' j
+  set ω : Eucl d := ‖barycenter (μ₀' j)‖⁻¹ • barycenter (μ₀' j) with hωdef
+  -- `ω` is (strictly) in the open orthant, so a small enough ball around it stays inside.
+  have hbint : Integrable (fun x : Eucl d => x) (μ₀' j) := integrable_id_of_sphere_support (hsph j)
+  have hbmem : barycenter (μ₀' j) ∈ orthant d := barycenter_mem_orthant (hsph j) hbint (horth j)
+  have hbpos : 0 < ‖barycenter (μ₀' j)‖ := norm_barycenter_pos_of_orthant (hsph j) hbint (horth j)
+  have hωmem : ω ∈ orthant d := by
+    intro i
+    have hinvpos : (0 : ℝ) < ‖barycenter (μ₀' j)‖⁻¹ := inv_pos.mpr hbpos
+    simpa [hωdef] using mul_pos hinvpos (hbmem i)
+  obtain ⟨ε₀, hε₀pos, hε₀sub⟩ := Metric.isOpen_iff.mp isOpen_orthant ω hωmem
+  -- Phase 1, with the orthant slack `ε₀` as the caller-supplied radius cap.
+  obtain ⟨θ', hdur, ⟨ε, hεpos, hεε₀, hshrinkj, hshrinkk, hdisj⟩, hfix⟩ :=
+    exists_shrink_colinear_pair_disjoint_from_bystanders hd j kk hjk μ₀' hμ' T hT ε₀ hε₀pos
+      hsph horth hnoncol hcol
+      (fun o : Option (Fin k) => o.elim (0 : Eucl d) α)
+      (fun o : Option (Fin k) => o.elim (-1 : ℝ) r)
+      (by
+        rintro (_ | i)
+        · simp only [Option.elim, dist_zero_right]
+          linarith [norm_nonneg ω]
+        · exact hsep i)
+  have hballorth : Metric.ball ω ε ⊆ orthant d :=
+    (Metric.ball_subset_ball hεε₀).trans hε₀sub
+  refine ⟨θ', hdur, ω, ε, hεpos, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- The colinear partner `j` shares the new ball (the deferred-conflict record).
+    rw [attnMeasureFlow_append]
+    exact hshrinkj
+  · -- Clause 1 (sphere support): schedule-generic, exactly as in the non-colinear sibling.
+    intro i
+    rw [attnMeasureFlow_append]
+    exact attnMeasureFlow_supportedIn_sphere θ' (attnMeasureFlow θ (μ₀ i))
+      (haveI := hμ' i; hsph i)
+  · -- Clause 2 (orthant support): the pair sits in `ball ω ε ⊆ ball ω ε₀ ⊆ orthant d`, every other
+    -- member is fixed by Phase 1.
+    intro i
+    rw [attnMeasureFlow_append]
+    by_cases hij : i = j
+    · subst hij
+      exact measure_mono_null (Set.compl_subset_compl.mpr hballorth) hshrinkj
+    · by_cases hik : i = kk
+      · subst hik
+        exact measure_mono_null (Set.compl_subset_compl.mpr hballorth) hshrinkk
+      · rw [hfix i hij hik]
+        exact horth i
+  · -- Clause 3 (ball placement of every placed member, now `i < k + 1`). Already-placed members
+    -- are neither `j` (unplaced, `k < j`) nor `k`, so Phase 1 fixes them.
+    intro i hik
+    rw [attnMeasureFlow_append]
+    rcases Fin.eq_castSucc_or_eq_last (⟨i, hik⟩ : Fin (k + 1)) with ⟨i', hi'⟩ | hi'
+    · have hval : (i : ℕ) = (i' : ℕ) := by
+        have h := congrArg Fin.val hi'; simpa using h
+      have hik' : (i : ℕ) < k := hval ▸ i'.isLt
+      have hii' : i' = (⟨i, hik'⟩ : Fin k) := Fin.ext hval.symm
+      have hfixk : i ≠ kk := by
+        intro h
+        have hikk : (i : ℕ) = k := by rw [h, hkkdef]
+        omega
+      have hfixj : i ≠ j := by
+        intro h
+        rw [h] at hik'
+        omega
+      rw [hfix i hfixj hfixk, hi', hii']
+      simp only [Fin.snoc_castSucc]
+      exact hball i hik'
+    · have hival : (i : ℕ) = k := by
+        have := congrArg Fin.val hi'; simpa using this
+      have hieqk : i = kk := by
+        apply Fin.ext; simp [hkkdef, hival]
+      rw [hi', hieqk]
+      simp only [Fin.snoc_last]
+      exact hshrinkk
+  · -- Clause 4 (pairwise disjoint balls, extended to `k + 1`): Phase 1 chose its radius disjoint
+    -- from every already-placed ball.
+    intro a b hab
+    rcases Fin.eq_castSucc_or_eq_last a with ⟨a', ha'⟩ | ha'
+    · rcases Fin.eq_castSucc_or_eq_last b with ⟨b', hb'⟩ | hb'
+      · rw [ha', hb'] at hab ⊢
+        simp only [Fin.snoc_castSucc]
+        exact hballdisj (by simpa using (Fin.castSucc_injective k).ne_iff.mp hab)
+      · rw [ha', hb']
+        simp only [Fin.snoc_castSucc, Fin.snoc_last]
+        exact (hdisj (some a')).symm
+    · rcases Fin.eq_castSucc_or_eq_last b with ⟨b', hb'⟩ | hb'
+      · rw [ha', hb']
+        simp only [Fin.snoc_castSucc, Fin.snoc_last]
+        exact hdisj (some b')
+      · exfalso; apply hab; rw [ha', hb']
+  · -- Clause 5 (invertible on-sphere flow map): schedule-generic, as in the non-colinear sibling.
+    intro i hik
+    haveI := hμ i
+    obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hΦeq, -, hΦinv⟩ :=
+      attnMeasureFlow_exists_map (θ ++ θ') (μ₀ i) (hμs i)
+    exact ⟨Φ, Φinv, hΦm, hΦinvm, hΦeq, hΦinv⟩
+
 end MeasureToMeasure.Leaves
