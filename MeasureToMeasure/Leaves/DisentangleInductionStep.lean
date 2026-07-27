@@ -3,6 +3,7 @@ import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
 import MeasureToMeasure.Leaves.OrthantBoundaryGap
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Leaves.OrthantSphereAvoiding
+import MeasureToMeasure.Leaves.GenRestNearBall
 
 /-!
 # `exists_disentangling_balls`'s strong induction: the prefix invariant and its base case
@@ -543,5 +544,381 @@ theorem disentangle_insert_colinear (hd : 2 ≤ d) {N k : ℕ} (hk : k < N)
     obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hΦeq, -, hΦinv⟩ :=
       attnMeasureFlow_exists_map (θ ++ θ') (μ₀ i) (hμs i)
     exact ⟨Φ, Φinv, hΦm, hΦinvm, hΦeq, hΦinv⟩
+
+/-! ### The pair-RESOLVING colinear insertion step
+
+`disentangle_insert_colinear` above DEFERS the colinearity: `j` and `k` leave sharing one ball, so
+iterating that branch alone cannot close the induction over `N` (a later step wanting to place `j`
+finds it inside `k`'s ball). The three declarations below build the variant that BREAKS the
+colinearity instead, by running Phases 2/3 FIRST, before any shrink, and only then handing off to
+the already-banked non-colinear branch.
+
+**Why this order is forced.** Phase 2 (`barycenter_ne_of_massGapCollapse_meanField`) needs
+`hne : μ ≠ ν` for the two acted members. Run BEFORE any shrink, that is
+`attnMeasureFlow θ (μ₀ j) ≠ attnMeasureFlow θ (μ₀ k)`, a statable hypothesis about the data the
+caller already has. Run AFTER a Phase-1 shrink it is neither statable nor derivable: mean-field flow
+maps are measure-DEPENDENT, so `attnMeasureFlow_exists_map` gives no injectivity across two
+different measures, and nothing propagates distinctness through the shrink.
+
+**Standing caveat on `GenRestNearBall`.** Phase 3 is gated on `GenRestNearBall d`, which
+`Regression/Refuted/HgenRestUnconditionallyFalse.lean` records as unconditionally FALSE for `2 ≤ d`
+(its `restComp` clause fails at `w := normalize (q - ⟪z,q⟫•z)`). So
+`disentangle_insert_colinear_resolving` is kernel-clean but, as it stands, NOT invocable: it is the
+`kernel-clean-not-applicable` pattern, deliberately, exactly as for the already-merged
+`exists_phase3_of_genRestNearBall` it is built on. What is banked here is the ARCHITECTURE (the
+correct phase order, the carrier bundle, and the hand-off to `disentangle_insert_noncolinear`);
+replacing `GenRestNearBall` by a satisfiable Phase-3 non-degeneracy condition is a separate open
+problem, and every hypothesis OTHER than `hgen` is jointly satisfiable (see the notes on
+`disentangle_insert_colinear_resolving` below). -/
+
+/-- A sphere-supported measure is supported in `Metric.ball 0 2`: `sphere d` is the unit sphere, so
+every point of it has norm `1 < 2`. Used to discharge, vacuously, the ball-confinement clause of
+`GenRestNearBall` at the decorative instantiation `center := 0`, `ε' := 2` -- Phase 3 is applied
+here BEFORE any shrink, so no genuine confinement is available (nor needed: `GenRestNearBall`
+quantifies
+over every ball, and a ball containing the whole sphere makes that clause carry no information). -/
+theorem supportedIn_ball_two_of_sphere {d : ℕ} {ρ : Measure (Eucl d)}
+    (hρ : supportedIn ρ (sphere d)) : supportedIn ρ (Metric.ball (0 : Eucl d) 2) := by
+  refine measure_mono_null (Set.compl_subset_compl.mpr ?_) hρ
+  intro x hx
+  simp only [sphere, Metric.mem_sphere, dist_zero_right] at hx
+  simp only [Metric.mem_ball, dist_zero_right, hx]
+  norm_num
+
+/-- **Phase 3, in BOTH directions.** `exists_phase3_of_genRestNearBall` (`GenRestNearBall.lean`)
+concludes `∀ γ₂, barycenter (flow A) ≠ γ₂ • barycenter (flow B)`, one direction only. The insertion
+step needs a `Pairwise` non-colinearity statement, which is symmetric, so the reverse direction is
+produced here once and for all by `ne_smul_flip_of_ne_zero`: the flip needs
+`barycenter (flow B) ≠ 0`, which follows from `B`'s image staying inside the carrier `U ⊆ orthant d`
+(the region-generic conjunct at `S := orthant d`) plus `norm_barycenter_pos_of_orthant`.
+
+The ball-confinement inputs of `exists_phase3_of_genRestNearBall` are instantiated at
+`center := 0`, `ε' := 2` (see `supportedIn_ball_two_of_sphere`): this variant applies Phase 3
+BEFORE any shrink, so there is no confining ball to point at, and none is needed. -/
+theorem exists_phase3_nonColinear_symm {d : ℕ} [NeZero d] (hgen : GenRestNearBall d)
+    (A B : Measure (Eucl d)) [IsProbabilityMeasure A] [IsProbabilityMeasure B]
+    (T : ℝ) (hT : 0 < T) (hAB : A ≠ B)
+    (hAs : supportedIn A (sphere d)) (hBs : supportedIn B (sphere d))
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hUorth : U ⊆ orthant d)
+    (hAU : supportedIn A U) (hBU : supportedIn B U)
+    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter A = γ • barycenter B) :
+    ∃ ψ : AttnSchedule d, AttnSchedule.durationSum ψ = T ∧
+      (∀ c : ℝ, barycenter (attnMeasureFlow ψ A) ≠ c • barycenter (attnMeasureFlow ψ B)) ∧
+      (∀ c : ℝ, barycenter (attnMeasureFlow ψ B) ≠ c • barycenter (attnMeasureFlow ψ A)) ∧
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow ψ ρ = ρ) ∧
+      (∀ S : Set (Eucl d), MeasurableSet S → U ⊆ S →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow ψ ρ) S) := by
+  have horthsub : ∀ ρ : Measure (Eucl d), supportedIn ρ U → supportedIn ρ (orthant d) :=
+    fun ρ h => measure_mono_null (Set.compl_subset_compl.mpr hUorth) h
+  obtain ⟨ψ, hdur, -, hnc, -, hfix, hreg⟩ :=
+    exists_phase3_of_genRestNearBall hgen 0 2 (by norm_num) A B T hT hAB hAs hBs
+      (horthsub A hAU) (horthsub B hBU)
+      (supportedIn_ball_two_of_sphere hAs) (supportedIn_ball_two_of_sphere hBs)
+      hcol U hUopen hAU hBU
+  refine ⟨ψ, hdur, hnc, ?_, hfix, hreg⟩
+  haveI : IsProbabilityMeasure (attnMeasureFlow ψ B) :=
+    isProbabilityMeasure_attnMeasureFlow ψ B hBs
+  have hBs' : supportedIn (attnMeasureFlow ψ B) (sphere d) :=
+    attnMeasureFlow_supportedIn_sphere ψ B hBs
+  have hBo' : supportedIn (attnMeasureFlow ψ B) (orthant d) :=
+    hreg (orthant d) isOpen_orthant.measurableSet hUorth B hBs (horthsub B hBU)
+  exact ne_smul_flip_of_ne_zero
+    (norm_pos_iff.mp (norm_barycenter_pos_of_orthant hBs'
+      (integrable_id_of_sphere_support hBs') hBo')) hnc
+
+/-- **Phases 2 and 3 together: a pair of distinct carrier-supported members is made fully
+non-colinear.** Phase 2 (`barycenter_ne_of_massGapCollapse_meanField`, kernel-clean and
+unconditional) separates the two barycenters; if that already broke colinearity outright, Phase 3
+is SKIPPED and its time budget is handed back to the caller through `Tf` (the returned schedule
+satisfies `durationSum ψ + Tf = T` with `0 < Tf`, so the caller always has a strictly positive
+remaining budget for its own final step, and no identity/filler schedule is ever needed). Otherwise
+Phase 3 runs on the ordered pair, and the leftover budget is `T / 3`.
+
+**The `γ`-bookkeeping between the two phases.** Phase 3 needs `barycenter μ = γ • barycenter ν` with
+`γ ∈ Ioo 0 1`, while the residual relation after Phase 2 is just some `γ = c`. Positivity of `c` is
+forced by the ORTHANT: both barycenters lie in `orthant d` (`barycenter_mem_orthant`), so comparing
+coordinate `0` gives `0 < c`. `c = 1` is excluded by Phase 2's own conclusion. `c > 1` is handled by
+swapping the two roles (`barycenter ν = c⁻¹ • barycenter μ`) and reading the conclusion off the
+other direction of `exists_phase3_nonColinear_symm`, which is why that lemma exposes both.
+
+The bystander-fixing and region-generic conjuncts compose across `θ₂ ++ θ₃` in the obvious way:
+`attnMeasureFlow_append` plus the fact that the intermediate measure is again a sphere-supported
+probability measure. -/
+theorem exists_phase23_nonColinear {d : ℕ} [NeZero d] (hgen : GenRestNearBall d)
+    (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
+    (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hUorth : U ⊆ orthant d)
+    (hμU : supportedIn μ U) (hνU : supportedIn ν U) :
+    ∃ (ψ : AttnSchedule d) (Tf : ℝ), 0 < Tf ∧ AttnSchedule.durationSum ψ + Tf = T ∧
+      (∀ c : ℝ, barycenter (attnMeasureFlow ψ μ) ≠ c • barycenter (attnMeasureFlow ψ ν)) ∧
+      (∀ c : ℝ, barycenter (attnMeasureFlow ψ ν) ≠ c • barycenter (attnMeasureFlow ψ μ)) ∧
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow ψ ρ = ρ) ∧
+      (∀ S : Set (Eucl d), MeasurableSet S → U ⊆ S →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow ψ ρ) S) := by
+  have horthsub : ∀ ρ : Measure (Eucl d), supportedIn ρ U → supportedIn ρ (orthant d) :=
+    fun ρ h => measure_mono_null (Set.compl_subset_compl.mpr hUorth) h
+  -- Phase 2: separate the barycenters (unconditional, no `hgen` needed).
+  obtain ⟨θ₂, hdur₂, hbne, -, hfix₂, hreg₂⟩ :=
+    barycenter_ne_of_massGapCollapse_meanField μ ν (T / 3) (by linarith) hne hμs hνs
+      (horthsub μ hμU) (horthsub ν hνU) U hUopen hμU hνU
+  haveI hμ₂p : IsProbabilityMeasure (attnMeasureFlow θ₂ μ) :=
+    isProbabilityMeasure_attnMeasureFlow θ₂ μ hμs
+  haveI hν₂p : IsProbabilityMeasure (attnMeasureFlow θ₂ ν) :=
+    isProbabilityMeasure_attnMeasureFlow θ₂ ν hνs
+  have hμ₂s : supportedIn (attnMeasureFlow θ₂ μ) (sphere d) :=
+    attnMeasureFlow_supportedIn_sphere θ₂ μ hμs
+  have hν₂s : supportedIn (attnMeasureFlow θ₂ ν) (sphere d) :=
+    attnMeasureFlow_supportedIn_sphere θ₂ ν hνs
+  have hμ₂U : supportedIn (attnMeasureFlow θ₂ μ) U :=
+    hreg₂ U hUopen.measurableSet (subset_refl U) μ hμs hμU
+  have hν₂U : supportedIn (attnMeasureFlow θ₂ ν) U :=
+    hreg₂ U hUopen.measurableSet (subset_refl U) ν hνs hνU
+  have hne₂ : attnMeasureFlow θ₂ μ ≠ attnMeasureFlow θ₂ ν := fun h => hbne (by rw [h])
+  by_cases hnc : ∀ c : ℝ, barycenter (attnMeasureFlow θ₂ μ)
+      ≠ c • barycenter (attnMeasureFlow θ₂ ν)
+  · -- Phase 2 alone already resolved the pair: skip Phase 3, hand its budget back.
+    have hν₂o : supportedIn (attnMeasureFlow θ₂ ν) (orthant d) := horthsub _ hν₂U
+    have hnz : barycenter (attnMeasureFlow θ₂ ν) ≠ 0 :=
+      norm_pos_iff.mp (norm_barycenter_pos_of_orthant hν₂s
+        (integrable_id_of_sphere_support hν₂s) hν₂o)
+    exact ⟨θ₂, T / 3 * 2, by linarith, by rw [hdur₂]; ring, hnc,
+      ne_smul_flip_of_ne_zero hnz hnc, hfix₂, hreg₂⟩
+  · simp only [ne_eq, not_forall, not_not] at hnc
+    obtain ⟨c, hc⟩ := hnc
+    have hμ₂o : supportedIn (attnMeasureFlow θ₂ μ) (orthant d) := horthsub _ hμ₂U
+    have hν₂o : supportedIn (attnMeasureFlow θ₂ ν) (orthant d) := horthsub _ hν₂U
+    have hbμ : barycenter (attnMeasureFlow θ₂ μ) ∈ orthant d :=
+      barycenter_mem_orthant hμ₂s (integrable_id_of_sphere_support hμ₂s) hμ₂o
+    have hbν : barycenter (attnMeasureFlow θ₂ ν) ∈ orthant d :=
+      barycenter_mem_orthant hν₂s (integrable_id_of_sphere_support hν₂s) hν₂o
+    have hd0 : 0 < d := Nat.pos_of_ne_zero (NeZero.ne d)
+    -- Orthant positivity forces `0 < c`, Phase 2 forces `c ≠ 1`.
+    have hcpos : 0 < c := by
+      have h1 := hbμ ⟨0, hd0⟩
+      have h2 := hbν ⟨0, hd0⟩
+      rw [hc] at h1
+      simp only [PiLp.smul_apply, smul_eq_mul] at h1
+      nlinarith
+    have hcne1 : c ≠ 1 := by
+      intro h; rw [h, one_smul] at hc; exact hbne hc
+    rcases lt_or_gt_of_ne hcne1 with hlt | hgt
+    · obtain ⟨θ₃, hdur₃, hnc₃, hnc₃', hfix₃, hreg₃⟩ :=
+        exists_phase3_nonColinear_symm hgen _ _ (T / 3) (by linarith) hne₂ hμ₂s hν₂s
+          U hUopen hUorth hμ₂U hν₂U ⟨c, ⟨hcpos, hlt⟩, hc⟩
+      refine ⟨θ₂ ++ θ₃, T / 3, by linarith, ?_, ?_, ?_, ?_, ?_⟩
+      · simp only [AttnSchedule.durationSum_append, hdur₂, hdur₃]; ring
+      · simpa [attnMeasureFlow_append] using hnc₃
+      · simpa [attnMeasureFlow_append] using hnc₃'
+      · intro ρ _ hρs hρU
+        rw [attnMeasureFlow_append, hfix₂ ρ hρs hρU, hfix₃ ρ hρs hρU]
+      · intro S hS hUS ρ _ hρs hρS
+        rw [attnMeasureFlow_append]
+        haveI := isProbabilityMeasure_attnMeasureFlow θ₂ ρ hρs
+        exact hreg₃ S hS hUS _ (attnMeasureFlow_supportedIn_sphere θ₂ ρ hρs)
+          (hreg₂ S hS hUS ρ hρs hρS)
+    · -- `c > 1`: swap the two roles and read the other direction of the symmetric Phase 3.
+      have hcne0 : c ≠ 0 := by linarith
+      have hc' : barycenter (attnMeasureFlow θ₂ ν)
+          = c⁻¹ • barycenter (attnMeasureFlow θ₂ μ) := by
+        rw [hc, smul_smul, inv_mul_cancel₀ hcne0, one_smul]
+      have hcinv : c⁻¹ ∈ Set.Ioo (0 : ℝ) 1 :=
+        ⟨inv_pos.mpr hcpos, by rw [inv_lt_one_iff₀]; right; exact hgt⟩
+      obtain ⟨θ₃, hdur₃, hnc₃, hnc₃', hfix₃, hreg₃⟩ :=
+        exists_phase3_nonColinear_symm hgen _ _ (T / 3) (by linarith) (Ne.symm hne₂) hν₂s hμ₂s
+          U hUopen hUorth hν₂U hμ₂U ⟨c⁻¹, hcinv, hc'⟩
+      refine ⟨θ₂ ++ θ₃, T / 3, by linarith, ?_, ?_, ?_, ?_, ?_⟩
+      · simp only [AttnSchedule.durationSum_append, hdur₂, hdur₃]; ring
+      · simpa [attnMeasureFlow_append] using hnc₃'
+      · simpa [attnMeasureFlow_append] using hnc₃
+      · intro ρ _ hρs hρU
+        rw [attnMeasureFlow_append, hfix₂ ρ hρs hρU, hfix₃ ρ hρs hρU]
+      · intro S hS hUS ρ _ hρs hρS
+        rw [attnMeasureFlow_append]
+        haveI := isProbabilityMeasure_attnMeasureFlow θ₂ ρ hρs
+        exact hreg₃ S hS hUS _ (attnMeasureFlow_supportedIn_sphere θ₂ ρ hρs)
+          (hreg₂ S hS hUS ρ hρs hρS)
+
+/-- **The pair-RESOLVING colinear insertion step.** The sibling of `disentangle_insert_colinear`
+that BREAKS the colinearity between the new member `k` and its colinear partner `j` instead of
+deferring it: the returned schedule splits as `ψ ++ ψ'`, and the exposed middle conjunct records
+that after the FIRST half the WHOLE family is pairwise non-colinear. `j` and `k` therefore do NOT
+end up sharing a ball; `j` stays unplaced but now has a barycenter direction not colinear with
+anyone else's, so a later insertion step can place it through the non-colinear branch. This is
+additive: `disentangle_insert_colinear` is untouched.
+
+**The four steps, in the order that is forced.**
+1. Phases 2 and 3 run FIRST, on the pair `(j, k)`, through `exists_phase23_nonColinear`. Doing this
+   before any shrink is what makes `hne` (distinctness of the two flowed members) a statable
+   hypothesis at all: post-shrink it is neither statable nor derivable, because mean-field flow maps
+   are measure-dependent so `attnMeasureFlow_exists_map` gives no cross-measure injectivity.
+2. Phase 3's ball-confinement parameters are decorative here (`center := 0`, `ε' := 2`, a ball
+   containing the whole sphere), which is exactly what lets Phase 3 precede the shrink.
+3. If Phase 2 alone already resolved the pair, Phase 3 is skipped and its duration budget is handed
+   to the final step; `exists_phase23_nonColinear` reports the remaining budget as `Tf`.
+4. The finish is the ALREADY-BANKED `disentangle_insert_noncolinear` applied on the composed
+   schedule `θ ++ ψ`, whose full-family `Pairwise` hypothesis is precisely the conjunct step 1
+   establishes. `List.append_assoc` converts its `(θ ++ ψ) ++ ψ'` conclusion into the
+   `θ ++ (ψ ++ ψ')` shape stated here.
+
+**The carrier bundle.** Phases 2/3 fix only what lies outside their open carrier `U`, so the caller
+must supply `U` together with: `IsOpen U`, `U ⊆ orthant d` (this is what turns the region-generic
+conjunct of Phases 2/3 into orthant preservation for the two acted members, i.e. clause 2 of the
+invariant), support of both acted members in `U`, and support of every OTHER member in `Uᶜ` (this is
+what makes Phases 2/3 fix them literally, preserving clauses 2/3 for the already-placed prefix).
+Two further hypotheses are needed because the two acted members MOVE during Phases 2/3, so
+statements about the pre-phase family do not transfer: `hbys` (every bystander is non-colinear with
+EVERY `U`-supported sphere probability measure, not merely with the pre-phase members) and `hsepU`
+(a `U`-uniform form of `disentangle_insert_noncolinear`'s own `hsep`). Both are genuine
+strengthenings, carried as standing hypotheses in the same style as `hsep` in leaf 2, to be
+established by the induction that eventually consumes this step.
+
+**`j` must be unplaced (`hjun : k < j`),** for the same reason as in `disentangle_insert_colinear`:
+`j` is moved by Phases 2/3 (it is inside `U`), so if it already owned a ball, clause 3 of the
+invariant would break at `j`. Unplaced members carry no ball commitment (module docstring), so
+moving `j` is harmless.
+
+**Gate.** `hgen : GenRestNearBall d` is threaded through UNRESOLVED, and
+`Regression/Refuted/HgenRestUnconditionallyFalse.lean` records that it is in fact unconditionally
+false for `2 ≤ d`. This theorem is therefore kernel-clean but not currently invocable, deliberately:
+what it banks is the phase ordering and the carrier bookkeeping, which are independent of how
+Phase 3's non-degeneracy condition is eventually repaired. Every hypothesis other than `hgen` is
+jointly satisfiable, e.g. `N = 2`, `k = 0`, `θ = []`, `U = orthant d`, `μ₀ = ![δ_p, δ_q]` for two
+distinct points of `sphere d ∩ orthant d`: then `hout`, `hbys`, `hrest` and `hsepU` are vacuous
+(there are no bystanders and no placed members) and `hinv` is `DisentangledPrefix … 0` with empty
+ball data. -/
+theorem disentangle_insert_colinear_resolving {d : ℕ} (hd : 2 ≤ d) {N k : ℕ} (hk : k < N)
+    (hgen : GenRestNearBall d)
+    (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (θ : AttnSchedule d) (α : Fin k → Eucl d) (r : Fin k → ℝ)
+    (hinv : DisentangledPrefix d N k μ₀ θ α r)
+    (j : Fin N) (hjun : k < (j : ℕ))
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hUorth : U ⊆ orthant d)
+    (hjU : supportedIn (attnMeasureFlow θ (μ₀ j)) U)
+    (hkU : supportedIn (attnMeasureFlow θ (μ₀ ⟨k, hk⟩)) U)
+    (hout : ∀ i : Fin N, i ≠ j → i ≠ ⟨k, hk⟩ → supportedIn (attnMeasureFlow θ (μ₀ i)) Uᶜ)
+    (hne : attnMeasureFlow θ (μ₀ j) ≠ attnMeasureFlow θ (μ₀ ⟨k, hk⟩))
+    (hbys : ∀ i : Fin N, i ≠ j → i ≠ ⟨k, hk⟩ → ∀ ρ : Measure (Eucl d),
+        IsProbabilityMeasure ρ → supportedIn ρ (sphere d) → supportedIn ρ U →
+        ∀ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ i)) ≠ c • barycenter ρ)
+    (hrest : Pairwise fun i i' : Fin N => i ≠ j → i ≠ ⟨k, hk⟩ → i' ≠ j → i' ≠ ⟨k, hk⟩ →
+        ∀ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ i))
+          ≠ c • barycenter (attnMeasureFlow θ (μ₀ i')))
+    (hsepU : ∀ i : Fin k, ∀ ρ : Measure (Eucl d), IsProbabilityMeasure ρ →
+        supportedIn ρ (sphere d) → supportedIn ρ U →
+        r i < dist (‖barycenter ρ‖⁻¹ • barycenter ρ) (α i))
+    (T : ℝ) (hT : 0 < T) :
+    ∃ ψ ψ' : AttnSchedule d, AttnSchedule.durationSum (ψ ++ ψ') = T ∧
+      Pairwise (fun i i' : Fin N => ∀ c : ℝ,
+        barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i))
+          ≠ c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i'))) ∧
+      ∃ (ω : Eucl d) (ε : ℝ), 0 < ε ∧
+        DisentangledPrefix d N (k + 1) μ₀ (θ ++ (ψ ++ ψ')) (Fin.snoc α ω) (Fin.snoc r ε) := by
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨hsph, horth, hball, hballdisj, -⟩ := hinv
+  set kk : Fin N := ⟨k, hk⟩ with hkkdef
+  have hμ'p : ∀ i, IsProbabilityMeasure (attnMeasureFlow θ (μ₀ i)) :=
+    fun i => haveI := hμ i; isProbabilityMeasure_attnMeasureFlow θ (μ₀ i) (hμs i)
+  haveI := hμ'p j
+  haveI := hμ'p kk
+  -- Step 1: Phases 2/3, run BEFORE any shrink.
+  obtain ⟨ψ, Tf, hTf, hdursum, hnc1, hnc2, hfix, hreg⟩ :=
+    exists_phase23_nonColinear hgen _ _ T hT hne (hsph j) (hsph kk) U hUopen hUorth hjU hkU
+  -- Every member outside the carrier is fixed literally; the two acted members stay in `U`.
+  have hFbys : ∀ i : Fin N, i ≠ j → i ≠ kk →
+      attnMeasureFlow (θ ++ ψ) (μ₀ i) = attnMeasureFlow θ (μ₀ i) := by
+    intro i hij hik
+    rw [attnMeasureFlow_append]
+    exact hfix _ (haveI := hμ'p i; hsph i) (hout i hij hik)
+  have hFs : ∀ i : Fin N, supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ i)) (sphere d) := by
+    intro i
+    rw [attnMeasureFlow_append]
+    exact attnMeasureFlow_supportedIn_sphere ψ _ (haveI := hμ'p i; hsph i)
+  have hFp : ∀ i : Fin N, IsProbabilityMeasure (attnMeasureFlow (θ ++ ψ) (μ₀ i)) := by
+    intro i
+    haveI := hμ i
+    exact isProbabilityMeasure_attnMeasureFlow (θ ++ ψ) (μ₀ i) (hμs i)
+  have hFjU : supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ j)) U := by
+    rw [attnMeasureFlow_append]
+    exact hreg U hUopen.measurableSet (subset_refl U) _ (hsph j) hjU
+  have hFkU : supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ kk)) U := by
+    rw [attnMeasureFlow_append]
+    exact hreg U hUopen.measurableSet (subset_refl U) _ (hsph kk) hkU
+  have horthsub : ∀ ρ : Measure (Eucl d), supportedIn ρ U → supportedIn ρ (orthant d) :=
+    fun ρ h => measure_mono_null (Set.compl_subset_compl.mpr hUorth) h
+  have hnz : ∀ ρ : Measure (Eucl d), IsProbabilityMeasure ρ → supportedIn ρ (sphere d) →
+      supportedIn ρ (orthant d) → barycenter ρ ≠ 0 := by
+    intro ρ hρp hρs hρo
+    haveI := hρp
+    exact norm_pos_iff.mp (norm_barycenter_pos_of_orthant hρs
+      (integrable_id_of_sphere_support hρs) hρo)
+  have hFjnz : barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ j)) ≠ 0 :=
+    hnz _ (hFp j) (hFs j) (horthsub _ hFjU)
+  have hFknz : barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ kk)) ≠ 0 :=
+    hnz _ (hFp kk) (hFs kk) (horthsub _ hFkU)
+  -- Step 2: the whole family is pairwise non-colinear after `θ ++ ψ` (the resolution itself).
+  have hpair : Pairwise (fun i i' : Fin N => ∀ c : ℝ,
+      barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i))
+        ≠ c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i'))) := by
+    intro a b hab
+    by_cases haj : a = j
+    · have hbj : b ≠ j := by rw [← haj]; exact Ne.symm hab
+      by_cases hbk : b = kk
+      · rw [haj, hbk]
+        simpa [attnMeasureFlow_append] using hnc1
+      · rw [haj, hFbys b hbj hbk]
+        exact ne_smul_flip_of_ne_zero hFjnz (hbys b hbj hbk _ (hFp j) (hFs j) hFjU)
+    · by_cases hak : a = kk
+      · have hbk : b ≠ kk := by rw [← hak]; exact Ne.symm hab
+        by_cases hbj : b = j
+        · rw [hak, hbj]
+          simpa [attnMeasureFlow_append] using hnc2
+        · rw [hak, hFbys b hbj hbk]
+          exact ne_smul_flip_of_ne_zero hFknz (hbys b hbj hbk _ (hFp kk) (hFs kk) hFkU)
+      · rw [hFbys a haj hak]
+        by_cases hbj : b = j
+        · rw [hbj]
+          exact hbys a haj hak _ (hFp j) (hFs j) hFjU
+        · by_cases hbk : b = kk
+          · rw [hbk]
+            exact hbys a haj hak _ (hFp kk) (hFs kk) hFkU
+          · rw [hFbys b hbj hbk]
+            exact hrest hab haj hak hbj hbk
+  -- Step 3: the prefix invariant survives Phases 2/3.
+  have hprefix : DisentangledPrefix d N k μ₀ (θ ++ ψ) α r := by
+    refine ⟨hFs, ?_, ?_, hballdisj, ?_⟩
+    · intro i
+      by_cases hij : i = j
+      · rw [hij]; exact horthsub _ hFjU
+      · by_cases hik : i = kk
+        · rw [hik]; exact horthsub _ hFkU
+        · rw [hFbys i hij hik]; exact horth i
+    · intro i hik
+      have hij : i ≠ j := by intro h; rw [h] at hik; omega
+      have hikk : i ≠ kk := by
+        intro h; rw [h, hkkdef] at hik; simp at hik
+      rw [hFbys i hij hikk]; exact hball i hik
+    · intro i _
+      haveI := hμ i
+      obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hΦeq, -, hΦinv⟩ :=
+        attnMeasureFlow_exists_map (θ ++ ψ) (μ₀ i) (hμs i)
+      exact ⟨Φ, Φinv, hΦm, hΦinvm, hΦeq, hΦinv⟩
+  have hsep : ∀ i : Fin k, r i < dist
+      (‖barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ ⟨k, hk⟩))‖⁻¹ •
+        barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ ⟨k, hk⟩))) (α i) :=
+    fun i => hsepU i _ (hFp kk) (hFs kk) hFkU
+  -- Step 4: hand off to the already-banked non-colinear branch.
+  obtain ⟨ψ', hdur', ω, ε, hεpos, hprefix'⟩ :=
+    disentangle_insert_noncolinear hk μ₀ hμ hμs (θ ++ ψ) α r hprefix hpair hsep Tf hTf
+  refine ⟨ψ, ψ', ?_, hpair, ω, ε, hεpos, ?_⟩
+  · simp only [AttnSchedule.durationSum_append, hdur']
+    exact hdursum
+  · rw [← List.append_assoc]
+    exact hprefix'
 
 end MeasureToMeasure.Leaves
