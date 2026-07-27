@@ -131,6 +131,7 @@ import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
 import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
 import MeasureToMeasure.Leaves.GenRestNearBall
+import MeasureToMeasure.Leaves.OffSpanMargin
 import MeasureToMeasure.Leaves.OrthantSphereAvoiding
 import MeasureToMeasure.Leaves.UniformRadiusPacking
 import MeasureToMeasure.Leaves.UniformRadiusPackingUnit
