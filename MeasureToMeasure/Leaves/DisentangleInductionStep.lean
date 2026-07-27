@@ -272,10 +272,29 @@ leaves slot `j` untouched by the substitution. The resulting schedule's bystande
 (`∀ i, i ≠ j → attnMeasureFlow θ (μ₀'' i) = μ₀'' i`) reads off the REAL family's own bystander
 fact for every `i ≠ j, i ≠ k` (poisoning only touches slot `k`, which is excluded); slot `k`'s own
 fate is instead read off `lemma_3_3`'s shrinking conclusion on the companion `ν₀ = μ₀ k` directly,
-so the poisoned slot's own (fictional, uninformative) fixed-point fact is simply discarded. -/
+so the poisoned slot's own (fictional, uninformative) fixed-point fact is simply discarded.
+
+**Why the caller-supplied radius cap `εmax`.** The confinement radius is chosen existentially here
+(`exists_ball_disjoint_of_dist_pos` only knows about the bystander balls), and ball-SUPPORT is not
+monotone under shrinking, so a caller cannot narrow the ball after the fact: the cap has to be
+pushed into this phase. It is: the returned `ε` additionally satisfies `ε ≤ εmax` for any
+caller-supplied `0 < εmax`, because DISJOINTNESS (unlike support) IS monotone under
+`Metric.ball_subset_ball`, so every conclusion survives at the smaller radius `min ε εmax`. This
+is the same `min` idiom `disentangle_insert_noncolinear` uses above.
+
+The cap exists so the eventual assembly can force the confinement ball INSIDE the open orthant.
+There `εmax` is instantiated from `Metric.isOpen_iff.mp isOpen_orthant ω̂ hω̂mem`, where
+`ω̂ := ‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)` is in the OPEN orthant (`barycenter_mem_orthant`
+plus `norm_barycenter_pos_of_orthant`, both `OrthantBoundaryGap.lean`, both already used above);
+the resulting `U := Metric.ball ω̂ ε` then satisfies `U ⊆ orthant d`, which is exactly the `U ⊆ S`
+antecedent that the region-generic forward-invariance conjunct of Phase 2 / Phase 3
+(`barycenter_ne_of_massGapCollapse_meanField`,
+`barycenter_nonColinear_of_massGapCollapse_meanField`) needs in order to yield orthant preservation
+for the unplaced bystanders. Without the cap those conjuncts are kernel-clean but inapplicable. -/
 theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N : ℕ}
     (j k : Fin N) (hjk : j ≠ k) (μ₀ : Fin N → Measure (Eucl d))
     (hμ : ∀ i, IsProbabilityMeasure (μ₀ i)) (T : ℝ) (hT : 0 < T)
+    (εmax : ℝ) (hεmax : 0 < εmax)
     (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hμo : ∀ i, supportedIn (μ₀ i) (orthant d))
     (hnoncol : Pairwise (fun i i' : Fin N =>
         i ≠ k → i' ≠ k → ∀ c : ℝ, barycenter (μ₀ i) ≠ c • barycenter (μ₀ i')))
@@ -283,7 +302,8 @@ theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N :
     {ι : Type*} [Fintype ι] [Nonempty ι] (β : ι → Eucl d) (r : ι → ℝ)
     (hsep : ∀ i, r i < dist (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) (β i)) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
-      (∃ ε > 0, supportedIn (attnMeasureFlow θ (μ₀ j))
+      (∃ ε > 0, ε ≤ εmax ∧
+        supportedIn (attnMeasureFlow θ (μ₀ j))
           (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
         supportedIn (attnMeasureFlow θ (μ₀ k))
           (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε) ∧
@@ -291,8 +311,16 @@ theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N :
           (Metric.ball (β i) (r i))) ∧
       ∀ i, i ≠ j → i ≠ k → attnMeasureFlow θ (μ₀ i) = μ₀ i := by
   haveI : NeZero d := ⟨by omega⟩
-  obtain ⟨ε, hεpos, hdisj⟩ :=
+  obtain ⟨ε₁, hε₁pos, hdisj₁⟩ :=
     exists_ball_disjoint_of_dist_pos β r (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) hsep
+  -- Honor the caller's cap: shrink to `min ε₁ εmax`. Disjointness survives (it is monotone under
+  -- `Metric.ball_subset_ball`), and the shrink radius is only ever fed FORWARD into `lemma_3_3`.
+  set ε : ℝ := min ε₁ εmax with hεdef
+  have hεpos : 0 < ε := lt_min hε₁pos hεmax
+  have hεε₁ : ε ≤ ε₁ := min_le_left _ _
+  have hdisj : ∀ i, Disjoint (Metric.ball (‖barycenter (μ₀ j)‖⁻¹ • barycenter (μ₀ j)) ε)
+      (Metric.ball (β i) (r i)) :=
+    fun i => Disjoint.mono_left (Metric.ball_subset_ball hεε₁) (hdisj₁ i)
   obtain ⟨ρ, hρprob, hρs, hρo, hρavoid⟩ :=
     exists_dirac_avoiding_measure hd (fun i : Fin N => barycenter (μ₀ i))
   classical
@@ -337,7 +365,7 @@ theorem exists_shrink_colinear_pair_disjoint_from_bystanders (hd : 2 ≤ d) {N :
   obtain ⟨θ, hdur, hshrinkν, hshrinkμ, hfix⟩ :=
     lemma_3_3 j μ₀' (μ₀ k) hμ' T ε hT hεpos hμs' hμo' (hμs k) (hμo k) hnoncol' hcol'
   rw [hjk'] at hshrinkμ hshrinkν
-  refine ⟨θ, hdur, ⟨ε, hεpos, hshrinkμ, hshrinkν, hdisj⟩, ?_⟩
+  refine ⟨θ, hdur, ⟨ε, hεpos, min_le_right _ _, hshrinkμ, hshrinkν, hdisj⟩, ?_⟩
   · intro i hij hik
     have := hfix i hij
     rwa [hμ₀'def, Function.update_of_ne hik] at this
