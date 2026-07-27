@@ -52,8 +52,11 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
       barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
       (∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x) ∧
-      ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
-        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ := by
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S → U ⊆ S →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow θ ρ) S := by
   rw [supportedIn] at hμs hνs hμ hν hμU hνU
   -- Step 1: a mass-gap cap `{cos R < ⟪z, ·⟫}` inside the carrier `U`
   obtain ⟨z, cosR, hzsphere, hcosRhalf, hcosR1, hcapsub, hmassne⟩ :=
@@ -261,7 +264,7 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
   have hflowEqν : attnMeasureFlow θ' ν = attnMeasureFlow θ ν := by
     rw [hθ'def, hθdef]
     exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos ν hνs
-  refine ⟨θ', hθ'dur, ?_, ?_, ?_⟩
+  refine ⟨θ', hθ'dur, ?_, ?_, ?_, ?_⟩
   · rw [hflowEqμ, hflowEqν]
     refine Leaves.barycenter_ne_of_W2_gap hPμsphere hPνsphere hαμs hανs hW2μ hW2ν ?_
     rw [← hG]
@@ -305,6 +308,21 @@ theorem barycenter_ne_of_massGapCollapse_meanField (μ ν : Measure (Eucl d)) [I
         ρ hρs
     rw [hflowEqρ, hθdef]
     exact attnMeasureFlow_pPark_eq_of_off_cap z ω cosR ((n : ℝ) * T) hnT0 ρ hρs hρcap
+  · -- **Region-generic forward invariance.** Any measurable region `S` containing the carrier `U`
+    -- contains the mass-gap cap too (`hcapsub`), and a `pPark` block cannot push mass out of such
+    -- a region: its time slices are sphere bijections that are the identity off the cap, so the
+    -- cap-trace maps into itself. This is `attnMeasureFlow_pPark_supportedIn_of_cap_subset`,
+    -- transported to the exact-duration rescale `θ'` by the same rescale bridge as above. `S` is
+    -- arbitrary, so a caller may instantiate it at `orthant d`, at a ball, or at any other region.
+    intro S hS hUS ρ _ hρs hρS
+    rw [supportedIn] at hρs hρS ⊢
+    have hflowEqρ : attnMeasureFlow θ' ρ = attnMeasureFlow θ ρ := by
+      rw [hθ'def, hθdef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos
+        ρ hρs
+    rw [hflowEqρ, hθdef]
+    exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z ω cosR ((n : ℝ) * T) hnT0 hS
+      (fun x hxs hlt => hUS (hcapsub x hxs hlt)) ρ hρs hρS
 
 set_option maxHeartbeats 1600000 in
 /-- **Full non-colinearity of the mass-gap-cap-collapse construction, mean-field form**, closing
@@ -364,8 +382,11 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
       (∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)) ∧
       (∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x) ∧
-      ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
-        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ := by
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S → U ⊆ S →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow θ ρ) S := by
   rw [supportedIn] at hμs hνs hμ hν hμU hνU
   -- Step 1: a mass-gap cap `{cos R < ⟪z, ·⟫}` inside the carrier `U`
   obtain ⟨z, cosR, hzsphere, hcosRhalf, hcosR1, hcapsub, hmassne⟩ :=
@@ -669,7 +690,7 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
   have hflowEqν : attnMeasureFlow θ' ν = attnMeasureFlow θ ν := by
     rw [hθ'def, hθdef]
     exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos ν hνs
-  refine ⟨θ', hθ'dur, hθ'switches, ?_, ?_, ?_⟩
+  refine ⟨θ', hθ'dur, hθ'switches, ?_, ?_, ?_, ?_⟩
   · intro γ₂
     rw [hflowEqμ, hflowEqν]
     rw [hbaryμ] at hArP
@@ -710,6 +731,21 @@ theorem barycenter_nonColinear_of_massGapCollapse_meanField (μ ν : Measure (Eu
         ρ hρs
     rw [hflowEqρ, hθdef]
     exact attnMeasureFlow_pPark_eq_of_off_cap z ω cosR ((n : ℝ) * T) hnT0 ρ hρs hρcap
+  · -- **Region-generic forward invariance.** Any measurable region `S` containing the carrier `U`
+    -- contains the mass-gap cap too (`hcapsub`), and a `pPark` block cannot push mass out of such
+    -- a region: its time slices are sphere bijections that are the identity off the cap, so the
+    -- cap-trace maps into itself. This is `attnMeasureFlow_pPark_supportedIn_of_cap_subset`,
+    -- transported to the exact-duration rescale `θ'` by the same rescale bridge as above. `S` is
+    -- arbitrary, so a caller may instantiate it at `orthant d`, at a ball, or at any other region.
+    intro S hS hUS ρ _ hρs hρS
+    rw [supportedIn] at hρs hρS ⊢
+    have hflowEqρ : attnMeasureFlow θ' ρ = attnMeasureFlow θ ρ := by
+      rw [hθ'def, hθdef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T) hnT0) hnpos
+        ρ hρs
+    rw [hflowEqρ, hθdef]
+    exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z ω cosR ((n : ℝ) * T) hnT0 hS
+      (fun x hxs hlt => hUS (hcapsub x hxs hlt)) ρ hρs hρS
 
 set_option maxHeartbeats 1600000 in
 /-- **Caller-supplied-cap sibling of `barycenter_nonColinear_of_massGapCollapse_meanField`.** Same
@@ -1076,8 +1112,11 @@ theorem lemma_3_4_part1_meanField (μ ν : Measure (Eucl d)) [IsProbabilityMeasu
       barycenter (attnMeasureFlow θ μ) ≠ barycenter (attnMeasureFlow θ ν) ∧
       (∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ = μ.map Φ ∧
         ∀ x ∈ sphere d, x ∉ U → Φ x = x) ∧
-      ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
-        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ :=
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        supportedIn ρ Uᶜ → attnMeasureFlow θ ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S → U ⊆ S →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow θ ρ) S :=
   barycenter_ne_of_massGapCollapse_meanField μ ν T hT hne hμs hνs hμ hν U hUopen hμU hνU
 
 end MeasureToMeasure.Leaves
