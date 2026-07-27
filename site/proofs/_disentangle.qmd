@@ -184,9 +184,14 @@ $2\le d$ is **derived** from $\mu\ne\nu$ (the cap-pole needs a unit $w\perp z$),
 adding it as a hypothesis would break transcription against the axiom's signature. The "no map is
 constant on a nonempty open ball" pigeonhole is leaf **L10** (`exists_ne_in_ball`); `hbar` (equal
 barycenters) is retained for transcription fidelity but **unused**, so the discharge is slightly more
-general than the paper's lemma. (The attention case $\gamma_1\ne1$, at most two switches, remains the
-companion axiom `lemma_3_4_part2`, on the mean-field layer with a genuine $\gamma\in(0,1)$
-colinearity hypothesis.)
+general than the paper's lemma. (The attention case $\gamma_1\ne1$, at most two switches, is the
+companion statement `lemma_3_4_part2` on the mean-field layer with a genuine $\gamma\in(0,1)$
+colinearity hypothesis, and it remains **effectively open**: a 2026-07-19 conditional discharge
+added an `hgenRest` hypothesis that was later kernel-refuted as unsatisfiable for every measure
+pair (finding F22, `Regression/Refuted/HgenRestUnconditionallyFalse.lean`), so that theorem is
+kernel-clean but vacuous. A non-vacuous re-discharge along the paper's own Appendix B.3
+asymmetric-cap route, resting on the admitted eq.-(B.16) bridge axiom (claim `cap-nu-null-b16`,
+with the E5 label-swap correction), is the planned replacement.)
 
 ```lean
 /-- **Lemma 3.4, Part 1** (`γ₁ = 1` case), machine-checked. For two distinct probability measures on

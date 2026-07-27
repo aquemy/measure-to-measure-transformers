@@ -1,5 +1,8 @@
 import MeasureToMeasure.Leaves.CollapseColinearityAvoidance
 import MeasureToMeasure.Leaves.PoleGeometry
+import MeasureToMeasure.Leaves.GenRestNearBall
+import MeasureToMeasure.Leaves.DisentangleInductionStep
+import Regression.NonVacuity.MidLevel
 
 /-!
 # `hgenRest` is unconditionally unsatisfiable (`phase4_final_pole_pigeonhole_assembly`, G1)
@@ -34,6 +37,18 @@ draft, so there is no `Refutations/` adapter to pair with it. Recording it here 
 `Regression.Refuted` convention of PRs #272/#280) prevents a future session from re-attempting to
 wire pole-avoidance machinery into `callerCap` as an invocation route: no choice of `w` can ever
 make `hgenRest` hold, so any such route is doomed before it starts.
+
+Two corollaries (added 2026-07-27, finding F22) state the previously prose-only entailment in the
+kernel: `lemma_3_4_part2_hgenRest_unsatisfiable` shows the EXACT `∀ z, ∀ cosR, ∀ w` hypothesis
+bundle of `Statements/MidLevel.lean`'s `lemma_3_4_part2` (and of
+`barycenter_nonColinear_of_massGapCollapse_meanField`) is false for EVERY measure pair at every
+`2 ≤ d` -- so the 2026-07-19 discharge of `lemma_3_4_part2` (PR #260) is vacuously true; and
+`genRestNearBall_false` refutes `GenRestNearBall 2` outright, instantiating it at the admissible
+part-2 witness pair (`Regression/NonVacuity/MidLevel.lean`'s `partTwoMu`/`partTwoNu`: distinct,
+sphere- and orthant-supported, ball-confined, colinear-unequal barycenters). Everything gated on
+`GenRestNearBall` (`exists_phase3_of_genRestNearBall`, `exists_phase3_nonColinear_symm`,
+`exists_phase23_nonColinear`, `disentangle_insert_colinear_resolving`) is therefore kernel-clean
+but vacuous until Phase 3's non-degeneracy condition is replaced.
 -/
 
 set_option autoImplicit false
@@ -100,5 +115,53 @@ theorem hgenRest_unconditionally_false {d : ℕ} (hd : 2 ≤ d) (z : Eucl d) (hz
     rw [hwq, hw, smul_smul]
     have hinv : ‖r‖ * ‖r‖⁻¹ = 1 := mul_inv_cancel₀ hrnormne
     rw [hinv, one_smul, ← hr, sub_self]
+
+/-- **The `lemma_3_4_part2` hypothesis bundle is unsatisfiable** (finding F22). For every `d ≥ 2`
+and EVERY measure pair `μ, ν`, the exact `hgenRest` hypothesis carried by
+`Statements/MidLevel.lean`'s `lemma_3_4_part2` (and by
+`barycenter_nonColinear_of_massGapCollapse_meanField`) is false: instantiate the outer quantifiers
+at `z := unitE d 0` and `cosR := 3/4`, then `hgenRest_unconditionally_false` refutes the inner
+`∀ w, … ≠ 0` clause with `q` the leftover-mass integral of `ν`. Consequence: the discharge of
+`lemma_3_4_part2` (PR #260) is vacuously true -- no instantiation can ever satisfy its hypotheses
+-- so the statement is effectively OPEN pending a re-discharge with satisfiable hypotheses. -/
+theorem lemma_3_4_part2_hgenRest_unsatisfiable {d : ℕ} (hd : 2 ≤ d)
+    (μ ν : MeasureTheory.Measure (Eucl d)) :
+    ¬ (∀ z : Eucl d, ‖z‖ = 1 → ∀ cosR : ℝ, cosR ∈ Set.Ioo (1 / 2 : ℝ) 1 →
+      ∀ w : Eucl d, ‖w‖ = 1 → (⟪z, w⟫ : ℝ) = 0 →
+      Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν) ≠ 0 ∧
+      ∀ c : ℝ, Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ)
+        ≠ c • Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν)) := by
+  intro hall
+  have hd0 : 0 < d := by omega
+  have hz := Regression.NonVacuity.unitE_norm d ⟨0, hd0⟩
+  have h34 : (3 / 4 : ℝ) ∈ Set.Ioo (1 / 2 : ℝ) 1 := by
+    rw [Set.mem_Ioo]; constructor <;> norm_num
+  exact hgenRest_unconditionally_false hd _ hz
+    (∫ x in {x : Eucl d | (3 / 4 : ℝ) < (⟪Regression.NonVacuity.unitE d ⟨0, hd0⟩, x⟫ : ℝ)}ᶜ, x ∂ν)
+    (fun w hw hzw => (hall _ hz (3 / 4) h34 w hw hzw).1)
+
+/-- **`GenRestNearBall` is refuted** (finding F22). The Phase-3-regime non-degeneracy predicate
+(`Leaves/GenRestNearBall.lean`) is false at `d = 2`: instantiating its universal quantifiers at the
+admissible part-2 witness pair (`Regression/NonVacuity/MidLevel.lean`'s `partTwoMu`/`partTwoNu` --
+distinct, sphere- and orthant-supported, confined to `Metric.ball 0 2`, colinear-unequal
+barycenters with `γ = 85/91`) yields exactly the hypothesis bundle refuted by
+`lemma_3_4_part2_hgenRest_unsatisfiable`. So every theorem gated on `hgen : GenRestNearBall d`
+(`exists_phase3_of_genRestNearBall` and the `DisentangleInductionStep.lean` colinear-resolving
+chain) is kernel-clean but vacuous at `d = 2`; the same construction generalizes to any `d ≥ 2`
+with a dimension-parametric witness pair, so the gate is not usable at any dimension. -/
+theorem genRestNearBall_false : ¬ Leaves.GenRestNearBall 2 := by
+  intro hgen
+  exact lemma_3_4_part2_hgenRest_unsatisfiable (le_refl 2)
+    Regression.NonVacuity.partTwoMu Regression.NonVacuity.partTwoNu
+    (hgen 0 2 (by norm_num)
+      Regression.NonVacuity.partTwoMu Regression.NonVacuity.partTwoNu
+      Regression.NonVacuity.partTwoMu_ne_partTwoNu
+      Regression.NonVacuity.partTwoMu_supportedIn_sphere
+      Regression.NonVacuity.partTwoNu_supportedIn_sphere
+      Regression.NonVacuity.partTwoMu_supportedIn_orthant
+      Regression.NonVacuity.partTwoNu_supportedIn_orthant
+      (Leaves.supportedIn_ball_two_of_sphere Regression.NonVacuity.partTwoMu_supportedIn_sphere)
+      (Leaves.supportedIn_ball_two_of_sphere Regression.NonVacuity.partTwoNu_supportedIn_sphere)
+      Regression.NonVacuity.partTwo_colinear)
 
 end Regression.Refuted

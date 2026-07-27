@@ -23,10 +23,18 @@ degeneracy behind an explicit hypothesis rather than proving it unconditionally.
   directly, not the public `lemma_3_4_part2` wrapper, which fixes `U := Set.univ`).
 
 M3b/mid-level staging: consumed when `exists_disentangling_balls`'s full induction is assembled; see
-`Statements/MainResults.lean` and the `exists-disentangling-balls-campaign` project notes. Whether
-`GenRestNearBall` itself holds is NOT addressed here -- it remains a genuinely open question (see the
-project notes for the near-Dirac mechanistic argument suggesting it's a delicate, possibly false,
-regime), staged as an explicit hypothesis for whoever assembles the rest of the induction.
+`Statements/MainResults.lean` and the `exists-disentangling-balls-campaign` project notes.
+
+**REFUTED (finding F22, 2026-07-27):** `GenRestNearBall` is NOT an open question any more -- it is
+kernel-refuted. `Regression/Refuted/HgenRestUnconditionallyFalse.lean` proves the underlying
+`hgenRest` rest-component clause is unsatisfiable for every `z, q` at `2 ≤ d`
+(`hgenRest_unconditionally_false`) and derives `genRestNearBall_false : ¬ GenRestNearBall 2` by
+instantiating this predicate at an admissible witness pair; the construction generalizes to every
+`d ≥ 2`. Every theorem gated on `hgen : GenRestNearBall d` (including
+`exists_phase3_of_genRestNearBall` below and the `DisentangleInductionStep.lean` colinear-resolving
+chain) is therefore kernel-clean but vacuous: the gate can never be supplied. The staging is kept
+so the ARCHITECTURE survives; un-gating it requires replacing Phase 3's non-degeneracy condition
+(the planned asymmetric-cap route, `Leaves/AsymmetricMassGapCap.lean`), not proving this predicate.
 -/
 
 namespace MeasureToMeasure.Leaves

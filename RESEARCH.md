@@ -73,7 +73,9 @@ remaining axioms live in `Statements/` (eight in `MidLevel.lean` plus `exists_di
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
 | `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,lemma_3_4_part2,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining nine axioms, all statement-layer |
+| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining eight statement-layer axioms |
+| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the ninth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
+| `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`): no instantiation exists, so the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
 **Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
@@ -731,6 +733,63 @@ subset of `[0, π/4]` contains `0`", proved directly (if not, the open complemen
 ball around `0`, whose intersection with `[0, π/4]` is a positive-length one-sided interval,
 contradicting full measure). The axiom remains `math.axiomatised`; `hxhull` is additive (`prop_2_2`
 has zero downstream callers in this codebase, confirmed by grep before the fix).
+
+### F22 (soundness-of-claims, recorded 2026-07-27) `lemma_3_4_part2`'s discharge is vacuous: `hgenRest` is kernel-unsatisfiable
+
+The 2026-07-19 discharge of `lemma_3_4_part2` (PR #260, axiom -> theorem, inventory 9 -> 8) added an
+`hgenRest` hypothesis: for every admissible mass-gap cap `(z, cosR)` and EVERY unit `w` orthogonal
+to `z`, the rest-component `restComp z w q := q - <z,q>z - <w,q>w` of the leftover-mass integral is
+nonzero (plus a non-parallelism clause). That hypothesis is UNSATISFIABLE, for every measure pair
+and every `2 <= d`: taking `w` along the residual `q - <z,q>z` (or any unit `w` orthogonal to `z`
+when that residual is zero) always zeroes `restComp z w q`. Kernel-checked in
+`Regression/Refuted/HgenRestUnconditionallyFalse.lean`: `hgenRest_unconditionally_false` (the core,
+PR #283), `lemma_3_4_part2_hgenRest_unsatisfiable` (the exact `lemma_3_4_part2` bundle, every
+measure pair, every `d >= 2`), and `genRestNearBall_false : not GenRestNearBall 2` (instantiated at
+the admissible `partTwoMu`/`partTwoNu` witness pair). Consequences, recorded honestly:
+
+- `lemma_3_4_part2` is kernel-clean but VACUOUS: no instantiation can satisfy its hypotheses, so
+  Lemma 3.4 Part 2 is effectively OPEN; `claims.toml` keeps `math.axiomatised` (the conservative
+  reading) pending a non-vacuous re-discharge via the Appendix B.3 asymmetric-cap route (F24).
+- The same closure is vacuous: `barycenter_nonColinear_of_massGapCollapse_meanField` (and its
+  `_callerCap` sibling), `exists_phase3_of_genRestNearBall`, and `DisentangleInductionStep.lean`'s
+  `exists_phase3_nonColinear_symm` / `exists_phase23_nonColinear` /
+  `disentangle_insert_colinear_resolving`. All docstrings now say so.
+- GUARD HOLE: the non-vacuity witness for `lemma_3_4_part2` in `Regression/NonVacuity/MidLevel.lean`
+  had silently degraded into a PARTIAL application (10 of 13 explicit arguments) when PR #260 added
+  hypotheses; it typechecked, so no build failed, and it degraded exactly at the unsatisfiable
+  hypothesis. Rule going forward: non-vacuity witnesses must ascribe the full conclusion type
+  (`have _h : <conclusion> := ...`) so partial application cannot typecheck; any discharge or
+  re-statement that ADDS hypotheses must re-run the witness against the whole bundle.
+- COMMIT-FOOTER ERRATA (uneditable history, recorded here): PRs #268, #294, #295 stamp
+  `Status: math.machine-checked` while their own `Axioms:` footers list the live axiom `lemma_3_3`;
+  the honest status per this repo's own closure rule is `math.axiomatised`. PR #287 omitted the
+  `Status:` footer and truncated its `Claude-Session` trailer. The build tooling's commit template
+  has been fixed to branch on the actual `#print axioms` closure.
+
+### F23 (paper erratum, recorded 2026-07-27) eq. (B.16) prints its `mu`/`nu` roles swapped
+
+Appendix B.3, Part 2, p.36: eq. (B.16) as printed asserts the constructed ball meets `supp nu(T*)`
+and misses `supp mu(T*)`, while the immediately preceding derivation (the one-sided divergence of
+the `mu` trajectory from the shared boundary point) establishes the opposite orientation: the ball
+is centered on the `mu`-flowed boundary point, carries positive `mu(T*)` mass, and misses
+`supp nu(T*)`. Three independent cross-checks of the surrounding text agree. Recorded as erratum E5
+in `ERRATA.md`; the corrected orientation is what
+`MeasureToMeasure/Leaves/AsymmetricMassGapCap.lean` states (see F24). Severity: typographical
+label swap, recoverable; no downstream statement changes.
+
+### F24 (paper gap -> admitted axiom, recorded 2026-07-27) B.3's single-point-to-whole-cap step has no construction
+
+The heart of the Part 2 proof needs an entire spherical cap around the `mu`-flowed boundary point
+that `nu`'s flow at the same time misses. The paper proves a SINGLE-POINT `O(tau)` divergence (the
+margin machinery now machine-checked in `Leaves/SharedBoundaryPointNondegenerate.lean`, PRs
+#276/#277, under `[NoAtoms mu0]`) and asserts the whole-cap consequence without construction; no
+Mathlib or in-repo machinery bridges a pointwise trajectory margin to a uniform-over-the-support cap
+exclusion for a general mean-field flow. Admitted 2026-07-23 as the leaf-layer axiom
+`exists_cap_nu_mass_zero_at_shared_boundary` (PR #281, full six-axis admission protocol,
+`Source-Ref` eq. (B.16) p.36 with the E5 label-swap correction, full-application witness in
+`Regression/NonVacuity/AsymmetricMassGapCap.lean`), consumed by `exists_asymmetric_massgap_cap`.
+This is the ninth live axiom and the designated foundation for `lemma_3_4_part2`'s non-vacuous
+re-discharge; registered as claim `cap-nu-null-b16`.
 
 ### Verdict
 

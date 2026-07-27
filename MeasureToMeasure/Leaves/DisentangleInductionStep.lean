@@ -560,16 +560,26 @@ caller already has. Run AFTER a Phase-1 shrink it is neither statable nor deriva
 maps are measure-DEPENDENT, so `attnMeasureFlow_exists_map` gives no injectivity across two
 different measures, and nothing propagates distinctness through the shrink.
 
-**Standing caveat on `GenRestNearBall`.** Phase 3 is gated on `GenRestNearBall d`, which
-`Regression/Refuted/HgenRestUnconditionallyFalse.lean` records as unconditionally FALSE for `2 ≤ d`
-(its `restComp` clause fails at `w := normalize (q - ⟪z,q⟫•z)`). So
-`disentangle_insert_colinear_resolving` is kernel-clean but, as it stands, NOT invocable: it is the
-`kernel-clean-not-applicable` pattern, deliberately, exactly as for the already-merged
-`exists_phase3_of_genRestNearBall` it is built on. What is banked here is the ARCHITECTURE (the
+**Standing caveat on `GenRestNearBall` (kernel-stated since finding F22).** Phase 3 is gated on
+`GenRestNearBall d`, which `Regression/Refuted/HgenRestUnconditionallyFalse.lean` now REFUTES in
+the kernel: `genRestNearBall_false : ¬ GenRestNearBall 2` (via the admissible `partTwoMu`/`partTwoNu`
+witness pair), on top of `lemma_3_4_part2_hgenRest_unsatisfiable` showing the underlying `hgenRest`
+bundle fails for every measure pair at every `2 ≤ d`. So `exists_phase3_nonColinear_symm`,
+`exists_phase23_nonColinear`, and `disentangle_insert_colinear_resolving` are kernel-clean but NOT
+invocable: the `kernel-clean-not-applicable` pattern, deliberately, exactly as for the already-merged
+`exists_phase3_of_genRestNearBall` they are built on. What is banked here is the ARCHITECTURE (the
 correct phase order, the carrier bundle, and the hand-off to `disentangle_insert_noncolinear`);
-replacing `GenRestNearBall` by a satisfiable Phase-3 non-degeneracy condition is a separate open
-problem, and every hypothesis OTHER than `hgen` is jointly satisfiable (see the notes on
-`disentangle_insert_colinear_resolving` below). -/
+replacing `GenRestNearBall` by a satisfiable Phase-3 non-degeneracy condition (the planned
+asymmetric-cap route, `Leaves/AsymmetricMassGapCap.lean`) is a separate open problem, and every
+hypothesis OTHER than `hgen` is jointly satisfiable (see the notes on
+`disentangle_insert_colinear_resolving` below).
+
+**Role split between the two colinear branches.** `disentangle_insert_colinear` (PR #294) is
+UNCONDITIONAL and invocable but only DEFERS the colinearity: the pair leaves sharing one ball, so a
+later step cannot place the partner and iterating it alone cannot complete the induction over `N`.
+`disentangle_insert_colinear_resolving` (PR #295) genuinely BREAKS the colinearity and is the
+induction path, but is gated as above. The induction over `N` becomes assemblable exactly when the
+resolving branch's gate is replaced. -/
 
 /-- A sphere-supported measure is supported in `Metric.ball 0 2`: `sphere d` is the unit sphere, so
 every point of it has norm `1 < 2`. Used to discharge, vacuously, the ball-confinement clause of
