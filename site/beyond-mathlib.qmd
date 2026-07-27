@@ -181,8 +181,10 @@ infrastructure. They fall into three groups by *how* each is closed:
   This took the axiom count to **9** and closed out M3b entirely.
 - `prop_2_1`, `cluster_to_point` -- the M6 LaSalle/Lyapunov convergence theory.
 - `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
-- `lemma_3_3`, `lemma_3_4_part2` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 is on the
-  linear layer and is **discharged** -- see Tier 1 above).
+- `lemma_3_3` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 of Lemma 3.4 is on the
+  linear layer and is **discharged** -- see Tier 1 above; `lemma_3_4_part2` is since 2026-07-27 a
+  theorem conditional exactly on the eq.-(B.16) bridge axiom `cap-nu-null-b16`, non-vacuously
+  re-discharged along the paper's own Appendix B.3 asymmetric-cap route, finding F26).
 
 **Top-level assembly.**
 

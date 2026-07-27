@@ -821,6 +821,47 @@ DROP `_hu` in this ambient form; if the asymmetric-cap route needs footnote 7 at
 re-transcribed sphere-intrinsically (e.g. via the geodesic-hull machinery of
 `Leaves/BarycenterNonColinear.lean` / `Foundations/GeodesicConvex.lean`).
 
+### F26 (re-statement, recorded 2026-07-27) `lemma_3_4_part2` re-stated and re-discharged NON-vacuously on the asymmetric-cap route
+
+The doubly-vacuous post-#260 statement (F22: `hgenRest`; F25: the ambient `_hu` transcription) is
+re-stated per WORKFLOW.md's re-statement protocol and re-discharged non-vacuously. Signature
+surgery, conclusion byte-identical: `hgenRest` deleted (F22), `_hu` deleted (F25; the axiom route
+never needs footnote 7, which is proof-side in the paper, so this RETURNS the statement to the
+paper's own p.16 scope), `[NoAtoms mu]` added (required by the B.16 bridge axiom's
+shared-boundary-point machinery; an honest formal strengthening, recorded in the claim's
+fidelity table), `hcol`/`hsupp` un-underscored (now genuinely consumed by
+`exists_asymmetric_massgap_cap`). Proof: Phase 1 runs `pAlign` at horizon `T/2` and
+`exists_asymmetric_massgap_cap` (F24's B.16 axiom) yields `Tstar in (0, T/2]` plus a cap positive
+for flowed `mu` and null for flowed `nu`; `attnStep_pAlign_eq_map` (PRs #300/#301) renders the
+flowed pair as one schedule block; Phase 2 is `exists_asymmetric_collapse_schedule` (PR #307)
+with duration `T - Tstar`, fixing `nu` exactly and defeating every `gamma2`. Two blocks:
+`durationSum = T`, `switches = 2` (the paper's "at most 2 switches" verbatim). Closure:
+[propext, Classical.choice, Quot.sound, exists_cap_nu_mass_zero_at_shared_boundary]
+(`math.axiomatised`, non-vacuously so).
+
+Protocol companions, same PR: the F12-era heavy-tails must-fail adapter re-derived against the
+new signature (new refuted signature `AttnLemma34Part2NoSphereNoAtomsSig` in
+`Regression/OldStatements.lean`, disproof `attnLemma34Part2NoSphereNoAtoms_false` in
+`Regression/Refuted/F26_HeavyTailsNoAtoms.lean` via ATOMLESS junk-zero-barycenter heavy-tails
+mixtures -- pushforwards of `x -> 1/x` on the uniform `(0,1)` -- since the historical atomic
+`heavy r` witnesses no longer fit the `[NoAtoms mu]` shape; adapter
+`Refutations/F12b_lemma_3_4_part2_heavy_tails_noatoms.lean`; the F12-era adapter stays live for
+the older not-SameRay no-sphere shape). Degenerate scratch attack re-run on the FINAL signature
+(`mu := nu` / zero / `volume` / `dirac` / `d in {0,1}`: each violates a hypothesis, no
+refutation; the `NoAtoms` class newly excludes Diracs for `mu`, and `d = 1` makes
+sphere-support-plus-atomlessness jointly unsatisfiable). FULL conclusion-type-ascribed witness
+(the T1 rule from F22): `arc2Measure` (uniform sub-arc `t in [pi/8, 3pi/8]` of the open first
+quadrant of the circle, atomless via arc injectivity) and `arc2Nu := (1/2) arc2Measure +
+(1/2) dirac(midpoint)`, with the exact symmetric-arc barycenter `s * midpoint`,
+`s = sin(pi/8)/(pi/8) in (0,1)` by `Real.sin_lt`, giving `gamma = 2s/(1+s) in (0,1)`;
+`Regression/NonVacuity/MidLevel.lean`.
+
+CORRECTION to the F22 entry's satisfiability note (the G1 follow-through): the F22-era claim
+that "the pre-discharge paper-level bundle IS jointly satisfiable (partTwoMu/partTwoNu)" was
+true only for the bundle WITHOUT `_hu`; per F25 the bundle WITH `_hu` was already unsatisfiable,
+so `partTwoMu`/`partTwoNu` witness the `_hu`-free paper-level bundle only. The corrected
+claim-level record lives in `claims.toml` `[claims.lem-3-4-part2.fidelity]`.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the

@@ -5,6 +5,9 @@ import MeasureToMeasure.Leaves.BarycenterNonColinear
 import MeasureToMeasure.Leaves.GatedTwoCap
 import MeasureToMeasure.Leaves.OrthantRotation
 import MeasureToMeasure.Leaves.Lemma34Part1MeanField
+import MeasureToMeasure.Leaves.AsymmetricMassGapCap
+import MeasureToMeasure.Leaves.PAlignTruncate
+import MeasureToMeasure.Leaves.AsymmetricCapCollapse
 import MeasureToMeasure.Foundations.AtomlessSplitting
 import MeasureToMeasure.Foundations.GeodesicDistance
 import MeasureToMeasure.Foundations.GeodesicConvex
@@ -12,7 +15,6 @@ import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttnStepExistence
 import MeasureToMeasure.Statements.SupportedIn
 import Mathlib.MeasureTheory.Measure.Support
-import Mathlib.Analysis.Convex.Intrinsic
 
 /-!
 # Mid-level statements: the connective lemmas of Sections 2-5 and Appendix B
@@ -261,73 +263,121 @@ Layer (F14): mean-field -- the paper's part-2 construction (§B.3) switches on t
 the two flows of the SAME schedule applied to the two measures (two separate mean-field systems
 sharing the parameters, as in the paper).
 
-**Two further fidelity hypotheses (`mean-field-axioms-retractability` sub-campaign), matching the
-paper's own invocation context for Part 2 rather than the general statement:** (1) `hsupp : μ.support
+**Support-coincidence hypothesis (`mean-field-axioms-retractability` sub-campaign), matching the
+paper's own invocation context for Part 2 rather than the general statement:** `hsupp : μ.support
 = ν.support` -- the paper invokes Part 2 specifically when the two supports COINCIDE (Part 1, stated
 separately in `Statements/Lemma34Part1.lean`, handles `supp μ ≠ supp ν` via a different
-Wasserstein-continuity argument). (2) `hu`, footnote 7's non-degeneracy condition: the normalized
-barycenter direction lies in the INTRINSIC (relative-to-affine-span) interior of the ambient convex
-hull of the shared support -- `conv_g`'s open-hemisphere-faithful geodesic hull, expressed via
-Mathlib's general `intrinsicInterior`/`convexHull` (no finite-generator restriction, unlike this
-repo's own `Leaves.BarycenterNonColinear.geodesicHull`). Without this, the paper's own proof defers
-to Proposition 2.1 on a lower-dimensional sphere (the `σ_d(conv_g supp μ) = 0` case) instead of
-running Part 2's Taylor-divergence argument at all; the hypothesis rules that case out. Neither
-hypothesis was exercised by earlier kernel-refutation attempts (they were introduced by this
-sub-campaign's own re-reading of the paper, not by an adversarial review pass), so both are recorded
-here for the discharge, not retrofitted from a review finding.
+Wasserstein-continuity argument), and the (B.16) construction runs exactly in that branch ("if
+(B.15) is not satisfied", p.36). An earlier revision also carried `_hu`, an ambient
+`intrinsicInterior`/`convexHull` transcription of footnote 7's non-degeneracy condition; that
+transcription is kernel-unsatisfiable (finding F25, see the re-statement notes below) and is gone.
 
-**DISCHARGED** (2026-07-19) via `Leaves/Lemma34Part1MeanField.lean`'s `barycenter_nonColinear_of_massGapCollapse_meanField`
-(the mass-gap-cap-collapse construction, Case A route of `Leaves/CollapseColinearityAvoidance.lean`),
-applied with the carrier `U := Set.univ`. `_hcol, _hsupp, _hu` are the paper-faithful hypotheses
-that motivated the original axiom statement (kept for fidelity to Lemma 3.4 Part 2's actual scope
--- COLINEAR-unequal barycenters with equal, non-degenerate supports) but are PROVABLY UNUSED by this
-proof: the construction only consumes `hne : μ ≠ ν` plus sphere/orthant support, γ-independently
-(matching `lemma_3_4_part1`'s own `_hbar` pattern). `hgenRest` is the genuine NEW hypothesis this
-discharge needed -- a rest-component non-degeneracy condition for every admissible mass-gap cap the
-Besicovitch-driven construction could produce (see `Leaves/Lemma34Part1MeanField.lean`'s docstring
-and the `mean-field-axioms-retractability` project notes for the full derivation).
+**HISTORY.** The original axiom was converted to a theorem on 2026-07-19 (PR #260) via
+`Leaves/Lemma34Part1MeanField.lean`'s `barycenter_nonColinear_of_massGapCollapse_meanField`, at
+the price of an added `hgenRest` rest-component hypothesis. That discharge turned out DOUBLY
+vacuous: `hgenRest` is kernel-unsatisfiable for every measure pair and every `2 ≤ d` (finding
+F22, `Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and independently the ambient
+`intrinsicInterior`/`convexHull` transcription `_hu` of footnote 7 carried since PR #239 is
+kernel-unsatisfiable in conjunction with the support hypotheses (finding F25,
+`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`: a unit-norm point in the ambient
+intrinsic interior of a ball-confined hull collapses the hull, hence both supports, to a
+singleton, forcing `μ = ν = dirac u` against `hne`).
 
-**VACUITY (finding F22, 2026-07-27):** `hgenRest` is now KERNEL-REFUTED as unsatisfiable, for every
-measure pair and every `2 ≤ d`: `Regression/Refuted/HgenRestUnconditionallyFalse.lean` proves the
-inner `∀ w` clause fails for every `z, q` (`hgenRest_unconditionally_false`) and specializes it to
-this theorem's exact hypothesis bundle (`lemma_3_4_part2_hgenRest_unsatisfiable`). This theorem is
-therefore kernel-clean but VACUOUS: no instantiation can satisfy its hypotheses, so the 2026-07-19
-discharge carries no epistemic content and Lemma 3.4 Part 2 is effectively OPEN. A non-vacuous
-re-discharge along the paper's own Appendix B.3 asymmetric-cap route (the
-`Leaves/AsymmetricMassGapCap.lean` staging chain plus the `exists_cap_nu_mass_zero_at_shared_boundary`
-axiom, eq. (B.16) p.36) is the planned replacement; until it lands, treat the statement's status as
-open, not machine-checked.
+**RE-STATED, NON-VACUOUSLY (2026-07-27, finding F26; supersedes the F22-vacuous form).**
+Hypothesis surgery relative to PR #260's signature, conclusion byte-identical:
 
-**VACUITY, SECOND WITNESS (finding F25, 2026-07-27):** `_hu` is ALSO kernel-unsatisfiable in
-conjunction with the support hypotheses, for every measure pair and every dimension
-(`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`): sphere-plus-orthant support makes the
-normalized barycenter unit-norm, a unit-norm point in the ambient intrinsic interior of a
-ball-confined hull forces the hull (hence both supports, via `hsupp`) to a singleton, and two
-probability measures with the same singleton support are the same Dirac mass, against `hne`. So
-even the pre-F22 hypothesis list (before `hgenRest` existed) had no instances, and the ambient
-`convexHull`/`intrinsicInterior` transcription of footnote 7 is itself the error: the paper's
-condition lives on the sphere-intrinsic geodesic hull `conv_g`. The re-discharge must drop `_hu`
-in this form. -/
+- `hgenRest` DELETED (F22) and `_hu` DELETED (F25). Fidelity delta: dropping `_hu` RETURNS the
+  statement to the paper's own p.16 scope -- footnote 7 is a proof-side narrowing of the §3.3
+  invocation context, and the Appendix B.3 route used here never needs it.
+- `[NoAtoms μ]` ADDED: the eq.-(B.16) bridge axiom
+  (`Leaves.exists_cap_nu_mass_zero_at_shared_boundary`, claim `cap-nu-null-b16`, finding F24)
+  states the paper's shared-boundary-point construction for an atomless `μ0`. An honest formal
+  strengthening of the printed hypothesis list, recorded in the claim's fidelity table.
+- `hcol`/`hsupp` UN-underscored: genuinely consumed by `Leaves.exists_asymmetric_massgap_cap`,
+  exactly the paper's own usage (Part 2's (B.16) construction runs under equal supports and
+  colinear-unequal barycenters).
+
+**Proof route (Appendix B.3, pp.35-36, with the E5 label-swap correction).** Phase 1: run the
+`pAlign` alignment block at horizon `T/2`; `Leaves.exists_asymmetric_massgap_cap` (resting on the
+B.16 bridge axiom) yields a time `Tstar ∈ (0, T/2]` and a spherical cap of angular radius
+`arccos cosR < π/3` carrying positive flowed-`μ` mass and zero flowed-`ν` mass, and
+`Leaves.attnStep_pAlign_eq_map` renders the flowed pair as `attnStep` of the truncated block
+`pAlign Tstar`. Phase 2: `Leaves.exists_asymmetric_collapse_schedule` collapses the cap toward a
+pole chosen off the (fixed) `ν`-barycenter line while fixing `ν` exactly (its cap mass is zero),
+forcing non-colinearity for every `γ₂`. The schedule is the two blocks, so `switches = 2` (the
+paper's "at most 2 switches" verbatim) and `durationSum = Tstar + (T - Tstar) = T`. The
+`ν`-barycenter being nonzero is DERIVED from sphere-plus-orthant support
+(`Leaves.norm_barycenter_pos_of_orthant`), not hypothesized.
+
+Status: `math.axiomatised`, NON-vacuously so: the closure is exactly propext, Classical.choice,
+Quot.sound plus the B.16 bridge axiom, and the hypothesis bundle has a kernel-checked
+FULL-application witness (`arc2Measure`/`arc2Nu`, `Regression/NonVacuity/MidLevel.lean`). -/
 theorem lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
+    [NoAtoms μ]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))
     (hμ : supportedIn μ (orthant d)) (hν : supportedIn ν (orthant d))
-    (_hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν)
-    (_hsupp : μ.support = ν.support)
-    (_hu : (‖barycenter μ‖⁻¹ • barycenter μ) ∈ intrinsicInterior ℝ (convexHull ℝ μ.support))
-    (hgenRest : ∀ z : Eucl d, ‖z‖ = 1 → ∀ cosR : ℝ, cosR ∈ Set.Ioo (1 / 2 : ℝ) 1 →
-      ∀ w : Eucl d, ‖w‖ = 1 → (⟪z, w⟫ : ℝ) = 0 →
-      Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν) ≠ 0 ∧
-      ∀ c : ℝ, Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ)
-        ≠ c • Leaves.restComp z w (∫ x in {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂ν)) :
+    (hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν)
+    (hsupp : μ.support = ν.support) :
     ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 2 ∧
       ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν) := by
   have hd2 : 2 ≤ d := Leaves.two_le_d_of_distinct hne hμs hνs hμ hν
   haveI : NeZero d := ⟨by omega⟩
-  obtain ⟨θ, hdur, hsw, hnoncol, -⟩ :=
-    Leaves.barycenter_nonColinear_of_massGapCollapse_meanField μ ν T hT hne hμs hνs hμ hν
-      Set.univ isOpen_univ (by simp [supportedIn]) (by simp [supportedIn]) hgenRest
-  exact ⟨θ, hdur, hsw, hnoncol⟩
+  have hμint : Integrable (fun x : Eucl d => x) μ := Leaves.integrable_id_of_sphere_support hμs
+  have hνint : Integrable (fun x : Eucl d => x) ν := Leaves.integrable_id_of_sphere_support hνs
+  -- the ν-barycenter is nonzero (derived from sphere+orthant support, not hypothesized)
+  have hνnz : barycenter ν ≠ 0 := by
+    have hpos := Leaves.norm_barycenter_pos_of_orthant hνs hνint hν
+    intro h0
+    rw [h0, norm_zero] at hpos
+    exact lt_irrefl _ hpos
+  obtain ⟨γ1, hγ1, hcoleq⟩ := hcol
+  have hT2 : (0 : ℝ) < T / 2 := by linarith
+  -- Phase 1: mean-field flows for the alignment block at horizon T/2, and the asymmetric cap
+  obtain ⟨Φμ, hΦμ⟩ := Foundations.exists_meanFieldFlow (Leaves.pAlign (T/2) hT2.le) μ hμs
+  obtain ⟨Φν, hΦν⟩ := Foundations.exists_meanFieldFlow (Leaves.pAlign (T/2) hT2.le) ν hνs
+  obtain ⟨Tstar, hTstar, z, hzs, cosR, hcosR, hμpos, hνzero⟩ :=
+    Leaves.exists_asymmetric_massgap_cap hμs hνs hsupp hμint hνint hγ1 hcoleq hνnz hT2 hΦμ hΦν
+  -- Phase 1 as one schedule block of duration Tstar
+  set p1 : Foundations.AttnParams d := Leaves.pAlign Tstar hTstar.1.le with hp1def
+  have hμ'eq : Foundations.attnStep p1 μ = μ.map (Φμ Tstar) :=
+    Leaves.attnStep_pAlign_eq_map μ hμs hT2.le hΦμ hTstar.1.le hTstar.2
+  have hν'eq : Foundations.attnStep p1 ν = ν.map (Φν Tstar) :=
+    Leaves.attnStep_pAlign_eq_map ν hνs hT2.le hΦν hTstar.1.le hTstar.2
+  haveI hμ'prob : IsProbabilityMeasure (Foundations.attnStep p1 μ) :=
+    Foundations.isProbabilityMeasure_attnStep p1 μ hμs
+  haveI hν'prob : IsProbabilityMeasure (Foundations.attnStep p1 ν) :=
+    Foundations.isProbabilityMeasure_attnStep p1 ν hνs
+  have hμ's : supportedIn (Foundations.attnStep p1 μ) (sphere d) :=
+    Foundations.attnStep_supportedIn_sphere p1 μ hμs
+  have hν's : supportedIn (Foundations.attnStep p1 ν) (sphere d) :=
+    Foundations.attnStep_supportedIn_sphere p1 ν hνs
+  -- transport the cap facts to the schedule layer
+  have hμ'cap := hμpos
+  rw [← hμ'eq] at hμ'cap
+  have hν'cap := hνzero
+  rw [← hν'eq] at hν'cap
+  -- Phase 2: the asymmetric collapse block of duration T - Tstar
+  have hT2pos : (0 : ℝ) < T - Tstar := by
+    have h := hTstar.2
+    linarith
+  obtain ⟨p2, hp2dur, -, hp2noncol⟩ :=
+    Leaves.exists_asymmetric_collapse_schedule hd2 (Foundations.attnStep p1 μ)
+      (Foundations.attnStep p1 ν) hμ's hν's hzs hcosR hμ'cap hν'cap hT2pos
+  refine ⟨[p1, p2], ?_, ?_, ?_⟩
+  · show AttnSchedule.durationSum [p1, p2] = T
+    simp only [Foundations.AttnSchedule.durationSum, List.map_cons, List.map_nil, List.sum_cons,
+      List.sum_nil, add_zero, hp2dur, hp1def, Leaves.pAlign_duration]
+    ring
+  · show AttnSchedule.switches [p1, p2] ≤ 2
+    simp [Foundations.AttnSchedule.switches]
+  · intro γ₂
+    have hflowμ : attnMeasureFlow [p1, p2] μ
+        = attnMeasureFlow [p2] (Foundations.attnStep p1 μ) := rfl
+    have hflowν : attnMeasureFlow [p1, p2] ν
+        = attnMeasureFlow [p2] (Foundations.attnStep p1 ν) := rfl
+    rw [hflowμ, hflowν]
+    exact hp2noncol γ₂
 
 /-- **Proposition 4.2** (steer one active point). With `d ≥ 3`, distinct inputs/targets, and the
 inactive points (the first `M-1`) already at their targets, at most `6` switches move every input to

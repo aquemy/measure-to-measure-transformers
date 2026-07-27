@@ -73,6 +73,23 @@ abbrev OldAttnLemma34Part2NoSphereSig : Prop :=
     ∃ θ : AttnSchedule d,
       ¬ SameRay ℝ (barycenter (attnMeasureFlow θ μ)) (barycenter (attnMeasureFlow θ ν))
 
+/-- The 2026-07-27 non-vacuous re-statement of `lemma_3_4_part2` (finding F26) with the **sphere
+supports removed** but everything the re-statement kept or added retained: `[NoAtoms μ]`, the
+support-coincidence `hsupp`, and the colinearity `hcol` (horizon and switch clauses dropped, per
+this file's weakening convention). Refuted by ATOMLESS heavy-tailed orthant mixtures
+(`Regression/Refuted/F26_HeavyTailsNoAtoms.lean`): equal supports and the `γ ∈ (0,1)` colinearity
+hold at the junk barycenter value `0`, the flow is the junk identity off the sphere, and the
+`∀ γ₂` non-colinearity fails at `γ₂ = 0`. -/
+abbrev AttnLemma34Part2NoSphereNoAtomsSig : Prop :=
+  ∀ {d : ℕ} (μ ν : Measure (Eucl d)), IsProbabilityMeasure μ → IsProbabilityMeasure ν →
+    NoAtoms μ →
+    ∀ T : ℝ, 0 < T → μ ≠ ν →
+    supportedIn μ (orthant d) → supportedIn ν (orthant d) →
+    (∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧ barycenter μ = γ • barycenter ν) →
+    μ.support = ν.support →
+    ∃ θ : AttnSchedule d,
+      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow θ μ) ≠ γ₂ • barycenter (attnMeasureFlow θ ν)
+
 /-- Pre-F12 `lemma_3_2` (finding F12): every measure, no probability/sphere/cap hypotheses
 (switch budget dropped). Refuted by Lebesgue `volume`. Current `lemma_3_2` is still linear, so
 this signature carries a live must-fail adapter. -/

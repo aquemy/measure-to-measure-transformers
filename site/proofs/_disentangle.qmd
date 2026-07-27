@@ -186,12 +186,19 @@ constant on a nonempty open ball" pigeonhole is leaf **L10** (`exists_ne_in_ball
 barycenters) is retained for transcription fidelity but **unused**, so the discharge is slightly more
 general than the paper's lemma. (The attention case $\gamma_1\ne1$, at most two switches, is the
 companion statement `lemma_3_4_part2` on the mean-field layer with a genuine $\gamma\in(0,1)$
-colinearity hypothesis, and it remains **effectively open**: a 2026-07-19 conditional discharge
-added an `hgenRest` hypothesis that was later kernel-refuted as unsatisfiable for every measure
-pair (finding F22, `Regression/Refuted/HgenRestUnconditionallyFalse.lean`), so that theorem is
-kernel-clean but vacuous. A non-vacuous re-discharge along the paper's own Appendix B.3
-asymmetric-cap route, resting on the admitted eq.-(B.16) bridge axiom (claim `cap-nu-null-b16`,
-with the E5 label-swap correction), is the planned replacement.)
+colinearity hypothesis. Its 2026-07-19 conditional discharge was later found **doubly vacuous**:
+both the added `hgenRest` hypothesis (finding F22) and the ambient `intrinsicInterior`
+transcription of footnote 7 (finding F25) are kernel-refuted as unsatisfiable. On 2026-07-27 it
+was **re-stated and non-vacuously re-discharged** (finding F26): the unsatisfiable hypotheses are
+gone, `[NoAtoms μ]` is added (the one honest strengthening the route needs), and the proof
+follows the paper's own Appendix B.3 asymmetric-cap argument, with the E5 label-swap correction:
+a `pAlign` alignment phase reaches a spherical cap carrying flowed-$\mu$ mass that the flowed
+$\nu$ misses entirely (the admitted eq.-(B.16) bridge axiom, claim `cap-nu-null-b16`), and a
+single collapse block then pins $\mu$'s barycenter off every line through $\nu$'s while fixing
+$\nu$ exactly. The statement is `math.axiomatised` with closure exactly propext,
+Classical.choice, Quot.sound plus `exists_cap_nu_mass_zero_at_shared_boundary`, and its
+hypothesis bundle carries a kernel-checked full-application witness
+(`arc2Measure`/`arc2Nu`, `Regression/NonVacuity/MidLevel.lean`).)
 
 ```lean
 /-- **Lemma 3.4, Part 1** (`γ₁ = 1` case), machine-checked. For two distinct probability measures on
