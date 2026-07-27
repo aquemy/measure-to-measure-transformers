@@ -7,9 +7,9 @@ import Regression.NonVacuity.MidLevel
 /-!
 # `hgenRest` is unconditionally unsatisfiable (`phase4_final_pole_pigeonhole_assembly`, G1)
 
-`barycenter_nonColinear_of_massGapCollapse_meanField_callerCap` (PR #273,
-`MeasureToMeasure/Leaves/Lemma34Part1MeanField.lean`) and its non-`callerCap` sibling
-`barycenter_nonColinear_of_massGapCollapse_meanField` both carry a hypothesis `hgenRest`: for
+`barycenter_nonColinear_of_massGapCollapse_meanField`
+(`MeasureToMeasure/Leaves/Lemma34Part1MeanField.lean`; until the S1 hygiene pass it had a
+now-removed caller-supplied-cap sibling `..._callerCap`, PR #273) carries a hypothesis `hgenRest`: for
 **every** unit `w` orthogonal to `z`, the rest-component `Leaves.restComp z w q` (`q` the leftover
 -mass integral of `ν` outside the cap) is nonzero, plus a non-parallelism clause. Both theorems are
 kernel-clean, but this file records the hand-verified finding that `hgenRest`'s core clause is
@@ -27,15 +27,17 @@ component orthogonal to `z`. Since any unit `w ⊥ z` also has `⟪w,q⟫ = ⟪w
   `⟪w,r⟫ = ‖r‖`, so `restComp z w q = r - ‖r‖ • (‖r‖⁻¹ • r) = r - r = 0`.
 
 Either way a witnessing `w` exists with `restComp z w q = 0`, refuting the universally-quantified
-`≠ 0` clause -- so `hgenRest` can never be supplied, for any `z, q`. `callerCap` (PR #273) and
-`barycenter_nonColinear_of_massGapCollapse_meanField` are therefore true and kernel-clean but
+`≠ 0` clause -- so `hgenRest` can never be supplied, for any `z, q`.
+`barycenter_nonColinear_of_massGapCollapse_meanField` is therefore true and kernel-clean but
 **never actually invocable**: an instance of this project's own kernel-clean-not-applicable
-pattern (see project memory `kernel-clean-not-applicable`). This is a bookkeeping record, not a
+pattern (see project memory `kernel-clean-not-applicable`). (Its caller-supplied-cap sibling
+`..._callerCap`, PR #273, was equally uninvocable and was deleted in the S1 hygiene pass; this file
+and git history preserve the knowledge.) This is a bookkeeping record, not a
 refutation of a Sig transcribed for the `Regression/OldStatements.lean` must-fail-adapter
 machinery -- `hgenRest` is a live hypothesis of a currently-standing theorem, not a rejected axiom
 draft, so there is no `Refutations/` adapter to pair with it. Recording it here (matching the
 `Regression.Refuted` convention of PRs #272/#280) prevents a future session from re-attempting to
-wire pole-avoidance machinery into `callerCap` as an invocation route: no choice of `w` can ever
+wire pole-avoidance machinery into these theorems as an invocation route: no choice of `w` can ever
 make `hgenRest` hold, so any such route is doomed before it starts.
 
 Two corollaries (added 2026-07-27, finding F22) state the previously prose-only entailment in the
@@ -60,8 +62,8 @@ open scoped RealInnerProductSpace
 
 /-- **The refutation.** For every dimension `d ≥ 2`, every unit `z`, and every `q`, there is a unit
 `w` orthogonal to `z` with `Leaves.restComp z w q = 0` -- so the universally-quantified `≠ 0`
-clause of `hgenRest` (`barycenter_nonColinear_of_massGapCollapse_meanField_callerCap`'s hypothesis,
-PR #273, and its non-`callerCap` sibling's identical clause) can never hold. `w := normalize (q -
+clause of `hgenRest` (`barycenter_nonColinear_of_massGapCollapse_meanField`'s hypothesis, and
+identically its since-deleted `..._callerCap` sibling's, PR #273) can never hold. `w := normalize (q -
 ⟪z,q⟫•z)` zeroes `restComp z w q` whenever `q`'s component orthogonal to `z` is nonzero; when that
 component is already `0`, EVERY unit `w ⊥ z` works (supplied by `Leaves.exists_unit_orthogonal`,
 which needs `2 ≤ d`). -/
