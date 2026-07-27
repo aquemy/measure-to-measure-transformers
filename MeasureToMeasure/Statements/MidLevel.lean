@@ -243,7 +243,7 @@ axiom lemma_3_3 {N : ℕ} (j : Fin N) (μ₀ : Fin N → Measure (Eucl d)) (ν�
 whose barycenters are **colinear but unequal** (`ℰ_μ = γ·ℰ_ν` for some `γ ∈ (0,1)`), at most two
 switches make the barycenters FULLY non-colinear: `ℰ_{μ(T)} ≠ γ₂ · ℰ_{ν(T)}` for every real `γ₂`
 (the paper's conclusion verbatim; the earlier `¬ SameRay` form was strictly weaker, allowing
-antipodal colinearity -- upgraded per finding F11's fidelity note). AXIOM (`math.axiomatised`). The "disjoint
+antipodal colinearity -- upgraded per finding F11's fidelity note). The "disjoint
 geodesic hulls ⟹ non-colinear barycenters" implication used alongside this is the machine-checked leaf
 L11 (`barycenter_noncolinear_of_disjoint_hull`, review finding F2).
 
@@ -285,9 +285,18 @@ proof: the construction only consumes `hne : μ ≠ ν` plus sphere/orthant supp
 (matching `lemma_3_4_part1`'s own `_hbar` pattern). `hgenRest` is the genuine NEW hypothesis this
 discharge needed -- a rest-component non-degeneracy condition for every admissible mass-gap cap the
 Besicovitch-driven construction could produce (see `Leaves/Lemma34Part1MeanField.lean`'s docstring
-and the `mean-field-axioms-retractability` project notes for the full derivation and the residual
-degenerate case it does NOT exclude: leftover-mass integrals forced-parallel to the cap direction for
-EVERY admissible cap, for which no counterexample or proof of impossibility has yet been found). -/
+and the `mean-field-axioms-retractability` project notes for the full derivation).
+
+**VACUITY (finding F22, 2026-07-27):** `hgenRest` is now KERNEL-REFUTED as unsatisfiable, for every
+measure pair and every `2 ≤ d`: `Regression/Refuted/HgenRestUnconditionallyFalse.lean` proves the
+inner `∀ w` clause fails for every `z, q` (`hgenRest_unconditionally_false`) and specializes it to
+this theorem's exact hypothesis bundle (`lemma_3_4_part2_hgenRest_unsatisfiable`). This theorem is
+therefore kernel-clean but VACUOUS: no instantiation can satisfy its hypotheses, so the 2026-07-19
+discharge carries no epistemic content and Lemma 3.4 Part 2 is effectively OPEN. A non-vacuous
+re-discharge along the paper's own Appendix B.3 asymmetric-cap route (the
+`Leaves/AsymmetricMassGapCap.lean` staging chain plus the `exists_cap_nu_mass_zero_at_shared_boundary`
+axiom, eq. (B.16) p.36) is the planned replacement; until it lands, treat the statement's status as
+open, not machine-checked. -/
 theorem lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (T : ℝ) (hT : 0 < T) (hne : μ ≠ ν)
     (hμs : supportedIn μ (sphere d)) (hνs : supportedIn ν (sphere d))

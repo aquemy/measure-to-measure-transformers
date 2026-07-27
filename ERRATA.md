@@ -101,3 +101,34 @@ arbitrarily small gate and cannot reach `ℬ₀ ∩ ℬ₁` within the fixed tim
 
 **Severity:** statement-level, recoverable. Every use of B.1/B.2 in the paper instantiates them at
 a specific measure, so the `∀ μ₀, ∃ parameters` order (which the formalization states) suffices.
+
+---
+
+# Later erratum candidates
+
+## E4. Lemma 3.4, eq. (3.2) (p.16): the printed fixing clause is refutable for atomic inputs
+
+(Backfilled 2026-07-27; found 2026-07-04 as RESEARCH.md finding F17 and referenced as "E4" by
+`claims.toml` since then, but never written into this file.) Eq. (3.2) prints the localization
+clause as "the flow map is the identity off the geodesic hulls of the supports". For atomic inputs
+this is refutable: a continuous flow map that is the identity off a FINITE set is the identity
+everywhere, while distinct finite-support measures with equal barycenters exist, so the clause as
+printed cannot hold together with the lemma's conclusion. The proof itself (App. B.3, p.35) delivers
+the identity off an OPEN gate ball, i.e. off an open carrier `U` of both measures; the open-carrier
+form is what the formalization states (`Statements/Lemma34Part1.lean`, discharged kernel-clean).
+
+**Severity:** statement-level, recoverable. The proof's own open-carrier localization is the correct
+statement; no downstream use needs the printed hull form.
+
+## E5. Appendix B.3, eq. (B.16) (p.36): the `μ`/`ν` roles are swapped
+
+(Recorded 2026-07-27, RESEARCH.md finding F23.) Eq. (B.16) as printed asserts the constructed ball
+meets `supp ν(T*)` and misses `supp μ(T*)`; the derivation immediately preceding it (the one-sided
+divergence of the `μ` trajectory from the shared boundary point) establishes the opposite
+orientation: the ball is centered on the `μ`-flowed boundary point, carries positive `μ(T*)` mass,
+and misses `supp ν(T*)`. Three independent cross-checks of the surrounding text agree. The corrected
+orientation is what the formalization's admitted bridge axiom states
+(`MeasureToMeasure/Leaves/AsymmetricMassGapCap.lean`, `exists_cap_nu_mass_zero_at_shared_boundary`,
+claim `cap-nu-null-b16`).
+
+**Severity:** typographical label swap, recoverable; no downstream statement changes.

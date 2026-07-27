@@ -253,7 +253,14 @@ Disjoint-support atomless measures cluster to $M$ atoms. [open]
 \begin{lemma}[Transport to the orthant, 3.2]\label{lem:32}\lean{MeasureToMeasure.Statements.lemma_3_2}\uses{ax:flow}One switch moves measures into $\mathbb Q_1^{d-1}$. [machine-checked]\end{lemma}
 \begin{lemma}[Disentangle non-colinear, 3.3]\label{lem:33}\lean{MeasureToMeasure.Statements.lemma_3_3}\uses{lem:bary}Shrink a measure's hull to its barycenter direction. [open]\end{lemma}
 \begin{lemma}[Make non-colinear, 3.4 Part 1]\label{lem:34}\lean{MeasureToMeasure.Statements.lemma_3_4_part1}\uses{lem:pigeon,lem:bary,lem:noncol}Two measures made non-colinear (Part 1, linear layer, via mass-collapse + pigeonhole). [machine-checked]\end{lemma}
-\begin{lemma}[Make non-colinear, 3.4 Part 2]\label{lem:34b}\lean{MeasureToMeasure.Statements.lemma_3_4_part2}\uses{lem:34}The full non-colinearity conclusion ($\forall\gamma_2$), over the mean-field layer. [axiomatised]\end{lemma}
+\begin{lemma}[Make non-colinear, 3.4 Part 2]\label{lem:34b}\lean{MeasureToMeasure.Statements.lemma_3_4_part2}\uses{lem:34,ax:b16cap}The full non-colinearity conclusion ($\forall\gamma_2$), over the mean-field layer. [axiomatised]
+% Honesty note (F22, 2026-07-27): a 2026-07-19 discharge (PR #260) made this a kernel-clean theorem,
+% but its added hgenRest hypothesis is kernel-refuted as unsatisfiable for every measure pair
+% (Regression/Refuted/HgenRestUnconditionallyFalse.lean), so that theorem is VACUOUS and the node is
+% deliberately kept [axiomatised] (the conservative reading) pending a non-vacuous re-discharge via
+% the Appendix B.3 asymmetric-cap route (ax:b16cap).
+\end{lemma}
+\begin{lemma}[Whole-cap $\nu$-nullity, eq.\ (B.16)]\label{ax:b16cap}\lean{MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary}The single-point-to-whole-cap propagation step of Appendix B.3 Part 2 (with the E5 label-swap correction), admitted as a bridge axiom (F24): the paper asserts it without construction. [axiomatised]\end{lemma}
 
 \begin{proposition}[Disentanglement, 3.1]\label{prop:31}\lean{MeasureToMeasure.Statements.prop_3_1}\uses{lem:32,lem:33,lem:34,lem:noncol}
 A piecewise-constant $\theta$ renders the $N$ supports pairwise disjoint, $O(dN)$ switches. [open]

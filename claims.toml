@@ -140,16 +140,29 @@ evidence = "F11 (mu=nu) + F12 (heavy tails) + F17 (atomic-support refutation of 
 
 [claims.lem-3-4-part2]
 kind      = "conjecture"
-statement = "Lemma 3.4, Part 2 (gamma1 in (0,1), MEAN-FIELD/ATTENTION layer, V!=0 with B=0): two DISTINCT sphere+orthant-supported probability measures whose barycenters are initially colinear (barycenter mu = gamma1 * barycenter nu, gamma1 in (0,1)) are driven to FULL non-colinearity (barycenter(attnMeasureFlow mu) != gamma2 * barycenter(attnMeasureFlow nu) for EVERY real gamma2 -- the paper's conclusion; the earlier not-SameRay form was strictly weaker) via one AttnSchedule with <= 2 switches. AXIOM (math.axiomatised): the paper's §B.3 part-2 construction switches on the value matrix so the field reads the flowing measures' barycenters (a mean-field system); discharging it needs McKean-Vlasov well-posedness (exists_meanFieldFlow) plus the barycenter-shrink dynamics. Split from Part 1 in the F14 layer audit -- Part 1 is LINEAR and now discharged (lem-3-4), Part 2 is mean-field and remains axiomatised. Fixes: F11 (mu!=nu), F12 (sphere supports, heavy-tails refutation), F14 (layer split)."
+statement = "Lemma 3.4, Part 2 (gamma1 in (0,1), MEAN-FIELD/ATTENTION layer, V!=0 with B=0): two DISTINCT sphere+orthant-supported probability measures whose barycenters are initially colinear (barycenter mu = gamma1 * barycenter nu, gamma1 in (0,1)) are driven to FULL non-colinearity (barycenter(attnMeasureFlow mu) != gamma2 * barycenter(attnMeasureFlow nu) for EVERY real gamma2 -- the paper's conclusion; the earlier not-SameRay form was strictly weaker) via one AttnSchedule with <= 2 switches. STATUS HISTORY: admitted as an axiom (F14 layer split; the paper's SS B.3 part-2 construction is a mean-field system read through exists_meanFieldFlow); converted to a theorem 2026-07-19 (PR #260) by adding an hgenRest rest-component hypothesis; that discharge was found VACUOUS 2026-07-27 (finding F22): hgenRest is kernel-refuted as unsatisfiable for every measure pair and every d >= 2 (Regression/Refuted/HgenRestUnconditionallyFalse.lean, lemma_3_4_part2_hgenRest_unsatisfiable), so the theorem is kernel-clean but has no instances and Lemma 3.4 Part 2 is EFFECTIVELY OPEN. Status is deliberately kept at math.axiomatised (the conservative reading) pending a non-vacuous re-discharge via the Appendix B.3 asymmetric-cap route (Leaves/AsymmetricMassGapCap.lean, claim cap-nu-null-b16). Fixes: F11 (mu!=nu), F12 (sphere supports, heavy-tails refutation), F14 (layer split), F22 (vacuous discharge)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_3_4_part2"
 paper     = "Lem 3.4, p.16"
 created   = "2026-07-05"
 
 [claims.lem-3-4-part2.fidelity]
-reviewed = "2026-07-03"
+reviewed = "2026-07-27"
 paper    = "Lem 3.4, p.16, arXiv:2411.04551v3"
-evidence = "F12 (heavy tails); disproof Regression/Refuted/F12_HeavyTails.lean; adapter Refutations/F12_lemma_3_4_part2_heavy_tails.lean; witness Regression/NonVacuity/MidLevel.lean"
+evidence = "F12 (heavy tails); disproof Regression/Refuted/F12_HeavyTails.lean; adapter Refutations/F12_lemma_3_4_part2_heavy_tails.lean. F22 (vacuous discharge, 2026-07-27): the post-#260 hypothesis bundle is kernel-refuted (Regression/Refuted/HgenRestUnconditionallyFalse.lean: lemma_3_4_part2_hgenRest_unsatisfiable, genRestNearBall_false); the pre-discharge paper-level bundle IS jointly satisfiable (named witnesses partTwoMu/partTwoNu, Regression/NonVacuity/MidLevel.lean), but no full application of the current theorem can exist, so the earlier witness citation was a partial application and has been rescoped."
+
+[claims.cap-nu-null-b16]
+kind      = "conjecture"
+statement = "Whole-cap nu-nullity at the shared boundary point (corrected eq. (B.16)): for sphere+orthant-style colinear-unequal pairs (mu0 atomless, shared topological support, gamma1 in (0,1), barycenter nu0 != 0), running the pAlign sharpening flow on both measures independently produces a time tau0 in (0,T] and a spherical cap of angular radius arccos cosR < pi/3 centered at the mu0-flowed boundary point Phi_mu(tau0, x0) that the nu0-pushforward at the SAME tau0 entirely misses. ADMITTED AXIOM (PR #281, 2026-07-23, full WORKFLOW.md six-axis protocol): the paper proves only a single-point O(tau) divergence (the margin machinery machine-checked in Leaves/SharedBoundaryPointNondegenerate.lean) and asserts the whole-cap consequence without construction (finding F24); eq. (B.16) as printed also has its mu/nu roles swapped relative to the surrounding derivation (erratum E5, finding F23). Consumed by exists_asymmetric_massgap_cap (Leaves/AsymmetricMassGapCap.lean); staged for the non-vacuous re-discharge of lem-3-4-part2."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary"
+paper     = "App. B.3, eq. (B.16), p.36"
+created   = "2026-07-23"
+
+[claims.cap-nu-null-b16.fidelity]
+reviewed = "2026-07-23"
+paper    = "App. B.3, eq. (B.16), p.36, arXiv:2411.04551v3 (mu/nu label-swap correction documented in the axiom's docstring and erratum E5)"
+evidence = "Six-axis fidelity diff + degenerate-instantiation attack in PR #281's commit body (no refutation found; equal measures / zero and infinite measures / off-sphere points / boundary dimensions all excluded by the hypotheses); full-application non-vacuity witness Regression/NonVacuity/AsymmetricMassGapCap.lean (atomless arc-mixture pair, gamma1 = 1/2)"
 
 [claims.prop-4-1]
 kind      = "conjecture"
