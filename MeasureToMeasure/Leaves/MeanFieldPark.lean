@@ -1,4 +1,5 @@
 import MeasureToMeasure.Leaves.DivergenceFormula
+import MeasureToMeasure.Foundations.BijOnFixedComplement
 
 /-!
 # The mean-field parking primitive (`exists_parked_schedule` leaf 1)
@@ -163,5 +164,71 @@ theorem attnMeasureFlow_pPark_eq_of_off_cap (z ω : Eucl d) (cosR T : ℝ) (hT :
     obtain ⟨hxs, hxcap⟩ := hxor
     exact attnFlow_id_of_inner_le z ω cosR T hT hρs Φ hΦ hxs hxcap ⟨p.duration_nonneg, le_rfl⟩
   rw [hid, Measure.map_id']
+
+/-- **Region-generic forward invariance for the `pPark` step.** If a measurable region `S` already
+contains the whole sphere-trace of the open cap `{x | cosR < ⟪z, x⟫}`, then the single-block
+schedule `[pPark z ω cosR T hT]` cannot push any mass out of `S`: a sphere-supported probability
+measure carried by `S` stays carried by `S`.
+
+**Why this is true, and what it is NOT.** The mechanism is bijectivity, not geometry. Each time
+slice `Φ t` is a BIJECTION of `sphere d` (`IsMeanFieldFlow.sphere_bijOn`, the paper's eq. (B.2)
+"invertible `φ^t`"), and `attnFlow_id_of_inner_le` says `Φ t` is the IDENTITY on the off-cap part
+of the sphere. A sphere-bijection that fixes a complement pointwise cannot evacuate the cap: by
+`Set.BijOn.mapsTo_of_eqOn_compl`, the cap-trace `C` maps into itself. Every on-sphere point of `S`
+therefore either sits in the cap (and lands back in the cap, hence in `S` by `hcapS`) or sits off
+the cap (and is fixed, hence stays in `S`).
+
+Two things this deliberately does not need. It needs NOTHING about `ω`: the field's direction is
+irrelevant because the only inputs are "bijection of the sphere" and "identity off the cap".
+And it asks NO region commitment from `ρ` beyond `ρ Sᶜ = 0`; in particular `S` is an arbitrary
+measurable set, so this serves an orthant, a ball, or any future region without importing
+`Statements/SupportedIn.lean`.
+
+**Rejected alternative (do not re-attempt).** The geodesic-convexity route -- argue that the
+trajectory from an orthant point stays in the orthant because the orthant is geodesically convex
+and the flow moves along the `ω` geodesic -- was investigated and rejected on two independent
+counts: the pole `ω` is provably NOT constrained to lie in the orthant, and no trajectory-level
+geodesic statement exists in this repo (building one is a large ODE development). Bijectivity
+supersedes it entirely. -/
+theorem attnMeasureFlow_pPark_supportedIn_of_cap_subset (z ω : Eucl d) (cosR T : ℝ) (hT : 0 ≤ T)
+    [NeZero d] {S : Set (Eucl d)} (hS : MeasurableSet S)
+    (hcapS : ∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S)
+    (ρ : Measure (Eucl d)) [IsProbabilityMeasure ρ] (hρs : ρ (sphere d)ᶜ = 0)
+    (hρS : ρ Sᶜ = 0) :
+    (attnMeasureFlow [pPark z ω cosR T hT] ρ) Sᶜ = 0 := by
+  set p := pPark z ω cosR T hT with hpdef
+  have hΦ := (@exists_meanFieldFlow d p ρ ‹_› hρs).choose_spec
+  set Φ := (@exists_meanFieldFlow d p ρ ‹_› hρs).choose with hΦdef
+  show (attnStep p ρ) Sᶜ = 0
+  unfold attnStep
+  rw [dif_pos ⟨‹IsProbabilityMeasure ρ›, hρs⟩]
+  have hdur : p.duration ∈ Set.Icc (0 : ℝ) p.duration := ⟨p.duration_nonneg, le_rfl⟩
+  -- The sphere-trace of the open cap.
+  set C : Set (Eucl d) := {x | x ∈ sphere d ∧ cosR < (⟪z, x⟫ : ℝ)} with hCdef
+  have hbij := hΦ.sphere_bijOn p.duration hdur
+  have hfix : Set.EqOn (Φ p.duration) id (sphere d \ C) := by
+    intro x hx
+    obtain ⟨hxs, hxnC⟩ := hx
+    have hle : (⟪z, x⟫ : ℝ) ≤ cosR := by
+      by_contra hlt
+      exact hxnC ⟨hxs, not_le.mp hlt⟩
+    exact attnFlow_id_of_inner_le z ω cosR T hT hρs Φ hΦ hxs hle hdur
+  -- A sphere-bijection fixing the off-cap complement cannot evacuate the cap.
+  have hmaps : Set.MapsTo (Φ p.duration) C C :=
+    Set.BijOn.mapsTo_of_eqOn_compl hbij hfix (fun x hx => hx.1)
+  have hmaps2 : Set.MapsTo (Φ p.duration) (sphere d ∩ S) S := by
+    intro x hx
+    obtain ⟨hxs, hxS⟩ := hx
+    by_cases hc : cosR < (⟪z, x⟫ : ℝ)
+    · exact hcapS _ (hmaps ⟨hxs, hc⟩).1 (hmaps ⟨hxs, hc⟩).2
+    · have hfx := attnFlow_id_of_inner_le z ω cosR T hT hρs Φ hΦ hxs (not_lt.mp hc) hdur
+      rw [hfx]; exact hxS
+  rw [Measure.map_apply (hΦ.measurable _ hdur) hS.compl]
+  refine measure_mono_null ?_ (measure_union_null hρs hρS)
+  intro x hx
+  simp only [Set.mem_preimage, Set.mem_compl_iff] at hx
+  by_contra hxor
+  simp only [Set.mem_union, Set.mem_compl_iff, not_or, not_not] at hxor
+  exact hx (hmaps2 ⟨hxor.1, hxor.2⟩)
 
 end MeasureToMeasure.Leaves
