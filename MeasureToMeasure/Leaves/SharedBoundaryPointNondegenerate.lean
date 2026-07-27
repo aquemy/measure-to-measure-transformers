@@ -37,6 +37,10 @@ Combining `norm_taylor_remainder_le`'s uniform `O(τ²)` remainder for both flow
 inequality turns this `O(τ)` linear gap into a genuine positive margin `‖Φμ τ0 x0 - Φν τ0 x0‖ ≥
 τ0 κ / 2 > 0` for `τ0` small enough (`≤ κ/12` keeps the combined `6τ0²` error below half the
 linear term).
+
+Staging: zero consumers today. The `exists_cap_nu_mass_zero_at_shared_boundary` axiom
+(`Leaves/AsymmetricMassGapCap.lean`) RE-STATES rather than consumes this file's facts; kept for
+the planned non-vacuous `lemma_3_4_part2` re-discharge assembly.
 -/
 
 namespace MeasureToMeasure.Leaves

@@ -129,9 +129,6 @@ import MeasureToMeasure.Leaves.DeficitRouting
 import MeasureToMeasure.Leaves.GeodesicArcChain
 import MeasureToMeasure.Leaves.MarkovBound
 import MeasureToMeasure.Leaves.DiscreteClustering
-import MeasureToMeasure.Statements.SupportedIn
-import MeasureToMeasure.Statements.MainResults
-import MeasureToMeasure.Statements.MidLevel
 import MeasureToMeasure.Leaves.ShrinkDisjointBystanders
 import MeasureToMeasure.Leaves.GenRestNearBall
 import MeasureToMeasure.Leaves.OrthantSphereAvoiding
@@ -139,4 +136,7 @@ import MeasureToMeasure.Leaves.UniformRadiusPacking
 import MeasureToMeasure.Leaves.UniformRadiusPackingUnit
 import MeasureToMeasure.Leaves.RotateFamilyToOrthant
 import MeasureToMeasure.Leaves.DisentangleInductionStep
+import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.Lemma34Part1
+import MeasureToMeasure.Statements.MainResults
+import MeasureToMeasure.Statements.MidLevel
