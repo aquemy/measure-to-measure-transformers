@@ -322,67 +322,105 @@ example : True := by
     Set.univ isOpen_univ hUuniv hUuniv'
   trivial
 
-/-- Non-vacuity of `lemma_3_4_part2`: the diagonal-symmetric halves have barycenters
-`(17/26, 17/26)` and `(7/10, 7/10)` on the diagonal ray, colinear with `γ = 85/91 ∈ (0,1)`. -/
-example : True := by
-  have hsum : (1 / 2 : ℝ≥0∞) + 1 / 2 = 1 := ENNReal.add_halves 1
+/-! #### Named part-2 witness pair
+
+The diagonal-symmetric halves have barycenters `(17/26, 17/26)` and `(7/10, 7/10)` on the diagonal
+ray, colinear with `γ = 85/91 ∈ (0,1)`. Named (rather than inline in an `example`) so that
+`Regression/Refuted/HgenRestUnconditionallyFalse.lean` can reuse the same admissible pair to refute
+`GenRestNearBall` (finding F22). -/
+
+/-- Part-2 witness `μ`: equal-weight atoms at `(5/13, 12/13)` and `(12/13, 5/13)`. -/
+noncomputable def partTwoMu : Measure (Eucl 2) :=
+  twoAtom (1/2) (1/2) (pt (5/13) (12/13)) (pt (12/13) (5/13))
+
+/-- Part-2 witness `ν`: equal-weight atoms at `(3/5, 4/5)` and `(4/5, 3/5)`. -/
+noncomputable def partTwoNu : Measure (Eucl 2) :=
+  twoAtom (1/2) (1/2) (pt (3/5) (4/5)) (pt (4/5) (3/5))
+
+instance partTwoMu_isProbabilityMeasure : IsProbabilityMeasure partTwoMu :=
+  isProbabilityMeasure_twoAtom (ENNReal.add_halves 1) _ _
+
+instance partTwoNu_isProbabilityMeasure : IsProbabilityMeasure partTwoNu :=
+  isProbabilityMeasure_twoAtom (ENNReal.add_halves 1) _ _
+
+theorem partTwoMu_supportedIn_sphere : supportedIn partTwoMu (MeasureToMeasure.sphere 2) :=
+  twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+    (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+
+theorem partTwoNu_supportedIn_sphere : supportedIn partTwoNu (MeasureToMeasure.sphere 2) :=
+  twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
+    (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
+
+/-- The open orthant of `Eucl 2` is measurable (an intersection of open half-spaces). -/
+theorem orthant_two_measurableSet : MeasurableSet (orthant 2) := by
+  have : orthant 2 = ⋂ i : Fin 2, {v : Eucl 2 | 0 < v i} := by
+    ext v; simp [orthant, Set.mem_iInter]
+  rw [this]
+  exact MeasurableSet.iInter fun i =>
+    measurableSet_lt measurable_const (EuclideanSpace.proj (𝕜 := ℝ) i).continuous.measurable
+
+theorem partTwoMu_supportedIn_orthant : supportedIn partTwoMu (orthant 2) :=
+  twoAtom_supportedIn orthant_two_measurableSet
+    (pt_mem_orthant (by norm_num) (by norm_num)) (pt_mem_orthant (by norm_num) (by norm_num))
+
+theorem partTwoNu_supportedIn_orthant : supportedIn partTwoNu (orthant 2) :=
+  twoAtom_supportedIn orthant_two_measurableSet
+    (pt_mem_orthant (by norm_num) (by norm_num)) (pt_mem_orthant (by norm_num) (by norm_num))
+
+theorem partTwoMu_ne_partTwoNu : partTwoMu ≠ partTwoNu := by
+  intro hEq
+  have hμa : partTwoMu {pt (5/13) (12/13)} = 1 / 2 :=
+    twoAtom_apply_fst (pt_ne_of_fst (by norm_num))
+  have hνa : partTwoNu {pt (5/13) (12/13)} = 0 := by
+    show twoAtom (1/2) (1/2) (pt (3/5) (4/5)) (pt (4/5) (3/5)) {pt (5/13) (12/13)} = 0
+    simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
+    rw [Measure.dirac_apply' _ (measurableSet_singleton _),
+      Measure.dirac_apply' _ (measurableSet_singleton _),
+      Set.indicator_of_notMem
+        (by simpa using (pt_ne_of_fst (by norm_num) : pt (3/5) (4/5) ≠ pt (5/13) (12/13))),
+      Set.indicator_of_notMem
+        (by simpa using (pt_ne_of_fst (by norm_num) : pt (4/5) (3/5) ≠ pt (5/13) (12/13)))]
+    simp
+  rw [hEq, hνa] at hμa
+  exact absurd hμa.symm (by norm_num)
+
+theorem partTwo_colinear : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧
+    MeasureToMeasure.Leaves.barycenter partTwoMu =
+      γ • MeasureToMeasure.Leaves.barycenter partTwoNu := by
   have hne2 : (1 / 2 : ℝ≥0∞) ≠ ⊤ := by finiteness
-  set a := pt (5/13) (12/13) with ha
-  set b := pt (12/13) (5/13) with hb
-  set c := pt (3/5) (4/5) with hc
-  set e := pt (4/5) (3/5) with he
-  set μ := twoAtom (1/2) (1/2) a b with hμdef
-  set ν := twoAtom (1/2) (1/2) c e with hνdef
-  haveI : IsProbabilityMeasure μ := isProbabilityMeasure_twoAtom hsum a b
-  haveI : IsProbabilityMeasure ν := isProbabilityMeasure_twoAtom hsum c e
-  have hμs : supportedIn μ (MeasureToMeasure.sphere 2) :=
-    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
-      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
-  have hνs : supportedIn ν (MeasureToMeasure.sphere 2) :=
-    twoAtom_supportedIn Metric.isClosed_sphere.measurableSet
-      (pt_mem_sphere (by norm_num)) (pt_mem_sphere (by norm_num))
-  have horthMeas : MeasurableSet (orthant 2) := by
-    have : orthant 2 = ⋂ i : Fin 2, {v : Eucl 2 | 0 < v i} := by
-      ext v; simp [orthant, Set.mem_iInter]
-    rw [this]
-    exact MeasurableSet.iInter fun i =>
-      measurableSet_lt measurable_const (EuclideanSpace.proj (𝕜 := ℝ) i).continuous.measurable
-  have hμo : supportedIn μ (orthant 2) :=
-    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
-      (pt_mem_orthant (by norm_num) (by norm_num))
-  have hνo : supportedIn ν (orthant 2) :=
-    twoAtom_supportedIn horthMeas (pt_mem_orthant (by norm_num) (by norm_num))
-      (pt_mem_orthant (by norm_num) (by norm_num))
-  have hne : μ ≠ ν := by
-    intro hEq
-    have hμa : μ {a} = 1 / 2 := twoAtom_apply_fst (pt_ne_of_fst (by norm_num))
-    have hνa : ν {a} = 0 := by
-      show twoAtom (1/2) (1/2) c e {a} = 0
-      simp only [twoAtom, Measure.add_apply, Measure.smul_apply, smul_eq_mul]
-      rw [Measure.dirac_apply' _ (measurableSet_singleton a),
-        Measure.dirac_apply' _ (measurableSet_singleton a),
-        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : c ≠ a)),
-        Set.indicator_of_notMem (by simpa using (pt_ne_of_fst (by norm_num) : e ≠ a))]
-      simp
-    rw [hEq, hνa] at hμa
-    exact absurd hμa.symm (by norm_num)
   have htoReal : (1 / 2 : ℝ≥0∞).toReal = 1 / 2 := by
     rw [ENNReal.toReal_div]; norm_num
-  have hcol : ∃ γ : ℝ, γ ∈ Set.Ioo (0 : ℝ) 1 ∧
-      MeasureToMeasure.Leaves.barycenter μ =
-        γ • MeasureToMeasure.Leaves.barycenter ν := by
-    refine ⟨85 / 91, ⟨by norm_num, by norm_num⟩, ?_⟩
-    rw [twoAtom_barycenter hne2 hne2, twoAtom_barycenter hne2 hne2, htoReal]
-    refine WithLp.ofLp_injective 2 ?_
-    funext i
-    fin_cases i
-    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
-        Pi.smul_apply, smul_eq_mul]
-      norm_num
-    · simp only [ha, hb, hc, he, pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
-        Pi.smul_apply, smul_eq_mul]
-      norm_num
-  have _h := lemma_3_4_part2 μ ν 1 one_pos hne hμs hνs hμo hνo hcol
+  refine ⟨85 / 91, ⟨by norm_num, by norm_num⟩, ?_⟩
+  show MeasureToMeasure.Leaves.barycenter
+      (twoAtom (1/2) (1/2) (pt (5/13) (12/13)) (pt (12/13) (5/13))) =
+    (85 / 91 : ℝ) • MeasureToMeasure.Leaves.barycenter
+      (twoAtom (1/2) (1/2) (pt (3/5) (4/5)) (pt (4/5) (3/5)))
+  rw [twoAtom_barycenter hne2 hne2, twoAtom_barycenter hne2 hne2, htoReal]
+  refine WithLp.ofLp_injective 2 ?_
+  funext i
+  fin_cases i
+  · simp only [pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+      Pi.smul_apply, smul_eq_mul]
+    norm_num
+  · simp only [pt, WithLp.ofLp_add, WithLp.ofLp_smul, Pi.add_apply,
+      Pi.smul_apply, smul_eq_mul]
+    norm_num
+
+/-- Non-vacuity scope for `lemma_3_4_part2` (rescoped 2026-07-27, finding F22). The paper-level
+hypothesis bundle -- distinctness, sphere and orthant supports, colinear-unequal barycenters
+(`γ = 85/91`) -- IS jointly satisfiable, witnessed by `partTwoMu`/`partTwoNu` above. A FULL
+application of the discharged theorem is impossible: the `hgenRest` hypothesis added at discharge
+time (PR #260) is unsatisfiable for every measure pair and every `d ≥ 2`, kernel-checked as
+`lemma_3_4_part2_hgenRest_unsatisfiable` in `Regression/Refuted/HgenRestUnconditionallyFalse.lean`,
+so `lemma_3_4_part2` is currently VACUOUS pending re-discharge. An earlier version of this example
+applied `lemma_3_4_part2` PARTIALLY (10 of its 13 explicit arguments), which silently stopped
+guarding when PR #260 added hypotheses; per F22, non-vacuity witnesses must ascribe the full
+conclusion type so a partial application cannot typecheck. -/
+example : True := by
+  have _hne := partTwoMu_ne_partTwoNu
+  have _hcol := partTwo_colinear
+  have _hs := partTwoMu_supportedIn_sphere
+  have _ho := partTwoNu_supportedIn_orthant
   trivial
 
 /-! ### prop_2_2 (`hxhull`, F21) -/
