@@ -34,6 +34,17 @@ conjunct.
 Staging: zero consumers today. Built for the Phase-4 pole step of the planned non-vacuous
 `lemma_3_4_part2` re-discharge (the asymmetric-cap route, claim `cap-nu-null-b16`); see the
 `exists-disentangling-balls-campaign` project notes.
+
+## Totalization (group G3): `exists_pole_in_cap_avoiding_total`
+
+`hnondeg` above is undischargeable at intended call sites: for `β := barycenter ν'` and
+`q :=` the off-cap `μ'`-integral, BOTH can genuinely lie in `span{z, w}` at ANY dimension `d`
+(and at `d = 2` the whole space IS that plane, so `hnondeg` is unsatisfiable outright). The
+excluded planar configuration is elementarily fine anyway: `circle_meets_line_finite_planar`
+(`Leaves/ArcAvoidsLine.lean`) covers it by the quadratic-coefficient argument.
+`exists_pole_in_cap_avoiding_total` therefore restates the SAME conclusion with `hnondeg`
+deleted, case-splitting per family member between the two finiteness lemmas. New call sites
+should use the total version; the original is kept untouched for its existing statement shape.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -143,6 +154,102 @@ theorem exists_pole_in_cap_avoiding (z w : Eucl d) (hz : ‖z‖ = 1) (hw : ‖w
   have hSifin : ∀ i, {θ : ℝ | θ ∈ Set.Icc (-R) R ∧ ∃ c : ℝ, s • ωf θ + q = c • β i}.Finite := by
     intro i
     exact circle_meets_line_finite z w hz hw hzw s hs q (β i) (hβ i) (hnondeg i) (-R) R
+  have hBfin : (Sv ∪ ⋃ i, {θ : ℝ | θ ∈ Set.Icc (-R) R ∧ ∃ c : ℝ, s • ωf θ + q = c • β i}).Finite :=
+    hSvfin.union (Set.finite_iUnion hSifin)
+  -- the arc is uncountable, so it survives minus this finite bad set.
+  have hIooInf : (Set.Ioo (-R) R).Infinite := Set.Ioo_infinite (by linarith)
+  have hdiffInf := hIooInf.sdiff hBfin
+  obtain ⟨θ, hθ⟩ := hdiffInf.nonempty
+  obtain ⟨hθIoo, hθnotB⟩ := hθ
+  refine ⟨ωf θ, hnorm θ, ?_, ?_, hspan θ, ?_⟩
+  · rw [hinnerz]; exact hcosgt θ hθIoo
+  · intro hcontra
+    apply hθnotB
+    left
+    exact ⟨hθIoo, hcontra⟩
+  · intro i c hcontra
+    apply hθnotB
+    right
+    rw [Set.mem_iUnion]
+    exact ⟨i, ⟨Set.Ioo_subset_Icc_self hθIoo, c, hcontra⟩⟩
+
+/-- **Total arc-valued spherical-cap pigeonhole, avoiding a finite family of lines.** Exactly
+`exists_pole_in_cap_avoiding`'s conclusion, with its `hnondeg` hypothesis DELETED: no
+non-degeneracy is required of the family `β` against the plane `span{z, w}` beyond `β i ≠ 0`.
+
+`hnondeg` is undischargeable at the intended (App. B.3 asymmetric-cap) call sites, where
+`β := barycenter ν'` and `q :=` the off-cap `μ'`-integral can both genuinely lie in
+`span{z, w}` at ANY `d`, and at `d = 2` it is unsatisfiable outright (the plane is the whole
+space). The proof re-runs the arc argument and, in the per-member finiteness step, case-splits:
+the configuration `hnondeg` would exclude (`β i` and `q` both planar) is handled by
+`circle_meets_line_finite_planar`'s quadratic-coefficient argument, every other configuration by
+`circle_meets_line_finite`. -/
+theorem exists_pole_in_cap_avoiding_total (z w : Eucl d) (hz : ‖z‖ = 1) (hw : ‖w‖ = 1)
+    (hzw : (⟪z, w⟫ : ℝ) = 0) (cosR : ℝ) (hcosR : cosR ∈ Set.Ico (0 : ℝ) 1)
+    (v : Eucl d) (s : ℝ) (hs : s ≠ 0) (q : Eucl d)
+    {ι : Type*} [Fintype ι] (β : ι → Eucl d) (hβ : ∀ i, β i ≠ 0) :
+    ∃ ω : Eucl d, ‖ω‖ = 1 ∧ cosR < (⟪z, ω⟫ : ℝ) ∧ ω ≠ v ∧
+      ω = (⟪z, ω⟫ : ℝ) • z + (⟪w, ω⟫ : ℝ) • w ∧
+      ∀ i, ∀ c : ℝ, s • ω + q ≠ c • β i := by
+  obtain ⟨hcosR0, hcosR1⟩ := hcosR
+  have hzz : (⟪z, z⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hz]; norm_num
+  have hwz : (⟪w, z⟫ : ℝ) = 0 := by rw [real_inner_comm]; exact hzw
+  have hww : (⟪w, w⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hw]; norm_num
+  -- `R := arccos cosR` is the half-width of the arc: `cos θ > cosR` exactly on `(-R, R)`.
+  set R : ℝ := Real.arccos cosR with hR
+  have hRpos : 0 < R := Real.arccos_pos.mpr hcosR1
+  have hcosRle1 : cosR ≤ 1 := le_of_lt hcosR1
+  have hcosRge : (-1 : ℝ) ≤ cosR := by linarith
+  have hcosReq : Real.cos R = cosR := Real.cos_arccos hcosRge hcosRle1
+  have hRlepi : R ≤ Real.pi := Real.arccos_le_pi cosR
+  have hcosgt : ∀ θ : ℝ, θ ∈ Set.Ioo (-R) R → cosR < Real.cos θ := by
+    intro θ hθ
+    obtain ⟨h1, h2⟩ := hθ
+    rw [← hcosReq]
+    rcases lt_or_ge θ 0 with hθ0 | hθ0
+    · have heq : Real.cos θ = Real.cos (-θ) := (Real.cos_neg θ).symm
+      rw [heq]
+      exact Real.strictAntiOn_cos (a := -θ) (b := R) ⟨by linarith, by linarith⟩
+        ⟨by linarith, hRlepi⟩ (by linarith)
+    · exact Real.strictAntiOn_cos (a := θ) (b := R) ⟨hθ0, by linarith⟩ ⟨by linarith, hRlepi⟩ h2
+  -- the arc parametrization `ω(θ) = cos θ • z + sin θ • w`.
+  set ωf : ℝ → Eucl d := fun θ => Real.cos θ • z + Real.sin θ • w with hωf
+  have hnorm : ∀ θ, ‖ωf θ‖ = 1 := by
+    intro θ
+    have hsq : ‖ωf θ‖ ^ 2 = Real.cos θ ^ 2 + Real.sin θ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq]
+      simp only [hωf, inner_add_left, inner_add_right, real_inner_smul_left,
+        real_inner_smul_right, hzz, hww, hzw, hwz]
+      ring
+    calc ‖ωf θ‖ = Real.sqrt (‖ωf θ‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
+      _ = Real.sqrt 1 := by rw [hsq, add_comm, Real.sin_sq_add_cos_sq]
+      _ = 1 := Real.sqrt_one
+  have hinnerz : ∀ θ, (⟪z, ωf θ⟫ : ℝ) = Real.cos θ := by
+    intro θ; simp only [hωf, inner_add_right, real_inner_smul_right, hzz, hzw]; ring
+  have hinnerw : ∀ θ, (⟪w, ωf θ⟫ : ℝ) = Real.sin θ := by
+    intro θ; simp only [hωf, inner_add_right, real_inner_smul_right, hwz, hww]; ring
+  have hspan : ∀ θ, ωf θ = (⟪z, ωf θ⟫ : ℝ) • z + (⟪w, ωf θ⟫ : ℝ) • w := by
+    intro θ; rw [hinnerz, hinnerw]
+  -- bad set for `v`: finite, since all its members share one `(cos θ, sin θ)` pair.
+  set Sv : Set ℝ := {θ | θ ∈ Set.Ioo (-R) R ∧ ωf θ = v} with hSv
+  have hSvfin : Sv.Finite := by
+    refine finite_of_shared_cos_sin (a := -R) (b := R)
+      (fun θ hθ => Set.Ioo_subset_Icc_self hθ.1) ?_
+    rintro θ1 θ2 ⟨-, he1⟩ ⟨-, he2⟩
+    have hveq : ωf θ1 = ωf θ2 := he1.trans he2.symm
+    constructor
+    · have hc := congrArg (fun x : Eucl d => (⟪z, x⟫ : ℝ)) hveq
+      simpa [hinnerz] using hc
+    · have hc := congrArg (fun x : Eucl d => (⟪w, x⟫ : ℝ)) hveq
+      simpa [hinnerw] using hc
+  -- bad set for each `i`: finite, case-splitting on the planar configuration.
+  have hSifin : ∀ i, {θ : ℝ | θ ∈ Set.Icc (-R) R ∧ ∃ c : ℝ, s • ωf θ + q = c • β i}.Finite := by
+    intro i
+    by_cases hplanar : β i ∈ Submodule.span ℝ ({z, w} : Set (Eucl d)) ∧
+        q ∈ Submodule.span ℝ ({z, w} : Set (Eucl d))
+    · exact circle_meets_line_finite_planar z w hz hw hzw s hs q (β i) (hβ i)
+        hplanar.1 hplanar.2 (-R) R
+    · exact circle_meets_line_finite z w hz hw hzw s hs q (β i) (hβ i) hplanar (-R) R
   have hBfin : (Sv ∪ ⋃ i, {θ : ℝ | θ ∈ Set.Icc (-R) R ∧ ∃ c : ℝ, s • ωf θ + q = c • β i}).Finite :=
     hSvfin.union (Set.finite_iUnion hSifin)
   -- the arc is uncountable, so it survives minus this finite bad set.
