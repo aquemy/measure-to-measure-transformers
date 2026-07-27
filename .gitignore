@@ -70,3 +70,7 @@ experiments/results/*
 /paper.pdf
 
 /blueprint/src/web.paux
+
+# Claude Code session-local state (never commit); the workflows/ scripts ARE tracked.
+/.claude/settings.local.json
+/.claude/scheduled_tasks.lock
