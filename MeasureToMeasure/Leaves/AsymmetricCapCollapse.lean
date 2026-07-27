@@ -1,4 +1,6 @@
 import MeasureToMeasure.Leaves.PoleGeometry
+import MeasureToMeasure.Leaves.CapPoleAvoiding
+import MeasureToMeasure.Leaves.OffSpanMargin
 import MeasureToMeasure.Leaves.OffCenterCollapse
 import MeasureToMeasure.Leaves.OffCenterW2
 import MeasureToMeasure.Leaves.AnnulusMass
@@ -213,5 +215,100 @@ theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProba
         hnpos ρ hρs
     rw [hflowEqρ, hθdef]
     exact attnMeasureFlow_pPark_eq_of_off_cap z ω cosR ((n : ℝ) * T2) hnT0 ρ hρs hρcap
+
+/-- **The asymmetric-cap collapse schedule: one block defeats every `γ₂`.** Given the axiom's
+asymmetric cap (`μ'`-positive, `ν'`-null mass) on the sphere, some single attention block `p` of
+duration EXACTLY `T2` fixes `ν'` and makes the flowed barycenters non-colinear for EVERY scalar
+`γ₂`. The `ν'`-side is exact: zero cap mass means the block fixes `ν'` outright
+(`exists_collapse_block_barycenter_close`'s bystander clause), so its barycenter `β` is untouched.
+The `μ'`-side is quantitative: the pole `ω` is chosen by the total arc pigeonhole
+(`exists_pole_in_cap_avoiding_total`) so that the ideal collapse target `Sμ'·ω + p'` avoids the
+whole line `span{β}` (when `β = 0`, an `Empty` family plus the forbidden vector
+`v := -(Sμ')⁻¹ • p'` makes the target nonzero, which is off `span{0}` already); the off-span
+margin (`forall_ne_smul_of_dist_lt_infDist_span`) turns that qualitative avoidance into a
+positive `infDist` margin `M`, and running the collapse block at `ε := M/2` keeps the flowed
+`μ'`-barycenter strictly inside the margin, where no scalar multiple of `β` lives.
+
+This is the Phase-B glue of the non-vacuous `lemma_3_4_part2` re-discharge (claim
+`cap-nu-null-b16`), replacing the refuted `hgenRest`/gramGap route entirely: only un-gated
+components are consumed. -/
+theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
+    (μ' ν' : Measure (Eucl d)) [IsProbabilityMeasure μ'] [IsProbabilityMeasure ν']
+    (hμ's : supportedIn μ' (sphere d)) (hν's : supportedIn ν' (sphere d))
+    {z : Eucl d} (hzs : z ∈ sphere d)
+    {cosR : ℝ} (hcosR : cosR ∈ Set.Ioo (1 / 2 : ℝ) 1)
+    (hμcap : 0 < μ' {x | cosR < (⟪z, x⟫ : ℝ)})
+    (hνcap : ν' {x | cosR < (⟪z, x⟫ : ℝ)} = 0)
+    {T2 : ℝ} (hT2 : 0 < T2) :
+    ∃ p : AttnParams d, p.duration = T2 ∧ attnMeasureFlow [p] ν' = ν' ∧
+      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow [p] μ')
+        ≠ γ₂ • barycenter (attnMeasureFlow [p] ν') := by
+  have hz : ‖z‖ = 1 := norm_eq_one_of_mem_sphere hzs
+  have hz0 : z ≠ 0 := fun h => by simp [h] at hz
+  obtain ⟨hcosRhalf, hcosR1⟩ := hcosR
+  have hcosR0 : (0 : ℝ) ≤ cosR := by linarith
+  have hSpos : 0 < (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal :=
+    ENNReal.toReal_pos hμcap.ne' (measure_ne_top μ' _)
+  have hSne : (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal ≠ 0 := ne_of_gt hSpos
+  obtain ⟨w, hzw, hw⟩ := Leaves.exists_unit_orthogonal hd2 hz0
+  -- pole choice: in both branches, the ideal collapse target avoids the `β`-line entirely
+  have hpole : ∃ ω : Eucl d, ‖ω‖ = 1 ∧ cosR < (⟪z, ω⟫ : ℝ) ∧
+      ∀ c : ℝ, (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+        + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ') ≠ c • barycenter ν' := by
+    by_cases hβ0 : barycenter ν' = 0
+    · -- `β = 0`: an `Empty` family; the pole only needs to dodge the single vector `-Sμ'⁻¹ • p'`
+      obtain ⟨ω, hωnorm, hωcap, hωne, -, -⟩ :=
+        exists_pole_in_cap_avoiding_total z w hz hw hzw cosR ⟨hcosR0, hcosR1⟩
+          (-(((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal)⁻¹
+            • (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ')))
+          ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal) hSne
+          (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ')
+          (ι := Empty) Empty.elim (fun i => i.elim)
+      refine ⟨ω, hωnorm, hωcap, ?_⟩
+      intro c hc
+      rw [hβ0, smul_zero] at hc
+      apply hωne
+      have h1 : (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+          = -(∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ') := eq_neg_of_add_eq_zero_left hc
+      have h2 : ω = ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal)⁻¹
+          • ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω) := by
+        rw [smul_smul, inv_mul_cancel₀ hSne, one_smul]
+      rw [h1, smul_neg] at h2
+      exact h2
+    · -- `β ≠ 0`: the singleton family `{β}` feeds the arc pigeonhole directly
+      obtain ⟨ω, hωnorm, hωcap, -, -, havoid⟩ :=
+        exists_pole_in_cap_avoiding_total z w hz hw hzw cosR ⟨hcosR0, hcosR1⟩ 0
+          ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal) hSne
+          (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ')
+          (ι := Unit) (fun _ => barycenter ν') (fun _ => hβ0)
+      exact ⟨ω, hωnorm, hωcap, fun c => havoid () c⟩
+  obtain ⟨ω, hωnorm, hωcap, htarget⟩ := hpole
+  -- positive margin off the `β`-line, with perturbation stability
+  obtain ⟨hMpos, hstab⟩ := forall_ne_smul_of_dist_lt_infDist_span (E := Eucl d) htarget
+  -- ε-approximate collapse block, `ε :=` half the margin
+  obtain ⟨p, hpdur, hpclose, hpfix⟩ :=
+    exists_collapse_block_barycenter_close μ' hμ's hz hωnorm ⟨hcosRhalf, hcosR1⟩ hωcap hT2
+      (ε := Metric.infDist
+        ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+          + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ'))
+        (Submodule.span ℝ {barycenter ν'} : Set (Eucl d)) / 2)
+      (by linarith)
+  have hνfix : attnMeasureFlow [p] ν' = ν' := hpfix ν' hν's hνcap
+  refine ⟨p, hpdur, hνfix, ?_⟩
+  intro γ₂
+  rw [hνfix]
+  refine hstab _ ?_ γ₂
+  rw [dist_eq_norm]
+  calc ‖barycenter (attnMeasureFlow [p] μ')
+      - ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+        + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ'))‖
+      < Metric.infDist
+        ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+          + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ'))
+        (Submodule.span ℝ {barycenter ν'} : Set (Eucl d)) / 2 := hpclose
+    _ ≤ Metric.infDist
+        ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+          + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ'))
+        (Submodule.span ℝ {barycenter ν'} : Set (Eucl d)) := by linarith
 
 end MeasureToMeasure.Leaves
