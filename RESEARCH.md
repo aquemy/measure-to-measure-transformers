@@ -62,19 +62,21 @@
 ## Node status (refresh from `bin/axiom-report`; run `scripts/audit.sh`)
 The `Axioms/` layer (`W2`, `W1`, `measureFlow`, `flowMap`) is now concrete definitions with proved
 properties, and many former mid-level axioms have been discharged. As of the `exists_meanFieldFlow`
-discharge (PR #173, 2026-07-09, 10 → **9**), the axiom inventory is fully mean-field-free: all nine
-remaining axioms live in `Statements/` (eight in `MidLevel.lean` plus `exists_disentangling_balls` in
-`MainResults.lean`). No node is `sorryAx` (zero `sorry` repo-wide). Regenerate the exact split with
-`scripts/audit.sh` (writes `.cache/axiom-report.txt`). Representative:
+discharge (PR #173, 2026-07-09, 10 → **9**), the axiom inventory is fully mean-field-free: every
+remaining axiom lives in `Statements/` (plus the one (B.16) leaf bridge, F24). The 2026-07-28
+discharges of `prop_2_1` (F29, 9 → 8) and `cluster_to_point` (F30, 8 → **7**) bring the live
+inventory to seven: five in `MidLevel.lean`, `exists_disentangling_balls` in `MainResults.lean`,
+and the (B.16) bridge in `Leaves/`. No node is `sorryAx` (zero `sorry` repo-wide). Regenerate the
+exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`). Representative:
 
 | Node (`\lean{}` name) | Status | Notes |
 | --- | --- | --- |
 | `MeasureToMeasure.Leaves.*` (L1-L11′) | clean | the self-contained leaf cores; L7 `lemma_5_2` and L8 `markov_bound` machine-checked since the `W₂`/`W₁` discharge |
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
-| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → **8**) |
+| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1,cluster_to_point}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → **8**; `cluster_to_point` via the F30 three-pull chain, 2026-07-28, 8 → **7**) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining seven statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29) |
-| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the eighth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
+| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining six statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30) |
+| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the seventh live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
 | `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
@@ -939,6 +941,33 @@ during the discharge:
    proof. The statement is TRUE (our kernel-clean discharge proves it, degenerate cases included:
    the Dirac case is exactly where the gated pull is trivial), so this is a proof gap, not an
    erratum against the statement.
+
+### F30 (discharge, recorded 2026-07-28) `cluster_to_point` discharged by a three-pull `V = 0` chain; the prescribed-target composite needs neither LaSalle nor the Prop 4.2 steering tail
+
+`cluster_to_point` (single-measure controllability: drive a sphere-supported hemisphere-carried
+probability measure `W₂`-within `ε` of the Dirac at ANY prescribed sphere point `z`, `≤ 7` pieces,
+`d ≥ 3`) is now DISCHARGED to a kernel-clean theorem (`Statements/ClusterToPoint.lean`, signature
+verbatim, closure exactly [propext, Classical.choice, Quot.sound], axiom inventory 8 -> **7**).
+The witness is `Leaves.exists_three_pull_cluster_to_target` (PR #336, assembled from the banked
+`exists_gatedPull_cap_transfer` + `inner_orthogonal_ge_of_mem_cap` leaves): three `V = 0` gated
+pulls of duration `T/3` each, relaying the concentrated cap `e → α → z` through a unit vector `α`
+orthogonal to BOTH `e` and `z` (`exists_unit_orthogonal_two`, the only consumer of `3 ≤ d`; the
+relay handles `z = e` and `z = -e` uniformly with no case split). Each pull's `ε²/8` off-cap
+budget is handed off, not accumulated: the tight `7/8`-cap of one pull clears the next pull's
+`-(1/2)` entry level around any orthogonal pole.
+
+**Honest witness / model adequacy.** The paper's own construction (§5.2, p.29, arXiv:2411.04551v3)
+is a genuine attention piece (`(V, B, W) ≡ (I_d, B, 0)`, Prop 2.1) clustering the hemisphere to a
+point, followed by six perceptron switches (Prop 4.1 with one active point) steering that point to
+`z`: `1 + 6` pieces. The machine-checked witness realizes the same conclusion with three `V = 0`
+gated perceptron pieces instead; this is faithful because the axiom's `switches ≤ 7` was always an
+upper bound, and the statement (unchanged, byte-for-byte, on the mean-field layer per F14) is what
+Theorem 1.1 consumes. Consequences: `theorem_1_1`'s footprint is now exactly
+`{exists_disentangling_balls, exists_parked_schedule}` (verified by `#print axioms`), and
+`prop_4_2` no longer gates `cluster_to_point` (it remains open for its own sake and for
+`lemma_5_4`'s route). As with F29, the paper's OWN attention construction remains unformalized;
+the `d ≥ 3` hypothesis is genuinely consumed (the doubly-orthogonal relay pole), where the paper
+spends it in Prop 4.1's steering instead.
 
 ### Verdict
 

@@ -1,6 +1,7 @@
 import Regression.Refuted.F12_HeavyTails
 import MeasureToMeasure.Statements.Lemma34Part1
 import MeasureToMeasure.Statements.Prop21
+import MeasureToMeasure.Statements.ClusterToPoint
 
 /-!
 # Non-vacuity witnesses for the `Statements/MidLevel.lean` axioms

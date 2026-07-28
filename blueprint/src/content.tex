@@ -285,6 +285,14 @@ $x_0^M\to y^M$ while inactive points stay fixed, $\le 6$ switches. [open]
 $M$ points $x_0^i\to y^i$ exactly, $\le 6M$ switches. [open]
 \end{proposition}
 
+\begin{proposition}[Cluster to a prescribed point, 2.1 + 4.1]\label{prop:c2p}\lean{MeasureToMeasure.Statements.cluster_to_point}\uses{prop:21,prop:41}\leanok
+A single-hemisphere measure is driven $W_2$-close to the Dirac at \emph{any prescribed} sphere
+point, $\le 7$ pieces, $d\ge 3$. Discharged to a kernel-clean theorem: three $\mathbf V=0$ gated
+pulls relay the mass $e\to\alpha\to z$ through a unit vector orthogonal to both $e$ and $z$ (the
+consumer of $d\ge 3$), so the composite needs neither Proposition 2.1's LaSalle theory nor
+Proposition 4.1's steering tail. [machine-checked]
+\end{proposition}
+
 \section{Main results}
 
 \begin{lemma}[Transport maps preserved, 5.1]\label{lem:51}\lean{MeasureToMeasure.Statements.lemma_5_1}\uses{prop:31}Existence of $\psi$. [machine-checked]\end{lemma}

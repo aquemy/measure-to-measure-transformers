@@ -2,6 +2,7 @@ import MeasureToMeasure.Axioms.Wasserstein
 import MeasureToMeasure.Axioms.ContinuityEquation
 import MeasureToMeasure.Axioms.Dynamics
 import MeasureToMeasure.Statements.MidLevel
+import MeasureToMeasure.Statements.ClusterToPoint
 
 /-!
 # Blueprint statements: the main results (Theorems 1.1 and 1.2) and disentanglement (Prop 3.1)
