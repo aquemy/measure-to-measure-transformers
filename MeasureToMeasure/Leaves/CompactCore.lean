@@ -1,6 +1,7 @@
 import Mathlib.MeasureTheory.Measure.Regular
 import Mathlib.Analysis.Normed.Lp.MeasurableSpace
 import MeasureToMeasure.Foundations.Sphere
+import MeasureToMeasure.Leaves.DisjointCompactCapCover
 
 /-!
 # Leaf (lemma 5.4 campaign, G4): compact cores of measurable sets under a finite measure
@@ -41,5 +42,21 @@ theorem exists_compact_core_subset_sphere (μ : Measure (Eucl d)) [IsFiniteMeasu
     ∃ K, IsCompact K ∧ K ⊆ A ∧ K ⊆ sphere d ∧ μ (A \ K) < η := by
   obtain ⟨K, hKc, hKA, hKlt⟩ := exists_compact_core μ A hA η hη
   exact ⟨K, hKc, hKA, hKA.trans hAs, hKlt⟩
+
+/-- **Cross-piece disjoint cap system at `Eucl d`.** Pairwise-disjoint compact cores in
+`Eucl d` have a gap `δ > 0` such that for every radius `r` with `0 < r` and `2 * r ≤ δ`
+there are finite centre sets `t i ⊆ K i` whose radius-`r` balls cover `K i`, miss every
+other core, and are pairwise disjoint across distinct cores. Term-mode instantiation of
+the abstract `exists_disjoint_cap_system` (see `DisjointCompactCapCover.lean` for why the
+proof lives over an abstract metric space). -/
+theorem disjoint_compacts_cap_cover {n : ℕ} {K : Fin n → Set (Eucl d)}
+    (hK : ∀ i, IsCompact (K i))
+    (hdisj : Pairwise fun i j => Disjoint (K i) (K j)) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ r : ℝ, 0 < r → 2 * r ≤ δ →
+      ∃ t : Fin n → Set (Eucl d), (∀ i, t i ⊆ K i) ∧ (∀ i, (t i).Finite) ∧
+        (∀ i, K i ⊆ ⋃ c ∈ t i, Metric.ball c r) ∧
+        (∀ i j, j ≠ i → ∀ c ∈ t i, Disjoint (Metric.ball c r) (K j)) ∧
+        (∀ i j, i ≠ j → ∀ c ∈ t i, ∀ c' ∈ t j, Disjoint (Metric.ball c r) (Metric.ball c' r)) :=
+  exists_disjoint_cap_system hK hdisj
 
 end MeasureToMeasure.Leaves
