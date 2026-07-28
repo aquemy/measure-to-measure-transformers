@@ -20,3 +20,4 @@ import Regression.NonVacuity.MainResults
 import Regression.NonVacuity.AsymmetricMassGapCap
 import Regression.NonVacuity.DisentangleResolvingAsym
 import Regression.NonVacuity.DisentangleAvoidingInsert
+import Regression.NonVacuity.DisentangleAssembly
