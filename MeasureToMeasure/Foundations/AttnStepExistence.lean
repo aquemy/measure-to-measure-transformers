@@ -2,6 +2,7 @@ import MeasureToMeasure.Foundations.TrajectoryFlowSurjective
 import MeasureToMeasure.Foundations.TrajectoryFlowInjective
 import MeasureToMeasure.Foundations.SelfConsistencyFixedPoint
 import MeasureToMeasure.Foundations.AtomlessPushforward
+import MeasureToMeasure.Statements.SupportedIn
 
 /-!
 # `exists_meanFieldFlow` discharged: the McKean-Vlasov mean-field flow exists (M3b existence,
@@ -502,6 +503,31 @@ theorem attnMeasureFlow_restrict_decomposition (θ : AttnSchedule d) (μ : Measu
         rw [Measure.sum_fintype, ← hμpart]
     _ = Measure.sum (fun i => (μ.restrict (A i)).map Φ) := Measure.map_sum hΦm.aemeasurable
     _ = ∑ i, (μ.restrict (A i)).map Φ := Measure.sum_fintype _
+
+/-- **Supported restricted pushforwards give pointwise a.e. membership.** The collapse and
+relocation engines conclude at the measure level: the restricted pushforward `(μ.restrict A).map Φ`
+is supported in a closed set `B`. The L2 assembly needs the pointwise form it can integrate: for
+`μ.restrict A`-a.e. `x`, `Φ x ∈ B`. Closedness of `B` supplies the measurability `Measure.map_apply`
+needs, matching how every engine states its conclusion. -/
+theorem ae_mem_of_restrict_map_supportedIn {μ : Measure (Eucl d)}
+    {Φ : Eucl d → Eucl d} (hΦ : Measurable Φ) {A B : Set (Eucl d)}
+    (_hA : MeasurableSet A) (hB : IsClosed B)
+    (h : Statements.supportedIn ((μ.restrict A).map Φ) B) :
+    ∀ᵐ x ∂(μ.restrict A), Φ x ∈ B := by
+  have h0 : ((μ.restrict A).map Φ) Bᶜ = 0 := h
+  rw [Measure.map_apply hΦ hB.measurableSet.compl] at h0
+  rw [ae_iff]
+  exact h0
+
+/-- The unrestricted corollary of `ae_mem_of_restrict_map_supportedIn`: on the ambient measure,
+`μ`-a.e. `x` in `A` is sent into `B`. This is the exact shape the L2 ledger's good/bad-set
+assembly consumes. -/
+theorem ae_imp_mem_of_restrict_map_supportedIn {μ : Measure (Eucl d)}
+    {Φ : Eucl d → Eucl d} (hΦ : Measurable Φ) {A B : Set (Eucl d)}
+    (hA : MeasurableSet A) (hB : IsClosed B)
+    (h : Statements.supportedIn ((μ.restrict A).map Φ) B) :
+    ∀ᵐ x ∂μ, x ∈ A → Φ x ∈ B :=
+  (ae_restrict_iff' hA).mp (ae_mem_of_restrict_map_supportedIn hΦ hA hB h)
 
 /-! ### The linear bridge, relocated from `MeanFieldWellPosed.lean`
 
