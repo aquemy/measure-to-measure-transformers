@@ -106,6 +106,7 @@ import MeasureToMeasure.Leaves.ExtremalOutwardCap
 import MeasureToMeasure.Leaves.AttnRescale
 import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
 import MeasureToMeasure.Leaves.AsymmetricCapCollapse
+import MeasureToMeasure.Leaves.HemisphereCollapse
 import MeasureToMeasure.Leaves.Lemma33CapSeparation
 import MeasureToMeasure.Leaves.StaticAsymmetricCap
 import MeasureToMeasure.Leaves.Lemma34Part1MeanField
