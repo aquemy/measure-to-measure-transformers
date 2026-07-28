@@ -47,14 +47,14 @@ The proof of Lemma 5.4 is involved, so we postpone it to Appendix B.5.
 ::: {.our-work}
 **Our formalization.** [axiomatised]{.badge .axiom}
 
-The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p. 38) shows any $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ is approximated in $L^2(\mu)$, to any tolerance, by a flow map $\psi_\varepsilon$ of the continuity equation with piecewise-constant control and finitely many switches; chained with the coupling bound $W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}$ (Lemma 5.2, leaf L7) this converts $L^2$ control of the map into $W_2$ control of the pushforward. It is a labeled `axiom` on the mean-field layer, carrying the paper's hypotheses in full: a **probability** measure on the **sphere**, a **measurable, a.e. sphere-valued** $\psi$ (the paper's $L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ — without sphere-valuedness the statement is refutable, since flow approximants are sphere-valued and cannot $L^2$-approach an off-sphere target; finding F12). The measurability and integrability of the displacement are made explicit so the `W₂` map bound can consume them.
+The paper (Geshkovski, Rigollet, Ruiz-Balet, App. B.5, p. 38) shows any $\psi \in L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ is approximated in $L^2(\mu)$, to any tolerance, by a flow map $\psi_\varepsilon$ of the continuity equation with piecewise-constant control and finitely many switches; chained with the coupling bound $W_2(\mathsf T^1_\#\mu, \mathsf T^2_\#\mu) \le \|\mathsf T^1-\mathsf T^2\|_{L^2(\mu)}$ (Lemma 5.2, leaf L7) this converts $L^2$ control of the map into $W_2$ control of the pushforward. It is a labeled `axiom` on the mean-field layer, carrying the paper's hypotheses in full: a **probability** measure on the **sphere**, a **measurable, a.e. sphere-valued** $\psi$ (the paper's $L^2(\mathbb S^{d-1};\mathbb S^{d-1})$ — without sphere-valuedness the statement is refutable, since flow approximants are sphere-valued and cannot $L^2$-approach an off-sphere target; finding F12), and the paper's standing **dimension scope** $d \geq 3$ (stated dimension-free the schema is refutable at $d = 1$, where the tangential projector vanishes identically on $\mathbb S^0$ and every mean-field flow freezes sphere Diracs; finding F31). The measurability and integrability of the displacement are made explicit so the `W₂` map bound can consume them.
 
 ```lean
 /-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
 map `ψ` is approximated in `L²(μ)` by a mean-field flow map, to any tolerance. AXIOM
 (`math.axiomatised`). Combined with the coupling bound (leaf L7) this controls `W₂`. -/
-axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d → Eucl d) (T ε : ℝ)
-    (hT : 0 < T) (hε : 0 < ε)
+axiom lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),

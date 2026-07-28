@@ -527,15 +527,27 @@ coupling bound (leaf L7) this controls `W₂`. The approximant `ψε` is measura
 displacement is `L²`-integrable -- both implicit in the `∫` bound being meaningful, made explicit
 so the `W₂` map bound (`W2_map_le_L2`) can consume them.
 
-**Fidelity (soundness):** the paper's Lemma 5.4 (p.24) has `μ ∈ P(S^{d-1})` and
-`ψ ∈ L²(S^{d-1}; S^{d-1})` -- the map is sphere-valued. The original stub quantified over every
-measure and every `ψ` and was refutable: flow approximants are sphere-valued on sphere mass, so
-`ψ = const (3 • e₁)` on `μ = δ_{e₁}` keeps every approximant at `L²` distance at least `2`
-(review finding F12). Sphere-valued `ψ` on sphere-supported `μ` is automatically `L²`.
+**Fidelity (soundness):** the paper's Lemma 5.4 (p.24, arXiv:2411.04551v3) verbatim: "Suppose
+`ε > 0` and `μ ∈ P(S^{d-1})`. For every `ψ ∈ L²(S^{d-1}; S^{d-1})`, there exists a
+Lipschitz-continuous and invertible map `ψε : S^{d-1} → S^{d-1}` induced by the solution map of
+(B.1), namely `Φ^T_{θε}(μ) = (ψε)#μ` for some piecewise constant `θε : [0,T] → Θ` with finitely
+many switches, such that `‖ψ − ψε‖_{L²(μ)} ⩽ ε`." The map is sphere-valued. The original stub
+quantified over every measure and every `ψ` and was refutable: flow approximants are sphere-valued
+on sphere mass, so `ψ = const (3 • e₁)` on `μ = δ_{e₁}` keeps every approximant at `L²` distance
+at least `2` (review finding F12). Sphere-valued `ψ` on sphere-supported `μ` is automatically `L²`.
+
+**Dimension repair (finding F31):** stated dimension-free, the schema is refutable at `d = 1`: on
+`S⁰` the tangential projector at a unit point annihilates every vector, so every mean-field flow
+freezes sphere Diracs, and `ψ = const (-e)` on `μ = δ_e` keeps every approximant at `L²` distance
+exactly `2` -- a compiling proof of `False` (kernel disproof: the F31 regression suite,
+`Regression.Refuted`). Repaired with `hd : 3 ≤ d`: the paper's standing scope (Theorem 1.2, p.5,
+"Suppose `d ⩾ 3`") and the exact hypothesis its sole consumer `theorem_1_2` already carries; it is
+also load-bearing for the planned discharge (the three-pull steering of `ClusterToPoint` consumes
+a doubly-orthogonal relay pole).
 
 Layer (F14): mean-field -- the paper's density argument ranges over the full attention dynamics. -/
-axiom lemma_5_4 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (ψ : Eucl d → Eucl d) (T ε : ℝ)
-    (hT : 0 < T) (hε : 0 < ε)
+axiom lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),

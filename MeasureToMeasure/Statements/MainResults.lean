@@ -251,7 +251,7 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
       filter_upwards [hTis, hμae] with w hw hws
       simpa [hS, Function.comp_apply, hΦleft w hws] using hw
     obtain ⟨θ₂, ψε, hdur₂, hflow, hψεmeas, hint, hL2⟩ :=
-      lemma_5_4 ν S (T / 2) ε hT2 hε hνs hSmeas hSs
+      lemma_5_4 hd ν S (T / 2) ε hT2 hε hνs hSmeas hSs
     have hfe : (fun x => ‖S x - ψε x‖ ^ 2) = (fun x => ‖ψε x - S x‖ ^ 2) := by
       funext x; rw [norm_sub_rev]
     have hint' : Integrable (fun x => ‖ψε x - S x‖ ^ 2) ν := hfe ▸ hint

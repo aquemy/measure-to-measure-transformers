@@ -969,6 +969,39 @@ Theorem 1.1 consumes. Consequences: `theorem_1_1`'s footprint is now exactly
 the `d ≥ 3` hypothesis is genuinely consumed (the doubly-orthogonal relay pole), where the paper
 spends it in Prop 4.1's steering instead.
 
+### F31 (soundness repair, recorded 2026-07-28) `lemma_5_4` is false without a dimension hypothesis: frozen `S⁰` flows defeat every approximant at `d = 1`; repaired with `hd : 3 ≤ d`
+
+The axiom `lemma_5_4` (L² approximation of a transport map by a mean-field flow map) was stated
+for every `d`. The dimension-free schema admits a compiling proof of `False` at `d = 1`, by the
+same freezing mechanism as F18 but now on the MEAN-FIELD layer, one level up from block fields:
+
+1. In `Eucl 1` the tangential projector at a unit point annihilates every vector
+   (`P_x^⊥ v = v - ⟪x,v⟫x = 0` since `x₀² = 1`), so `AttnParams.field` vanishes at every sphere
+   point for EVERY parameter block and EVERY current measure.
+2. Hence any `IsMeanFieldFlow` freezes sphere points: the characteristic derivative is `0` on all
+   of `[0, duration]`, and `constant_of_has_deriv_right_zero` pins `Φ_t x = x`. Every `attnStep`
+   therefore fixes the sphere Dirac `δ_e` exactly (via `Measure.map_dirac` on the chosen flow),
+   and by induction so does `attnMeasureFlow θ` for every schedule `θ`.
+3. Instantiate the schema at `μ = δ_e`, `ψ = const (-e)`, `T = ε = 1` (all hypotheses hold:
+   probability, sphere support, measurable, a.e. sphere-valued). Any approximant satisfies
+   `δ_e = δ_{ψε(e)}`, forcing `ψε e = e`, so the L² error is
+   `√(∫‖-e - ψε x‖² dδ_e) = ‖-e - e‖ = 2 ≰ 1`. `False`.
+
+The kernel disproof plus the regression apparatus (`Regression.OldLemma54NoDimSig`,
+`Regression/Refuted/F31_Lemma54DimensionFree.lean`, must-fail adapter in `Refutations/`) land in
+the companion PR immediately following the repair.
+
+**The repair.** `hd : 3 ≤ d` added as the axiom's first hypothesis. The paper never claims
+`d = 1`: Lemma 5.4 (p.24) lives under Theorem 1.2's standing scope "Suppose `d ⩾ 3`" (p.5), and
+its proof (App. B.5) runs through Prop 2.2 and Prop 4.1, both stated with `d ⩾ 3`. The narrowing
+is free for the sole consumer (`theorem_1_2` carries `hd : 3 ≤ d` at the call site) and is
+load-bearing for the planned discharge, whose steering core (the F30 three-pull chain) consumes
+`3 ≤ d` for a doubly-orthogonal relay pole. The non-vacuity witness moved from `d = 1` to `d = 3`
+(`δ_{e₀}` on `𝕊²`, identity transport map) and was upgraded to a FULL application with the
+conclusion type ascribed, per the F22 witness rule. Whether `2 ≤ d` would suffice for the
+statement's truth is a paper-side question (the disproof mechanism needs `d = 1`); we take the
+paper's own `d ⩾ 3` rather than invent a sharper scope.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the

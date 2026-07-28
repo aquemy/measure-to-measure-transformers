@@ -213,16 +213,16 @@ created   = "2026-06-30"
 
 [claims.lem-5-4]
 kind      = "conjecture"
-statement = "Lemma 5.4: any measurable a.e. sphere-valued psi on a sphere-supported probability measure mu is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over every measure and every psi and was refutable (flow approximants are sphere-valued on sphere mass, so psi = const 3e_1 keeps every approximant at L2 distance >= 2); restored the paper's mu in P(S^{d-1}) and psi in L2(S^{d-1}; S^{d-1}). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the density argument ranges over the full attention dynamics)."
+statement = "Lemma 5.4: any measurable a.e. sphere-valued psi on a sphere-supported probability measure mu is approximated in L2(mu) by a flow map of the continuity equation with finitely many switches. SOUNDNESS FIX (2026-07-03, F12): the stub quantified over every measure and every psi and was refutable (flow approximants are sphere-valued on sphere mass, so psi = const 3e_1 keeps every approximant at L2 distance >= 2); restored the paper's mu in P(S^{d-1}) and psi in L2(S^{d-1}; S^{d-1}). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (the density argument ranges over the full attention dynamics). DIMENSION REPAIR (2026-07-28, F31): stated dimension-free, the schema was refutable at d = 1 (on S^0 the tangential projector at a unit point annihilates every vector, so every mean-field flow freezes sphere Diracs and psi = const(-e) on delta_e keeps every approximant at L2 distance 2); added hd : 3 <= d, the paper's standing scope (Theorem 1.2, p.5) and the exact hypothesis the sole consumer theorem_1_2 already carries."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.lemma_5_4"
 paper     = "Lem 5.4, p.24"
 created   = "2026-06-30"
 
 [claims.lem-5-4.fidelity]
-reviewed = "2026-07-03"
+reviewed = "2026-07-28"
 paper    = "Lem 5.4, p.24, arXiv:2411.04551v3"
-evidence = "F12 (flow approximants are sphere-valued); probability/sphere/measurable/a.e.-sphere hypotheses restored; witness Regression/NonVacuity/MidLevel.lean"
+evidence = "F12 (flow approximants are sphere-valued); F14 (mean-field layer); F31 (d = 1 frozen S^0 flows refute the dimension-free form; hd : 3 <= d added, matching Theorem 1.2's standing d >= 3); probability/sphere/measurable/a.e.-sphere hypotheses restored; witness (d = 3, full application) Regression/NonVacuity/MidLevel.lean"
 
 [claims.lem-b-1]
 kind      = "conjecture"
