@@ -82,7 +82,13 @@ plus the `ExclusiveSupportFamily` gate, some schedule `θ` of duration exactly `
 FULL prefix invariant `DisentangledPrefix d N N` with strictly positive radii: every member is
 confined to its own ball, the balls are pairwise disjoint, and every member's flow is realized by
 a measurable map with a measurable on-sphere inverse. See the module docstring for the
-base-rotation / Phase-R / placement chain and the placement invariant. -/
+base-rotation / Phase-R / placement chain and the placement invariant.
+
+The final conjunct additionally exposes the WHOLE-FAMILY pairwise non-colinearity of the flowed
+barycenters, which the placement induction carries anyway (its `key` invariant) and which the
+`G-unwrap` uniformization round (`disentangled_prefix_uniformize`) needs: per-member ball
+disjointness alone does NOT imply it (two disjoint balls can straddle one ray), so discarding it
+here would make the final shrink round unassemblable. -/
 theorem disentangled_prefix_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
     (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
     (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
@@ -90,7 +96,9 @@ theorem disentangled_prefix_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
     (T : ℝ) (hT : 0 < T) :
     ∃ (θ : AttnSchedule d) (α : Fin N → Eucl d) (r : Fin N → ℝ),
       (∀ i, 0 < r i) ∧ AttnSchedule.durationSum θ = T ∧
-      DisentangledPrefix d N N μ₀ θ α r := by
+      DisentangledPrefix d N N μ₀ θ α r ∧
+      Pairwise fun i j : Fin N => ∀ c : ℝ,
+        barycenter (attnMeasureFlow θ (μ₀ i)) ≠ c • barycenter (attnMeasureFlow θ (μ₀ j)) := by
   haveI : NeZero d := ⟨by omega⟩
   have hd2 : 2 ≤ d := by omega
   have hden : (0 : ℝ) < 2 * (N : ℝ) + 1 := by positivity
@@ -221,8 +229,8 @@ theorem disentangled_prefix_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
           have hnot := hlineav mIdx hmne
             (‖barycenter (attnMeasureFlow θ (μ₀ mIdx))‖⁻¹)
           exact not_le.mp (fun hle => hnot (Metric.mem_closedBall.mpr hle))
-  obtain ⟨θfin, α, r, hdurfin, hprefin, hrposfin, -, -⟩ := key N (le_refl N)
-  refine ⟨θfin, α, r, hrposfin, ?_, hprefin⟩
+  obtain ⟨θfin, α, r, hdurfin, hprefin, hrposfin, hncfin, -⟩ := key N (le_refl N)
+  refine ⟨θfin, α, r, hrposfin, ?_, hprefin, hncfin⟩
   rw [hdurfin, hτdef]
   field_simp
   ring

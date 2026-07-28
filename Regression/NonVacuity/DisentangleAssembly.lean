@@ -84,7 +84,10 @@ example : True := by
         · exact absurd rfl hj⟩
   have _h : ∃ (θ : AttnSchedule 3) (α : Fin 2 → Eucl 3) (r : Fin 2 → ℝ),
       (∀ i, 0 < r i) ∧ AttnSchedule.durationSum θ = 1 ∧
-      DisentangledPrefix 3 2 2 μ₀ θ α r :=
+      DisentangledPrefix 3 2 2 μ₀ θ α r ∧
+      Pairwise fun i j : Fin 2 => ∀ c : ℝ,
+        barycenter (Foundations.attnMeasureFlow θ (μ₀ i)) ≠
+          c • barycenter (Foundations.attnMeasureFlow θ (μ₀ j)) :=
     disentangled_prefix_of_exclusive_supports (le_refl 3) μ₀ hμ hμs hmiss hgate 1 one_pos
   trivial
 
