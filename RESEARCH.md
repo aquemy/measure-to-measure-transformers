@@ -862,6 +862,29 @@ true only for the bundle WITHOUT `_hu`; per F25 the bundle WITH `_hu` was alread
 so `partTwoMu`/`partTwoNu` witness the `_hu`-free paper-level bundle only. The corrected
 claim-level record lives in `claims.toml` `[claims.lem-3-4-part2.fidelity]`.
 
+### F27 (honest narrowing, recorded 2026-07-28) `exists_disentangling_balls`'s conclusion proved under an `ExclusiveSupportFamily` gate
+
+The static-cap re-base campaign's endpoint: `exists_disentangling_balls_of_exclusive_supports`
+(`Leaves/DisentangleInductionAssembly.lean`) proves the axiom's conclusion BYTE-IDENTICAL under
+ONE added hypothesis, the `ExclusiveSupportFamily` gate (every member owns a support point no
+other member's support contains). Assembly chain, total duration exactly `T`: shared base
+rotation (transports the gate) -> Phase R (whole-family pairwise barycenter non-colinearity) ->
+placement induction (avoiding insertion steps; the colinear branch, whose paper construction has
+the F17(b) gap, is never entered because the gate keeps it empty) -> uniformization round (`N`
+self-paired `lemma_3_3` shrinks onto the normalized barycenter directions; uniform radius from
+the abstract packing lemma; per-member flow maps from `attnMeasureFlow_exists_map`). Kernel
+closure: [propext, Classical.choice, Quot.sound, lemma_3_3], i.e. `math.axiomatised` through the
+one live axiom `lemma_3_3` and nothing else.
+
+Honesty boundary: the paper's Prop 3.1 (p.15) carries NEITHER the gate NOR any atomlessness
+hypothesis; its Section 3.3 induction claims full generality, members allowed to share supports
+entirely. That general case stays on the PUBLIC AXIOM, which is untouched and gains no
+hypothesis; its non-narrowed discharge is pending the equal-supports follow-up campaign (B.16
+asymmetric cap + `pAlign` + the Prop 2.1 nesting, the route charted by F17(b), F22, F24/F25).
+The paper's standing `Pairwise (mu_0^i != mu_0^j)` is retained in the companion as `_hne` for
+statement fidelity (the gate subsumes it in this proof). Full conclusion-type-ascribed witness
+for the whole bundle: `Regression/NonVacuity/DisentangleAssembly.lean`.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the

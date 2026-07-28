@@ -38,9 +38,11 @@ conjunct exposed in PR #319):
   `c := ‖barycenter‖⁻¹` for the fresh ball and inherited (bystander barycenters being literally
   fixed) for the old balls.
 
-M3b/mid-level staging: the `G-unwrap` step (uniformizing the per-member radii and discharging
-`exists_disentangling_balls` itself) consumes this; see the `exists-disentangling-balls-campaign`
-notes.
+M3b/mid-level staging: the `G-unwrap` step consumes this below: the uniformization round
+(`disentangled_prefix_uniformize`) and the gated companion
+(`exists_disentangling_balls_of_exclusive_supports`, finding F27), which proves the
+`exists_disentangling_balls` conclusion byte-identical under the exclusivity gate; see the
+`exists-disentangling-balls-campaign` notes.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -48,7 +50,7 @@ namespace MeasureToMeasure.Leaves
 open MeasureTheory Set MeasureToMeasure MeasureToMeasure.Statements
 open MeasureToMeasure.Foundations (AttnSchedule AttnParams attnMeasureFlow)
 open MeasureToMeasure.Foundations (isProbabilityMeasure_attnMeasureFlow
-  attnMeasureFlow_supportedIn_sphere attnMeasureFlow_append)
+  attnMeasureFlow_supportedIn_sphere attnMeasureFlow_append attnMeasureFlow_exists_map)
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -482,5 +484,55 @@ theorem disentangled_prefix_uniformize (hd : 3 ≤ d) {N : ℕ}
   refine ⟨ψ, ω, rU, ?_, hrU0, hrU1, hωunit, hrUsep, fun i => hballs i i.isLt⟩
   rw [hdurψ, hτdef]
   field_simp
+
+/-- **The gated companion of the `exists_disentangling_balls` axiom.** Under the axiom's exact
+hypothesis bundle PLUS the `ExclusiveSupportFamily` gate (every member owns a support point
+exclusive to it), the axiom's conclusion holds verbatim: one schedule of duration exactly `T`
+concentrates each member into the ball of one uniform radius `r < 1` around a unit direction
+`α i`, the directions pairwise `2 r`-separated, with per-member measurable flow maps and
+measurable on-sphere inverses. Assembly: the strong induction
+(`disentangled_prefix_of_exclusive_supports`, duration `T / 2`) followed by the uniformization
+round (`disentangled_prefix_uniformize`, duration `T / 2`); the flow maps are
+`attnMeasureFlow_exists_map` on the composite schedule.
+
+**Honest-narrowing note.** The paper's Proposition 3.1 (p.15, arXiv:2411.04551v3) carries NEITHER
+the exclusivity gate NOR any atomlessness hypothesis: its Section 3.3 induction claims the full
+generality in which members may share supports entirely. The gate is what makes the formal
+placement chain close: it survives the shared base rotation, feeds the Phase-R resolution, and
+keeps every colinear branch empty (the branch whose paper construction has the F17(b) gap). The
+GENERAL case, distinct measures on possibly equal supports, stays on the untouched public axiom
+(which gains NO hypothesis here), pending the equal-supports follow-up campaign through the B.16
+asymmetric cap, `pAlign`, and the Prop 2.1 nesting, the route charted by findings F17(b), F22,
+and F24/F25. `_hne` (the paper's standing pairwise-distinctness assumption) is retained for
+statement fidelity per the faithful-scope convention; the gate subsumes it in this proof. -/
+theorem exists_disentangling_balls_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
+    (μ₀ : Fin N → Measure (Eucl d)) (T : ℝ) (hT : 0 < T)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (_hne : Pairwise fun i j => μ₀ i ≠ μ₀ j)
+    (hmiss : SharedMissingDirection μ₀)
+    (hgate : ExclusiveSupportFamily μ₀) :
+    ∃ (θ : AttnSchedule d) (α : Fin N → Eucl d) (r : ℝ),
+      AttnSchedule.durationSum θ = T ∧
+      0 < r ∧ r < 1 ∧
+      (∀ i, ‖α i‖ = 1) ∧
+      (∀ i j, i ≠ j → 2 * r ≤ dist (α i) (α j)) ∧
+      (∀ i, supportedIn (attnMeasureFlow θ (μ₀ i)) (Metric.ball (α i) r)) ∧
+      (∀ i, ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Measurable Φinv ∧
+        attnMeasureFlow θ (μ₀ i) = (μ₀ i).map Φ ∧
+        ∀ x ∈ sphere d, Φinv (Φ x) = x) := by
+  have hT2 : (0 : ℝ) < T / 2 := by linarith
+  obtain ⟨θ₁, α₁, r₁, -, hdur₁, hprefix, hnoncol⟩ :=
+    disentangled_prefix_of_exclusive_supports hd μ₀ hμ hμs hmiss hgate (T / 2) hT2
+  obtain ⟨θ₂, α, rU, hdur₂, hrU0, hrU1, hunit, hsep, hballs⟩ :=
+    disentangled_prefix_uniformize hd μ₀ hμ hμs θ₁ α₁ r₁ hprefix hnoncol (T / 2) hT2
+  refine ⟨θ₁ ++ θ₂, α, rU, ?_, hrU0, hrU1, hunit, hsep, hballs, ?_⟩
+  · rw [AttnSchedule.durationSum_append, hdur₁, hdur₂]
+    ring
+  · intro i
+    haveI := hμ i
+    obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hmap, -, hinv⟩ :=
+      attnMeasureFlow_exists_map (θ₁ ++ θ₂) (μ₀ i) (hμs i)
+    exact ⟨Φ, Φinv, hΦm, hΦinvm, hmap, hinv⟩
 
 end MeasureToMeasure.Leaves

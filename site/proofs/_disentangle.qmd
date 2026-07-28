@@ -260,6 +260,18 @@ inherits the axiom: `#print axioms prop_3_1` lists exactly `exists_disentangling
 mean-field well-posedness pair it used to also rest on, `exists_meanFieldFlow` /
 `meanFieldFlow_unique`, is now fully machine-checked).
 
+**Gated companion** *(finding F27, 2026-07-28).* The axiom's conclusion is now **proved
+byte-identical** under one added hypothesis, the `ExclusiveSupportFamily` gate — each member owns
+a support point no other member's support contains —
+(`exists_disentangling_balls_of_exclusive_supports`,
+[`Leaves/DisentangleInductionAssembly.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Leaves/DisentangleInductionAssembly.lean){.lean-src}),
+with kernel closure `[propext, Classical.choice, Quot.sound, lemma_3_3]`: the entire Section 3.3
+induction — shared orthant rotation, the non-colinearity resolution round, the ball-placement
+induction, and the final uniform-radius shrink round — is machine-checked, resting only on the
+Lemma 3.3 shrinking axiom. The paper's Prop 3.1 has no such gate: the general case (distinct
+measures on possibly **equal** supports) remains on the untouched axiom, pending the
+equal-supports route through the B.16 asymmetric cap (findings F17(b), F22, F24/F25).
+
 ```lean
 /-- Shared missing direction (eq. 1.4, positive-gap form): one unit `ω` and one gap `δ > 0`
 work for every member of the family. -/
