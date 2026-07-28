@@ -210,28 +210,35 @@ the logarithmic rate follows from [CLPR25, Theorem 2.3].
 :::
 
 ::: {.our-work}
-**Our formalization.** [axiomatised]{.badge .axiom}
+**Our formalization.** [machine-checked]{.badge .ok}
 
-The authors' strategy is a Lyapunov/LaSalle argument on the geodesic convex hull: with the pure
-self-attention drift ($\mathbf W=0$, $\mathbf V=I_d$) the hull's diameter is strictly decreasing while
-its mass stays inside it, so the measure contracts to a single Dirac, the exponential contraction
-giving the $O(\log\tfrac1\varepsilon)$ time. Because the drift is genuinely **measure-dependent**
-(self-attention averages against the evolving measure), the statement lives on the mean-field
-attention layer (`AttnSchedule`, `attnMeasureFlow`) introduced by the F14 restatement — a
-statement over the measure-independent linear flow would be about the wrong dynamics. It is a
-labeled `axiom`: the diameter monotonicity and the LaSalle/Hartman-Grobman convergence are the
-milestone-M6 build; the mean-field well-posedness pair it sits on top of
-(`exists_meanFieldFlow` / `meanFieldFlow_unique`) is itself now fully machine-checked, so
-`prop_2_1` is the only axiom in its own footprint. The clustering itself carries a one-piece (`switches θ ≤ 1`) budget,
-the paper's single constant parameter $(\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)$.
-The conclusion is validated numerically by experiment **E2**.
+**Discharged to a kernel-clean theorem** (2026-07-28), with the former axiom's signature verbatim
+and no added hypothesis. The authors' strategy is a Lyapunov/LaSalle argument on the geodesic
+convex hull; the machine-checked proof shows that machinery is not needed: an **elementary
+one-block construction** reaches the same conclusion. The witness is a single amplitude-scaled
+gated pull block (`pParkScaled A e e (-1) T`, a $\mathbf V=0$ gated perceptron piece) collapsing
+the open hemisphere onto its own pole $z:=e$: the open-hemisphere hypothesis gives, by continuity
+of measure, an inner level $m>0$ carrying all but $\varepsilon^2/8$ of the mass
+(`hemisphere_subcap_mass_le`); the block's amplitude $A$ — the paper's parameter-norm freedom
+$\|\theta\|\sim C/(T\varepsilon)$ — pulls that sub-cap above the cap level
+$b=\max(1-\varepsilon^2/4,0)$ in time exactly $T$; on the sphere the surviving cap is the chordal
+ball of radius $\sqrt{2(1-b)}$, and the ball-mass-to-$W_2$ bound closes with
+$\sqrt{\varepsilon^2/2+\varepsilon^2/2}=\varepsilon$ (`exists_collapse_block_hemisphere_W2`,
+assembled in `Statements/Prop21.lean`). One constant piece (`switches θ ≤ 1`), duration exactly
+$T$, target on the sphere. The statement stays on the mean-field attention layer (`AttnSchedule`,
+`attnMeasureFlow`, the F14 restatement) — the *witness* happens to be measure-independent, but the
+statement quantifies over the self-attention dynamics. **Honesty notes:** the witness is a
+$\mathbf V=0$ gated perceptron block, not the paper's $(\mathbf V,\mathbf B,\mathbf W)\equiv(I_d,\mathbf B,0)$
+attention construction; and the paper's own printed proof has a gap for hulls with empty interior,
+where its nesting chain is vacuous and the footnote-7 dimension reduction it needs appears only in
+Appendix B (finding **F29**). The conclusion is validated numerically by experiment **E2**.
 
 ```lean
 /-- **Proposition 2.1** (clustering to a point). A sphere-supported probability measure in an open
 hemisphere can be driven arbitrarily `W₂`-close to a Dirac mass at a sphere point, with one
-constant attention piece. AXIOM (`math.axiomatised`): the LaSalle/Hartman-Grobman convergence
-is the M6 build over the mean-field flow. -/
-axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+constant piece. DISCHARGED (`math.machine-checked`): witness `θ := [pParkScaled A e e (-1) T]`,
+`z := e`, via `Leaves.exists_collapse_block_hemisphere_W2`. -/
+theorem prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (e : Eucl d) (he : ‖e‖ = 1)
     (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
     ∃ (θ : AttnSchedule d) (z : Eucl d), AttnSchedule.durationSum θ = T ∧
@@ -239,7 +246,7 @@ axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (h
       Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
 ```
 
-[`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
+[`Statements/Prop21.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/Prop21.lean){.lean-src}
 :::
 
 ## Clustering disjoint-support measures to atoms (Proposition 2.2) {#node-cluster-discrete}

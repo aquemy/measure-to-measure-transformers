@@ -240,8 +240,10 @@ Mass through $K$ overlapping balls $\ge(1-\varepsilon)^K$. Proved by induction o
 single-pair lemma.
 \end{lemma}
 
-\begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\lean{MeasureToMeasure.Statements.prop_2_1}\uses{def:projector,ax:flow}
-A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$. [open]
+\begin{proposition}[Clustering to a point, 2.1]\label{prop:21}\lean{MeasureToMeasure.Statements.prop_2_1}\uses{def:projector,ax:flow}\leanok
+A single-hemisphere measure clusters to a point; $\mathrm{diam}\to 0$ at rate $O(\log 1/\varepsilon)$.
+Discharged to a kernel-clean theorem: one amplitude-scaled gated block ($\mathbf V=0$) collapses the
+hemisphere onto its pole in time exactly $T$ (no LaSalle/linearization needed). [machine-checked]
 \end{proposition}
 
 \begin{proposition}[Clustering to discrete, 2.2]\label{prop:22}\lean{MeasureToMeasure.Statements.prop_2_2}\uses{lem:b1,prop:21,found:atomless}
