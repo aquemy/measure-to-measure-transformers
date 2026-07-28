@@ -43,9 +43,12 @@ theorem notMem_support_dirac {d : ℕ} {x y : Eucl d} (hxy : y ≠ x) :
     Set.indicator_of_notMem
       (fun h => lt_irrefl _ (by rwa [Metric.mem_ball, dist_comm] at h))]
 
-/-- Non-vacuity of `disentangled_prefix_of_exclusive_supports`: the `MainResults.lean` family
-(distinct Diracs at `e₀, e₁ ∈ 𝕊² ⊂ ℝ³`, `e₂` the shared missing direction) also satisfies the
-`ExclusiveSupportFamily` gate, and the strong induction applies to it in full. -/
+/-- Non-vacuity of `disentangled_prefix_of_exclusive_supports` AND of the uniformization round
+`disentangled_prefix_uniformize` it feeds: the `MainResults.lean` family (distinct Diracs at
+`e₀, e₁ ∈ 𝕊² ⊂ ℝ³`, `e₂` the shared missing direction) also satisfies the
+`ExclusiveSupportFamily` gate, the strong induction applies to it in full, and its output
+prefix + non-colinearity pair is then consumed in full by the uniformization round, each with
+an explicit conclusion-type ascription. -/
 example : True := by
   set μ₀ : Fin 2 → Measure (Eucl 3) :=
     ![Measure.dirac (unitE 3 0), Measure.dirac (unitE 3 1)] with hμ₀_def
@@ -89,6 +92,14 @@ example : True := by
         barycenter (Foundations.attnMeasureFlow θ (μ₀ i)) ≠
           c • barycenter (Foundations.attnMeasureFlow θ (μ₀ j)) :=
     disentangled_prefix_of_exclusive_supports (le_refl 3) μ₀ hμ hμs hmiss hgate 1 one_pos
+  obtain ⟨θ, α, r, -, -, hprefix, hnoncol⟩ := _h
+  have _h2 : ∃ (θ' : AttnSchedule 3) (α' : Fin 2 → Eucl 3) (rU : ℝ),
+      AttnSchedule.durationSum θ' = 1 ∧ 0 < rU ∧ rU < 1 ∧
+      (∀ i, ‖α' i‖ = 1) ∧
+      (∀ i j, i ≠ j → 2 * rU ≤ dist (α' i) (α' j)) ∧
+      (∀ i, supportedIn (Foundations.attnMeasureFlow (θ ++ θ') (μ₀ i))
+        (Metric.ball (α' i) rU)) :=
+    disentangled_prefix_uniformize (le_refl 3) μ₀ hμ hμs θ α r hprefix hnoncol 1 one_pos
   trivial
 
 end Regression.NonVacuity
