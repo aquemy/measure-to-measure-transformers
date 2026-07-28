@@ -143,6 +143,7 @@ import MeasureToMeasure.Leaves.RotateFamilyToOrthant
 import MeasureToMeasure.Leaves.DisentangleInductionStep
 import MeasureToMeasure.Leaves.DisentangleInductionStepAsym
 import MeasureToMeasure.Leaves.DisentangleResolveFamily
+import MeasureToMeasure.Leaves.DisentangleInductionAssembly
 import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.Lemma34Part1
 import MeasureToMeasure.Statements.MainResults
