@@ -15,6 +15,13 @@ Two purely geometric ingredients the grand assembly needs:
   orthogonal residuals, `⟪x,ω⟫ = ⟪z,x⟫⟪z,ω⟫ + ⟪x⊥, ω⊥⟫`, and Cauchy–Schwarz bounds the residual pairing
   below by `−‖x⊥‖‖ω⊥‖ = −√(1−⟪z,x⟫²)√(1−⟪z,ω⟫²)`. This gives the uniform pole-reach floor `mp` on a
   sub-cap `{⟪z,·⟫ ≥ m}` for an off-centre pole `ω` (specialising to `mp = m` when `ω = z`).
+
+* `inner_orthogonal_ge_of_mem_cap` — the **orthogonal-cap hand-off** bound: a point of the tight cap
+  `{⟪·,u⟫ ≥ b}` (`b ≥ 7/8`) sits within chordal distance `1/2` of the pole `u`, hence its inner
+  product against any unit `v ⊥ u` is at least `−1/2`. Together with the set-inclusion corollary
+  `cap_subset_inner_orthogonal_ge`, this is the glue between consecutive pulls of the three-pull
+  `cluster_to_point` chain: mass concentrated near the current pole `u` automatically clears the next
+  pull's off-sub-cap threshold `−1/2` around any orthogonal pole `v`.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -112,5 +119,36 @@ theorem inner_pole_lower_bound {z x ω : Eucl d} (hz : ‖z‖ = 1) (hx : ‖x�
   have hcs : -(‖xp‖ * ‖wp‖) ≤ (⟪xp, wp⟫ : ℝ) := (abs_le.mp (abs_real_inner_le_norm xp wp)).1
   rw [hxpnorm, hwpnorm] at hcs
   linarith [hres, hcs]
+
+/-- **Orthogonal-cap hand-off bound.** For unit `u, v` with `⟪u,v⟫ = 0` and a sphere point `y` in
+the tight cap `b ≤ ⟪y,u⟫` with `7/8 ≤ b`: `−1/2 ≤ ⟪y,v⟫`. Proof: the chordal identity gives
+`‖y − u‖² = 2 − 2⟪y,u⟫ ≤ 2 − 7/4 = 1/4`, and then
+`⟪y,v⟫ = ⟪u,v⟫ + ⟪y − u, v⟫ ≥ 0 − ‖y − u‖ ≥ −1/2` by Cauchy–Schwarz. -/
+theorem inner_orthogonal_ge_of_mem_cap {u v : Eucl d} (hu : ‖u‖ = 1) (hv : ‖v‖ = 1)
+    (huv : (⟪u, v⟫ : ℝ) = 0) {b : ℝ} (hb : 7 / 8 ≤ b) {y : Eucl d} (hy : y ∈ sphere d)
+    (hyu : b ≤ (⟪y, u⟫ : ℝ)) : (-(1 / 2) : ℝ) ≤ (⟪y, v⟫ : ℝ) := by
+  have hyn : ‖y‖ = 1 := by
+    rw [sphere, Metric.mem_sphere, dist_zero_right] at hy; exact hy
+  have hnorm2 : ‖y - u‖ ^ 2 = 2 - 2 * (⟪y, u⟫ : ℝ) := by
+    rw [← real_inner_self_eq_norm_sq]
+    have h1 : (⟪y, y⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hyn]; norm_num
+    have h2 : (⟪u, u⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hu]; norm_num
+    simp only [inner_sub_left, inner_sub_right, h1, h2]
+    rw [real_inner_comm u y]; ring
+  have hsq : ‖y - u‖ ^ 2 ≤ (1 / 2 : ℝ) ^ 2 := by rw [hnorm2]; nlinarith
+  have hnorm : ‖y - u‖ ≤ 1 / 2 := by nlinarith [norm_nonneg (y - u)]
+  have hsplit : (⟪y, v⟫ : ℝ) = ⟪u, v⟫ + ⟪y - u, v⟫ := by
+    rw [inner_sub_left]; ring
+  have hcs : -(‖y - u‖ * ‖v‖) ≤ (⟪y - u, v⟫ : ℝ) :=
+    (abs_le.mp (abs_real_inner_le_norm _ _)).1
+  rw [hv, mul_one] at hcs
+  linarith
+
+/-- Set-inclusion form of `inner_orthogonal_ge_of_mem_cap`: the tight cap around `u` at level
+`b ≥ 7/8` sits inside the `−1/2` lower-bound half-space of any orthogonal unit pole `v`. -/
+theorem cap_subset_inner_orthogonal_ge {u v : Eucl d} (hu : ‖u‖ = 1) (hv : ‖v‖ = 1)
+    (huv : (⟪u, v⟫ : ℝ) = 0) {b : ℝ} (hb : 7 / 8 ≤ b) :
+    {y ∈ sphere d | b ≤ (⟪y, u⟫ : ℝ)} ⊆ {y | (-(1 / 2) : ℝ) ≤ (⟪y, v⟫ : ℝ)} :=
+  fun _y ⟨hys, hyu⟩ => inner_orthogonal_ge_of_mem_cap hu hv huv hb hys hyu
 
 end MeasureToMeasure.Leaves
