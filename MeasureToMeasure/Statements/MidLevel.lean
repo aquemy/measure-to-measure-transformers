@@ -53,8 +53,9 @@ lives on the layer its own paper construction uses:
 * **Mean-field layer** (`AttnSchedule d` / `attnMeasureFlow`, the self-attention flow interface of
   `Foundations/Attention.lean`): statements whose paper constructions switch on attention
   (`V ≠ 0`) -- `prop_2_1` (attention clustering; discharged in `Statements/Prop21.lean`, where the
-  machine-checked witness turned out to be a `V = 0` gated block), `lemma_3_3`, `lemma_3_4_part2`,
-  `cluster_to_point`, `lemma_5_4`, `exists_parked_schedule`, and the disentanglement/main results
+  machine-checked witness turned out to be a `V = 0` gated block), `cluster_to_point` (likewise
+  discharged, in `Statements/ClusterToPoint.lean`, via three `V = 0` gated pulls), `lemma_3_3`,
+  `lemma_3_4_part2`, `lemma_5_4`, `exists_parked_schedule`, and the disentanglement/main results
   in `MainResults.lean`.
 
 The horizon convention on the mean-field layer: a schedule spans `[0, T]` through its pieces'
@@ -435,29 +436,13 @@ theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) 
       rw [flowMap_comp]
       exact hψ i
 
-/-- **Clustering to a prescribed point** (Proposition 2.1 followed by Proposition 4.1). A
-sphere-supported measure in an open hemisphere can be driven `W₂`-close to the Dirac mass at *any
-chosen* point `z` of the sphere: first cluster it to a point (Proposition 2.1, one switch), then
-steer that point to `z` (Proposition 4.2 with a single active point, six switches). AXIOM
-(`math.axiomatised`): a combination of the two axiomatized propositions; it is the single-measure
-controllability fact that Theorem 1.1 lifts to a family by disentanglement and parking.
-`Depends-On prop_2_1`, `Depends-On prop_4_1`.
-
-**Fidelity (soundness):** the original stub let `z` range over ALL of `Eucl d` and was
-kernel-refuted: the flow keeps sphere mass on the sphere, so no flowed Dirac can `W₂`-approach an
-off-sphere target (`W₂(δ_p, δ_q) = dist p q`, and the distance from the sphere to `3 • e` is at
-least `2`; review finding F12). The sphere support, `d ≥ 3` (inherited from Proposition 4.1's
-steering), and the `1 + 6` switch budget are the paper's.
-
-Layer (F14): mean-field -- the clustering half is the attention dynamics (Proposition 2.1); the
-steering half (Proposition 4.1) is a perceptron tail, so the composite schedule lives on the
-mean-field layer. -/
-axiom cluster_to_point (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (hd : 3 ≤ d) (T ε : ℝ)
-    (hT : 0 < T) (hε : 0 < ε)
-    (z e : Eucl d) (hz : z ∈ sphere d) (he : ‖e‖ = 1)
-    (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧ AttnSchedule.switches θ ≤ 7 ∧
-      Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
+-- `cluster_to_point` (clustering to a prescribed point, Prop 2.1 followed by Prop 4.1) was an
+-- axiom here; it now lives, discharged as a kernel-clean theorem with the same signature verbatim,
+-- in `Statements/ClusterToPoint.lean` (a separate file per the `Prop21.lean` precedent: the proof
+-- consumes the `Leaves/ThreePullCluster.lean` machinery, which `MidLevel` must not import). The
+-- witness is a chain of three `V = 0` gated pulls relaying the mass `e → α → z` through a unit
+-- vector orthogonal to both (the consumer of `3 ≤ d`), `switches = 3 ≤ 7`; see the theorem's
+-- docstring and finding F30 in `RESEARCH.md`.
 
 /-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
 source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition

@@ -407,16 +407,16 @@ evidence = "F12 (false at d<=2, monotone/cyclic order obstructions); hd + budget
 
 [claims.cluster-to-point]
 kind      = "conjecture"
-statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a sphere-supported probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point OF THE SPHERE, by clustering (one piece) then steering the cluster (six pieces), 7 pieces total, for d >= 3. Lifted to a family by disentanglement and parking in Theorem 1.1. SOUNDNESS FIX (2026-07-03, F12): the stub let z range over all of Eucl d and was kernel-refuted with an off-sphere Dirac target (the flow keeps sphere mass on the sphere and W2(delta_p, delta_q) = dist p q, proved exactly over the coupling definition). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (attention clustering + perceptron steering composite; 7 pieces)."
-status    = "math.axiomatised"
+statement = "Single-measure controllability (Prop 2.1 + Prop 4.1): a sphere-supported probability measure in an open hemisphere can be driven W2-close to the Dirac mass at any prescribed point OF THE SPHERE, by clustering (one piece) then steering the cluster (six pieces), 7 pieces total, for d >= 3. Lifted to a family by disentanglement and parking in Theorem 1.1. SOUNDNESS FIX (2026-07-03, F12): the stub let z range over all of Eucl d and was kernel-refuted with an off-sphere Dirac target (the flow keeps sphere mass on the sphere and W2(delta_p, delta_q) = dist p q, proved exactly over the coupling definition). MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with durationSum = T (attention clustering + perceptron steering composite; 7 pieces). DISCHARGED (2026-07-28, F30): kernel-clean theorem in Statements/ClusterToPoint.lean with the axiom's signature verbatim; the witness is a chain of THREE V=0 gated pulls relaying the mass e -> alpha -> z through a unit vector orthogonal to both (the consumer of d >= 3), switches = 3 within the paper's 7-piece budget."
+status    = "math.machine-checked"
 lean      = "MeasureToMeasure.Statements.cluster_to_point"
 paper     = "Prop 2.1 + Prop 4.1"
 created   = "2026-06-30"
 
 [claims.cluster-to-point.fidelity]
-reviewed = "2026-07-03"
+reviewed = "2026-07-28"
 paper    = "Prop 2.1 + Prop 4.1, arXiv:2411.04551v3"
-evidence = "F12; disproof Regression/Refuted/F12_ClusterToPoint.lean; adapter Refutations/F12_cluster_to_point_off_sphere.lean; witness Regression/NonVacuity/MidLevel.lean"
+evidence = "F12; disproof Regression/Refuted/F12_ClusterToPoint.lean; adapter Refutations/F12_cluster_to_point_off_sphere.lean; witness Regression/NonVacuity/MidLevel.lean; discharge F30 (three-pull chain, PR #336 leaves)"
 
 [claims.axiom-w2-convexity]
 kind      = "conjecture"

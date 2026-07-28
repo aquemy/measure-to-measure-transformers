@@ -153,3 +153,4 @@ import MeasureToMeasure.Statements.Lemma34Part1
 import MeasureToMeasure.Statements.MainResults
 import MeasureToMeasure.Statements.MidLevel
 import MeasureToMeasure.Statements.Prop21
+import MeasureToMeasure.Statements.ClusterToPoint

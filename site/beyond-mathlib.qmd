@@ -31,10 +31,10 @@ axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKea
 argument on the sphere), then existence (the self-consistency fixed point of leaf E3n, transported
 through the padded point flow) -- so the mean-field layer itself carries **zero** axioms.
 Today `#print axioms theorem_1_1` lists exactly the *paper-level* dynamical statements
-(`cluster_to_point`, `exists_disentangling_balls`, `exists_parked_schedule`;
-`theorem_1_2` swaps `cluster_to_point` for `lemma_5_4`), each encoding a result from the paper's
-Sections 2--5 that rests on classical theorems (LaSalle invariance, Hartman-Grobman linearization)
-Mathlib does not yet have. This page is the public roadmap for that program -- and, increasingly,
+(`exists_disentangling_balls`, `exists_parked_schedule`; `theorem_1_2` adds `lemma_5_4`), each
+encoding a result from the paper's Sections 3--5 that rests on theory Mathlib does not yet have
+(`cluster_to_point`, the clustering half, is since 2026-07-28 a machine-checked theorem --
+finding F30). This page is the public roadmap for that program -- and, increasingly,
 a record of it.
 
 ## Progress so far
@@ -169,8 +169,8 @@ infrastructure. They fall into three groups by *how* each is closed:
   $O(M)$-switch mass-sweep, which needs the continuity-equation theory Mathlib lacks (mapped in a
   scouting pass; the naive "one cap per piece" partition is *false*).
 - `prop_4_2` (steering) -- the geodesic-gradient corridor construction, the hardest constructive
-  target. Closing it also makes `prop_4_1` (already a theorem) kernel-clean and unblocks
-  `cluster_to_point`.
+  target. Closing it also makes `prop_4_1` (already a theorem) kernel-clean. (It no longer gates
+  `cluster_to_point`, which discharged on 2026-07-28 without it -- finding F30.)
 
 **Tier 2 -- infrastructure builds (a genuine new layer of Mathlib-level theory).**
 
@@ -179,9 +179,13 @@ infrastructure. They fall into three groups by *how* each is closed:
   Lipschitz-in-$(x, W_1)$ moduli from the uniqueness campaign fed the same leaf-decomposition
   template, closing with a self-consistency fixed point transported through the padded point flow.
   This took the axiom count to **9** and closed out M3b entirely.
-- `cluster_to_point` -- the M6 LaSalle/Lyapunov convergence theory (`prop_2_1` itself is since
-  2026-07-28 **[machine-checked]{.badge .ok}**: the single-hemisphere case needs no LaSalle at
-  all, one amplitude-scaled gated block collapses it onto its pole -- finding F29).
+- `cluster_to_point` -- **[machine-checked]{.badge .ok}** since 2026-07-28, and with it the whole
+  "M6 LaSalle/Lyapunov convergence theory" tier turned out to be unnecessary for the clustering
+  chain: `prop_2_1` fell first (one amplitude-scaled gated block collapses a hemisphere onto its
+  pole -- finding F29), and the prescribed-target composite followed by a chain of three `V = 0`
+  gated pulls relaying the mass `e → α → z` through a unit vector orthogonal to both, `switches
+  = 3` within the paper's 7-piece budget, without routing through `prop_4_2`'s steering
+  (finding F30).
 - `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
 - `lemma_3_3` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 of Lemma 3.4 is on the
   linear layer and is **discharged** -- see Tier 1 above; `lemma_3_4_part2` is since 2026-07-27 a
