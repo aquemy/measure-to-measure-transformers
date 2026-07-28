@@ -4,7 +4,10 @@ import MeasureToMeasure.Leaves.DisentangleInductionStep
 import MeasureToMeasure.Leaves.DistinctDim
 
 /-!
-# The static-cap re-based pair lemma: `exists_phase23_nonColinear_asym`
+# The static-cap re-based pair lemma and resolving insertion step
+
+`exists_phase23_nonColinear_asym` (the pair lemma) and
+`disentangle_insert_colinear_resolving_asym` (the insertion step consuming it).
 
 The un-gated replacement for `exists_phase23_nonColinear` (and, through its two-directional
 conclusion, for `exists_phase3_nonColinear_symm`), both in `DisentangleInductionStep.lean`. Those
@@ -57,6 +60,8 @@ namespace MeasureToMeasure.Leaves
 
 open MeasureTheory Set MeasureToMeasure MeasureToMeasure.Statements
 open MeasureToMeasure.Foundations (AttnSchedule AttnParams attnMeasureFlow)
+open MeasureToMeasure.Foundations (isProbabilityMeasure_attnMeasureFlow
+  attnMeasureFlow_supportedIn_sphere attnMeasureFlow_exists_map attnMeasureFlow_append)
 open scoped RealInnerProductSpace
 
 /-- **The static-cap pair lemma: `A` made non-colinear with `B` in both directions, `B` and all
@@ -138,5 +143,176 @@ theorem exists_phase23_nonColinear_asym {d : ℕ} [NeZero d]
   refine ⟨[p], T / 2, z, cosR, by linarith, ?_, hcosR, htrace, hγ, hflip, hfix, hS⟩
   rw [hdur1, hpdur]
   ring
+
+/-- **The static-cap re-based pair-RESOLVING colinear insertion step.** The un-gated, INVOCABLE
+replacement for `disentangle_insert_colinear_resolving` (`DisentangleInductionStep.lean`), whose
+`hgen : GenRestNearBall d` gate is kernel-refuted (`genRestNearBall_false`, finding F22). The
+conclusion is byte-identical to the gated original, so the induction over `N` consumes this step
+unchanged; only the hypothesis interface moves from the refuted dynamic gate to the static-cap
+route of `exists_phase23_nonColinear_asym`.
+
+**What changed against the gated original.**
+* `hgen` is DROPPED: the asymmetric collapse needs no non-degeneracy gate.
+* `hout` (every bystander supported in `Uᶜ`) is REPLACED by the closed carrier `K` with
+  `hKbys`/`hkK` (every bystander's support, and the `k`-side's support, inside `K`) plus the
+  exclusive-point gate `hexcl` (one `j`-support point outside `K`). Bystanders and the `k`-side
+  are now fixed by CAP-AVOIDANCE instead of carrier-complement support: the pair lemma exposes a
+  cap whose sphere-trace avoids `K`, so `measure_cap_null_of_trace_disjoint_support` gives them
+  zero cap mass and the ρ-clause fixes them literally.
+* `hne` is DROPPED: it became derivable (inside the pair lemma) from `hexcl` plus `hkK`, since a
+  `j`-support point off `K ⊇` (`k`-side support) forces the two flowed measures apart.
+* Role asymmetry: only the `j`-side MOVES now (it is the collapse's `A`-side, staying `U`-supported
+  through the S-clause at `S := U`, whose trace condition is the `W := U` half of the exposed trace
+  guarantee); the `k`-side is literally fixed (`hFk`), which simplifies the original's `hFbys`/
+  `hpair` case analysis. The induction hands the orientation with `k < j` preserved: the newly
+  placed member `k` is the `K`-carried side, the unplaced colinear partner `j` is the
+  exclusive-point side (`j` MUST be the moved one, since moving a placed member would break
+  clause 3 of the invariant, and `j` is unplaced by `hjun`).
+* `hbys`, `hrest`, `hsepU` carry over verbatim (module docstring of the original for why they are
+  standing hypotheses, to be established by the induction that consumes this step).
+
+The full-application non-vacuity witness (mandatory since this theorem GUARDS the induction; a
+gated sibling was invocable-never before, F22) is
+`Regression/NonVacuity/DisentangleResolvingAsym.lean`. -/
+theorem disentangle_insert_colinear_resolving_asym {d : ℕ} (hd : 2 ≤ d) {N k : ℕ} (hk : k < N)
+    (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (θ : AttnSchedule d) (α : Fin k → Eucl d) (r : Fin k → ℝ)
+    (hinv : DisentangledPrefix d N k μ₀ θ α r)
+    (j : Fin N) (hjun : k < (j : ℕ))
+    (U : Set (Eucl d)) (hUopen : IsOpen U) (hUorth : U ⊆ orthant d)
+    (hjU : supportedIn (attnMeasureFlow θ (μ₀ j)) U)
+    (hkU : supportedIn (attnMeasureFlow θ (μ₀ ⟨k, hk⟩)) U)
+    (K : Set (Eucl d)) (hK : IsClosed K)
+    (hKbys : ∀ i : Fin N, i ≠ j → i ≠ ⟨k, hk⟩ →
+        (attnMeasureFlow θ (μ₀ i)).support ⊆ K)
+    (hkK : (attnMeasureFlow θ (μ₀ ⟨k, hk⟩)).support ⊆ K)
+    (hexcl : ∃ x0, x0 ∈ (attnMeasureFlow θ (μ₀ j)).support ∧ x0 ∉ K)
+    (hbys : ∀ i : Fin N, i ≠ j → i ≠ ⟨k, hk⟩ → ∀ ρ : Measure (Eucl d),
+        IsProbabilityMeasure ρ → supportedIn ρ (sphere d) → supportedIn ρ U →
+        ∀ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ i)) ≠ c • barycenter ρ)
+    (hrest : Pairwise fun i i' : Fin N => i ≠ j → i ≠ ⟨k, hk⟩ → i' ≠ j → i' ≠ ⟨k, hk⟩ →
+        ∀ c : ℝ, barycenter (attnMeasureFlow θ (μ₀ i))
+          ≠ c • barycenter (attnMeasureFlow θ (μ₀ i')))
+    (hsepU : ∀ i : Fin k, ∀ ρ : Measure (Eucl d), IsProbabilityMeasure ρ →
+        supportedIn ρ (sphere d) → supportedIn ρ U →
+        r i < dist (‖barycenter ρ‖⁻¹ • barycenter ρ) (α i))
+    (T : ℝ) (hT : 0 < T) :
+    ∃ ψ ψ' : AttnSchedule d, AttnSchedule.durationSum (ψ ++ ψ') = T ∧
+      Pairwise (fun i i' : Fin N => ∀ c : ℝ,
+        barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i))
+          ≠ c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i'))) ∧
+      ∃ (ω : Eucl d) (ε : ℝ), 0 < ε ∧
+        DisentangledPrefix d N (k + 1) μ₀ (θ ++ (ψ ++ ψ')) (Fin.snoc α ω) (Fin.snoc r ε) := by
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨hsph, horth, hball, hballdisj, -⟩ := hinv
+  set kk : Fin N := ⟨k, hk⟩ with hkkdef
+  have hμ'p : ∀ i, IsProbabilityMeasure (attnMeasureFlow θ (μ₀ i)) :=
+    fun i => haveI := hμ i; isProbabilityMeasure_attnMeasureFlow θ (μ₀ i) (hμs i)
+  haveI := hμ'p j
+  haveI := hμ'p kk
+  -- Step 1: the static-cap pair lemma on the θ-flowed pair (`A := j`-side, `B := k`-side).
+  obtain ⟨ψ, Tf, z, cosR, hTf, hdursum, hcosR, htrace, hnc1, hnc2, hfix, hS⟩ :=
+    exists_phase23_nonColinear_asym (attnMeasureFlow θ (μ₀ j)) (attnMeasureFlow θ (μ₀ kk))
+      T hT (hsph j) (hsph kk) U hUopen hUorth hjU hkU K hK hkK hexcl
+  -- The `k`-side and every bystander have `K`-carried supports, hence zero cap mass: fixed.
+  have hcapnull : ∀ i : Fin N, (attnMeasureFlow θ (μ₀ i)).support ⊆ K →
+      attnMeasureFlow θ (μ₀ i) {x | cosR < (⟪z, x⟫ : ℝ)} = 0 := fun i hiK =>
+    measure_cap_null_of_trace_disjoint_support _ (hsph i)
+      (fun x hx hcap hsupp => (htrace x hx hcap).2 (hiK hsupp))
+  have hFk : attnMeasureFlow (θ ++ ψ) (μ₀ kk) = attnMeasureFlow θ (μ₀ kk) := by
+    rw [attnMeasureFlow_append]
+    exact hfix _ (hsph kk) (hcapnull kk hkK)
+  have hFbys : ∀ i : Fin N, i ≠ j → i ≠ kk →
+      attnMeasureFlow (θ ++ ψ) (μ₀ i) = attnMeasureFlow θ (μ₀ i) := by
+    intro i hij hik
+    haveI := hμ'p i
+    rw [attnMeasureFlow_append]
+    exact hfix _ (hsph i) (hcapnull i (hKbys i hij hik))
+  have hFs : ∀ i : Fin N, supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ i)) (sphere d) := by
+    intro i
+    rw [attnMeasureFlow_append]
+    exact attnMeasureFlow_supportedIn_sphere ψ _ (hsph i)
+  have hFp : ∀ i : Fin N, IsProbabilityMeasure (attnMeasureFlow (θ ++ ψ) (μ₀ i)) := by
+    intro i
+    haveI := hμ i
+    exact isProbabilityMeasure_attnMeasureFlow (θ ++ ψ) (μ₀ i) (hμs i)
+  -- The moved member stays inside the carrier: the trace lies in `U`, so `S := U` invariates.
+  have hFjU : supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ j)) U := by
+    rw [attnMeasureFlow_append]
+    exact hS U hUopen.measurableSet (fun x hx hcap => (htrace x hx hcap).1) _ (hsph j) hjU
+  have hFkU : supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ kk)) U := by
+    rw [hFk]; exact hkU
+  have horthsub : ∀ ρ : Measure (Eucl d), supportedIn ρ U → supportedIn ρ (orthant d) :=
+    fun ρ h => measure_mono_null (Set.compl_subset_compl.mpr hUorth) h
+  have hnz : ∀ ρ : Measure (Eucl d), IsProbabilityMeasure ρ → supportedIn ρ (sphere d) →
+      supportedIn ρ (orthant d) → barycenter ρ ≠ 0 := by
+    intro ρ hρp hρs hρo
+    haveI := hρp
+    exact norm_pos_iff.mp (norm_barycenter_pos_of_orthant hρs
+      (integrable_id_of_sphere_support hρs) hρo)
+  have hFjnz : barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ j)) ≠ 0 :=
+    hnz _ (hFp j) (hFs j) (horthsub _ hFjU)
+  have hFknz : barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ kk)) ≠ 0 :=
+    hnz _ (hFp kk) (hFs kk) (horthsub _ hFkU)
+  -- Step 2: whole-family pairwise non-colinearity after `θ ++ ψ`.
+  have hpair : Pairwise (fun i i' : Fin N => ∀ c : ℝ,
+      barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i))
+        ≠ c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i'))) := by
+    intro a b hab
+    by_cases haj : a = j
+    · have hbj : b ≠ j := by rw [← haj]; exact Ne.symm hab
+      by_cases hbk : b = kk
+      · rw [haj, hbk]
+        simpa [attnMeasureFlow_append] using hnc1
+      · rw [haj, hFbys b hbj hbk]
+        exact ne_smul_flip_of_ne_zero hFjnz (hbys b hbj hbk _ (hFp j) (hFs j) hFjU)
+    · by_cases hak : a = kk
+      · have hbk : b ≠ kk := by rw [← hak]; exact Ne.symm hab
+        by_cases hbj : b = j
+        · rw [hak, hbj]
+          simpa [attnMeasureFlow_append] using hnc2
+        · rw [hak, hFbys b hbj hbk]
+          exact ne_smul_flip_of_ne_zero hFknz (hbys b hbj hbk _ (hFp kk) (hFs kk) hFkU)
+      · rw [hFbys a haj hak]
+        by_cases hbj : b = j
+        · rw [hbj]
+          exact hbys a haj hak _ (hFp j) (hFs j) hFjU
+        · by_cases hbk : b = kk
+          · rw [hbk]
+            exact hbys a haj hak _ (hFp kk) (hFs kk) hFkU
+          · rw [hFbys b hbj hbk]
+            exact hrest hab haj hak hbj hbk
+  -- Step 3: the prefix invariant survives.
+  have hprefix : DisentangledPrefix d N k μ₀ (θ ++ ψ) α r := by
+    refine ⟨hFs, ?_, ?_, hballdisj, ?_⟩
+    · intro i
+      by_cases hij : i = j
+      · rw [hij]; exact horthsub _ hFjU
+      · by_cases hik : i = kk
+        · rw [hik, hFk]; exact horth kk
+        · rw [hFbys i hij hik]; exact horth i
+    · intro i hik
+      have hij : i ≠ j := by intro h; rw [h] at hik; omega
+      have hikk : i ≠ kk := by
+        intro h; rw [h, hkkdef] at hik; simp at hik
+      rw [hFbys i hij hikk]; exact hball i hik
+    · intro i _
+      haveI := hμ i
+      obtain ⟨Φ, Φinv, hΦm, -, hΦinvm, hΦeq, -, hΦinv⟩ :=
+        attnMeasureFlow_exists_map (θ ++ ψ) (μ₀ i) (hμs i)
+      exact ⟨Φ, Φinv, hΦm, hΦinvm, hΦeq, hΦinv⟩
+  have hsep : ∀ i : Fin k, r i < dist
+      (‖barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ ⟨k, hk⟩))‖⁻¹ •
+        barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ ⟨k, hk⟩))) (α i) :=
+    fun i => hsepU i _ (hFp kk) (hFs kk) hFkU
+  -- Step 4: the banked non-colinear insertion on the composed schedule.
+  obtain ⟨ψ', hdur', ω, ε, hεpos, hprefix'⟩ :=
+    disentangle_insert_noncolinear hk μ₀ hμ hμs (θ ++ ψ) α r hprefix hpair hsep Tf hTf
+  refine ⟨ψ, ψ', ?_, hpair, ω, ε, hεpos, ?_⟩
+  · simp only [AttnSchedule.durationSum_append, hdur']
+    exact hdursum
+  · rw [← List.append_assoc]
+    exact hprefix'
 
 end MeasureToMeasure.Leaves
