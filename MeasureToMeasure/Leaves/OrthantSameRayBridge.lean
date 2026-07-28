@@ -75,4 +75,34 @@ theorem barycenter_ne_smul_of_separated_balls {μ ν : Measure (Eucl d)}
   exact ne_smul_of_orthant_not_sameRay hμmem hνmem
     (barycenter_not_sameRay_of_separated_balls hα₁ hα₂ hr hsep hμs hνs hμb hνb)
 
+/-- **A nonzero vector has at most one colinear partner in a pairwise non-colinear family**
+(the at-most-one-partner fact of arXiv:2411.04551v3, p.17, as pure algebra). Colinearity through a
+NONZERO vector is transitive: if `v ≠ 0` is a scalar multiple of both `w₁` and `w₂`, then the
+scalar against `w₁` is forced nonzero (else `v = 0`), so `w₁ = (c₁⁻¹ * c₂) • w₂`, contradicting
+the standing non-colinearity of `w₁` and `w₂`. Sibling of `ne_smul_flip_of_ne_zero`
+(`DisentangleInductionStep.lean`), which handles the one-vector flip the same way. -/
+theorem colinear_partner_unique {v w₁ w₂ : Eucl d} (hv : v ≠ 0)
+    (h1 : ∃ c : ℝ, v = c • w₁) (h2 : ∃ c : ℝ, v = c • w₂)
+    (hne : ∀ c : ℝ, w₁ ≠ c • w₂) : False := by
+  obtain ⟨c₁, hc₁⟩ := h1
+  obtain ⟨c₂, hc₂⟩ := h2
+  have hc₁0 : c₁ ≠ 0 := by
+    rintro rfl
+    rw [zero_smul] at hc₁
+    exact hv hc₁
+  exact hne (c₁⁻¹ * c₂) (by rw [mul_smul, ← hc₂, hc₁, inv_smul_smul₀ hc₁0])
+
+/-- **`Fin N`-indexed corollary: THE colinear partner is unique.** Given a family `b` that is
+pairwise fully non-colinear (the `Pairwise (∀ c, b i ≠ c • b j)` shape the disentangling
+induction's bookkeeping consistently carries, with nonzeroness of the members available separately
+via `norm_barycenter_pos_of_orthant` when `b` is a barycenter family), a NONZERO vector `v`
+colinear with two DISTINCT members' vectors is impossible. This is what lets the induction's case
+split pick THE unique partner `j` of a new member and keep the bystander non-colinearity
+(`hbys`-style hypotheses) establishable for every remaining index. -/
+theorem colinear_partner_unique_pairwise {N : ℕ} {b : Fin N → Eucl d}
+    (hnoncol : Pairwise (fun i j : Fin N => ∀ c : ℝ, b i ≠ c • b j))
+    {v : Eucl d} (hv : v ≠ 0) {i j : Fin N} (hij : i ≠ j)
+    (hi : ∃ c : ℝ, v = c • b i) (hj : ∃ c : ℝ, v = c • b j) : False :=
+  colinear_partner_unique hv hi hj (hnoncol hij)
+
 end MeasureToMeasure.Leaves
