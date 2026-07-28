@@ -341,4 +341,75 @@ theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
           + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ'))
         (Submodule.span ℝ {barycenter ν'} : Set (Eucl d)) := by linarith
 
+/-- **The multi-line collapse block: one block defeats every scalar against a whole finite family
+of lines.** Sibling of `exists_asymmetric_collapse_schedule` above, widened from the single
+`ν'`-barycenter line to an arbitrary finite family of NONZERO vectors `β i`: given a cap
+`{cosR < ⟪z, ·⟫}` with positive `μ'`-mass, some single attention block `p` of duration EXACTLY
+`T2` makes the flowed `μ'`-barycenter avoid every scalar multiple of every `β i` at once, while
+carrying the same two bystander conjuncts (every sphere probability measure with zero cap mass is
+fixed literally; every measurable region containing the cap's sphere-trace is forward-invariant).
+
+The single-`ν'` version cannot be iterated to this conclusion: each of its blocks re-moves the
+`μ'`-side, so defeating one line can re-enter another. The widening instead feeds the WHOLE family
+to the pole pigeonhole `exists_pole_in_cap_avoiding_total` (which always took a finite family of
+nonzero vectors; the single-`ν'` version instantiated it at a singleton), so the ideal collapse
+target avoids every line simultaneously, and one positive margin below every line's `infDist`
+(the empty family is served by `1`) feeds the same `ε`-approximate collapse block once.
+
+This is the engine of the family resolution phase (Phase R) of `exists_disentangling_balls`'s
+induction over `N`: member `i` is collapsed once, against the barycenter lines of ALL other
+members, so the per-pair colinear branch (whose carrier hypotheses an unconfined family cannot
+satisfy) is never entered. -/
+theorem exists_multiline_collapse_schedule (hd2 : 2 ≤ d)
+    (μ' : Measure (Eucl d)) [IsProbabilityMeasure μ'] (hμ's : supportedIn μ' (sphere d))
+    {z : Eucl d} (hzs : z ∈ sphere d)
+    {cosR : ℝ} (hcosR : cosR ∈ Set.Ioo (1 / 2 : ℝ) 1)
+    (hμcap : 0 < μ' {x | cosR < (⟪z, x⟫ : ℝ)})
+    {ι : Type*} [Fintype ι] (β : ι → Eucl d) (hβ : ∀ i, β i ≠ 0)
+    {T2 : ℝ} (hT2 : 0 < T2) :
+    ∃ p : AttnParams d, p.duration = T2 ∧
+      (∀ i, ∀ γ : ℝ, barycenter (attnMeasureFlow [p] μ') ≠ γ • β i) ∧
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        ρ {x | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S →
+        (∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S) →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S := by
+  have hz : ‖z‖ = 1 := norm_eq_one_of_mem_sphere hzs
+  have hz0 : z ≠ 0 := fun h => by simp [h] at hz
+  obtain ⟨hcosRhalf, hcosR1⟩ := hcosR
+  have hcosR0 : (0 : ℝ) ≤ cosR := by linarith
+  have hSpos : 0 < (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal :=
+    ENNReal.toReal_pos hμcap.ne' (measure_ne_top μ' _)
+  have hSne : (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal ≠ 0 := ne_of_gt hSpos
+  obtain ⟨w, hzw, hw⟩ := Leaves.exists_unit_orthogonal hd2 hz0
+  -- pole choice: the ideal collapse target avoids EVERY line of the family at once
+  obtain ⟨ω, hωnorm, hωcap, -, -, htarget⟩ :=
+    exists_pole_in_cap_avoiding_total z w hz hw hzw cosR ⟨hcosR0, hcosR1⟩ 0
+      ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal) hSne
+      (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ') β hβ
+  set target : Eucl d := (μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
+      + (∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ') with htargetdef
+  -- one positive margin below every line's `infDist` (the empty family is served by `1`)
+  obtain ⟨M, hMpos, hMle⟩ : ∃ M, 0 < M ∧ ∀ i,
+      M ≤ Metric.infDist target (Submodule.span ℝ {β i} : Set (Eucl d)) := by
+    rcases isEmpty_or_nonempty ι with h | h
+    · exact ⟨1, one_pos, fun i => (IsEmpty.false i).elim⟩
+    · refine ⟨Finset.univ.inf' Finset.univ_nonempty
+        (fun i => Metric.infDist target (Submodule.span ℝ {β i} : Set (Eucl d))), ?_, ?_⟩
+      · exact (Finset.lt_inf'_iff Finset.univ_nonempty).mpr fun i _ =>
+          (forall_ne_smul_of_dist_lt_infDist_span (htarget i)).1
+      · exact fun i => Finset.inf'_le _ (Finset.mem_univ i)
+  -- ε-approximate collapse block at `ε := M / 2`
+  obtain ⟨p, hpdur, hpclose, hpfix, hpS⟩ :=
+    exists_collapse_block_barycenter_close μ' hμ's hz hωnorm ⟨hcosRhalf, hcosR1⟩ hωcap hT2
+      (ε := M / 2) (by linarith)
+  refine ⟨p, hpdur, ?_, hpfix, hpS⟩
+  intro i γ
+  refine (forall_ne_smul_of_dist_lt_infDist_span (htarget i)).2 _ ?_ γ
+  rw [dist_eq_norm]
+  calc ‖barycenter (attnMeasureFlow [p] μ') - target‖ < M / 2 := hpclose
+    _ ≤ Metric.infDist target (Submodule.span ℝ {β i} : Set (Eucl d)) := by
+        linarith [hMle i]
+
 end MeasureToMeasure.Leaves
