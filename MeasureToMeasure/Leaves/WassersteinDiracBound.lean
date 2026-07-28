@@ -128,4 +128,82 @@ theorem W2_dirac_le_of_geodesicBall_mass (μ : Measure (Eucl d)) [IsProbabilityM
     _ ≤ ((ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ) ^ (2⁻¹ : ℝ) := by gcongr
     _ ≤ ENNReal.ofReal (Real.sqrt (R ^ 2 + 4 * δ)) := hrpow
 
+/-! ### Chordal-ball twin (prop_2_1 closing bound)
+
+The `prop_2_1` hemisphere-collapse route delivers its concentration set as an inner-level cap,
+which on the sphere reads as a **chordal** bound `‖x - e‖ ≤ √(2(1-b))`, i.e. membership in an
+ambient `Metric.closedBall`, not a `geodesicBall`. Since `geodesicBall z R ⊆ Metric.ball z R`
+points the wrong way for the mass-complement hypothesis, the geodesic version above cannot be
+reused as-is. The twin below is strictly simpler: on the ball, `edist x z ≤ R` is definitionally
+`Metric.closedBall` membership, so no chord-vs-arc conversion is needed at all. -/
+
+/-- Chordal-ball twin of `lintegral_sq_edist_dirac_le`: the squared distance to `z`, integrated
+against a sphere-supported measure, is bounded by `R²` per point on the **ambient closed ball**
+of radius `R` around `z` plus `4` (diameter squared) per point off it. -/
+theorem lintegral_sq_edist_dirac_le_closedBall (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (hμS : μ (sphere d)ᶜ = 0) (z : Eucl d) (hz : z ∈ sphere d) (R : ℝ) :
+    ∫⁻ x, edist x z ^ 2 ∂μ ≤ (ENNReal.ofReal R) ^ 2 * μ (Metric.closedBall z R) +
+      4 * μ (Metric.closedBall z R)ᶜ := by
+  have hae : ∀ᵐ x ∂μ, x ∈ sphere d := by rw [ae_iff]; exact hμS
+  have hbound : ∀ᵐ x ∂μ, edist x z ^ 2 ≤
+      (Metric.closedBall z R).indicator (fun _ => (ENNReal.ofReal R) ^ 2) x +
+      (Metric.closedBall z R)ᶜ.indicator (fun _ => (4 : ℝ≥0∞)) x := by
+    filter_upwards [hae] with x hxs
+    by_cases hxb : x ∈ Metric.closedBall z R
+    · rw [Set.indicator_of_mem hxb, Set.indicator_of_notMem (by simpa using hxb), add_zero]
+      have hle : edist x z ≤ ENNReal.ofReal R := by
+        rw [edist_dist]
+        exact ENNReal.ofReal_le_ofReal (Metric.mem_closedBall.mp hxb)
+      gcongr
+    · rw [Set.indicator_of_notMem hxb, Set.indicator_of_mem (by simpa using hxb), zero_add]
+      have hedist : edist x z = ENNReal.ofReal ‖x - z‖ := by rw [edist_dist, dist_eq_norm]
+      have hdiam : ‖x - z‖ ≤ 2 := by
+        have hxn : ‖x‖ = 1 := norm_eq_one_of_mem_sphere hxs
+        have hzn : ‖z‖ = 1 := norm_eq_one_of_mem_sphere hz
+        calc ‖x - z‖ ≤ ‖x‖ + ‖z‖ := norm_sub_le x z
+          _ = 2 := by rw [hxn, hzn]; ring
+      rw [hedist]
+      calc (ENNReal.ofReal ‖x - z‖) ^ 2 ≤ (ENNReal.ofReal (2 : ℝ)) ^ 2 := by gcongr
+        _ = 4 := by rw [← ENNReal.ofReal_pow (by norm_num)]; norm_num
+  calc ∫⁻ x, edist x z ^ 2 ∂μ
+      ≤ ∫⁻ x, ((Metric.closedBall z R).indicator (fun _ => (ENNReal.ofReal R) ^ 2) x +
+          (Metric.closedBall z R)ᶜ.indicator (fun _ => (4 : ℝ≥0∞)) x) ∂μ := lintegral_mono_ae hbound
+    _ = (ENNReal.ofReal R) ^ 2 * μ (Metric.closedBall z R) + 4 * μ (Metric.closedBall z R)ᶜ := by
+        rw [lintegral_add_left (Measurable.indicator measurable_const measurableSet_closedBall),
+          lintegral_indicator measurableSet_closedBall,
+          lintegral_indicator measurableSet_closedBall.compl,
+          setLIntegral_const, setLIntegral_const]
+
+/-- **Concentrated mass in an ambient closed ball bounds `W₂` to the Dirac at its center.** If `μ`
+is supported on the sphere and all but `≤δ` of its mass lies in `Metric.closedBall z R`,
+`W₂(μ, δ_z) ≤ √(R²+4δ)`. Chordal-ball twin of `W2_dirac_le_of_geodesicBall_mass`, for
+concentration statements delivered as chordal caps (`‖x-e‖ ≤ √(2(1-b))`). -/
+theorem W2_dirac_le_of_closedBall_mass (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+    (hμS : μ (sphere d)ᶜ = 0) (z : Eucl d) (hz : z ∈ sphere d) (R δ : ℝ) (hR : 0 ≤ R)
+    (hδ : 0 ≤ δ) (hmass : μ (Metric.closedBall z R)ᶜ ≤ ENNReal.ofReal δ) :
+    W2 μ (Measure.dirac z) ≤ ENNReal.ofReal (Real.sqrt (R ^ 2 + 4 * δ)) := by
+  have hcpl : IsCoupling (μ.prod (Measure.dirac z)) μ (Measure.dirac z) :=
+    isCoupling_prod μ (Measure.dirac z)
+  have hle := W2_le_rpow_sqTransportCost hcpl
+  have hst : sqTransportCost (μ.prod (Measure.dirac z)) = ∫⁻ x, edist x z ^ 2 ∂μ := by
+    rw [sqTransportCost, Measure.prod_dirac, lintegral_map (by fun_prop) (by fun_prop)]
+  rw [hst] at hle
+  have hbound := lintegral_sq_edist_dirac_le_closedBall μ hμS z hz R
+  have hμball : μ (Metric.closedBall z R) ≤ 1 := prob_le_one
+  have hcombine : ∫⁻ x, edist x z ^ 2 ∂μ ≤ (ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ := by
+    calc ∫⁻ x, edist x z ^ 2 ∂μ ≤ (ENNReal.ofReal R) ^ 2 * μ (Metric.closedBall z R) +
+          4 * μ (Metric.closedBall z R)ᶜ := hbound
+      _ ≤ (ENNReal.ofReal R) ^ 2 * 1 + 4 * ENNReal.ofReal δ := by gcongr
+      _ = (ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ := by ring
+  have hrpow : ((ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ) ^ (2⁻¹ : ℝ) ≤
+      ENNReal.ofReal (Real.sqrt (R ^ 2 + 4 * δ)) := by
+    have heq : (ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ = ENNReal.ofReal (R ^ 2 + 4 * δ) := by
+      rw [← ENNReal.ofReal_pow hR, show (4 : ℝ≥0∞) = ENNReal.ofReal 4 by simp,
+        ← ENNReal.ofReal_mul (by norm_num), ← ENNReal.ofReal_add (by positivity) (by positivity)]
+    rw [heq, ENNReal.ofReal_rpow_of_nonneg (by positivity) (by norm_num),
+      show (2⁻¹ : ℝ) = 1 / 2 by norm_num, ← Real.sqrt_eq_rpow]
+  calc W2 μ (Measure.dirac z) ≤ (∫⁻ x, edist x z ^ 2 ∂μ) ^ (2⁻¹ : ℝ) := hle
+    _ ≤ ((ENNReal.ofReal R) ^ 2 + 4 * ENNReal.ofReal δ) ^ (2⁻¹ : ℝ) := by gcongr
+    _ ≤ ENNReal.ofReal (Real.sqrt (R ^ 2 + 4 * δ)) := hrpow
+
 end MeasureToMeasure
