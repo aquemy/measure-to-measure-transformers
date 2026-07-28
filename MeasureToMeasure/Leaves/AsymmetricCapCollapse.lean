@@ -42,10 +42,13 @@ set_option maxHeartbeats 1200000 in
 probability measure `μ'` and a GIVEN cap `{cosR < ⟪z, ·⟫}` (with `cosR ∈ (1/2, 1)`) containing the
 given pole `ω`, some single attention block `p` of duration EXACTLY `T2` pushes `μ'`'s barycenter to
 within `ε` of the ideal collapse target `μ'(cap)·ω + ∫_{capᶜ} x dμ'`, while fixing EXACTLY every
-sphere-supported probability measure that puts no mass on the cap. Witness: `pPark z ω cosR (n·T2)`
-rescaled by the reach-budget `n ≥ 1`; the barycenter estimate transfers from the linear layer's
-`W2_measureFlow_offCenter_collapse_le` through `norm_barycenter_sub_le_W2` and the
-`pPark`/`gatedBlock` bridge. -/
+sphere-supported probability measure that puts no mass on the cap, and while keeping every
+sphere-supported probability measure carried by a measurable region `S` containing the cap's
+sphere-trace carried by `S` (region-generic forward invariance,
+`attnMeasureFlow_pPark_supportedIn_of_cap_subset` through the rescale bridge). Witness:
+`pPark z ω cosR (n·T2)` rescaled by the reach-budget `n ≥ 1`; the barycenter estimate transfers
+from the linear layer's `W2_measureFlow_offCenter_collapse_le` through
+`norm_barycenter_sub_le_W2` and the `pPark`/`gatedBlock` bridge. -/
 theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProbabilityMeasure μ']
     (hμ's : supportedIn μ' (sphere d)) {z ω : Eucl d} (hz : ‖z‖ = 1) (hω : ‖ω‖ = 1)
     {cosR : ℝ} (hcosR : cosR ∈ Set.Ioo (1 / 2 : ℝ) 1) (hωcap : cosR < (⟪z, ω⟫ : ℝ))
@@ -54,8 +57,12 @@ theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProba
       ‖barycenter (attnMeasureFlow [p] μ')
         - ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
           + ∫ x in {x | cosR < (⟪z, x⟫ : ℝ)}ᶜ, x ∂μ')‖ < ε ∧
-      ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
-        ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ := by
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S →
+        (∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S) →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S := by
   rw [supportedIn] at hμ's
   obtain ⟨hcosRhalf, hcosR1⟩ := hcosR
   have hcosRlb : (-1 : ℝ) ≤ cosR := by linarith
@@ -203,7 +210,7 @@ theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProba
     rw [hpfindef, hθdef]
     exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T2) hnT0)
       hnpos μ' hμ's
-  refine ⟨pfin, hdur, ?_, ?_⟩
+  refine ⟨pfin, hdur, ?_, ?_, ?_⟩
   · rw [hflowEq, ← hbary]
     exact hclose
   · -- exact fixing of every off-cap sphere probability measure, through the same rescale bridge
@@ -215,6 +222,16 @@ theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProba
         hnpos ρ hρs
     rw [hflowEqρ, hθdef]
     exact attnMeasureFlow_pPark_eq_of_off_cap z ω cosR ((n : ℝ) * T2) hnT0 ρ hρs hρcap
+  · -- region-generic sphere-trace invariance, through the same rescale bridge
+    intro S hS hcapS ρ _ hρs hρS
+    rw [supportedIn] at hρs hρS
+    have hflowEqρ : attnMeasureFlow [pfin] ρ = attnMeasureFlow θ ρ := by
+      rw [hpfindef, hθdef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z ω cosR ((n : ℝ) * T2) hnT0)
+        hnpos ρ hρs
+    rw [supportedIn, hflowEqρ, hθdef]
+    exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z ω cosR ((n : ℝ) * T2) hnT0 hS hcapS
+      ρ hρs hρS
 
 /-- **The asymmetric-cap collapse schedule: one block defeats every `γ₂`.** Given the axiom's
 asymmetric cap (`μ'`-positive, `ν'`-null mass) on the sphere, some single attention block `p` of
@@ -231,7 +248,14 @@ positive `infDist` margin `M`, and running the collapse block at `ε := M/2` kee
 
 This is the Phase-B glue of the non-vacuous `lemma_3_4_part2` re-discharge (claim
 `cap-nu-null-b16`), replacing the refuted `hgenRest`/gramGap route entirely: only un-gated
-components are consumed. -/
+components are consumed.
+
+Two bystander conjuncts ride along for the static-cap induction over `N`
+(`exists_disentangling_balls` re-base): the block fixes EVERY sphere-supported probability
+measure with zero cap mass (the `ν'`-fixing clause is its instance at `ρ := ν'`), and it keeps
+every sphere-supported probability measure carried by a measurable region `S` containing the
+cap's sphere-trace carried by `S`. Both are inherited verbatim from
+`exists_collapse_block_barycenter_close`'s own bystander clauses. -/
 theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
     (μ' ν' : Measure (Eucl d)) [IsProbabilityMeasure μ'] [IsProbabilityMeasure ν']
     (hμ's : supportedIn μ' (sphere d)) (hν's : supportedIn ν' (sphere d))
@@ -241,8 +265,14 @@ theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
     (hνcap : ν' {x | cosR < (⟪z, x⟫ : ℝ)} = 0)
     {T2 : ℝ} (hT2 : 0 < T2) :
     ∃ p : AttnParams d, p.duration = T2 ∧ attnMeasureFlow [p] ν' = ν' ∧
-      ∀ γ₂ : ℝ, barycenter (attnMeasureFlow [p] μ')
-        ≠ γ₂ • barycenter (attnMeasureFlow [p] ν') := by
+      (∀ γ₂ : ℝ, barycenter (attnMeasureFlow [p] μ')
+        ≠ γ₂ • barycenter (attnMeasureFlow [p] ν')) ∧
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        ρ {x | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S →
+        (∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S) →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S := by
   have hz : ‖z‖ = 1 := norm_eq_one_of_mem_sphere hzs
   have hz0 : z ≠ 0 := fun h => by simp [h] at hz
   obtain ⟨hcosRhalf, hcosR1⟩ := hcosR
@@ -286,7 +316,7 @@ theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
   -- positive margin off the `β`-line, with perturbation stability
   obtain ⟨hMpos, hstab⟩ := forall_ne_smul_of_dist_lt_infDist_span (E := Eucl d) htarget
   -- ε-approximate collapse block, `ε :=` half the margin
-  obtain ⟨p, hpdur, hpclose, hpfix⟩ :=
+  obtain ⟨p, hpdur, hpclose, hpfix, hpS⟩ :=
     exists_collapse_block_barycenter_close μ' hμ's hz hωnorm ⟨hcosRhalf, hcosR1⟩ hωcap hT2
       (ε := Metric.infDist
         ((μ' {x | cosR < (⟪z, x⟫ : ℝ)}).toReal • ω
@@ -294,7 +324,7 @@ theorem exists_asymmetric_collapse_schedule (hd2 : 2 ≤ d)
         (Submodule.span ℝ {barycenter ν'} : Set (Eucl d)) / 2)
       (by linarith)
   have hνfix : attnMeasureFlow [p] ν' = ν' := hpfix ν' hν's hνcap
-  refine ⟨p, hpdur, hνfix, ?_⟩
+  refine ⟨p, hpdur, hνfix, ?_, hpfix, hpS⟩
   intro γ₂
   rw [hνfix]
   refine hstab _ ?_ γ₂
