@@ -147,13 +147,24 @@ example : True := by
     (fun i => ⟨id, measurable_id, Measure.map_id⟩)
   trivial
 
-/-- Non-vacuity of `lemma_5_4`: `δ_{e₀}` with the identity transport map. -/
+/-- Non-vacuity of `lemma_5_4`: `δ_{e₀}` on `𝕊² ⊂ ℝ³` with the identity transport map. The
+witness moved from `d = 1` to `d = 3` with the F31 dimension repair (`hd : 3 ≤ d`): at `d = 1`
+the hypotheses were satisfiable but the dimension-free axiom itself was false (frozen `S⁰`
+flows), see finding F31 in `RESEARCH.md`. Full application with the conclusion type ascribed,
+per the F22 witness rule. -/
 example : True := by
-  have hψs : ∀ᵐ x ∂(Measure.dirac (unitE 1 0)), id x ∈ MeasureToMeasure.sphere 1 := by
+  have hψs : ∀ᵐ x ∂(Measure.dirac (unitE 3 0)), id x ∈ MeasureToMeasure.sphere 3 := by
     simp only [ae_dirac_eq, Filter.eventually_pure, id]
-    exact unitE_mem_sphere 1 0
-  have _h := lemma_5_4 (Measure.dirac (unitE 1 0)) id 1 1 one_pos one_pos
-    (dirac_supportedIn_sphere (unitE_mem_sphere 1 0)) measurable_id hψs
+    exact unitE_mem_sphere 3 0
+  have _h : ∃ (θ : Foundations.AttnSchedule 3) (ψε : Eucl 3 → Eucl 3),
+      Foundations.AttnSchedule.durationSum θ = 1 ∧
+      Foundations.attnMeasureFlow θ (Measure.dirac (unitE 3 0))
+        = (Measure.dirac (unitE 3 0)).map ψε ∧
+      Measurable ψε ∧
+      Integrable (fun x => ‖id x - ψε x‖ ^ 2) (Measure.dirac (unitE 3 0)) ∧
+      Real.sqrt (∫ x, ‖id x - ψε x‖ ^ 2 ∂(Measure.dirac (unitE 3 0))) ≤ 1 :=
+    lemma_5_4 (le_refl 3) (Measure.dirac (unitE 3 0)) id 1 1 one_pos one_pos
+      (dirac_supportedIn_sphere (unitE_mem_sphere 3 0)) measurable_id hψs
   trivial
 
 
