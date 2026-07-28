@@ -14,6 +14,13 @@ composes two single-step mean-field flows into one pushforward, then
 `GatedBlockMeanFieldBridge.lean`'s scaled bridge is applied ONCE PER PHASE to identify each mean-field
 step with its `scaledGatedBlock` counterpart.
 
+The conclusion exposes the composed block flow as ONE SHARED map `R` (measurable, continuous,
+injective, sphere-preserving) pushing forward EVERY sphere-supported probability measure at once:
+per F14 each measure flows under its own mean-field witness, but `meanFieldFlow_unique` pins every
+witness to the same block flow on the sphere, and sphere support upgrades that a.e. agreement to
+equality of pushforwards (`Measure.map_congr`). Downstream (`RotateFamilyToOrthant.lean`) this is
+what lets initial-data gates (exclusive supports) transport through the base rotation.
+
 M3b/mid-level staging: consumed when `exists_disentangling_balls` is discharged.
 -/
 
@@ -64,19 +71,25 @@ theorem attnMeasureFlow_two_eq_map_comp (p₁ p₂ : AttnParams d) {μ0 : Measur
 variable [NeZero d]
 
 set_option maxHeartbeats 1200000 in
-/-- **The two-phase rotation, mean-field form.** For `d ≥ 2`, a unit missing direction `ω`, a gap
-`δ ∈ (0,1]`, and any horizon `T > 0`, there is a two-block MEAN-FIELD schedule `θ` such that for
-every sphere-supported probability measure, the composed flow map carries every point missing `ω`
-by the gap `δ` into the orthant. Both phases run for time `T` (`pParkScaled`'s own `duration`
-field), so the total `durationSum θ = 2 * T`, exposed for callers that need to hit an exact
-horizon. -/
+/-- **The two-phase rotation, mean-field form, with the shared rotation map exposed.** For
+`d ≥ 2`, a unit missing direction `ω`, a gap `δ ∈ (0,1]`, and any horizon `T > 0`, there is a
+two-block MEAN-FIELD schedule `θ` and ONE fixed map `R` (the composed `scaledGatedBlock` flow
+`B₂.blockFlow T ∘ B₁.blockFlow T`, measurable, continuous, injective, sphere-preserving) such
+that EVERY sphere-supported probability measure is pushed forward by that same `R`:
+`attnMeasureFlow θ μ0 = μ0.map R`. Per F14 each member flows under its own mean-field witness,
+but `meanFieldFlow_unique` pins every witness to the SAME block flow on the sphere, and sphere
+support upgrades that a.e. agreement to equality of pushforwards; so the shared-map conclusion
+is honest. `R` carries every sphere point missing `ω` by the gap `δ` into the orthant. Both
+phases run for time `T` (`pParkScaled`'s own `duration` field), so the total
+`durationSum θ = 2 * T`, exposed for callers that need to hit an exact horizon. -/
 theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : ‖ω‖ = 1)
     {δ : ℝ} (hδ0 : 0 < δ) (hδ1 : δ ≤ 1) {T : ℝ} (hT : 0 < T) :
     ∃ θ : AttnSchedule d, AttnSchedule.switches θ = 2 ∧ AttnSchedule.durationSum θ = 2 * T ∧
-      ∀ μ0 : Measure (Eucl d), [IsProbabilityMeasure μ0] → μ0 (sphere d)ᶜ = 0 →
-      ∃ Φ : Eucl d → Eucl d, Measurable Φ ∧ attnMeasureFlow θ μ0 = μ0.map Φ ∧
-        Set.MapsTo Φ (sphere d) (sphere d) ∧
-        ∀ x ∈ sphere d, (⟪ω, x⟫ : ℝ) ≤ 1 - δ → ∀ i, 0 < Φ x i := by
+      ∃ R : Eucl d → Eucl d, Measurable R ∧ Continuous R ∧ Function.Injective R ∧
+        Set.MapsTo R (sphere d) (sphere d) ∧
+        (∀ x ∈ sphere d, (⟪ω, x⟫ : ℝ) ≤ 1 - δ → ∀ i, 0 < R x i) ∧
+        ∀ μ0 : Measure (Eucl d), [IsProbabilityMeasure μ0] → μ0 (sphere d)ᶜ = 0 →
+          attnMeasureFlow θ μ0 = μ0.map R := by
   obtain ⟨α, c, hα, hc, hcoord, hαω⟩ := exists_unit_orthant_ne hd ω
   have hωs : ω ∈ sphere d := by
     rw [sphere, Metric.mem_sphere, dist_zero_right]; exact hω
@@ -136,77 +149,86 @@ theorem exists_twoPhase_attnMapsTo_orthant (hd : 2 ≤ d) {ω : Eucl d} (hω : �
     simp only [AttnSchedule.durationSum, List.map_cons, List.map_nil, List.sum_cons,
       List.sum_nil, hp₁dur, hp₂dur]
     ring
-  refine ⟨[p₁, p₂], rfl, hdursum, ?_⟩
-  intro μ0 _ hμ0S
-  obtain ⟨Φ₁, Φ₂, hΦ₁spec, hΦ₂spec, hcomp⟩ := attnMeasureFlow_two_eq_map_comp p₁ p₂ hμ0S
-  refine ⟨Φ₂ p₂.duration ∘ Φ₁ p₁.duration, ?_, hcomp, ?_, ?_⟩
-  · exact (hΦ₂spec.measurable p₂.duration ⟨p₂.duration_nonneg, le_rfl⟩).comp
-      (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩)
-  · exact (hΦ₂spec.sphere_bijOn p₂.duration ⟨p₂.duration_nonneg, le_rfl⟩).mapsTo.comp
-      (hΦ₁spec.sphere_bijOn p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).mapsTo
-  intro x hxs hxgap i
-  -- phase 1: identify the mean-field step with `B₁.blockFlow T` on the sphere
-  have hΦ₁eq : Φ₁ p₁.duration x = B₁.blockFlow T x := by
-    rw [hp₁dur]
-    exact attnFlow_eq_blockFlow_scaledGatedBlock hA₁ hnegω hnegω (le_refl (-1 : ℝ)) hT.le hμ0S
-      Φ₁ hΦ₁spec hxs ⟨hT.le, le_rfl⟩
-  set y := B₁.blockFlow T x with hy_def
-  have hx₁ : x ∈ {z | z ∈ sphere d ∧ (δ - 1 : ℝ) ≤ ⟪z, -ω⟫} := by
-    refine ⟨hxs, ?_⟩
-    rw [inner_neg_right]
-    rw [real_inner_comm]
-    linarith
-  have hy₁ := hMaps₁ hx₁
-  have hys : y ∈ sphere d := B₁.blockFlow_mem_sphere hxs hT.le
-  have hy_cap : (1 - (η / 2) ^ 2 / 2 : ℝ) ≤ ⟪-ω, y⟫ := by
-    have h8 : ((η / 2) ^ 2 / 2 : ℝ) = η ^ 2 / 8 := by ring
-    rw [h8]
-    rw [real_inner_comm]
-    exact hy₁
-  have hnegωs : -ω ∈ sphere d := by
-    rw [sphere, Metric.mem_sphere, dist_zero_right]; exact hnegω
-  have hηhalf : (0 : ℝ) < η / 2 := by linarith
-  have hy_dist : dist y (-ω) ≤ η / 2 :=
-    dist_le_of_inner_cap hnegω hys hηhalf hy_cap
-  have hy₂ : y ∈ {z | z ∈ sphere d ∧ (η / 2 - 1 : ℝ) ≤ ⟪z, α⟫} := by
-    refine ⟨hys, ?_⟩
-    have hsplit : (⟪α, y⟫ : ℝ) = ⟪α, -ω⟫ + ⟪α, y - -ω⟫ := by
-      rw [inner_sub_right]; ring
-    have hfirst : (⟪α, -ω⟫ : ℝ) = η - 1 := by
-      rw [inner_neg_right, hη_def]; ring
-    have hsecond : -(‖y - -ω‖) ≤ (⟪α, y - -ω⟫ : ℝ) := by
-      have hcs := abs_real_inner_le_norm α (y - -ω)
-      rw [hα, one_mul] at hcs
-      linarith [(abs_le.mp hcs).1]
-    have hnorm_le : ‖y - -ω‖ ≤ η / 2 := by
-      rw [← dist_eq_norm]; exact hy_dist
-    have : (η - 1) - η / 2 ≤ (⟪α, y⟫ : ℝ) := by
-      rw [hsplit, hfirst]
+  refine ⟨[p₁, p₂], rfl, hdursum, fun x => B₂.blockFlow T (B₁.blockFlow T x),
+    (B₂.measurable_blockFlow hT.le).comp (B₁.measurable_blockFlow hT.le),
+    (B₂.continuous_blockFlow hT.le).comp (B₁.continuous_blockFlow hT.le),
+    (B₂.blockFlow_injective T).comp (B₁.blockFlow_injective T),
+    fun x hx => B₂.blockFlow_mem_sphere (B₁.blockFlow_mem_sphere hx hT.le) hT.le, ?_, ?_⟩
+  · -- the orthant clause: pure block-flow geometry, no mean-field dependence
+    intro x hxs hxgap i
+    show 0 < (B₂.blockFlow T (B₁.blockFlow T x)) i
+    set y := B₁.blockFlow T x with hy_def
+    have hx₁ : x ∈ {z | z ∈ sphere d ∧ (δ - 1 : ℝ) ≤ ⟪z, -ω⟫} := by
+      refine ⟨hxs, ?_⟩
+      rw [inner_neg_right]
+      rw [real_inner_comm]
       linarith
-    rw [real_inner_comm]
-    linarith
-  -- phase 2: identify the second mean-field step with `B₂.blockFlow T` on the sphere
-  have hΦ₂eq : Φ₂ p₂.duration y = B₂.blockFlow T y := by
-    rw [hp₂dur]
-    haveI : IsProbabilityMeasure (μ0.map (Φ₁ p₁.duration)) :=
-      Measure.isProbabilityMeasure_map
-        (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).aemeasurable
-    have hνS : (μ0.map (Φ₁ p₁.duration)) (sphere d)ᶜ = 0 := by
-      have hmscompl : MeasurableSet (sphere d)ᶜ := Metric.isClosed_sphere.measurableSet.compl
-      rw [Measure.map_apply (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩) hmscompl]
-      apply measure_mono_null _ hμ0S
-      intro w hw hws
-      exact hw ((hΦ₁spec.sphere_bijOn p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).mapsTo hws)
-    exact attnFlow_eq_blockFlow_scaledGatedBlock hA₂ hα hα (le_refl (-1 : ℝ)) hT.le hνS
-      Φ₂ hΦ₂spec hys ⟨hT.le, le_rfl⟩
-  have hz₁ := hMaps₂ hy₂
-  set z := B₂.blockFlow T y with hz_def
-  have hzs : z ∈ sphere d := B₂.blockFlow_mem_sphere hys hT.le
-  have hz_cap : (1 - c ^ 2 / 8 : ℝ) ≤ ⟪α, z⟫ := by
-    rw [real_inner_comm]
-    exact hz₁
-  show 0 < (Φ₂ p₂.duration (Φ₁ p₁.duration x)) i
-  rw [hΦ₁eq, hΦ₂eq]
-  exact cap_pos_coords hα hc hcoord hzs hz_cap i
+    have hy₁ := hMaps₁ hx₁
+    have hys : y ∈ sphere d := B₁.blockFlow_mem_sphere hxs hT.le
+    have hy_cap : (1 - (η / 2) ^ 2 / 2 : ℝ) ≤ ⟪-ω, y⟫ := by
+      have h8 : ((η / 2) ^ 2 / 2 : ℝ) = η ^ 2 / 8 := by ring
+      rw [h8]
+      rw [real_inner_comm]
+      exact hy₁
+    have hnegωs : -ω ∈ sphere d := by
+      rw [sphere, Metric.mem_sphere, dist_zero_right]; exact hnegω
+    have hηhalf : (0 : ℝ) < η / 2 := by linarith
+    have hy_dist : dist y (-ω) ≤ η / 2 :=
+      dist_le_of_inner_cap hnegω hys hηhalf hy_cap
+    have hy₂ : y ∈ {z | z ∈ sphere d ∧ (η / 2 - 1 : ℝ) ≤ ⟪z, α⟫} := by
+      refine ⟨hys, ?_⟩
+      have hsplit : (⟪α, y⟫ : ℝ) = ⟪α, -ω⟫ + ⟪α, y - -ω⟫ := by
+        rw [inner_sub_right]; ring
+      have hfirst : (⟪α, -ω⟫ : ℝ) = η - 1 := by
+        rw [inner_neg_right, hη_def]; ring
+      have hsecond : -(‖y - -ω‖) ≤ (⟪α, y - -ω⟫ : ℝ) := by
+        have hcs := abs_real_inner_le_norm α (y - -ω)
+        rw [hα, one_mul] at hcs
+        linarith [(abs_le.mp hcs).1]
+      have hnorm_le : ‖y - -ω‖ ≤ η / 2 := by
+        rw [← dist_eq_norm]; exact hy_dist
+      have : (η - 1) - η / 2 ≤ (⟪α, y⟫ : ℝ) := by
+        rw [hsplit, hfirst]
+        linarith
+      rw [real_inner_comm]
+      linarith
+    have hz₁ := hMaps₂ hy₂
+    set z := B₂.blockFlow T y with hz_def
+    have hzs : z ∈ sphere d := B₂.blockFlow_mem_sphere hys hT.le
+    have hz_cap : (1 - c ^ 2 / 8 : ℝ) ≤ ⟪α, z⟫ := by
+      rw [real_inner_comm]
+      exact hz₁
+    exact cap_pos_coords hα hc hcoord hzs hz_cap i
+  · -- the shared-pushforward clause: each measure's own mean-field witness agrees with the
+    -- fixed block-flow composition on the sphere, and sphere support upgrades that a.e.
+    -- agreement to equality of pushforwards
+    intro μ0 _ hμ0S
+    obtain ⟨Φ₁, Φ₂, hΦ₁spec, hΦ₂spec, hcomp⟩ := attnMeasureFlow_two_eq_map_comp p₁ p₂ hμ0S
+    rw [hcomp]
+    refine Measure.map_congr
+      (Filter.eventuallyEq_of_mem (MeasureTheory.mem_ae_iff.mpr hμ0S) fun x hxs => ?_)
+    -- phase 1: identify the first mean-field step with `B₁.blockFlow T` on the sphere
+    have hΦ₁eq : Φ₁ p₁.duration x = B₁.blockFlow T x := by
+      rw [hp₁dur]
+      exact attnFlow_eq_blockFlow_scaledGatedBlock hA₁ hnegω hnegω (le_refl (-1 : ℝ)) hT.le hμ0S
+        Φ₁ hΦ₁spec hxs ⟨hT.le, le_rfl⟩
+    have hys : B₁.blockFlow T x ∈ sphere d := B₁.blockFlow_mem_sphere hxs hT.le
+    -- phase 2: identify the second mean-field step with `B₂.blockFlow T` on the sphere
+    have hΦ₂eq : Φ₂ p₂.duration (B₁.blockFlow T x) = B₂.blockFlow T (B₁.blockFlow T x) := by
+      rw [hp₂dur]
+      haveI : IsProbabilityMeasure (μ0.map (Φ₁ p₁.duration)) :=
+        Measure.isProbabilityMeasure_map
+          (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).aemeasurable
+      have hνS : (μ0.map (Φ₁ p₁.duration)) (sphere d)ᶜ = 0 := by
+        have hmscompl : MeasurableSet (sphere d)ᶜ := Metric.isClosed_sphere.measurableSet.compl
+        rw [Measure.map_apply (hΦ₁spec.measurable p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩)
+          hmscompl]
+        apply measure_mono_null _ hμ0S
+        intro w hw hws
+        exact hw ((hΦ₁spec.sphere_bijOn p₁.duration ⟨p₁.duration_nonneg, le_rfl⟩).mapsTo hws)
+      exact attnFlow_eq_blockFlow_scaledGatedBlock hA₂ hα hα (le_refl (-1 : ℝ)) hT.le hνS
+        Φ₂ hΦ₂spec hys ⟨hT.le, le_rfl⟩
+    show Φ₂ p₂.duration (Φ₁ p₁.duration x) = B₂.blockFlow T (B₁.blockFlow T x)
+    rw [hΦ₁eq, hΦ₂eq]
 
 end MeasureToMeasure.Leaves
