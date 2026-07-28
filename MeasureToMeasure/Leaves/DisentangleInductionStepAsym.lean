@@ -362,7 +362,23 @@ fresh ball ADDITIONALLY avoids every `pts l` and every scalar multiple of every 
 witnesses out of the new ball; the second makes placed-members-never-re-enter-colinearity a
 geometric invariant: any measure supported in the new ball has its barycenter in the ball
 (convexity), hence off every other member's barycenter line. See the section docstring for the
-construction. -/
+construction.
+
+Three conclusion strengthenings for the induction over `N` (each read off data the proof already
+holds, none changing the hypothesis interface):
+
+* both avoidance conjuncts hold for the CLOSED ball `Metric.closedBall ω ε` (the shrink radius is
+  halved against its clearances, making every avoidance strict), because the placed member's
+  barycenter is only known to land in the closed ball (convexity through `inner_barycenter_ge`
+  gives `≤`, not `<`), so open-ball avoidance would just miss the boundary case;
+* `‖ω‖ = 1` is exposed (the fresh center is the normalized barycenter direction), which is what
+  lets a caller run the ball-to-closed-ball barycenter convexity argument at all; and
+* the bystander-fixing clause of the underlying `lemma_3_3` call is exposed
+  (`∀ i ≠ k, attnMeasureFlow (θ ++ θ') (μ₀ i) = attnMeasureFlow θ (μ₀ i)`): mean-field flows are
+  measure-dependent, so nothing about an untouched member survives an insertion step unless its
+  measure is literally fixed, and the induction's invariant (non-colinearity records, avoidance
+  records, support exclusivity of unplaced members) transports across the step exactly through
+  this clause. -/
 theorem disentangle_insert_noncolinear_avoiding {d N k : ℕ} (hk : k < N)
     (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
     (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
@@ -379,10 +395,12 @@ theorem disentangle_insert_noncolinear_avoiding {d N k : ℕ} (hk : k < N)
         barycenter (attnMeasureFlow θ (μ₀ ⟨k, hk⟩)))
     (T : ℝ) (hT : 0 < T) :
     ∃ θ' : AttnSchedule d, AttnSchedule.durationSum θ' = T ∧
-      ∃ (ω : Eucl d) (ε : ℝ), 0 < ε ∧
-        (∀ l, pts l ∉ Metric.ball ω ε) ∧
+      ∃ (ω : Eucl d) (ε : ℝ), 0 < ε ∧ ‖ω‖ = 1 ∧
+        (∀ l, pts l ∉ Metric.closedBall ω ε) ∧
         (∀ i : Fin N, i ≠ ⟨k, hk⟩ → ∀ c : ℝ,
-          c • barycenter (attnMeasureFlow θ (μ₀ i)) ∉ Metric.ball ω ε) ∧
+          c • barycenter (attnMeasureFlow θ (μ₀ i)) ∉ Metric.closedBall ω ε) ∧
+        (∀ i : Fin N, i ≠ ⟨k, hk⟩ →
+          attnMeasureFlow (θ ++ θ') (μ₀ i) = attnMeasureFlow θ (μ₀ i)) ∧
         DisentangledPrefix d N (k + 1) μ₀ (θ ++ θ') (Fin.snoc α ω) (Fin.snoc r ε) := by
   obtain ⟨hsph, horth, hball, hballdisj, -⟩ := hinv
   set j : Fin N := ⟨k, hk⟩ with hjdef
@@ -424,27 +442,40 @@ theorem disentangle_insert_noncolinear_avoiding {d N k : ℕ} (hk : k < N)
     (fun i : {i : Fin N // i ≠ j} =>
       Metric.infDist ω (Submodule.span ℝ {barycenter (μ₀' i.1)} : Set (Eucl d)))
     (fun i => (forall_ne_smul_of_dist_lt_infDist_span (hωline i.1 i.2)).1)
-  set ε : ℝ := min (min ε₁ ε₀) (min ε₂ ε₃) with hεdef
-  have hεpos : 0 < ε := lt_min (lt_min hε₁pos hε₀pos) (lt_min hε₂pos hε₃pos)
-  have hεε₁ : ε ≤ ε₁ := (min_le_left _ _).trans (min_le_left _ _)
-  have hεε₀ : ε ≤ ε₀ := (min_le_left _ _).trans (min_le_right _ _)
-  have hεε₂ : ε ≤ ε₂ := (min_le_right _ _).trans (min_le_left _ _)
-  have hεε₃ : ε ≤ ε₃ := (min_le_right _ _).trans (min_le_right _ _)
+  -- Halving the joint clearance makes the point/line avoidances hold for the CLOSED ball.
+  set ε : ℝ := min (min ε₁ ε₀) (min ε₂ ε₃) / 2 with hεdef
+  have hM : 0 < min (min ε₁ ε₀) (min ε₂ ε₃) :=
+    lt_min (lt_min hε₁pos hε₀pos) (lt_min hε₂pos hε₃pos)
+  have hεpos : 0 < ε := half_pos hM
+  have hεε₁ : ε ≤ ε₁ := (half_le_self hM.le).trans ((min_le_left _ _).trans (min_le_left _ _))
+  have hεε₀ : ε ≤ ε₀ := (half_le_self hM.le).trans ((min_le_left _ _).trans (min_le_right _ _))
+  have hεε₂ : ε < ε₂ :=
+    lt_of_lt_of_le (half_lt_self hM) ((min_le_right _ _).trans (min_le_left _ _))
+  have hεε₃ : ε < ε₃ :=
+    lt_of_lt_of_le (half_lt_self hM) ((min_le_right _ _).trans (min_le_right _ _))
+  have hωnorm : ‖ω‖ = 1 := by
+    rw [hωdef, norm_smul, Real.norm_eq_abs, abs_inv, abs_norm]
+    exact inv_mul_cancel₀ hbpos.ne'
   -- Shrink member `j` (self-paired with itself as its own colinear companion) via `lemma_3_3`
   -- directly, at the self-chosen radius `ε` honoring all four constraints at once.
   obtain ⟨θ', hdur, hshrinkν, hshrinkμ, hfix⟩ :=
     lemma_3_3 j μ₀' (μ₀' j) hμ' T ε hT hεpos hsph horth (hsph j) (horth j) hnoncol
       ⟨1, (one_smul ℝ _).symm⟩
-  refine ⟨θ', hdur, ω, ε, hεpos, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · -- Extra conjunct 1: the avoided points stay outside the fresh ball.
+  refine ⟨θ', hdur, ω, ε, hεpos, hωnorm, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- Extra conjunct 1: the avoided points stay outside the closed fresh ball.
     intro l hmem
-    rw [Metric.mem_ball, dist_comm] at hmem
-    exact absurd hmem (not_lt.mpr (hεε₂.trans (hε₂le l)))
-  · -- Extra conjunct 2: every other member's barycenter line stays outside the fresh ball.
+    rw [Metric.mem_closedBall, dist_comm] at hmem
+    exact absurd (lt_of_le_of_lt hmem hεε₂) (not_lt.mpr (hε₂le l))
+  · -- Extra conjunct 2: every other member's barycenter line stays outside the closed fresh ball.
     intro i hij c hmem
-    rw [Metric.mem_ball] at hmem
+    rw [Metric.mem_closedBall] at hmem
     exact (forall_ne_smul_of_dist_lt_infDist_span (hωline i hij)).2
-      (c • barycenter (μ₀' i)) (lt_of_lt_of_le hmem (hεε₃.trans (hε₃le ⟨i, hij⟩))) c rfl
+      (c • barycenter (μ₀' i))
+      (lt_of_le_of_lt hmem (lt_of_lt_of_le hεε₃ (hε₃le ⟨i, hij⟩))) c rfl
+  · -- Extra conjunct 3: every other member is literally fixed by the shrink chunk.
+    intro i hij
+    rw [attnMeasureFlow_append]
+    exact hfix i hij
   · -- Clause 1 (sphere support): general fact, holds for any schedule on any sphere-supported
     -- probability member of the family, regardless of placement.
     intro i

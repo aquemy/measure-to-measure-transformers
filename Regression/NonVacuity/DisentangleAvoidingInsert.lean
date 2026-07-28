@@ -101,11 +101,14 @@ theorem disentangleAvoidingInsert_nonvacuity_witness : True := by
     simpa using resP_ne_resQ
   -- the FULL application, with the conclusion type ascribed
   have _h : ∃ θ' : AttnSchedule 2, AttnSchedule.durationSum θ' = 1 ∧
-      ∃ (ω : Eucl 2) (ε : ℝ), 0 < ε ∧
-        (∀ l : Fin 1, (![resP] : Fin 1 → Eucl 2) l ∉ Metric.ball ω ε) ∧
+      ∃ (ω : Eucl 2) (ε : ℝ), 0 < ε ∧ ‖ω‖ = 1 ∧
+        (∀ l : Fin 1, (![resP] : Fin 1 → Eucl 2) l ∉ Metric.closedBall ω ε) ∧
         (∀ i : Fin 2, i ≠ (⟨0, hk⟩ : Fin 2) → ∀ c : ℝ,
           c • MeasureToMeasure.Leaves.barycenter (attnMeasureFlow [] (resFam i))
-            ∉ Metric.ball ω ε) ∧
+            ∉ Metric.closedBall ω ε) ∧
+        (∀ i : Fin 2, i ≠ (⟨0, hk⟩ : Fin 2) →
+          attnMeasureFlow (([] : AttnSchedule 2) ++ θ') (resFam i)
+            = attnMeasureFlow [] (resFam i)) ∧
         DisentangledPrefix 2 2 (0 + 1) resFam (([] : AttnSchedule 2) ++ θ')
           (Fin.snoc Fin.elim0 ω) (Fin.snoc Fin.elim0 ε) :=
     disentangle_insert_noncolinear_avoiding hk resFam resFam_prob resFam_sphere
