@@ -472,6 +472,37 @@ theorem noAtoms_attnMeasureFlow_of_noAtoms (θ : AttnSchedule d) (μ : Measure (
   rw [hΦeq]
   exact noAtoms_pushforward_of_injOn hs hΦm hinj
 
+/-- **The solution operator commutes with finite measure decompositions (over its own transport
+map).** Given a finite pairwise-disjoint measurable family `A i` covering a `μ`-conull set, the
+transport map `Φ` of `attnMeasureFlow_exists_map` decomposes the flowed measure as the finite sum
+of the restricted pushforwards `(μ.restrict (A i)).map Φ`, with the full witness bundle
+(measurability, continuity, sphere invariance, sphere left inverse) carried along so downstream
+consumers use the SAME `Φ` for the global equality and every piece.
+
+Deliberately NOT stated: `attnMeasureFlow θ (μ.restrict (A i)) = (μ.restrict (A i)).map Φ`. That
+form is false in general: `attnStep` is the identity on non-probability data (the junk branch), and
+the mean-field flow is McKean-Vlasov, so the transport map of a piece differs from the transport
+map of the whole. The additive decomposition over the FIXED whole-measure `Φ` is the form the L2
+assembly integrates. -/
+theorem attnMeasureFlow_restrict_decomposition (θ : AttnSchedule d) (μ : Measure (Eucl d))
+    [IsProbabilityMeasure μ] (hs : μ (sphere d)ᶜ = 0)
+    {n : ℕ} (A : Fin n → Set (Eucl d)) (hA : ∀ i, MeasurableSet (A i))
+    (hdisj : Pairwise (Function.onFun Disjoint A)) (hcover : μ (⋃ i, A i)ᶜ = 0) :
+    ∃ Φ Φinv : Eucl d → Eucl d, Measurable Φ ∧ Continuous Φ ∧ Measurable Φinv ∧
+      attnMeasureFlow θ μ = μ.map Φ ∧ Set.MapsTo Φ (sphere d) (sphere d) ∧
+      (∀ x ∈ sphere d, Φinv (Φ x) = x) ∧
+      attnMeasureFlow θ μ = ∑ i, (μ.restrict (A i)).map Φ := by
+  obtain ⟨Φ, Φinv, hΦm, hΦc, hΦim, hΦeq, hΦto, hΦinv⟩ := attnMeasureFlow_exists_map θ μ hs
+  have hμpart : μ = ∑ i, μ.restrict (A i) := by
+    rw [← Measure.sum_fintype, ← Measure.restrict_iUnion hdisj hA,
+        Measure.restrict_congr_set (ae_eq_univ.mpr hcover), Measure.restrict_univ]
+  refine ⟨Φ, Φinv, hΦm, hΦc, hΦim, hΦeq, hΦto, hΦinv, ?_⟩
+  calc attnMeasureFlow θ μ = μ.map Φ := hΦeq
+    _ = (Measure.sum fun i => μ.restrict (A i)).map Φ := by
+        rw [Measure.sum_fintype, ← hμpart]
+    _ = Measure.sum (fun i => (μ.restrict (A i)).map Φ) := Measure.map_sum hΦm.aemeasurable
+    _ = ∑ i, (μ.restrict (A i)).map Φ := Measure.sum_fintype _
+
 /-! ### The linear bridge, relocated from `MeanFieldWellPosed.lean`
 
 These two theorems used to live in `MeanFieldWellPosed.lean`'s `MeanFieldBridge` section, consuming
