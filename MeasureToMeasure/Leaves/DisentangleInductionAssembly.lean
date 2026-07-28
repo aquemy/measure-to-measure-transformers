@@ -1,4 +1,6 @@
 import MeasureToMeasure.Leaves.DisentangleResolveFamily
+import MeasureToMeasure.Leaves.UniformRadiusPackingUnit
+import MeasureToMeasure.Leaves.OrthantSameRayBridge
 
 /-!
 # The induction over `N`: every member of an exclusive-support family placed in its own ball
@@ -234,5 +236,251 @@ theorem disentangled_prefix_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
   rw [hdurfin, hτdef]
   field_simp
   ring
+
+/-! ### The G-unwrap uniformization round
+
+`DisentangledPrefix` at `k = N` places every member in its OWN ball, with per-member radii and
+non-unit centers. `exists_disentangling_balls`'s conclusion instead wants ONE uniform radius
+`rU < 1`, UNIT centers, and `2 rU` center separation. The per-member/uniform mismatch is real:
+confinement in `ball (α i) (r i)` gives nothing at a smaller radius (ball support is not monotone
+under shrinking), so a final, load-bearing shrink round is run below: each member is re-shrunk
+once, by the banked self-pairing trick (`lemma_3_3` with `ν₀ :=` the member itself), onto its
+CURRENT normalized barycenter direction, with the uniform target radius coming from the abstract
+packing lemma (`exists_uniform_radius_of_pairwise_ne_unit`, applied, never re-elaborated, per the
+`Eucl d` instance-heaviness note in `UniformRadiusPackingUnit.lean`). -/
+
+/-- **Line-through-a-far-unit-direction avoidance.** For unit vectors `u, w` with nonnegative
+inner product (e.g. two orthant directions) separated by `2 rU ≤ dist u w`, NO point of
+`closedBall u rU` is a scalar multiple of `w`: the squared distance from `u` to `c • w` is
+`1 - 2 c ⟪u, w⟫ + c² ≥ 1 - ⟪u, w⟫² ≥ 1 - ⟪u, w⟫ = dist² / 2 ≥ 2 rU²`, strictly beyond `rU²`.
+(Nonnegativity of `⟪u, w⟫` is load-bearing: for nearly-antipodal unit vectors the line through
+`w` passes arbitrarily close to `u` even at large `dist u w`.) During the uniformization round
+this is what keeps an already-shrunk member's barycenter, trapped in `closedBall (ω a) rU`, off
+every not-yet-shrunk member's barycenter LINE. -/
+theorem ne_smul_of_mem_closedBall_unit_sep {u w p : Eucl d} (hu : ‖u‖ = 1) (hw : ‖w‖ = 1)
+    (hinner : 0 ≤ ⟪u, w⟫) {rU : ℝ} (hr : 0 < rU) (hsep : 2 * rU ≤ dist u w)
+    (hp : p ∈ Metric.closedBall u rU) : ∀ c : ℝ, p ≠ c • w := by
+  intro c hpc
+  have hdp : dist u p ≤ rU := by rw [dist_comm]; exact Metric.mem_closedBall.mp hp
+  have ht1 : ⟪u, w⟫ ≤ 1 := by
+    have := real_inner_le_norm u w
+    rwa [hu, hw, one_mul] at this
+  have hexp : dist u (c • w) ^ 2 = 1 - 2 * (c * ⟪u, w⟫) + c ^ 2 := by
+    rw [dist_eq_norm, norm_sub_sq_real, real_inner_smul_right, norm_smul, hu, hw]
+    simp [sq_abs]
+  have hdsq : dist u w ^ 2 = 2 - 2 * ⟪u, w⟫ := by
+    rw [dist_eq_norm, norm_sub_sq_real, hu, hw]
+    ring
+  have hsep2 : (2 * rU) ^ 2 ≤ dist u w ^ 2 := by
+    nlinarith [dist_nonneg (x := u) (y := w)]
+  have hpc' : dist u p = dist u (c • w) := by rw [hpc]
+  nlinarith [sq_nonneg (c - ⟪u, w⟫), dist_nonneg (x := u) (y := p)]
+
+set_option maxHeartbeats 1000000 in
+/-- **The uniformization round: from the full prefix to one uniform radius at unit centers.**
+Given `DisentangledPrefix` at `k = N` together with the whole-family barycenter non-colinearity
+(both exactly as `disentangled_prefix_of_exclusive_supports` returns them), one further schedule
+chunk `θ'` of any prescribed duration `Tlast` re-confines every member into the ball of ONE
+uniform radius `rU < 1` around its normalized barycenter direction `α' i` (unit vectors, pairwise
+`2 rU`-separated) -- the exact geometric package `exists_disentangling_balls`'s conclusion wants.
+
+The round runs `N` sequential self-paired `lemma_3_3` shrinks (companion `ν₀ :=` the member
+itself, the `c = 1` colinearity witness), each of duration `Tlast / N` and target radius
+`min rU ε₀` (`ε₀` the orthant slack at the center, keeping the confinement ball inside the open
+orthant), each fixing every other member exactly (`lemma_3_3`'s bystander clause). The blanket
+`hnoncol` `lemma_3_3` demands is RE-DERIVED at every step from three sources: untouched pairs keep
+the input non-colinearity; two already-shrunk members sit in `2 rU`-separated unit-center balls
+(`barycenter_ne_smul_of_separated_balls`); and a shrunk/unshrunk pair is split by
+`ne_smul_of_mem_closedBall_unit_sep` (the shrunk barycenter is trapped in the closed ball by
+`barycenter_mem_closedBall`, and the unshrunk barycenter LINE stays `√2 rU` clear of it),
+flipped with `ne_smul_flip_of_ne_zero` for the reverse order. -/
+theorem disentangled_prefix_uniformize (hd : 3 ≤ d) {N : ℕ}
+    (μ₀ : Fin N → Measure (Eucl d)) (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (θ : AttnSchedule d) (α : Fin N → Eucl d) (r : Fin N → ℝ)
+    (hprefix : DisentangledPrefix d N N μ₀ θ α r)
+    (hnoncol : Pairwise fun i j : Fin N => ∀ c : ℝ,
+      barycenter (attnMeasureFlow θ (μ₀ i)) ≠ c • barycenter (attnMeasureFlow θ (μ₀ j)))
+    (Tlast : ℝ) (hT : 0 < Tlast) :
+    ∃ (θ' : AttnSchedule d) (α' : Fin N → Eucl d) (rU : ℝ),
+      AttnSchedule.durationSum θ' = Tlast ∧ 0 < rU ∧ rU < 1 ∧
+      (∀ i, ‖α' i‖ = 1) ∧
+      (∀ i j, i ≠ j → 2 * rU ≤ dist (α' i) (α' j)) ∧
+      (∀ i, supportedIn (attnMeasureFlow (θ ++ θ') (μ₀ i)) (Metric.ball (α' i) rU)) := by
+  haveI : NeZero d := ⟨by omega⟩
+  obtain ⟨hsph, horth, -, -, -⟩ := hprefix
+  rcases Nat.eq_zero_or_pos N with hN0 | hNpos
+  · -- `N = 0`: one arbitrary block of duration `Tlast`; every member clause is vacuous.
+    subst hN0
+    refine ⟨[⟨0, 0, 0, 0, 0, Tlast, hT.le⟩], Fin.elim0, 1 / 2,
+      ?_, by norm_num, by norm_num, fun i => i.elim0, fun i => i.elim0, fun i => i.elim0⟩
+    simp [AttnSchedule.durationSum]
+  haveI : Nonempty (Fin N) := ⟨⟨0, hNpos⟩⟩
+  -- barycenter data of the incoming (post-`θ`) family
+  have hprob : ∀ i, IsProbabilityMeasure (attnMeasureFlow θ (μ₀ i)) := fun i =>
+    haveI := hμ i; isProbabilityMeasure_attnMeasureFlow θ (μ₀ i) (hμs i)
+  have hint : ∀ i, Integrable (fun x : Eucl d => x) (attnMeasureFlow θ (μ₀ i)) := fun i =>
+    integrable_id_of_sphere_support (hsph i)
+  have hBorth : ∀ i, barycenter (attnMeasureFlow θ (μ₀ i)) ∈ orthant d := fun i =>
+    haveI := hprob i; barycenter_mem_orthant (hsph i) (hint i) (horth i)
+  have hBpos : ∀ i, 0 < ‖barycenter (attnMeasureFlow θ (μ₀ i))‖ := fun i =>
+    haveI := hprob i; norm_barycenter_pos_of_orthant (hsph i) (hint i) (horth i)
+  have hBnz : ∀ i, barycenter (attnMeasureFlow θ (μ₀ i)) ≠ 0 := fun i =>
+    norm_pos_iff.mp (hBpos i)
+  set ω : Fin N → Eucl d := fun i =>
+    ‖barycenter (attnMeasureFlow θ (μ₀ i))‖⁻¹ • barycenter (attnMeasureFlow θ (μ₀ i)) with hωdef
+  have hωeq : ∀ i, ω i =
+      ‖barycenter (attnMeasureFlow θ (μ₀ i))‖⁻¹ • barycenter (attnMeasureFlow θ (μ₀ i)) :=
+    fun _ => rfl
+  have hωunit : ∀ i, ‖ω i‖ = 1 := fun i => by
+    rw [hωeq i, norm_smul, norm_inv, norm_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr (hBnz i))]
+  have hωorth : ∀ i, ω i ∈ orthant d := by
+    intro i k
+    have hinvpos : (0 : ℝ) < ‖barycenter (attnMeasureFlow θ (μ₀ i))‖⁻¹ := inv_pos.mpr (hBpos i)
+    simpa [hωeq i] using mul_pos hinvpos (hBorth i k)
+  -- normalized directions are pairwise distinct: equality would be a colinearity witness
+  have hωne : Pairwise fun i j : Fin N => ω i ≠ ω j := by
+    intro i j hij he
+    refine hnoncol hij (‖barycenter (attnMeasureFlow θ (μ₀ i))‖ *
+      ‖barycenter (attnMeasureFlow θ (μ₀ j))‖⁻¹) ?_
+    calc barycenter (attnMeasureFlow θ (μ₀ i))
+        = ‖barycenter (attnMeasureFlow θ (μ₀ i))‖ • ω i := by
+          rw [hωeq i, smul_smul, mul_inv_cancel₀ (norm_ne_zero_iff.mpr (hBnz i)), one_smul]
+      _ = ‖barycenter (attnMeasureFlow θ (μ₀ i))‖ • ω j := by rw [he]
+      _ = (‖barycenter (attnMeasureFlow θ (μ₀ i))‖ *
+            ‖barycenter (attnMeasureFlow θ (μ₀ j))‖⁻¹) •
+            barycenter (attnMeasureFlow θ (μ₀ j)) := by rw [hωeq j, smul_smul]
+  -- the uniform packing radius (APPLY the banked abstract lemma, never re-elaborate near `Eucl d`)
+  obtain ⟨rU, hrU0, hrU1, hrUsep⟩ := exists_uniform_radius_of_pairwise_ne_unit ω hωunit hωne
+  set τ : ℝ := Tlast / (N : ℝ) with hτdef
+  have hNR : (0 : ℝ) < (N : ℝ) := by exact_mod_cast hNpos
+  have hτ : 0 < τ := div_pos hT hNR
+  -- the shrink round, one member at a time, each fixing all the others
+  have key : ∀ m : ℕ, m ≤ N → ∃ ψ : AttnSchedule d,
+      AttnSchedule.durationSum ψ = (m : ℝ) * τ ∧
+      (∀ i : Fin N, supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ i)) (orthant d)) ∧
+      (∀ a : Fin N, (a : ℕ) < m →
+        supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ a)) (Metric.ball (ω a) rU)) ∧
+      (∀ u : Fin N, m ≤ (u : ℕ) →
+        attnMeasureFlow (θ ++ ψ) (μ₀ u) = attnMeasureFlow θ (μ₀ u)) := by
+    intro m
+    induction m with
+    | zero =>
+      intro _
+      refine ⟨[], by simp, ?_, ?_, ?_⟩
+      · intro i
+        rw [List.append_nil]
+        exact horth i
+      · intro a ha
+        exact absurd ha (Nat.not_lt_zero _)
+      · intro u _
+        rw [List.append_nil]
+    | succ m ih =>
+      intro hm1
+      obtain ⟨ψ, hdur, ho, hballs, hfix⟩ := ih (by omega)
+      have hmN : m < N := by omega
+      set jm : Fin N := ⟨m, hmN⟩ with hjmdef
+      -- generic facts about the current (post-`θ ++ ψ`) family
+      have hcurprob : ∀ i, IsProbabilityMeasure (attnMeasureFlow (θ ++ ψ) (μ₀ i)) := fun i =>
+        haveI := hμ i; isProbabilityMeasure_attnMeasureFlow (θ ++ ψ) (μ₀ i) (hμs i)
+      have hcurs : ∀ i, supportedIn (attnMeasureFlow (θ ++ ψ) (μ₀ i)) (sphere d) := fun i =>
+        haveI := hμ i; attnMeasureFlow_supportedIn_sphere (θ ++ ψ) (μ₀ i) (hμs i)
+      have hjmfix : attnMeasureFlow (θ ++ ψ) (μ₀ jm) = attnMeasureFlow θ (μ₀ jm) :=
+        hfix jm (le_refl m)
+      -- shrunk-vs-unshrunk non-colinearity, the one direction needing the line-avoidance lemma
+      have hkey1 : ∀ a u : Fin N, (a : ℕ) < m → m ≤ (u : ℕ) → ∀ c : ℝ,
+          barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ a)) ≠
+            c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ u)) := by
+        intro a u ha hu c hEq
+        have hane : a ≠ u := by
+          intro h
+          rw [h] at ha
+          omega
+        haveI := hcurprob a
+        have hmem : barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ a)) ∈
+            Metric.closedBall (ω a) rU :=
+          barycenter_mem_closedBall (hcurs a) (hballs a ha)
+        have hBu : attnMeasureFlow (θ ++ ψ) (μ₀ u) = attnMeasureFlow θ (μ₀ u) := hfix u hu
+        have hrw : c • barycenter (attnMeasureFlow θ (μ₀ u)) =
+            (c * ‖barycenter (attnMeasureFlow θ (μ₀ u))‖) • ω u := by
+          rw [hωeq u, smul_smul, mul_assoc,
+            mul_inv_cancel₀ (norm_ne_zero_iff.mpr (hBnz u)), mul_one]
+        rw [hBu, hrw] at hEq
+        exact ne_smul_of_mem_closedBall_unit_sep (hωunit a) (hωunit u)
+          (inner_nonneg_of_orthant (hωorth a) (orthant_subset_closedOrthant (hωorth u)))
+          hrU0 (hrUsep a u hane) hmem _ hEq
+      -- the blanket non-colinearity of the current family, re-derived for this step
+      have hcur : Pairwise fun i j : Fin N => ∀ c : ℝ,
+          barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ i)) ≠
+            c • barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ j)) := by
+        intro i j hij
+        rcases Nat.lt_or_ge (i : ℕ) m with hi | hi
+        · rcases Nat.lt_or_ge (j : ℕ) m with hj | hj
+          · haveI := hcurprob i
+            haveI := hcurprob j
+            exact barycenter_ne_smul_of_separated_balls (hωunit i) (hωunit j) hrU0
+              (hrUsep i j hij) (hcurs i) (hcurs j) (hballs i hi) (hballs j hj) (ho i) (ho j)
+          · exact hkey1 i j hi hj
+        · rcases Nat.lt_or_ge (j : ℕ) m with hj | hj
+          · refine ne_smul_flip_of_ne_zero ?_ (hkey1 j i hj hi)
+            rw [hfix i hi]
+            exact hBnz i
+          · intro c
+            rw [hfix i hi, hfix j hj]
+            exact hnoncol hij c
+      -- the self-paired shrink of member `m`, radius capped by the orthant slack
+      obtain ⟨ε₀, hε₀pos, hε₀sub⟩ := Metric.isOpen_iff.mp isOpen_orthant (ω jm) (hωorth jm)
+      have hεpos : 0 < min rU ε₀ := lt_min hrU0 hε₀pos
+      haveI := hcurprob jm
+      obtain ⟨θ'', hdur'', -, hshrinkμ, hfix''⟩ :=
+        lemma_3_3 jm (fun i => attnMeasureFlow (θ ++ ψ) (μ₀ i))
+          (attnMeasureFlow (θ ++ ψ) (μ₀ jm)) hcurprob τ (min rU ε₀) hτ hεpos
+          hcurs ho (hcurs jm) (ho jm) hcur ⟨1, (one_smul ℝ _).symm⟩
+      have hcenter : ‖barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ jm))‖⁻¹ •
+          barycenter (attnMeasureFlow (θ ++ ψ) (μ₀ jm)) = ω jm := by
+        rw [hjmfix, hωeq jm]
+      rw [hcenter] at hshrinkμ
+      refine ⟨ψ ++ θ'', ?_, ?_, ?_, ?_⟩
+      · rw [AttnSchedule.durationSum_append, hdur, hdur'']
+        push_cast
+        ring
+      · -- orthant support of every member survives the step
+        intro i
+        rw [← List.append_assoc, attnMeasureFlow_append]
+        by_cases hij : i = jm
+        · subst hij
+          have hsub : Metric.ball (ω jm) (min rU ε₀) ⊆ orthant d :=
+            (Metric.ball_subset_ball (min_le_right rU ε₀)).trans hε₀sub
+          exact measure_mono_null (Set.compl_subset_compl.mpr hsub) hshrinkμ
+        · rw [hfix'' i hij]
+          exact ho i
+      · -- ball placement, extended to `m + 1`
+        intro a ha1
+        rw [← List.append_assoc, attnMeasureFlow_append]
+        by_cases haj : a = jm
+        · subst haj
+          have hsub : Metric.ball (ω jm) (min rU ε₀) ⊆ Metric.ball (ω jm) rU :=
+            Metric.ball_subset_ball (min_le_left rU ε₀)
+          exact measure_mono_null (Set.compl_subset_compl.mpr hsub) hshrinkμ
+        · have ham : (a : ℕ) < m := by
+            rcases Nat.lt_succ_iff_lt_or_eq.mp ha1 with h | h
+            · exact h
+            · exact absurd (Fin.ext h) haj
+          rw [hfix'' a haj]
+          exact hballs a ham
+      · -- everyone not yet shrunk is fixed by this step too
+        intro u hu
+        have hune : u ≠ jm := by
+          intro h
+          rw [h] at hu
+          simp only [hjmdef] at hu
+          omega
+        rw [← List.append_assoc, attnMeasureFlow_append, hfix'' u hune, hfix u (by omega)]
+  obtain ⟨ψ, hdurψ, -, hballs, -⟩ := key N (le_refl N)
+  have hNne : (N : ℝ) ≠ 0 := hNR.ne'
+  refine ⟨ψ, ω, rU, ?_, hrU0, hrU1, hωunit, hrUsep, fun i => hballs i i.isLt⟩
+  rw [hdurψ, hτdef]
+  field_simp
 
 end MeasureToMeasure.Leaves
