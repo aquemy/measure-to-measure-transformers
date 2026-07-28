@@ -164,7 +164,7 @@ Claim `claim:exp-e2-clustering`. It validates:
 
 | claim | paper node | status |
 | --- | --- | --- |
-| `prop-2-1` | Prop 2.1, p.11 | math.axiomatised |
+| `prop-2-1` | Prop 2.1, p.11 | math.machine-checked |
 
 **Pass criterion.** diameter contracts from 2.207 to < eps=0.05; time-to-eps grows ~ log(1/eps) (positive slope)
 

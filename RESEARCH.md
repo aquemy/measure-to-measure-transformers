@@ -71,10 +71,10 @@ remaining axioms live in `Statements/` (eight in `MidLevel.lean` plus `exists_di
 | --- | --- | --- |
 | `MeasureToMeasure.Leaves.*` (L1-L11′) | clean | the self-contained leaf cores; L7 `lemma_5_2` and L8 `markov_bound` machine-checked since the `W₂`/`W₁` discharge |
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
-| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse) |
+| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → **8**) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{prop_2_1,lemma_3_3,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining eight statement-layer axioms |
-| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the ninth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
+| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,cluster_to_point,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining seven statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29) |
+| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the eighth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
 | `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
@@ -910,6 +910,35 @@ classification of `lemma_3_3` is confirmed by the kernel, and the cap-separation
 `lemma_3_3_of_cap_separation` (built this campaign, PRs #326-#329) genuinely needs its gate.
 This does NOT refute `lemma_3_3` itself: `V ≠ 0` fields read the flowing measure and act
 differently on different inputs, which is exactly the freedom the obstruction shows is required.
+
+### F29 (paper-proof gap, recorded 2026-07-28) Prop 2.1's printed proof is vacuous for hulls with empty interior; the fix it needs (footnote 7's dimension reduction) is absent from the Section 2.1 proof
+
+`prop_2_1` is now DISCHARGED to a kernel-clean theorem (`Statements/Prop21.lean`, signature
+verbatim, closure exactly [propext, Classical.choice, Quot.sound], axiom inventory 9 -> 8) by an
+elementary one-block construction: `Leaves.exists_collapse_block_hemisphere_W2` (PR #332) collapses
+the open hemisphere onto its own pole `z := e` with a single amplitude-scaled gated pull block at
+horizon exactly `T`, so the former axiom's justification ("rests on LaSalle and Hartman-Grobman,
+which Mathlib lacks") was too pessimistic, the same pattern as `lemma_5_1`. Two honest records made
+during the discharge:
+
+1. **Witness class.** The machine-checked witness is a `V = 0` gated PERCEPTRON block
+   (`pParkScaled A e e (-1) T`), not the paper's `(V, B, W) ≡ (I_d, B, 0)` attention construction
+   (Prop 2.1, p.11, arXiv:2411.04551v3). The public statement is unchanged and lives on the
+   mean-field layer (F14), so this is a stronger realization, not a narrowing; but the paper's
+   OWN construction remains unformalized.
+2. **Paper-proof gap (the 4th paper-construction gap, after F17(b), the prop_4_2 Step-2
+   separating-direction counterexample, and F24).** The printed proof's load-bearing chain is
+   `conv_g supp μ(t₂) ⊂ int conv_g supp μ(t₁)` for `t₁ < t₂`, from "γ(x₀) points strictly into
+   int conv_g supp μ₀" at boundary points. Read with the AMBIENT interior, `int conv_g supp μ₀`
+   is empty for every sphere-carried hull, and the chain is vacuous as printed. Read with the
+   RELATIVE (sphere) interior, it still fails whenever the hull has empty relative interior:
+   e.g. `μ₀ = δ_e` or any measure carried by a great subsphere, all of which satisfy the
+   proposition's hypotheses. The repair the paper itself knows, reducing the dynamics to a
+   lower-dimensional sphere where the hull has nonempty relative interior, appears only as
+   footnote 7 (p.36) inside the Appendix B.3 argument, and is never invoked in the Section 2.1
+   proof. The statement is TRUE (our kernel-clean discharge proves it, degenerate cases included:
+   the Dirac case is exactly where the gated pull is trivial), so this is a proof gap, not an
+   erratum against the statement.
 
 ### Verdict
 

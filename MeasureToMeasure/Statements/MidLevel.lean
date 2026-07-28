@@ -52,7 +52,8 @@ lives on the layer its own paper construction uses:
   (Appendix B gates), and `prop_2_2` (the Section 2.2 gated construction).
 * **Mean-field layer** (`AttnSchedule d` / `attnMeasureFlow`, the self-attention flow interface of
   `Foundations/Attention.lean`): statements whose paper constructions switch on attention
-  (`V ≠ 0`) -- `prop_2_1` (attention clustering), `lemma_3_3`, `lemma_3_4_part2`,
+  (`V ≠ 0`) -- `prop_2_1` (attention clustering; discharged in `Statements/Prop21.lean`, where the
+  machine-checked witness turned out to be a `V = 0` gated block), `lemma_3_3`, `lemma_3_4_part2`,
   `cluster_to_point`, `lemma_5_4`, `exists_parked_schedule`, and the disentanglement/main results
   in `MainResults.lean`.
 
@@ -98,24 +99,12 @@ mass-free open cap around `ω`. -/
 def MissingCap (μ : Measure (Eucl d)) : Prop :=
   ∃ ω : Eucl d, ‖ω‖ = 1 ∧ ∃ δ : ℝ, 0 < δ ∧ supportedIn μ {x | ⟪ω, x⟫ ≤ 1 - δ}
 
-/-- **Proposition 2.1** (clustering to a point). A sphere-supported probability measure in an open
-hemisphere can be driven arbitrarily `W₂`-close to a Dirac mass at some point `z` of the sphere,
-with a single constant parameter (one switch). AXIOM (`math.axiomatised`): the convergence rests on
-the LaSalle invariance principle and Hartman-Grobman linearization for the attention flow
-(Section 2.1), which Mathlib lacks. `Depends-On` the barycenter ODE leaf L6.
-
-**Fidelity (soundness):** the sphere support and the on-sphere location of `z` are the paper's
-(`μ₀ ∈ P(S^{d-1})`, the cluster point is a limit of sphere points); without sphere support the
-`W₂ ≤ ε` conclusion held only through the `⊤.toReal = 0` collapse for infinite-cost pairs. The
-one-piece budget is the paper's parameter choice `(V, B, W) ≡ (I_d, B, 0)` -- attention-only,
-one constant piece (`switches` counts constant pieces). Stated on the mean-field layer (F14): the
-clustering IS the self-attention dynamics, so the linear model cannot host it faithfully. -/
-axiom prop_2_1 (μ : Measure (Eucl d)) [IsProbabilityMeasure μ] (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
-    (e : Eucl d) (he : ‖e‖ = 1)
-    (hμs : supportedIn μ (sphere d)) (hhemi : supportedIn μ {x | 0 < ⟪e, x⟫}) :
-    ∃ (θ : AttnSchedule d) (z : Eucl d), AttnSchedule.durationSum θ = T ∧
-      AttnSchedule.switches θ ≤ 1 ∧ z ∈ sphere d ∧
-      Axioms.W2 (attnMeasureFlow θ μ) (Measure.dirac z) ≤ ε
+-- `prop_2_1` (Proposition 2.1, hemisphere clustering to a Dirac) was an axiom here; it now lives,
+-- discharged as a kernel-clean theorem with the same signature verbatim, in `Statements/Prop21.lean`
+-- (a separate file per the `Lemma34Part1.lean` precedent: the proof consumes the
+-- `Leaves/HemisphereCollapse.lean` engine, which `MidLevel` must not import). The earlier docstring
+-- claim that the convergence "rests on LaSalle and Hartman-Grobman" was too pessimistic; see the
+-- theorem's docstring and finding F29 in `RESEARCH.md`.
 
 /-- **Lemma 3.2** (transport into the orthant, family form). ONE two-piece schedule moves every
 member of a sphere-supported probability family with a shared missing cap into `Q₁^{d-1}`
