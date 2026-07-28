@@ -108,6 +108,7 @@ import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
 import MeasureToMeasure.Leaves.AsymmetricCapCollapse
 import MeasureToMeasure.Leaves.HemisphereCollapse
 import MeasureToMeasure.Leaves.GatedPullTransfer
+import MeasureToMeasure.Leaves.ThreePullCluster
 import MeasureToMeasure.Leaves.Lemma33CapSeparation
 import MeasureToMeasure.Leaves.StaticAsymmetricCap
 import MeasureToMeasure.Leaves.Lemma34Part1MeanField
