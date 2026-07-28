@@ -8,6 +8,7 @@ import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.GatedBlockMeanFieldBridge
 import MeasureToMeasure.Leaves.MeanFieldPark
 import MeasureToMeasure.Leaves.AttnRescale
+import MeasureToMeasure.Leaves.GatedCollapse
 import MeasureToMeasure.Statements.SupportedIn
 
 /-!
@@ -231,6 +232,112 @@ theorem exists_collapse_block_barycenter_close (μ' : Measure (Eucl d)) [IsProba
         hnpos ρ hρs
     rw [supportedIn, hflowEqρ, hθdef]
     exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z ω cosR ((n : ℝ) * T2) hnT0 hS hcapS
+      ρ hρs hρS
+
+/-- **Mean-field cap collapse with SUPPORT confinement, universally over all cap-carried
+measures.** Companion of `exists_collapse_block_barycenter_close` with the conclusion architecture
+copied but SUPPORT confinement replacing barycenter closeness: a single self-centered attention
+block `p` of duration EXACTLY `T` carries EVERY sphere probability measure supported in the closed
+sub-cap `{m ≤ ⟪z,·⟫}` into `Metric.ball z ε`, while fixing EXACTLY every sphere probability measure
+that puts no mass on the open cap `{cosR < ⟪z,·⟫}`, and while keeping every sphere probability
+measure carried by a measurable region `S` containing the cap's sphere-trace carried by `S`.
+
+Two deliberate differences from the barycenter sibling. First, NO `cosR > 1/2` restriction: that
+restriction belongs to the sibling's barycenter integral estimate (`inner_pole_lower_bound`
+bookkeeping), not to the `mapsTo` engine used here, so any gate level `-1 ≤ cosR < m` works.
+Second, the `∀`-measures-INSIDE-`∃` shape: the block is chosen from `(z, cosR, m, T, ε)` alone
+(cap level `b := max (1 - ε²/4) 0` and the rim budget of `measureFlow_gatedBlock_supportedIn_ball`
+never look at a measure), so ONE schedule serves `ν₀`, every `μ₀ j`, and every bystander
+simultaneously, exactly the `V = 0` universal-map property the mean-field packaging needs.
+
+Witness: `pPark z z cosR (n·T)` rescaled by the reach budget `n ≥ 1`
+(`attnMeasureFlow_singleton_rescale_eq`), bridged to the linear gated block by
+`attnMeasureFlow_pPark_eq_measureFlow_gatedBlock`; the collapse conjunct is the group-1 engine
+`measureFlow_gatedBlock_supportedIn_ball`, the fixing conjunct is
+`attnMeasureFlow_pPark_eq_of_off_cap`, and the `S`-invariance conjunct is
+`attnMeasureFlow_pPark_supportedIn_of_cap_subset`, all through the same rescale bridge. -/
+theorem exists_collapse_block_support_close {z : Eucl d} (hz : ‖z‖ = 1)
+    {cosR m : ℝ} (hcosR : (-1 : ℝ) ≤ cosR) (hm : cosR < m) (hm1 : m < 1)
+    {T : ℝ} (hT : 0 < T) {ε : ℝ} (hε : 0 < ε) :
+    ∃ p : AttnParams d, p.duration = T ∧
+      (∀ μ : Measure (Eucl d), [IsProbabilityMeasure μ] → supportedIn μ (sphere d) →
+        supportedIn μ {x : Eucl d | m ≤ (⟪z, x⟫ : ℝ)} →
+        supportedIn (attnMeasureFlow [p] μ) (Metric.ball z ε)) ∧
+      (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+        ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ) ∧
+      ∀ S : Set (Eucl d), MeasurableSet S →
+        (∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S) →
+        ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
+          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S := by
+  -- cap level `b`: inside `Ioo (-1) 1` and above the polarization threshold `1 - ε²/2`
+  set b : ℝ := max (1 - ε ^ 2 / 4) 0 with hbdef
+  have hb : b ∈ Set.Ioo (-1 : ℝ) 1 := by
+    constructor
+    · exact lt_of_lt_of_le (by norm_num) (le_max_right _ _)
+    · apply max_lt _ one_pos
+      nlinarith
+  have hbε : 1 - ε ^ 2 / 2 < b := by
+    have h1 : 1 - ε ^ 2 / 2 < 1 - ε ^ 2 / 4 := by nlinarith
+    exact lt_of_lt_of_le h1 (le_max_left _ _)
+  -- reach budget: `n ≥ 1` copies of the duration meet the rim budget, then rescale to EXACTLY `T`
+  set slope : ℝ := 2 * (m - cosR) * T with hslope
+  have hslopepos : 0 < slope := by
+    rw [hslope]; exact mul_pos (mul_pos two_pos (by linarith)) hT
+  obtain ⟨n₀, hn₀⟩ := exists_nat_ge ((logOdds b - logOdds m) / slope)
+  rw [div_le_iff₀ hslopepos] at hn₀
+  set n : ℕ := n₀ + 1 with hndef
+  have hnpos : (0 : ℝ) < (n : ℝ) := by rw [hndef]; positivity
+  have hnT0 : (0 : ℝ) ≤ (n : ℝ) * T := by positivity
+  have hreach : logOdds b ≤ logOdds m + 2 * (m - cosR) * ((n : ℝ) * T) := by
+    have hmono : (n₀ : ℝ) * slope ≤ (n : ℝ) * slope := by
+      rw [hndef]; push_cast
+      exact mul_le_mul_of_nonneg_right (by linarith) hslopepos.le
+    have hrw : 2 * (m - cosR) * ((n : ℝ) * T) = (n : ℝ) * slope := by rw [hslope]; ring
+    rw [hrw]; linarith
+  -- the self-centered `pPark` block of combined duration `n * T`, rescaled to duration EXACTLY `T`
+  set pfin : AttnParams d := (pPark z z cosR ((n : ℝ) * T) hnT0).rescale hnpos with hpfindef
+  have hdur : pfin.duration = T := by
+    rw [hpfindef, AttnParams.rescale_duration]
+    show (n : ℝ) * T / (n : ℝ) = T
+    field_simp
+  refine ⟨pfin, hdur, ?_, ?_, ?_⟩
+  · -- support collapse into the ball, uniformly over all cap-carried sphere measures
+    intro μ _ hμs hμcap
+    rw [supportedIn] at hμs
+    have hflowEq : attnMeasureFlow [pfin] μ
+        = attnMeasureFlow [pPark z z cosR ((n : ℝ) * T) hnT0] μ := by
+      rw [hpfindef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z z cosR ((n : ℝ) * T) hnT0)
+        hnpos μ hμs
+    have hbr : attnMeasureFlow [pPark z z cosR ((n : ℝ) * T) hnT0] μ
+        = measureFlow [gatedBlock hz hz hcosR hnT0] ((n : ℝ) * T) μ :=
+      attnMeasureFlow_pPark_eq_measureFlow_gatedBlock hz hz hcosR hnT0 hμs
+    have hμcap' : supportedIn μ {x : Eucl d | m ≤ (⟪x, z⟫ : ℝ)} := by
+      have hsets : {x : Eucl d | m ≤ (⟪x, z⟫ : ℝ)} = {x : Eucl d | m ≤ (⟪z, x⟫ : ℝ)} :=
+        Set.ext fun x => by simp only [Set.mem_setOf_eq, real_inner_comm z x]
+      rw [hsets]; exact hμcap
+    rw [hflowEq, hbr]
+    exact measureFlow_gatedBlock_supportedIn_ball hz hcosR hnT0 hm hm1 hε hb hbε hreach hμs hμcap'
+  · -- exact fixing of every off-cap sphere probability measure, through the same rescale bridge
+    intro ρ _ hρs hρcap
+    rw [supportedIn] at hρs
+    have hflowEq : attnMeasureFlow [pfin] ρ
+        = attnMeasureFlow [pPark z z cosR ((n : ℝ) * T) hnT0] ρ := by
+      rw [hpfindef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z z cosR ((n : ℝ) * T) hnT0)
+        hnpos ρ hρs
+    rw [hflowEq]
+    exact attnMeasureFlow_pPark_eq_of_off_cap z z cosR ((n : ℝ) * T) hnT0 ρ hρs hρcap
+  · -- region-generic sphere-trace invariance, through the same rescale bridge
+    intro S hS hcapS ρ _ hρs hρS
+    rw [supportedIn] at hρs hρS
+    have hflowEq : attnMeasureFlow [pfin] ρ
+        = attnMeasureFlow [pPark z z cosR ((n : ℝ) * T) hnT0] ρ := by
+      rw [hpfindef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z z cosR ((n : ℝ) * T) hnT0)
+        hnpos ρ hρs
+    rw [supportedIn, hflowEq]
+    exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z z cosR ((n : ℝ) * T) hnT0 hS hcapS
       ρ hρs hρS
 
 /-- **The asymmetric-cap collapse schedule: one block defeats every `γ₂`.** Given the axiom's
