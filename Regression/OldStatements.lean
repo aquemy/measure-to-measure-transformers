@@ -14,7 +14,8 @@ kernel already refuted.
 Provenance of the transcriptions (`git show <rev>:<file>`):
 * pre-F11 statements: `4411b08^` (repaired in PR #64, finding F11);
 * pre-F12 statements: `db5889f^` (repaired in PR #66, finding F12);
-* pre-F14 statements: `acafe3a^` (restated over the mean-field layer in PR #69, finding F14).
+* pre-F14 statements: `acafe3a^` (restated over the mean-field layer in PR #69, finding F14);
+* pre-F31 statement: `33693a4^` (repaired in PR #338, finding F31).
 
 Two dynamics layers exist since PR #69 (see `Statements/MidLevel.lean`): axioms whose paper
 constructions are perceptron-only stayed on the linear `Params`/`measureFlow` layer; the
@@ -157,6 +158,21 @@ abbrev OldAttnDisentangleSig : Prop :=
     ∃ (θ : AttnSchedule d) (α : Fin N → Eucl d) (r : ℝ), 0 < r ∧ r < 1 ∧
       (∀ i j, i ≠ j → 2 * r ≤ dist (α i) (α j)) ∧
       (∀ i, supportedIn (attnMeasureFlow θ (μ₀ i)) (Metric.ball (α i) r))
+
+/-- Pre-F31 `lemma_5_4` with the **dimension hypothesis `3 ≤ d` removed** (finding F31; horizon
+and integrability clauses dropped, per this file's weakening convention). Refuted at `d = 1`
+(`oldLemma54NoDim_false`): in `Eucl 1` the tangential projector at a unit point annihilates every
+vector, so every mean-field flow freezes sphere Diracs and every schedule fixes `δ_e`, while
+`ψ = const (-e)` demands `L²` error `2 ≤ ε`. The repaired `lemma_5_4` carries `3 ≤ d` (the
+paper's standing Theorem 1.2 scope, p.5). -/
+abbrev OldLemma54NoDimSig : Prop :=
+  ∀ {d : ℕ} (μ : Measure (Eucl d)), IsProbabilityMeasure μ →
+    ∀ (ψ : Eucl d → Eucl d) (T ε : ℝ), 0 < T → 0 < ε →
+    supportedIn μ (sphere d) → Measurable ψ →
+    (∀ᵐ x ∂μ, ψ x ∈ sphere d) →
+    ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
+      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
+      Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 
 /-- **Draft, REJECTED before admission** (`disentangle_insert_colinear_phase4_gap` campaign, group
 G3, leaf `massGapCollapse_capMass_nonzero`): a `GenRestNearBall`-style blanket non-degeneracy
