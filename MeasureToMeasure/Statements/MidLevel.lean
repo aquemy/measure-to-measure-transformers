@@ -361,7 +361,7 @@ theorem lemma_3_4_part2 (μ ν : Measure (Eucl d)) [IsProbabilityMeasure μ] [Is
   have hT2pos : (0 : ℝ) < T - Tstar := by
     have h := hTstar.2
     linarith
-  obtain ⟨p2, hp2dur, -, hp2noncol⟩ :=
+  obtain ⟨p2, hp2dur, -, hp2noncol, -, -⟩ :=
     Leaves.exists_asymmetric_collapse_schedule hd2 (Foundations.attnStep p1 μ)
       (Foundations.attnStep p1 ν) hμ's hν's hzs hcosR hμ'cap hν'cap hT2pos
   refine ⟨[p1, p2], ?_, ?_, ?_⟩
