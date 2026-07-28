@@ -87,4 +87,23 @@ theorem exists_static_cap_in_open_avoiding_closed [NeZero d]
     intro x hx hxcap
     exact htrace0 x hx (lt_of_le_of_lt (le_max_left _ _) hxcap)
 
+/-- **Cap nullity from trace exclusivity.** If a sphere-supported measure `ν` has no support point
+in the cap's sphere-trace, the whole cap is `ν`-null: the cap splits into its sphere-trace, which
+misses `ν.support` and is hence contained in the null `ν.supportᶜ`, and an off-sphere part inside
+the null `(sphere d)ᶜ`. This converts the `A`-side exclusivity delivered by
+`exists_static_cap_in_open_avoiding_closed` into the `hνcap` input of
+`exists_asymmetric_collapse_schedule`, for the `B`-side and for every bystander supported in the
+bad set `K`. -/
+theorem measure_cap_null_of_trace_disjoint_support
+    (ν : Measure (Eucl d)) (hνs : supportedIn ν (sphere d))
+    {z : Eucl d} {cosR : ℝ}
+    (hdisj : ∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∉ ν.support) :
+    ν {x | cosR < (⟪z, x⟫ : ℝ)} = 0 := by
+  have hsub : {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} ⊆ ν.supportᶜ ∪ (sphere d)ᶜ := by
+    intro x hx
+    by_cases hxs : x ∈ sphere d
+    · exact Or.inl (hdisj x hxs hx)
+    · exact Or.inr hxs
+  exact measure_mono_null hsub (measure_union_null Measure.measure_compl_support hνs)
+
 end MeasureToMeasure.Leaves
