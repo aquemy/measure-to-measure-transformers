@@ -885,6 +885,32 @@ The paper's standing `Pairwise (mu_0^i != mu_0^j)` is retained in the companion 
 statement fidelity (the gate subsumes it in this proof). Full conclusion-type-ascribed witness
 for the whole bundle: `Regression/NonVacuity/DisentangleAssembly.lean`.
 
+### F28 (route refutation, recorded 2026-07-28) `lemma_3_3` has no universal-map (`V = 0`) discharge: the fixing and shrink clauses are jointly out of reach of measure-independent maps
+
+Kernel-checked route closure (`Regression/Refuted/Lemma33NoUniversalMap.lean`,
+`Regression.Refuted.lemma33_no_universal_map`, closure exactly [propext, Classical.choice,
+Quot.sound]), the same honest-negative role `HgenRestUnconditionallyFalse.lean` plays for
+`lemma_3_4_part2` (F22). A `V = 0` attention piece acts on every sphere-supported probability
+input by ONE measure-independent pushforward map (`attnStep_eq_map_blockFlow`,
+`Foundations/AttnStepExistence.lean`), and pieces compose; so any `V = 0` schedule realizes
+`attnMeasureFlow θ μ = Measure.map Φ μ` for a single measurable `Φ` shared by all inputs. The
+theorem exhibits an ADMISSIBLE `lemma_3_3` configuration (`d = 2`; acted
+`muActed = (δ_(3/5,4/5) + δ_(4/5,3/5))/2`, bystander `nuBeta = (δ_(3/5,4/5) + δ_(5/13,12/13))/2`;
+every hypothesis of the axiom kernel-witnessed in the same file: probability, sphere and orthant
+support, pairwise fully-non-colinear barycenters, colinear companion `ν₀ := muActed` at `c = 1`)
+on which NO measurable `Φ` with `Measure.map Φ nuBeta = nuBeta` (the fixing clause) can satisfy
+`supportedIn (Measure.map Φ muActed) (Metric.ball ω̂ ε)` (the shrink clause) for any
+`ε < ε₀ := min (dist uA ω̂) (dist uC ω̂) > 0`. Mechanism: the SHARED ATOM `uA`. Fixing `nuBeta`
+pins `Φ uA ∈ {uA, uC}`, so the pushed acted member keeps mass `≥ 1/2` on `{uA, uC}`, and that
+pair misses the small ball because `ω̂` (the normalized midpoint direction of the acted atoms,
+equal coordinates) differs from both `uA` and `uC` (unequal coordinates). Consequences: the
+unconditional `lemma_3_3` axiom can never be discharged with `V = 0` schedules, the paper's
+`V ≠ 0` `Ψ₁` phase (App. B.2, p.33, arXiv:2411.04551v3) is essential, the F14 mean-field
+classification of `lemma_3_3` is confirmed by the kernel, and the cap-separation companion
+`lemma_3_3_of_cap_separation` (built this campaign, PRs #326-#329) genuinely needs its gate.
+This does NOT refute `lemma_3_3` itself: `V ≠ 0` fields read the flowing measure and act
+differently on different inputs, which is exactly the freedom the obstruction shows is required.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
