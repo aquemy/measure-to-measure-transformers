@@ -160,8 +160,9 @@ example : True := by
     exact unitE_mem_sphere 3 0
   have _h : ∃ (θ : Foundations.AttnSchedule 3) (ψε : Eucl 3 → Eucl 3),
       Foundations.AttnSchedule.durationSum θ = 1 ∧
-      Foundations.attnMeasureFlow θ (Measure.dirac (unitE 3 0))
-        = (Measure.dirac (unitE 3 0)).map ψε ∧
+      (∀ ν : Measure (Eucl 3), [IsProbabilityMeasure ν] →
+        supportedIn ν (MeasureToMeasure.sphere 3) →
+        Foundations.attnMeasureFlow θ ν = ν.map ψε) ∧
       Measurable ψε ∧
       Integrable (fun x => ‖id x - ψε x‖ ^ 2) (Measure.dirac (unitE 3 0)) ∧
       Real.sqrt (∫ x, ‖id x - ψε x‖ ^ 2 ∂(Measure.dirac (unitE 3 0))) ≤ 1 :=

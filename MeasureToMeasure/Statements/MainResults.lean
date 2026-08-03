@@ -256,7 +256,7 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
       funext x; rw [norm_sub_rev]
     have hint' : Integrable (fun x => ‖ψε x - S x‖ ^ 2) ν := hfe ▸ hint
     refine ⟨θ₂, hdur₂, ?_⟩
-    rw [hflow, ← hmap]
+    rw [hflow ν hνs, ← hmap]
     calc Axioms.W2 (ν.map ψε) (ν.map S)
         ≤ Real.sqrt (∫ x, ‖ψε x - S x‖ ^ 2 ∂ν) := W2_map_le_L2 ν ψε S hψεmeas hSmeas hint'
       _ = Real.sqrt (∫ x, ‖S x - ψε x‖ ^ 2 ∂ν) := by simp_rw [norm_sub_rev]

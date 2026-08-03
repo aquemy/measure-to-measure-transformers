@@ -533,6 +533,12 @@ controls `W₂`. The approximant `ψε` is measurable and the displacement is `L
 both implicit in the `∫` bound being meaningful, made explicit so the `W₂` map bound
 (`W2_map_le_L2`) can consume them.
 
+The flow conjunct is UNIVERSAL: the schedule's blocks are all `V = 0`, so its single transport
+map `ψε` pushes forward every sphere-supported probability measure `ν` at once, not just the
+input `μ` (the paper's map is "induced by the solution map of (B.1)", i.e. measure-independent;
+the value-rounding leg is per-`μ` but only feeds the `L²` estimate, never the transport map).
+The input instance is the application at `ν := μ`.
+
 **Fidelity (soundness):** the paper's Lemma 5.4 (p.24, arXiv:2411.04551v3) verbatim: "Suppose
 `ε > 0` and `μ ∈ P(S^{d-1})`. For every `ψ ∈ L²(S^{d-1}; S^{d-1})`, there exists a
 Lipschitz-continuous and invertible map `ψε : S^{d-1} → S^{d-1}` induced by the solution map of
@@ -558,7 +564,9 @@ theorem lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure �
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
       AttnSchedule.durationSum θ = T ∧
-      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        attnMeasureFlow θ ν = ν.map ψε) ∧
+      Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
   -- round `ψ` to a finite on-sphere range at a.e. sup error `ε/2`

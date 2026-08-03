@@ -30,10 +30,13 @@ theorem e3_mem_sphere : e3 ∈ MeasureToMeasure.sphere 3 := by
     exact norm_one
   simpa [MeasureToMeasure.sphere, Metric.mem_sphere, dist_zero_right] using h
 
-/-- **Full application of the finite-range core**, conclusion type ascribed. -/
+/-- **Full application of the finite-range core**, conclusion type ascribed. The flow conjunct
+is the universal transport-map clause: one map for every sphere-supported probability measure. -/
 example : ∃ (θ : AttnSchedule 3) (ψε : Eucl 3 → Eucl 3),
     AttnSchedule.durationSum θ = 1 ∧
-    attnMeasureFlow θ (Measure.dirac e3) = (Measure.dirac e3).map ψε ∧ Measurable ψε ∧
+    (∀ ν : Measure (Eucl 3), [IsProbabilityMeasure ν] →
+      supportedIn ν (MeasureToMeasure.sphere 3) → attnMeasureFlow θ ν = ν.map ψε) ∧
+    Measurable ψε ∧
     Integrable (fun x => ‖(fun _ : Eucl 3 => e3) x - ψε x‖ ^ 2) (Measure.dirac e3) ∧
     Real.sqrt (∫ x, ‖(fun _ : Eucl 3 => e3) x - ψε x‖ ^ 2 ∂(Measure.dirac e3)) ≤ 1 :=
   lemma_5_4_of_finite_range (by norm_num) (Measure.dirac e3) (fun _ => e3) 1 1
