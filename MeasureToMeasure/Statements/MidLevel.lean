@@ -14,6 +14,8 @@ import MeasureToMeasure.Foundations.GeodesicConvex
 import MeasureToMeasure.Foundations.Attention
 import MeasureToMeasure.Foundations.AttnStepExistence
 import MeasureToMeasure.Statements.SupportedIn
+import MeasureToMeasure.Statements.Lemma54
+import MeasureToMeasure.Leaves.ValueRounding
 import Mathlib.MeasureTheory.Measure.Support
 
 /-!
@@ -521,11 +523,15 @@ theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
 
 /-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
 map `ψ` of a sphere-supported probability measure is approximated in `L²(μ)` by a flow map of the
-dynamics, to any tolerance, with finitely many switches. AXIOM (`math.axiomatised`): the density of
-attention-flow maps in `L²` rests on the missing continuity-equation theory. Combined with the
-coupling bound (leaf L7) this controls `W₂`. The approximant `ψε` is measurable and the
-displacement is `L²`-integrable -- both implicit in the `∫` bound being meaningful, made explicit
-so the `W₂` map bound (`W2_map_le_L2`) can consume them.
+dynamics, to any tolerance, with finitely many switches. **Proved** (`math.machine-checked`):
+value rounding (`exists_finite_range_sphere_approx`) replaces `ψ` by a finite-range approximant
+`ψ'` at a.e. sup error `ε/2`, the finite-range core (`lemma_5_4_of_finite_range`, the full G8
+staging/relocation pipeline over `V = 0` universal-transport-map schedules) realizes `ψ'` to
+`L²` error `ε/2` at exact duration `T`, and the raw sqrt-integral triangle inequality
+(`sqrtIntegral_sub_le_add`) combines the legs. Combined with the coupling bound (leaf L7) this
+controls `W₂`. The approximant `ψε` is measurable and the displacement is `L²`-integrable --
+both implicit in the `∫` bound being meaningful, made explicit so the `W₂` map bound
+(`W2_map_le_L2`) can consume them.
 
 **Fidelity (soundness):** the paper's Lemma 5.4 (p.24, arXiv:2411.04551v3) verbatim: "Suppose
 `ε > 0` and `μ ∈ P(S^{d-1})`. For every `ψ ∈ L²(S^{d-1}; S^{d-1})`, there exists a
@@ -546,7 +552,7 @@ also load-bearing for the planned discharge (the three-pull steering of `Cluster
 a doubly-orthogonal relay pole).
 
 Layer (F14): mean-field -- the paper's density argument ranges over the full attention dynamics. -/
-axiom lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
+theorem lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
@@ -554,7 +560,38 @@ axiom lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
       AttnSchedule.durationSum θ = T ∧
       attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
-      Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
+      Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
+  -- round `ψ` to a finite on-sphere range at a.e. sup error `ε/2`
+  obtain ⟨ψ', s, hs_sphere, hs_range, hψ'm, hψ'close⟩ :=
+    Leaves.exists_finite_range_sphere_approx μ ψ hψm hψs (ε / 2) (by positivity)
+  -- the finite-range core at tolerance `ε/2`, exact duration `T`
+  obtain ⟨θ, ψε, hdur, hflow, hψεm, hint2, hL2⟩ :=
+    lemma_5_4_of_finite_range hd μ ψ' T (ε / 2) hT (by positivity) hμs hψ'm
+      (ae_of_all _ fun x => hs_sphere _ (hs_range x)) ⟨s, hs_sphere, hs_range⟩
+  -- leg 1: the rounding error, in the raw sqrt-integral form
+  have hm1 : AEStronglyMeasurable (fun x => ψ x - ψ' x) μ :=
+    (hψm.sub hψ'm).aestronglyMeasurable
+  have hint1 : Integrable (fun x => ‖ψ x - ψ' x‖ ^ 2) μ :=
+    Leaves.integrable_sq_norm_of_ae_bound hm1 hψ'close
+  have hL1 : Real.sqrt (∫ x, ‖ψ x - ψ' x‖ ^ 2 ∂μ) ≤ ε / 2 := by
+    have h := Leaves.sqrtIntegral_le_of_good_bad (μ := μ) hm1 MeasurableSet.empty
+      (δ := ε / 2) (C := ε / 2) (η := 0) (by positivity) (by positivity) (by simp)
+      (by filter_upwards [hψ'close] with x hx _; exact hx) hψ'close (by simp)
+    calc Real.sqrt (∫ x, ‖ψ x - ψ' x‖ ^ 2 ∂μ)
+        ≤ Real.sqrt ((ε / 2) ^ 2 + (ε / 2) ^ 2 * (0 : ℝ≥0∞).toReal) := h
+      _ = ε / 2 := by
+          rw [ENNReal.toReal_zero, mul_zero, add_zero]
+          exact Real.sqrt_sq (by positivity)
+  have hm2 : AEStronglyMeasurable (fun x => ψ' x - ψε x) μ :=
+    (hψ'm.sub hψεm).aestronglyMeasurable
+  refine ⟨θ, ψε, hdur, hflow, hψεm,
+    Leaves.integrable_sq_norm_sub_of_legs hm1 hm2 hint1 hint2, ?_⟩
+  calc Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ)
+      ≤ Real.sqrt (∫ x, ‖ψ x - ψ' x‖ ^ 2 ∂μ)
+          + Real.sqrt (∫ x, ‖ψ' x - ψε x‖ ^ 2 ∂μ) :=
+        Leaves.sqrtIntegral_sub_le_add hm1 hm2 hint1 hint2
+    _ ≤ ε / 2 + ε / 2 := add_le_add hL1 hL2
+    _ = ε := by ring
 
 /-- **Lemma B.2** (single ball pair). Mass in the geodesic ball `ℬ₀ = B(z₀, R₀)` is pushed into
 `ℬ₀ ∩ ℬ₁` (`ℬ₁ = B(z₁, R₁)`), retaining a `(1-ε)` fraction, with a single parameter switch.

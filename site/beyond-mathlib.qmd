@@ -30,11 +30,12 @@ axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKea
 **Both halves are now machine-checked theorems** -- uniqueness first (a measure-averaged Grönwall
 argument on the sphere), then existence (the self-consistency fixed point of leaf E3n, transported
 through the padded point flow) -- so the mean-field layer itself carries **zero** axioms.
-Today `#print axioms theorem_1_1` lists exactly the *paper-level* dynamical statements
-(`exists_disentangling_balls`, `exists_parked_schedule`; `theorem_1_2` adds `lemma_5_4`), each
+Today `#print axioms theorem_1_1` and `#print axioms theorem_1_2` both list exactly the
+*paper-level* dynamical statements (`exists_disentangling_balls`, `exists_parked_schedule`), each
 encoding a result from the paper's Sections 3--5 that rests on theory Mathlib does not yet have
 (`cluster_to_point`, the clustering half, is since 2026-07-28 a machine-checked theorem --
-finding F30). This page is the public roadmap for that program -- and, increasingly,
+finding F30 -- and `lemma_5_4`, the $L^2$ flow-approximation half, since 2026-08-03 -- finding
+F32). This page is the public roadmap for that program -- and, increasingly,
 a record of it.
 
 ## Progress so far
@@ -186,7 +187,12 @@ infrastructure. They fall into three groups by *how* each is closed:
   gated pulls relaying the mass `e → α → z` through a unit vector orthogonal to both, `switches
   = 3` within the paper's 7-piece budget, without routing through `prop_4_2`'s steering
   (finding F30).
-- `lemma_5_4` -- the M7 $L^2$ approximation of a transport map by flow maps.
+- `lemma_5_4` -- **[machine-checked]{.badge .ok}** since 2026-08-03 (finding F32): the M7 $L^2$
+  approximation of a transport map by flow maps, discharged without any continuity-equation
+  density theory. Value rounding reduces to a finite-range target; a distance-tuned cap system,
+  cap-by-cap staging, and waypoint two-arc corridor relocation -- all built from `V = 0` blocks
+  sharing ONE universal transport map -- realize the finite-range map exactly, at exact total
+  duration `T`; Dirac instantiation and the good/bad $L^2$ ledger close the bound.
 - `lemma_3_3` -- the §3.3 mean-field barycenter shrink dynamics (Part 1 of Lemma 3.4 is on the
   linear layer and is **discharged** -- see Tier 1 above; `lemma_3_4_part2` is since 2026-07-27 a
   theorem conditional exactly on the eq.-(B.16) bridge axiom `cap-nu-null-b16`, non-vacuously
