@@ -3,6 +3,7 @@
 -- current axiom. If this file ever COMPILES, the on-sphere restriction on `z` has been dropped:
 -- `Regression.Refuted.oldAttnCluster_false` refutes that shape (off-sphere Dirac target).
 import Regression.OldStatements
+import MeasureToMeasure.Statements.ClusterToPoint
 set_option autoImplicit false
 open MeasureTheory MeasureToMeasure MeasureToMeasure.Statements
 
