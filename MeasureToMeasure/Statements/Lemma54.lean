@@ -24,7 +24,10 @@ arc hop corridors (`exists_arc_hop_corridor`: waypoint two-arc detours clearing 
 sources and landings) → Phase 2 relocation (`exists_merge_tolerant_relocation`: each staging
 ball delivered into `ball (zᵢ, ε/4)`) → a parked pad block making the total duration exactly
 `T`. Every engine block is `V = 0`, so the whole schedule has ONE transport map `ψε = f₂ ∘ f₁`
-serving every sphere-supported probability measure at once; Dirac instantiation
+serving every sphere-supported probability measure at once, and the statement exposes this: the
+flow conjunct quantifies over every sphere-supported probability measure `ν`, not just the input
+`μ` (matching the paper, whose Lemma 5.4 map is "induced by the solution map of (B.1)", i.e.
+measure-independent); Dirac instantiation
 (`flow_map_mem_of_universal`) turns the measure-level engine conclusions into the pointwise
 estimate `‖ψ x - ψε x‖ < ε/2` on the good set, and the good/bad `L²` ledger
 (`sqrtIntegral_le_of_good_bad`, diameter cost `2` on the `≤ ε²/8` bad mass) closes the bound.
@@ -43,7 +46,13 @@ variable {d : ℕ}
 /-- **Lemma 5.4, finite-range core.** A measurable transport map with finitely many on-sphere
 values is `L²(μ)`-approximated, to tolerance `ε` and within exact total duration `T`, by the
 transport map of an attention schedule. This is the gated companion of `lemma_5_4`: the general
-statement reduces to it by value rounding. -/
+statement reduces to it by value rounding.
+
+The flow conjunct is UNIVERSAL: every block of the schedule is `V = 0`, so the single transport
+map `ψε` pushes forward every sphere-supported probability measure `ν`, not just the input `μ`
+(the paper's Lemma 5.4 map is "induced by the solution map of (B.1)", p.24, arXiv:2411.04551v3,
+i.e. measure-independent); the input instance is the application at `ν := μ`. Only the `L²`
+estimate is `μ`-specific. -/
 theorem lemma_5_4_of_finite_range (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure μ]
     (ψ : Eucl d → Eucl d) (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
     (hμs : supportedIn μ (sphere d)) (hψm : Measurable ψ)
@@ -51,7 +60,9 @@ theorem lemma_5_4_of_finite_range (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProb
     (hrange : ∃ s : Finset (Eucl d), (∀ z ∈ s, z ∈ sphere d) ∧ ∀ x, ψ x ∈ s) :
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
       AttnSchedule.durationSum θ = T ∧
-      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        attnMeasureFlow θ ν = ν.map ψε) ∧
+      Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε := by
   classical
@@ -413,6 +424,6 @@ theorem lemma_5_4_of_finite_range (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProb
     calc Real.sqrt ((ε / 2) ^ 2 + 2 ^ 2 * (ε ^ 2 / 8))
         ≤ Real.sqrt (ε ^ 2) := Real.sqrt_le_sqrt (by nlinarith)
       _ = ε := Real.sqrt_sq hε.le
-  exact ⟨θtot, F, hdur, hUtot μ hμs, hFm, hint, le_trans hledger hfinal⟩
+  exact ⟨θtot, F, hdur, hUtot, hFm, hint, le_trans hledger hfinal⟩
 
 end MeasureToMeasure.Statements

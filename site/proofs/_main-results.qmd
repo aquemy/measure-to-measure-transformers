@@ -60,10 +60,14 @@ theorem lemma_5_4 (hd : 3 ≤ d) (μ : Measure (Eucl d)) [IsProbabilityMeasure �
     (hψs : ∀ᵐ x ∂μ, ψ x ∈ sphere d) :
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
       AttnSchedule.durationSum θ = T ∧
-      attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        attnMeasureFlow θ ν = ν.map ψε) ∧
+      Measurable ψε ∧
       Integrable (fun x => ‖ψ x - ψε x‖ ^ 2) μ ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
 ```
+
+The flow conjunct is stated universally: the schedule's single transport map `ψε` pushes forward *every* sphere-supported probability measure, not just the input `μ` — matching the paper's "induced by the solution map of (B.1)" (a measure-independent map); only the `L²` estimate is `μ`-specific.
 
 [`Statements/MidLevel.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MidLevel.lean){.lean-src}
 :::
