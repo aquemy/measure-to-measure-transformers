@@ -88,4 +88,48 @@ theorem prop_3_1_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
     have hsub : Metric.ball (α i) r ⊆ {x | 0 < ⟪α i, x⟫} := fun x hx => hball_hemi i x hx
     exact measure_mono_null (Set.compl_subset_compl.mpr hsub) (hsupp i)
 
+/-- **Theorem 1.1 companion on the exclusive-supports gate** (Dirac targets). `theorem_1_1`'s
+exact statement plus `hgate : Leaves.ExclusiveSupportFamily μ₀`: under a shared missing direction,
+a family whose members each own an exclusive support point is steered by one schedule to within
+`ε` of the point-mass targets `δ_{x i}` in `W₂`.
+
+Proof: `theorem_1_1`'s body verbatim, with the call to `prop_3_1` swapped for the gated companion
+`prop_3_1_of_exclusive_supports` (extra argument `hgate`); the machine-checked second half
+(`exists_parked_schedule_of_map_targets` with constant maps, the `Measure.map_const` Dirac
+identification, and the `attnMeasureFlow_append` concatenation) is unchanged. Kernel closure
+`{propext, Classical.choice, Quot.sound, lemma_3_3}`, NOT axiom-free: the gated disentangler
+still rests on the `lemma_3_3` axiom. The paper's Theorem 1.1 carries no exclusivity gate; the
+general shared-supports case stays on the original `theorem_1_1` and the untouched axiom (see the
+module docstring). -/
+theorem theorem_1_1_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
+    (μ₀ : Fin N → Measure (Eucl d)) (x : Fin N → Eucl d)
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε) (hmiss : SharedMissingDirection μ₀)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμs : ∀ i, supportedIn (μ₀ i) (sphere d)) (hx : ∀ i, x i ∈ sphere d)
+    (hne : Pairwise fun i j => μ₀ i ≠ μ₀ j)
+    (hgate : Leaves.ExclusiveSupportFamily μ₀) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      ∀ i, Axioms.W2 (attnMeasureFlow θ (μ₀ i)) (Measure.dirac (x i)) ≤ ε := by
+  have hT2 : 0 < T / 2 := by linarith
+  obtain ⟨θ₁, hdur₁, hdisj, -⟩ :=
+    prop_3_1_of_exclusive_supports hd μ₀ (T / 2) hT2 hμ hμs hne hmiss hgate
+  have hν : ∀ i, IsProbabilityMeasure (attnMeasureFlow θ₁ (μ₀ i)) := fun i =>
+    haveI := hμ i
+    Foundations.isProbabilityMeasure_attnMeasureFlow θ₁ (μ₀ i) (hμs i)
+  have hνs : ∀ i, supportedIn (attnMeasureFlow θ₁ (μ₀ i)) (sphere d) := fun i =>
+    Foundations.attnMeasureFlow_supportedIn_sphere θ₁ (μ₀ i) (hμs i)
+  -- One schedule steers every member to its (constant-map pushforward) Dirac target.
+  obtain ⟨Θ, hdurΘ, hΘ⟩ :=
+    exists_parked_schedule_of_map_targets hd (fun i => attnMeasureFlow θ₁ (μ₀ i))
+      (fun i _ => x i) (T / 2) ε hT2 hε hν hνs hdisj (fun _ => measurable_const)
+      (fun i => Filter.Eventually.of_forall fun _ => hx i)
+  refine ⟨θ₁ ++ Θ, ?_, fun i => ?_⟩
+  · rw [AttnSchedule.durationSum_append, hdur₁, hdurΘ]; ring
+  · rw [Foundations.attnMeasureFlow_append]
+    -- The constant-map pushforward of a probability measure is the Dirac at the target point.
+    have hmap : (attnMeasureFlow θ₁ (μ₀ i)).map (fun _ => x i) = Measure.dirac (x i) := by
+      haveI := hν i
+      rw [Measure.map_const, measure_univ, one_smul]
+    simpa [hmap] using hΘ i
+
 end MeasureToMeasure.Statements
