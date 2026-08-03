@@ -157,6 +157,7 @@ import MeasureToMeasure.Leaves.CellStagingInduction
 import MeasureToMeasure.Leaves.MergeTolerantRelocation
 import MeasureToMeasure.Leaves.UniversalFlowPointwise
 import MeasureToMeasure.Leaves.OverlapStagingInduction
+import MeasureToMeasure.Leaves.ClearanceCapCover
 import MeasureToMeasure.Leaves.ArcHopCorridor
 import MeasureToMeasure.Leaves.TunedCapSystem
 import MeasureToMeasure.Leaves.LandingPoleFamily
