@@ -15,7 +15,8 @@ Provenance of the transcriptions (`git show <rev>:<file>`):
 * pre-F11 statements: `4411b08^` (repaired in PR #64, finding F11);
 * pre-F12 statements: `db5889f^` (repaired in PR #66, finding F12);
 * pre-F14 statements: `acafe3a^` (restated over the mean-field layer in PR #69, finding F14);
-* pre-F31 statement: `33693a4^` (repaired in PR #338, finding F31).
+* pre-F31 statement: `33693a4^` (repaired in PR #338, finding F31);
+* pre-F33 statement: `c88cfdd^` (repaired in PR #354, finding F33).
 
 Two dynamics layers exist since PR #69 (see `Statements/MidLevel.lean`): axioms whose paper
 constructions are perceptron-only stayed on the linear `Params`/`measureFlow` layer; the
@@ -173,6 +174,21 @@ abbrev OldLemma54NoDimSig : Prop :=
     ∃ (θ : AttnSchedule d) (ψε : Eucl d → Eucl d),
       attnMeasureFlow θ μ = μ.map ψε ∧ Measurable ψε ∧
       Real.sqrt (∫ x, ‖ψ x - ψε x‖ ^ 2 ∂μ) ≤ ε
+
+/-- Pre-F33 `exists_parked_schedule` with the **horizon positivity `0 < T` removed** (finding
+F33; conclusion weakened to the horizon clause the disproof uses: switch budget and per-member
+`W₂` clauses dropped, per this file's weakening convention). INCONSISTENT, not merely false at
+a crafted witness: at `N = 0` both family hypotheses are vacuous (`Fin.elim0`), so `T = -1`
+forces a schedule of total duration `-1` against the kernel-checked `durationSum_nonneg`
+(`oldParkedScheduleNoHorizon_false`). The repaired axiom carries `hT : 0 < T`, the paper's own
+Prop 2.2 quantifier ("for any 𝑇 > 0", pp. 11-12). -/
+abbrev OldParkedScheduleNoHorizonSig : Prop :=
+  ∀ {d N : ℕ}, 3 ≤ d → ∀ (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ) (s : Fin N → ℕ),
+    DisjointSupports ν →
+    (∀ i, ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      AttnSchedule.switches θ ≤ s i ∧
+      Axioms.W2 (attnMeasureFlow θ (ν i)) (target i) ≤ ε) →
+    ∃ Θ : AttnSchedule d, AttnSchedule.durationSum Θ = T
 
 /-- **Draft, REJECTED before admission** (`disentangle_insert_colinear_phase4_gap` campaign, group
 G3, leaf `massGapCollapse_capMass_nonzero`): a `GenRestNearBall`-style blanket non-degeneracy

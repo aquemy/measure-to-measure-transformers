@@ -76,7 +76,7 @@ exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`). Represen
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
 | `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1,cluster_to_point,lemma_5_4}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → 8; `cluster_to_point` via the F30 three-pull chain, 2026-07-28, 8 → 7; `lemma_5_4` via the F32 value-rounding + staging/relocation pipeline, 2026-08-03, 7 → **6**) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining five statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30; `lemma_5_4` discharged 2026-08-03, F32) |
+| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining five statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30; `lemma_5_4` discharged 2026-08-03, F32; `exists_parked_schedule` horizon-repaired 2026-08-03, F33: `hT : 0 < T` restored per Prop 2.2, the hT-free shape was inconsistent) |
 | `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the sixth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
 | `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
@@ -1037,6 +1037,41 @@ F31 opened. The discharge has three layers:
 
 `theorem_1_2`'s axiom closure consequently drops to
 `{exists_disentangling_balls, exists_parked_schedule}`. Statement-layer axiom inventory 7 → **6**.
+
+### F33 (soundness repair, recorded 2026-08-03) `exists_parked_schedule` was inconsistent without horizon positivity: the empty family at `T = -1` contradicts `durationSum_nonneg`; repaired with `hT : 0 < T`
+
+The parking axiom `exists_parked_schedule` (one shared schedule steers a disjointly supported
+family, each member within `ε` of its target, summed switch budget, exact total duration `T`)
+was stated without horizon positivity. Unlike the F11/F12/F31 class (false axioms refuted by a
+crafted witness), the flaw here is degenerate-corner INCONSISTENCY, no witness data needed:
+
+1. At `N = 0` both family hypotheses are vacuous: `DisjointSupports` is witnessed by
+   `Fin.elim0`, and the per-member steering hypothesis quantifies over `Fin 0`.
+2. The conclusion still demands `∃ Θ, durationSum Θ = T` for an ARBITRARY real `T`.
+   Instantiate `d = 3`, `N = 0`, `T = -1`: the produced schedule has total duration `-1`,
+   contradicting the kernel-checked `AttnSchedule.durationSum_nonneg` (durations are
+   nonnegative by the `AttnParams` structure itself). `False` in two lines of `linarith`.
+
+Every kernel closure containing the axiom (`theorem_1_1`, `theorem_1_2`) therefore rested on an
+inconsistent hypothesis until the repair; the probe kernel-verified both directions before the
+fix landed (the old shape yields `False`; the repaired shape blocks the exploit).
+
+**The repair** (PR #354). `hT : 0 < T` added immediately after `(T ε : ℝ)`, the paper's OWN
+quantifier: Prop 2.2 reads "Then for any 𝑇 > 0 and 𝜀 > 0 there exist piecewise constant
+(W, U, 𝑏) : [0, 𝑇] → ..." (pp. 11-12, arXiv:2411.04551v3); the hypothesis was dropped in error
+at admission. Consumer compatibility is total: the only call sites, `theorem_1_1` and
+`theorem_1_2`, already hold `hT2 : 0 < T / 2` in scope and thread it verbatim. The `N = 0`,
+`T > 0` corner of the repaired axiom is satisfiable, not vacuous (any single positive-duration
+block gives `durationSum = T` with the member clauses vacuous), and the non-vacuity witness
+moved from the now-illegal empty schedule at horizon `0` to a unit-pause schedule at `T = 1`:
+one `V = 0` zero-perceptron block whose flow is the identity via the linear bridge
+(`attnMeasureFlow_singleton_eq_map_blockFlow` against a zero-field `Block`), applied FULLY with
+the conclusion type ascribed (F22 rule). The kernel disproof is
+`Regression/Refuted/F33_ParkedScheduleNegativeT.lean` over the transcription
+`Regression.OldParkedScheduleNoHorizonSig` (conclusion weakened to the horizon clause the
+disproof uses), with the must-fail adapter
+`Refutations/F33_exists_parked_schedule_negative_horizon.lean` asserting the current axiom
+cannot reproduce the horizon-free shape.
 
 ### Verdict
 
