@@ -24,3 +24,4 @@ import Regression.NonVacuity.DisentangleResolvingAsym
 import Regression.NonVacuity.DisentangleAvoidingInsert
 import Regression.NonVacuity.Lemma33CapSeparation
 import Regression.NonVacuity.DisentangleAssembly
+import Regression.NonVacuity.MergeTolerantRelocation

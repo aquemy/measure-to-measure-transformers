@@ -1,7 +1,8 @@
+import MeasureToMeasure.Leaves.CellStagingInduction
 import MeasureToMeasure.Leaves.PoleGeometry
 
 /-!
-# Leaves (lemma 5.4 campaign, G7): merge-tolerant relocation, landing-pole geometry
+# Leaves (lemma 5.4 campaign, G7): merge-tolerant relocation
 
 Phase 2 of the `lemma_5_4` discharge moves each Phase-1 staging ball's mass into a small ball
 around its own target `z (k i)`, where targets may REPEAT (several cells share one value of the
@@ -24,12 +25,25 @@ of radius just under `δ/8` can tile the whole `δ/2`-cap. Without a bound like 
 ball centered at the origin with radius `< δ/8` can swallow the entire sphere. Phase 2's consumers
 control both: avoided balls are staging and landing balls whose radii shrink at will, and a large
 `δ` target can always be shrunk before landing.
+
+The second and third leaves are Phase 2's transport engine. `exists_relocation_hop_chain` moves a
+single staged ball along a GIVEN chain of hop centres, one `exists_staging_collapse_step` block
+per hop, exactly fixing everything disjoint from the hop gate balls; because the collapse is
+support-level and exact, no retention budget accumulates between hops, which is precisely the
+tension that blocked the prop_2_2 arc-chain machinery's multi-hop induction.
+`exists_merge_tolerant_relocation` runs these chains for all staged balls in index order with the
+avoid set growing by one landing ball per step: each chain's gates clear the not yet moved source
+balls and the already placed landing balls, so every tracked unit is handled by exactly one clause
+per step. Corridor data (the chains and their avoidance) enters as a HYPOTHESIS bundle: producing
+it, i.e. hop chains between prescribed sphere points clearing finitely many shrinkable closed
+balls, is the one remaining geometric obligation of the campaign and lives with the G8 assembly.
 -/
 
 set_option autoImplicit false
 
 namespace MeasureToMeasure.Leaves
 
+open MeasureTheory MeasureToMeasure.Foundations MeasureToMeasure.Statements
 open scoped RealInnerProductSpace
 
 variable {d : ℕ}
@@ -200,5 +214,208 @@ theorem exists_landing_pole_avoiding (hd : 2 ≤ d) {z : Eucl d} (hz : z ∈ sph
       rw [Metric.mem_ball]
       linarith
     exact hεball hyball (Set.mem_iUnion.mpr ⟨i, hyi⟩)
+
+variable [NeZero d]
+
+/-- **Single-ball relocation along a given hop chain.** For on-sphere hop centres
+`w 0, …, w M`, a staging radius `ρ > 0`, and per-hop capture/gate radii `a t < b t ≤ 2` with
+`dist (w t.succ) (w t.castSucc) + ρ ≤ a t`, one staging-collapse block per hop yields a schedule
+of duration exactly `M * τ` that drives every sphere probability measure carried by
+`Metric.ball (w 0) ρ` into `Metric.ball (w (Fin.last M)) ρ`, while EXACTLY fixing every sphere
+probability measure supported in a set disjoint from all the hop gate balls
+`Metric.ball (w t.succ) (b t)`. Induction over the hop prefix: after `K` hops the tracked mass
+occupies `Metric.ball (w K) ρ`, which the capture bound places inside the next hop's collapse
+ball; `exists_staging_collapse_step` does one hop. There is NO tension between consecutive hops:
+the support-level collapse is exact, so no retention budget accumulates (contrast the prop_2_2
+arc-chain machinery, where exactly such a budget blocked the multi-hop induction). -/
+theorem exists_relocation_hop_chain {M : ℕ} (w : Fin (M + 1) → Eucl d)
+    (hw : ∀ t, w t ∈ sphere d) {ρ : ℝ} (hρ : 0 < ρ) (a b : Fin M → ℝ)
+    (hcap : ∀ t : Fin M, dist (w t.succ) (w t.castSucc) + ρ ≤ a t)
+    (hab : ∀ t, a t < b t) (hb2 : ∀ t, b t ≤ 2) {τ : ℝ} (hτ : 0 < τ) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = (M : ℝ) * τ ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν (Metric.ball (w 0) ρ) →
+        supportedIn (attnMeasureFlow θ ν) (Metric.ball (w (Fin.last M)) ρ)) ∧
+      (∀ F : Set (Eucl d), (∀ t : Fin M, Disjoint F (Metric.ball (w t.succ) (b t))) →
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+  have key : ∀ K : ℕ, K ≤ M → ∃ θ : AttnSchedule d,
+      AttnSchedule.durationSum θ = (K : ℝ) * τ ∧
+      (∀ hK : K < M + 1, ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] →
+        supportedIn ν (sphere d) → supportedIn ν (Metric.ball (w 0) ρ) →
+        supportedIn (attnMeasureFlow θ ν) (Metric.ball (w ⟨K, hK⟩) ρ)) ∧
+      (∀ F : Set (Eucl d), (∀ t : Fin M, (t : ℕ) < K → Disjoint F (Metric.ball (w t.succ) (b t))) →
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+    intro K
+    induction K with
+    | zero =>
+      intro _
+      refine ⟨[], by simp, ?_, ?_⟩
+      · intro hK ν _ _ hν0
+        have h0 : (⟨0, hK⟩ : Fin (M + 1)) = 0 := rfl
+        rw [h0]
+        exact hν0
+      · intro F _ ν _ _ _
+        rfl
+    | succ K ih =>
+      intro hK1
+      have hKM : K < M := hK1
+      obtain ⟨θ, hθdur, hmove, hfix⟩ := ih (Nat.le_of_lt hKM)
+      set t : Fin M := ⟨K, hKM⟩ with htdef
+      have ha0 : 0 < a t := lt_of_lt_of_le (by positivity) (le_trans (by
+        have := dist_nonneg (x := w t.succ) (y := w t.castSucc)
+        linarith) (hcap t))
+      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF⟩ :=
+        exists_staging_collapse_step (hw t.succ) ha0 (hab t) (hb2 t) hτ hρ
+      refine ⟨θ ++ [p], ?_, ?_, ?_⟩
+      · rw [AttnSchedule.durationSum_append, hθdur]
+        have hsing : AttnSchedule.durationSum [p] = p.duration := by
+          simp [AttnSchedule.durationSum]
+        rw [hsing, hpdur]
+        push_cast
+        ring
+      · -- move: capture the previous staging ball and collapse at the next centre
+        intro hK ν _hprob hνs hν0
+        haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+          isProbabilityMeasure_attnMeasureFlow θ ν hνs
+        have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+          attnMeasureFlow_supportedIn_sphere θ ν hνs
+        have hprev : supportedIn (attnMeasureFlow θ ν) (Metric.ball (w ⟨K, by omega⟩) ρ) :=
+          hmove (by omega) ν hνs hν0
+        have hclosed : supportedIn (attnMeasureFlow θ ν)
+            (Metric.closedBall (w t.succ) (a t)) := by
+          refine supportedIn_mono (fun x hx => ?_) hprev
+          rw [Metric.mem_ball] at hx
+          rw [Metric.mem_closedBall]
+          have hcast : w t.castSucc = w ⟨K, by omega⟩ := rfl
+          have htri := dist_triangle x (w t.castSucc) (w t.succ)
+          have hd2 := hcap t
+          rw [dist_comm (w t.succ) (w t.castSucc)] at hd2
+          rw [hcast] at htri hd2
+          linarith
+        rw [attnMeasureFlow_append]
+        have hsucc : (⟨K + 1, hK⟩ : Fin (M + 1)) = t.succ := rfl
+        rw [hsucc]
+        exact hpcol (attnMeasureFlow θ ν) hν's hclosed
+      · -- fixing: one more gate absorbed
+        intro F hF ν _hprob hνs hνF
+        have hfixed : attnMeasureFlow θ ν = ν :=
+          hfix F (fun s hs => hF s (Nat.lt_succ_of_lt hs)) ν hνs hνF
+        rw [attnMeasureFlow_append, hfixed]
+        exact hpfixF F (hF t (Nat.lt_succ_self K)) ν hνs hνF
+  obtain ⟨θ, hθdur, hmove, hfix⟩ := key M le_rfl
+  refine ⟨θ, hθdur, ?_, ?_⟩
+  · intro ν _hprob hνs hν0
+    have hlast : (Fin.last M) = (⟨M, by omega⟩ : Fin (M + 1)) := rfl
+    rw [hlast]
+    exact hmove (by omega) ν hνs hν0
+  · intro F hF ν _hprob hνs hνF
+    exact hfix F (fun s _ => hF s) ν hνs hνF
+
+/-- **The merge-tolerant relocation engine: all staged balls delivered, corridors given as
+data.** Balls are processed in index order; ball `i` follows its own hop chain
+`w i 0, …, w i (Mc i)` (`exists_relocation_hop_chain`), whose gate balls avoid every not yet
+moved source ball (`hgate_src`) and every already placed landing ball (`hgate_land`), so at
+every step each tracked unit is handled by exactly one clause: fixed at its source before its
+turn, moved by its own chain on its turn, fixed at its landing ball afterwards. Targets `z j`
+may REPEAT: the hypotheses force pairwise-disjoint landing balls even for equal targets, which
+is exactly what `exists_landing_pole_avoiding` produces when the corridors are built. Total
+duration is exactly `(∑ i, Mc i) * τ`; off-corridor mass is fixed EXACTLY.
+
+The corridor data `w`, `a`, `b` with `hgate_src`/`hgate_land` is a HYPOTHESIS here, not a
+construction: this leaf is the avoidance-composition engine, and the remaining (independent,
+purely geometric) obligation of the G7 campaign is corridor EXISTENCE, i.e. producing hop
+chains between prescribed endpoints on the sphere that clear finitely many shrinkable closed
+balls. See the campaign notes in the pull request for the precise obligation shape. -/
+theorem exists_merge_tolerant_relocation {N : ℕ}
+    (Mc : Fin N → ℕ) (w : ∀ i, Fin (Mc i + 1) → Eucl d)
+    (hw : ∀ i t, w i t ∈ sphere d) {ρ : ℝ} (hρ : 0 < ρ)
+    (a b : ∀ i, Fin (Mc i) → ℝ)
+    (hcap : ∀ i (t : Fin (Mc i)), dist (w i t.succ) (w i t.castSucc) + ρ ≤ a i t)
+    (hab : ∀ i t, a i t < b i t) (hb2 : ∀ i t, b i t ≤ 2)
+    (hgate_src : ∀ i j : Fin N, i < j → ∀ t : Fin (Mc i),
+      Disjoint (Metric.ball (w i t.succ) (b i t)) (Metric.ball (w j 0) ρ))
+    (hgate_land : ∀ i j : Fin N, j < i → ∀ t : Fin (Mc i),
+      Disjoint (Metric.ball (w i t.succ) (b i t)) (Metric.ball (w j (Fin.last (Mc j))) ρ))
+    (z : Fin N → Eucl d) {δ : ℝ}
+    (hland : ∀ j, Metric.ball (w j (Fin.last (Mc j))) ρ ⊆ Metric.ball (z j) δ)
+    {τ : ℝ} (hτ : 0 < τ) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = (∑ i, (Mc i : ℝ)) * τ ∧
+      (∀ j, ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν (Metric.ball (w j 0) ρ) →
+        supportedIn (attnMeasureFlow θ ν) (Metric.ball (z j) δ)) ∧
+      (∀ F : Set (Eucl d),
+        (∀ i, ∀ t : Fin (Mc i), Disjoint F (Metric.ball (w i t.succ) (b i t))) →
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+  set g : ℕ → ℝ := fun m => if h : m < N then (Mc ⟨m, h⟩ : ℝ) * τ else 0 with hgdef
+  have key : ∀ K : ℕ, K ≤ N → ∃ θ : AttnSchedule d,
+      AttnSchedule.durationSum θ = ∑ m ∈ Finset.range K, g m ∧
+      (∀ j : Fin N, (j : ℕ) < K → ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] →
+        supportedIn ν (sphere d) → supportedIn ν (Metric.ball (w j 0) ρ) →
+        supportedIn (attnMeasureFlow θ ν) (Metric.ball (w j (Fin.last (Mc j))) ρ)) ∧
+      (∀ F : Set (Eucl d),
+        (∀ i : Fin N, (i : ℕ) < K → ∀ t : Fin (Mc i),
+          Disjoint F (Metric.ball (w i t.succ) (b i t))) →
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+    intro K
+    induction K with
+    | zero =>
+      intro _
+      refine ⟨[], by simp [AttnSchedule.durationSum], ?_, ?_⟩
+      · intro j hj
+        exact absurd hj (Nat.not_lt_zero _)
+      · intro F _ ν _ _ _
+        rfl
+    | succ K ih =>
+      intro hK1
+      have hKN : K < N := hK1
+      obtain ⟨θ, hθdur, hmove, hfix⟩ := ih (Nat.le_of_lt hKN)
+      set iK : Fin N := ⟨K, hKN⟩ with hiKdef
+      obtain ⟨θK, hθKdur, hKmove, hKfix⟩ := exists_relocation_hop_chain (w iK) (hw iK)
+        hρ (a iK) (b iK) (hcap iK) (hab iK) (hb2 iK) hτ
+      refine ⟨θ ++ θK, ?_, ?_, ?_⟩
+      · rw [AttnSchedule.durationSum_append, hθdur, hθKdur, Finset.sum_range_succ]
+        have hgK : g K = (Mc iK : ℝ) * τ := dif_pos hKN
+        rw [hgK]
+      · intro j hj ν _hprob hνs hν0
+        haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+          isProbabilityMeasure_attnMeasureFlow θ ν hνs
+        have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+          attnMeasureFlow_supportedIn_sphere θ ν hνs
+        rcases Nat.lt_succ_iff_lt_or_eq.mp hj with hjK | hjK
+        · -- already placed: the fresh chain's gates avoid the landing ball
+          have hplaced := hmove j hjK ν hνs hν0
+          rw [attnMeasureFlow_append]
+          rw [hKfix (Metric.ball (w j (Fin.last (Mc j))) ρ)
+            (fun t => (hgate_land iK j (by rw [Fin.lt_def]; exact hjK) t).symm)
+            (attnMeasureFlow θ ν) hν's hplaced]
+          exact hplaced
+        · -- the fresh ball: fixed so far, then moved by its own chain
+          have hjeq : j = iK := Fin.ext hjK
+          subst hjeq
+          have hfixed : attnMeasureFlow θ ν = ν :=
+            hfix (Metric.ball (w iK 0) ρ)
+              (fun i hi t => (hgate_src i iK (by rw [Fin.lt_def]; exact hi) t).symm)
+              ν hνs hν0
+          rw [attnMeasureFlow_append, hfixed]
+          exact hKmove ν hνs hν0
+      · intro F hF ν _hprob hνs hνF
+        have hfixed : attnMeasureFlow θ ν = ν :=
+          hfix F (fun i hi t => hF i (Nat.lt_succ_of_lt hi) t) ν hνs hνF
+        rw [attnMeasureFlow_append, hfixed]
+        exact hKfix F (fun s => hF iK (Nat.lt_succ_self K) s) ν hνs hνF
+  obtain ⟨θ, hθdur, hmove, hfix⟩ := key N le_rfl
+  refine ⟨θ, ?_, ?_, ?_⟩
+  · rw [hθdur, ← Fin.sum_univ_eq_sum_range g N, Finset.sum_mul]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [hgdef]
+    simp only [i.isLt, dif_pos, Fin.eta]
+  · intro j ν _hprob hνs hν0
+    exact supportedIn_mono (hland j) (hmove j j.isLt ν hνs hν0)
+  · intro F hF ν _hprob hνs hνF
+    exact hfix F (fun i _ s => hF i s) ν hνs hνF
 
 end MeasureToMeasure.Leaves
