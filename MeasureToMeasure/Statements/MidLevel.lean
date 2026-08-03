@@ -446,6 +446,49 @@ theorem prop_4_1 (hd : 3 ≤ d) (M : ℕ) (x₀ y : Fin M → Eucl d) (T : ℝ) 
 -- vector orthogonal to both (the consumer of `3 ≤ d`), `switches = 3 ≤ 7`; see the theorem's
 -- docstring and finding F30 in `RESEARCH.md`.
 
+/-- **Measurable gluing over disjoint supports** (the reusable core of Lemma 5.1's proof). Given a
+family of measures with pairwise disjoint supports and a measurable map `S i` for each member, a
+single measurable map `g` agrees with each `S i` on `ν i`-almost every point. This re-exposes the
+machinery `lemma_5_1` below machine-checks -- the `toMeasurable` carrier upgrade plus the
+indicator-sum glue -- with the per-member a.e. agreement as the conclusion instead of pushforward
+equality, so consumers needing pointwise conclusions (e.g. a universal-map companion to
+`exists_parked_schedule`) can use it without re-deriving the carriers. `lemma_5_1` is now derived
+from this via `Measure.map_congr`. -/
+theorem exists_measurable_glue {N : ℕ} (ν : Fin N → Measure (Eucl d))
+    (hdisj : DisjointSupports ν) (S : Fin N → Eucl d → Eucl d)
+    (hSm : ∀ i, Measurable (S i)) :
+    ∃ g : Eucl d → Eucl d, Measurable g ∧ ∀ i, g =ᵐ[ν i] S i := by
+  classical
+  obtain ⟨A, hAsupp, hAdisj⟩ := hdisj
+  -- Measurable, full-mass carriers `C i ⊆ A i`; pairwise disjointness is inherited from `A`.
+  set C : Fin N → Set (Eucl d) := fun i => (toMeasurable (ν i) (A i)ᶜ)ᶜ with hCdef
+  have hCmeas : ∀ i, MeasurableSet (C i) := fun i => (measurableSet_toMeasurable _ _).compl
+  have hCmass : ∀ i, ν i (C i)ᶜ = 0 := by
+    intro i
+    simp only [hCdef, compl_compl]
+    rw [measure_toMeasurable]
+    exact hAsupp i
+  have hCsub : ∀ i, C i ⊆ A i := by
+    intro i x hx
+    simp only [hCdef, Set.mem_compl_iff] at hx
+    by_contra hxA
+    exact hx (subset_toMeasurable (ν i) (A i)ᶜ hxA)
+  have hCdisj : ∀ i j, i ≠ j → Disjoint (C i) (C j) := fun i j hij =>
+    Disjoint.mono (hCsub i) (hCsub j) (hAdisj hij)
+  -- Glue the measurable per-member maps over the disjoint carriers.
+  refine ⟨fun x => ∑ i, (C i).indicator (S i) x,
+    Finset.measurable_sum _ (fun i _ => (hSm i).indicator (hCmeas i)), ?_⟩
+  intro i
+  have hEqOn : Set.EqOn (fun x => ∑ j, (C j).indicator (S j) x) (S i) (C i) := by
+    intro x hx
+    show ∑ j, (C j).indicator (S j) x = S i x
+    rw [Finset.sum_eq_single i
+        (fun j _ hji => Set.indicator_of_notMem
+          (Set.disjoint_left.mp (hCdisj i j hji.symm) hx) (S j))
+        (fun hi => absurd (Finset.mem_univ i) hi)]
+    exact Set.indicator_of_mem hx (S i)
+  exact Filter.eventuallyEq_of_mem (mem_ae_iff.mpr (hCmass i)) hEqOn
+
 /-- **Lemma 5.1** (transport map after disentanglement). If the pairs are **disentangled** -- both the
 source family `μ₀` and the target family `μ₁` have pairwise disjoint supports (this is what Proposition
 3.1 achieves for `μ^i₀` and `μ^i₁` in the paper) -- and each pair is individually matchable, then a
@@ -454,7 +497,8 @@ map taken **measurable** (finding F19 below), the glue is elementary -- carve me
 carriers `C i := (toMeasurable (μ₀ i) (S i)ᶜ)ᶜ ⊆ S i` (pairwise disjoint, inherited from `S`, so NO
 optimal-transport / measurable-selection theory is needed -- the original "Mathlib lacks it"
 justification was too pessimistic for the disjoint-support case) and set `ψ := ∑ i, (C i).indicator Tᵢ`,
-which agrees with each `Tᵢ` `μ₀ i`-a.e. (`Measure.map_congr`).
+which agrees with each `Tᵢ` `μ₀ i`-a.e. (`Measure.map_congr`). The carrier-and-glue construction is
+factored out as `exists_measurable_glue` above; this proof is now its application.
 
 **Fidelity (soundness):** the disjoint-supports hypotheses are load-bearing and are the paper's context
 (Lemma 5.1 takes the measures from Proposition 3.1 applied to both `μ^i₀` and `μ^i₁`, i.e. already
@@ -486,40 +530,9 @@ theorem lemma_5_1 {N : ℕ} (μ₀ μ₁ : Fin N → Measure (Eucl d))
     (hdisj₀ : DisjointSupports μ₀) (_hdisj₁ : DisjointSupports μ₁)
     (hmatch : ∀ i, ∃ Ti : Eucl d → Eucl d, Measurable Ti ∧ (μ₀ i).map Ti = μ₁ i) :
     ∃ ψ : Eucl d → Eucl d, Measurable ψ ∧ ∀ i, (μ₀ i).map ψ = μ₁ i := by
-  classical
-  obtain ⟨S, hSsupp, hSdisj⟩ := hdisj₀
   choose T hTmeas hTmap using hmatch
-  -- Measurable, full-mass carriers `C i ⊆ S i`; pairwise disjointness is inherited from `S`.
-  set C : Fin N → Set (Eucl d) := fun i => (toMeasurable (μ₀ i) (S i)ᶜ)ᶜ with hCdef
-  have hCmeas : ∀ i, MeasurableSet (C i) := fun i => (measurableSet_toMeasurable _ _).compl
-  have hCmass : ∀ i, μ₀ i (C i)ᶜ = 0 := by
-    intro i
-    simp only [hCdef, compl_compl]
-    rw [measure_toMeasurable]
-    exact hSsupp i
-  have hCsub : ∀ i, C i ⊆ S i := by
-    intro i x hx
-    simp only [hCdef, Set.mem_compl_iff] at hx
-    by_contra hxS
-    exact hx (subset_toMeasurable (μ₀ i) (S i)ᶜ hxS)
-  have hCdisj : ∀ i j, i ≠ j → Disjoint (C i) (C j) := fun i j hij =>
-    Disjoint.mono (hCsub i) (hCsub j) (hSdisj hij)
-  -- Glue the measurable per-pair maps over the disjoint carriers.
-  refine ⟨fun x => ∑ i, (C i).indicator (T i) x,
-    Finset.measurable_sum _ (fun i _ => (hTmeas i).indicator (hCmeas i)), ?_⟩
-  intro i
-  have hEqOn : Set.EqOn (fun x => ∑ j, (C j).indicator (T j) x) (T i) (C i) := by
-    intro x hx
-    show ∑ j, (C j).indicator (T j) x = T i x
-    rw [Finset.sum_eq_single i
-        (fun j _ hji => Set.indicator_of_notMem
-          (Set.disjoint_left.mp (hCdisj i j hji.symm) hx) (T j))
-        (fun hi => absurd (Finset.mem_univ i) hi)]
-    exact Set.indicator_of_mem hx (T i)
-  have hae : (fun x => ∑ j, (C j).indicator (T j) x) =ᵐ[μ₀ i] T i :=
-    Filter.eventuallyEq_of_mem (mem_ae_iff.mpr (hCmass i)) hEqOn
-  rw [Measure.map_congr hae]
-  exact hTmap i
+  obtain ⟨ψ, hψmeas, hψae⟩ := exists_measurable_glue μ₀ hdisj₀ T hTmeas
+  exact ⟨ψ, hψmeas, fun i => by rw [Measure.map_congr (hψae i)]; exact hTmap i⟩
 
 /-- **Lemma 5.4** (`L²` approximation by a flow map). Any measurable, a.e. sphere-valued transport
 map `ψ` of a sphere-supported probability measure is approximated in `L²(μ)` by a flow map of the
