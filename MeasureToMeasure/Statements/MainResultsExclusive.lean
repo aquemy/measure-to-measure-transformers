@@ -132,4 +132,79 @@ theorem theorem_1_1_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
       rw [Measure.map_const, measure_univ, one_smul]
     simpa [hmap] using hΘ i
 
+/-- **Theorem 1.2 companion on the exclusive-supports gate** (general targets). `theorem_1_2`'s
+exact statement plus `hgate : Leaves.ExclusiveSupportFamily μ₀`: if every input/target pair is
+matchable by a measurable transport map, the inputs share a missing direction, and each input owns
+an exclusive support point, then a single schedule steers each input to within `ε` of its target
+in `W₂`. `_hmiss₁` is retained underscore-prefixed exactly as in the original, for statement
+fidelity.
+
+Proof: `theorem_1_2`'s body verbatim, with the direct axiom call `exists_disentangling_balls`
+swapped for the machine-checked gated companion
+`Leaves.exists_disentangling_balls_of_exclusive_supports` (extra argument `hgate`); the
+`S i = Ti ∘ Φᵢ⁻¹` hoisting, the `choose` step, the parked-schedule second half
+(`exists_parked_schedule_of_map_targets`), and the append are all reused unchanged. Kernel
+closure `{propext, Classical.choice, Quot.sound, lemma_3_3}`, NOT axiom-free: the gated
+disentangler still rests on the `lemma_3_3` axiom. The paper's Theorem 1.2 carries no exclusivity
+gate; the general shared-supports case stays on the original `theorem_1_2` and the untouched
+axiom (see the module docstring). -/
+theorem theorem_1_2_of_exclusive_supports (hd : 3 ≤ d) {N : ℕ}
+    (μ₀ μ₁ : Fin N → Measure (Eucl d))
+    (T ε : ℝ) (hT : 0 < T) (hε : 0 < ε)
+    (hmiss₀ : SharedMissingDirection μ₀) (_hmiss₁ : SharedMissingDirection μ₁)
+    (hμ : ∀ i, IsProbabilityMeasure (μ₀ i))
+    (hμ₀s : ∀ i, supportedIn (μ₀ i) (sphere d))
+    (hne : Pairwise fun i j => μ₀ i ≠ μ₀ j)
+    (hmatch : Matchable μ₀ μ₁)
+    (hgate : Leaves.ExclusiveSupportFamily μ₀) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
+      ∀ i, Axioms.W2 (attnMeasureFlow θ (μ₀ i)) (μ₁ i) ≤ ε := by
+  have hT2 : 0 < T / 2 := by linarith
+  obtain ⟨θ₁, α, r, hdur₁, hr0, hr1, hα, hsep, hsupp, hmaps⟩ :=
+    Leaves.exists_disentangling_balls_of_exclusive_supports hd μ₀ (T / 2) hT2 hμ hμ₀s hne
+      hmiss₀ hgate
+  -- The disentangled family has pairwise disjoint (ball) carriers.
+  have hdisj : DisjointSupports (fun i => attnMeasureFlow θ₁ (μ₀ i)) :=
+    ⟨fun i => Metric.ball (α i) r, hsupp, fun i j hij =>
+      Metric.ball_disjoint_ball (by linarith [hsep i j hij])⟩
+  have hν : ∀ i, IsProbabilityMeasure (attnMeasureFlow θ₁ (μ₀ i)) := fun i =>
+    haveI := hμ i
+    Foundations.isProbabilityMeasure_attnMeasureFlow θ₁ (μ₀ i) (hμ₀s i)
+  have hνs : ∀ i, supportedIn (attnMeasureFlow θ₁ (μ₀ i)) (sphere d) := fun i =>
+    Foundations.attnMeasureFlow_supportedIn_sphere θ₁ (μ₀ i) (hμ₀s i)
+  -- Hoist the per-member transport data: `S i = Ti ∘ Φᵢ⁻¹` maps each disentangled member to
+  -- `μ₁ i`, is measurable, and is a.e. sphere-valued (pull back through the pushforward and
+  -- cancel `Φᵢ⁻¹ ∘ Φᵢ` on the sphere, where the on-sphere inverse applies).
+  have hSdata : ∀ i, ∃ S : Eucl d → Eucl d, Measurable S ∧
+      (∀ᵐ y ∂(attnMeasureFlow θ₁ (μ₀ i)), S y ∈ sphere d) ∧
+      (attnMeasureFlow θ₁ (μ₀ i)).map S = μ₁ i := by
+    intro i
+    obtain ⟨Ti, hTim, hTis, hTi⟩ := hmatch i
+    obtain ⟨Φ, Φinv, hΦm, hΦinvm, hΦmap, hΦleft⟩ := hmaps i
+    haveI := hμ i
+    -- The input sits a.e. on the sphere, where `Φinv` inverts `Φ`.
+    have hμae : ∀ᵐ w ∂(μ₀ i), w ∈ sphere d := by
+      rw [ae_iff]; exact hμ₀s i
+    refine ⟨Ti ∘ Φinv, hTim.comp hΦinvm, ?_, ?_⟩
+    · have hmeasset : MeasurableSet {y : Eucl d | (Ti ∘ Φinv) y ∈ sphere d} :=
+        (hTim.comp hΦinvm) Metric.isClosed_sphere.measurableSet
+      rw [hΦmap, MeasureTheory.ae_map_iff hΦm.aemeasurable hmeasset]
+      filter_upwards [hTis, hμae] with w hw hws
+      simpa [Function.comp_apply, hΦleft w hws] using hw
+    · have hcongr : ((Ti ∘ Φinv) ∘ Φ) =ᵐ[μ₀ i] Ti := by
+        filter_upwards [hμae] with w hw
+        simp [Function.comp_apply, hΦleft w hw]
+      rw [hΦmap, Measure.map_map (hTim.comp hΦinvm) hΦm, Measure.map_congr hcongr]
+      exact hTi
+  choose S hSmeas hSs hmap using hSdata
+  -- One schedule steers every member to its pushforward target `(ν i).map (S i) = μ₁ i`.
+  obtain ⟨Θ, hdurΘ, hΘ⟩ :=
+    exists_parked_schedule_of_map_targets hd (fun i => attnMeasureFlow θ₁ (μ₀ i)) S (T / 2) ε
+      hT2 hε hν hνs hdisj hSmeas hSs
+  refine ⟨θ₁ ++ Θ, ?_, fun i => ?_⟩
+  · rw [AttnSchedule.durationSum_append, hdur₁, hdurΘ]; ring
+  · rw [Foundations.attnMeasureFlow_append]
+    have h := hΘ i
+    rwa [hmap i] at h
+
 end MeasureToMeasure.Statements
