@@ -153,6 +153,7 @@ import MeasureToMeasure.Leaves.ValueRounding
 import MeasureToMeasure.Leaves.DisjointCompactCapCover
 import MeasureToMeasure.Leaves.CompactCore
 import MeasureToMeasure.Leaves.CellStagingInduction
+import MeasureToMeasure.Leaves.MergeTolerantRelocation
 import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.Lemma34Part1
 import MeasureToMeasure.Statements.MainResults
