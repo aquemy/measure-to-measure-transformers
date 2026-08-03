@@ -742,7 +742,16 @@ Layer (F14): mean-field -- the parked family members are SEPARATE mean-field sys
 schedule (each `ν i` evolves under its own self-attention field), which is exactly the paper's
 family setting. Note this family form does NOT apply to pieces of a single mixture: a mixture
 evolves as one system and its flow is not the mixture of its pieces' flows (that distinction is
-why `prop_2_2` lives on the linear layer, where its paper construction is). -/
+why `prop_2_2` lives on the linear layer, where its paper construction is).
+
+**Consumption status (2026-08-03):** this axiom is NO LONGER consumed by the main theorems.
+Both `theorem_1_1` and `theorem_1_2` now route their second half through the machine-checked
+companion `exists_parked_schedule_of_map_targets` (`Statements/ParkedSchedule.lean`), whose
+map-shaped targets cover both uses; their kernel closures contain
+`exists_disentangling_balls` alone. This axiom is retained for Appendix-B statement fidelity
+in its general form (arbitrary target measures, exact tolerance `ε`, summed switch budget
+`∑ s i`), per the twice-recorded lesson that narrowing it breaks the real theorems; `hper`
+and `s` are unconsumed by the current assembly but are the paper's own quantifiers. -/
 axiom exists_parked_schedule {N : ℕ} (hd : 3 ≤ d) (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
     (hT : 0 < T) (s : Fin N → ℕ)
     (hdisj : DisjointSupports ν)

@@ -76,10 +76,10 @@ exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`). Represen
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
 | `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1,cluster_to_point,lemma_5_4}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → 8; `cluster_to_point` via the F30 three-pull chain, 2026-07-28, 8 → 7; `lemma_5_4` via the F32 value-rounding + staging/relocation pipeline, 2026-08-03, 7 → **6**) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining five statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30; `lemma_5_4` discharged 2026-08-03, F32; `exists_parked_schedule` horizon-repaired 2026-08-03, F33: `hT : 0 < T` restored per Prop 2.2, the hT-free shape was inconsistent) |
+| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining five statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30; `lemma_5_4` discharged 2026-08-03, F32; `exists_parked_schedule` horizon-repaired 2026-08-03, F33, and since 2026-08-03 NO LONGER in any headline closure: the machine-checked companion `exists_parked_schedule_of_map_targets` serves both main theorems, the axiom stays for Appendix-B statement fidelity) |
 | `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the sixth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
 | `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
-| `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
+| `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure; since 2026-08-03 the closures of `theorem_1_1`/`theorem_1_2` are exactly `{exists_disentangling_balls}` (map-targets companion rewiring) |
 
 **Coverage gap (addressed).** `claimgraph reconcile` had reported ~73 machine-checked nodes recorded in
 the CKC history but *absent from* `blueprint/src/content.tex`. The 12 curated foundation results tracked
@@ -1072,6 +1072,37 @@ the conclusion type ascribed (F22 rule). The kernel disproof is
 disproof uses), with the must-fail adapter
 `Refutations/F33_exists_parked_schedule_negative_horizon.lean` asserting the current axiom
 cannot reproduce the horizon-free shape.
+
+### Closure shrink (recorded 2026-08-03): both main theorems now rest on `exists_disentangling_balls` alone; `exists_parked_schedule` retired from both kernel closures (statements unchanged)
+
+Payoff of the map-targets campaign (PRs #354-#360 plus this rewiring). The machine-checked
+companion `exists_parked_schedule_of_map_targets` (`Statements/ParkedSchedule.lean`: Lemma 5.1
+glue over the disjoint carriers + uniform mixture + ONE `lemma_5_4` density call at tolerance
+`ε/√N` + the coupling bound) covers exactly the map-shaped uses of the parking axiom, and both
+headline proofs are map-shaped:
+
+- `theorem_1_2`: the per-member transport maps `S i = Ti ∘ Φᵢ⁻¹` (the paper's B.4 composition)
+  are hoisted with `choose` and fed to the companion; the per-member `lemma_5_4` calls and the
+  `exists_parked_schedule` invocation are deleted. This is the paper's own general Step-2 route
+  (glue, then one density call), now kernel-checked past disentanglement.
+- `theorem_1_1`: each Dirac target is the CONSTANT-map pushforward of the disentangled member
+  (`Measure.map_const` + the probability instance identify `(ν i).map (fun _ => x i)` with
+  `δ_{x i}`), so the same companion applies; the `cluster_to_point` block is deleted as a side
+  effect (that theorem stays banked and machine-checked, F30 -- only the proof shrank, not the
+  trust base).
+
+`lean_verify` on both: axioms exactly `[propext, Classical.choice, Quot.sound,
+exists_disentangling_balls]`. The `exists_parked_schedule` AXIOM REMAINS in `MidLevel.lean` for
+Appendix-B statement fidelity in its general form (arbitrary targets, exact tolerance, summed
+switch budget; `hper` and `s` now unconsumed), per the twice-aborted-narrowing lesson
+(2026-07-09, 2026-07-14): reproducing an arbitrary mean-field endpoint as a pushforward of the
+source remains the recorded wall, so the general form must not be narrowed. Campaign bookkeeping:
+the leaf-2 rescaling engine (`Leaves/AttnRescale.lean`, PR #241) stays banked and is consumed by
+the cap-collapse leaves (`Lemma34Part1MeanField`, `AsymmetricCapCollapse`) but NOT by the final
+companion route; the `MeanFieldPark` parking primitives are consumed via
+`exists_parked_pad_block` (the companion's `N = 0` pad and `lemma_5_4`'s exact-duration pad).
+Both headline closures now equal `{exists_disentangling_balls}`, the single remaining axiom
+between the paper's main theorems and the kernel.
 
 ### Verdict
 

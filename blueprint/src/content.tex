@@ -300,10 +300,18 @@ Proposition 4.1's steering tail. [machine-checked]
 
 \begin{theorem}[Theorem 1.2]\label{thm:12}\lean{MeasureToMeasure.Statements.theorem_1_2}\uses{prop:31,lem:51,lem:l52,lem:54}
 A single Transformer matches $N$ arbitrary inputs to $N$ arbitrary (transport-matchable) targets in $W_2$. [open]
+Proved by assembly; since 2026-08-03 the second half runs through the machine-checked map-targets
+companion \texttt{exists\_parked\_schedule\_of\_map\_targets} (Lemma 5.1 glue + mixture + one
+Lemma 5.4 density call, the paper's Step 2), so the kernel closure is exactly
+\texttt{exists\_disentangling\_balls}; the parking axiom is no longer consumed.
 \end{theorem}
 
 \begin{theorem}[Theorem 1.1]\label{thm:11}\lean{MeasureToMeasure.Statements.theorem_1_1}\uses{prop:31,prop:21,prop:41}
 Dirac targets: matching with $O(dN)$ switches and norm $O(dN/T+\log 1/\varepsilon)$. [open]
+Proved by assembly; since 2026-08-03 the second half treats each Dirac target as the constant-map
+pushforward of the disentangled member and runs the same machine-checked map-targets companion
+(mirroring the general Step-2 route rather than the paper's cluster-and-match specialization), so
+the kernel closure is exactly \texttt{exists\_disentangling\_balls}.
 \end{theorem}
 
 \begin{proposition}[Generic O(1) switches, 6.2]\label{prop:62}\uses{prop:21}

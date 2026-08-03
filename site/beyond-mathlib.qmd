@@ -30,13 +30,14 @@ axiom pair (`exists_meanFieldFlow` / `meanFieldFlow_unique`) as the honest McKea
 **Both halves are now machine-checked theorems** -- uniqueness first (a measure-averaged Grönwall
 argument on the sphere), then existence (the self-consistency fixed point of leaf E3n, transported
 through the padded point flow) -- so the mean-field layer itself carries **zero** axioms.
-Today `#print axioms theorem_1_1` and `#print axioms theorem_1_2` both list exactly the
-*paper-level* dynamical statements (`exists_disentangling_balls`, `exists_parked_schedule`), each
-encoding a result from the paper's Sections 3--5 that rests on theory Mathlib does not yet have
-(`cluster_to_point`, the clustering half, is since 2026-07-28 a machine-checked theorem --
-finding F30 -- and `lemma_5_4`, the $L^2$ flow-approximation half, since 2026-08-03 -- finding
-F32). This page is the public roadmap for that program -- and, increasingly,
-a record of it.
+Today `#print axioms theorem_1_1` and `#print axioms theorem_1_2` both list exactly ONE
+*paper-level* dynamical statement: `exists_disentangling_balls`, the Section 3.3 disentanglement
+dynamics that rests on theory Mathlib does not yet have. Everything after disentanglement is
+kernel-checked: `cluster_to_point` since 2026-07-28 (finding F30), `lemma_5_4` since 2026-08-03
+(finding F32), and since 2026-08-03 the parking step itself, via the machine-checked companion
+`exists_parked_schedule_of_map_targets` (the `exists_parked_schedule` axiom remains stated for
+Appendix-B fidelity but is no longer consumed by either main theorem). This page is the public
+roadmap for that program -- and, increasingly, a record of it.
 
 ## Progress so far
 
@@ -157,9 +158,12 @@ infrastructure. They fall into three groups by *how* each is closed:
   $W_2$-continuity transfers the gap; `hbar` (equal barycenters) is retained for transcription but
   unused, so the discharge is slightly more general than the paper's lemma. This took the axiom
   count to **10**.
-- `exists_parked_schedule` (parking) -- the **remaining Tier-1 target**: the gated field vanishes off
-  its cap, so a schedule parks disjoint supports; what remains is the non-interference argument plus
-  the concatenation budget.
+- `exists_parked_schedule` (parking) -- **retired from both headline closures** (2026-08-03): the
+  machine-checked companion `exists_parked_schedule_of_map_targets` (glue + mixture + one
+  `lemma_5_4` call) covers the map-shaped uses, which is all the main theorems need. The axiom
+  itself remains stated for Appendix-B fidelity in its general form (arbitrary targets, exact
+  tolerance, summed switch budget); discharging THAT general form still needs the
+  non-interference argument plus the concatenation budget, but no headline result rests on it.
 
 **Blocked -- constructive in principle, but stalled on a missing Mathlib layer (the continuity-equation / mass-sweep theory).**
 
