@@ -22,6 +22,15 @@ The translation is the on-sphere polarization identity `‖x - c‖² = 2 - 2⟪
 `c`: the closed ball of radius `a` traces the closed sub-cap at level `m = 1 - a²/2`, the open
 ball of radius `b` traces the open gate cap at level `cosR = 1 - b²/2`, and `0 < a < b ≤ 2`
 is exactly `-1 ≤ cosR < m < 1`.
+
+The second leaf, `staged_prefix_of_separated_caps`, is the Phase-1 engine itself: caps are
+processed in index order, one staging step each, and the MERGE-TOLERANT invariant replaces
+per-cap bystander separation. Each processed cell's mass occupies a SINGLE staging ball at any
+time (initially its own cap's, hopping only to same-piece sibling balls under the `hsep`
+dichotomy), so every step handles every tracked unit through exactly one conjunct of the staging
+step and no mixed-support decomposition is ever needed. The public conclusion forgets the
+tracked index into the same-label staging-ball union, which is what a downstream Phase 2
+consumes; off-gate mass is fixed EXACTLY, and the total duration is exactly `L * τ`.
 -/
 
 namespace MeasureToMeasure.Leaves
@@ -127,5 +136,145 @@ theorem exists_staging_collapse_step {c : Eucl d} (hc : c ∈ sphere d)
     have hνb : ν (Metric.ball c b) = 0 :=
       measure_mono_null (fun x hx => Set.disjoint_right.mp hF hx) hνF
     exact hfix' ν hprob hνs hνb
+
+/-- **The merge-tolerant staging induction: every cell's mass lands in its piece's staging-ball
+union, off-cap mass exactly fixed, total duration exactly `L * τ`.** Caps are processed in index
+order, one `exists_staging_collapse_step` block each. The carried data per cap `k`: an on-sphere
+centre `c k`, collapse radius `a k`, gate radius `b k`, a piece label `lab k`, and a cell `E k`
+inside the collapse ball that misses every EARLIER gate (`hEavoid`), so cell mass is literally
+fixed until its own cap fires. The separation dichotomy `hsep` is the merge tolerance: each
+earlier staging ball is, with a `ρ`-margin, either wholly inside a later cap's collapse ball AND
+of the same piece (same-piece capture: the mass hops to the sibling's staging ball, which shares
+the piece's eventual target) or wholly off the later cap's gate ball (fixed). Staged mass
+therefore always occupies a SINGLE staging ball, so every step handles it by exactly one conjunct
+of the staging step, and no mixed-support decomposition is ever needed: this is the invariant
+that replaces per-cap bystander separation.
+
+The induction carries, for each processed cell, the index of the staging ball currently holding
+its mass (same label, monotone under hops), plus the accumulated-gate fixing clause; the public
+conclusion forgets the index into the same-label union, which is what Phase 2 consumes. -/
+theorem staged_prefix_of_separated_caps {ι : Type*} {L : ℕ}
+    (c : Fin L → Eucl d) (hc : ∀ k, c k ∈ sphere d) (lab : Fin L → ι)
+    (a b : Fin L → ℝ) (ha : ∀ k, 0 < a k) (hab : ∀ k, a k < b k) (hb2 : ∀ k, b k ≤ 2)
+    (E : Fin L → Set (Eucl d)) (hE : ∀ k, E k ⊆ Metric.closedBall (c k) (a k))
+    (hEavoid : ∀ j k : Fin L, j < k → Disjoint (E k) (Metric.ball (c j) (b j)))
+    {ρ : ℝ} (hρ : 0 < ρ)
+    (hsep : ∀ j k : Fin L, j < k →
+      (lab j = lab k ∧ dist (c j) (c k) + ρ ≤ a k) ∨ b k + ρ ≤ dist (c j) (c k))
+    {τ : ℝ} (hτ : 0 < τ) :
+    ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = (L : ℝ) * τ ∧
+      (∀ k : Fin L, ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] →
+        supportedIn ν (sphere d) → supportedIn ν (E k) →
+        supportedIn (attnMeasureFlow θ ν)
+          (⋃ j ∈ {j : Fin L | lab j = lab k}, Metric.ball (c j) ρ)) ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        (∀ j : Fin L, ν (Metric.ball (c j) (b j)) = 0) → attnMeasureFlow θ ν = ν) := by
+  have key : ∀ K : ℕ, K ≤ L → ∃ θ : AttnSchedule d,
+      AttnSchedule.durationSum θ = (K : ℝ) * τ ∧
+      (∀ k : Fin L, (k : ℕ) < K → ∃ j : Fin L, (j : ℕ) < K ∧ lab j = lab k ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] →
+          supportedIn ν (sphere d) → supportedIn ν (E k) →
+          supportedIn (attnMeasureFlow θ ν) (Metric.ball (c j) ρ)) ∧
+      (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+        (∀ j : Fin L, (j : ℕ) < K → ν (Metric.ball (c j) (b j)) = 0) →
+        attnMeasureFlow θ ν = ν) := by
+    intro K
+    induction K with
+    | zero =>
+      intro _
+      refine ⟨[], by simp, ?_, ?_⟩
+      · intro k hk
+        exact absurd hk (Nat.not_lt_zero _)
+      · intro ν _ _ _
+        rfl
+    | succ K ih =>
+      intro hK1
+      have hKL : K < L := hK1
+      obtain ⟨θ, hθdur, hP1, hP2⟩ := ih (Nat.le_of_lt hKL)
+      set kK : Fin L := ⟨K, hKL⟩ with hkKdef
+      have hkKval : (kK : ℕ) = K := rfl
+      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF⟩ :=
+        exists_staging_collapse_step (hc kK) (ha kK) (hab kK) (hb2 kK) hτ hρ
+      refine ⟨θ ++ [p], ?_, ?_, ?_⟩
+      · rw [AttnSchedule.durationSum_append, hθdur]
+        have hsing : AttnSchedule.durationSum [p] = p.duration := by
+          simp [AttnSchedule.durationSum]
+        rw [hsing, hpdur]
+        push_cast
+        ring
+      · -- the staging invariant
+        intro k hk
+        rcases Nat.lt_succ_iff_lt_or_eq.mp hk with hkK | hkK
+        · -- previously staged mass: dichotomy of cap K against its current staging ball
+          obtain ⟨j, hjK, hjlab, hjcol⟩ := hP1 k hkK
+          have hjkK : j < kK := by
+            rw [Fin.lt_def, hkKval]
+            exact hjK
+          rcases hsep j kK hjkK with ⟨hlabjk, hdist⟩ | hdist
+          · -- same-piece capture: the whole staging ball sits inside cap K's collapse ball
+            refine ⟨kK, by rw [hkKval]; exact Nat.lt_succ_self K, by rw [← hlabjk]; exact hjlab,
+              ?_⟩
+            intro ν _hprob hνs hνE
+            haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+              isProbabilityMeasure_attnMeasureFlow θ ν hνs
+            have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+              attnMeasureFlow_supportedIn_sphere θ ν hνs
+            have hballsup : supportedIn (attnMeasureFlow θ ν) (Metric.ball (c j) ρ) :=
+              hjcol ν hνs hνE
+            have hclosed : supportedIn (attnMeasureFlow θ ν)
+                (Metric.closedBall (c kK) (a kK)) := by
+              refine supportedIn_mono (fun x hx => ?_) hballsup
+              rw [Metric.mem_ball] at hx
+              rw [Metric.mem_closedBall]
+              have htri := dist_triangle x (c j) (c kK)
+              linarith
+            rw [attnMeasureFlow_append]
+            exact hpcol (attnMeasureFlow θ ν) hν's hclosed
+          · -- avoidance: the staging ball misses cap K's gate, so its mass is fixed
+            refine ⟨j, Nat.lt_succ_of_lt hjK, hjlab, ?_⟩
+            intro ν _hprob hνs hνE
+            haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+              isProbabilityMeasure_attnMeasureFlow θ ν hνs
+            have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+              attnMeasureFlow_supportedIn_sphere θ ν hνs
+            have hballsup : supportedIn (attnMeasureFlow θ ν) (Metric.ball (c j) ρ) :=
+              hjcol ν hνs hνE
+            have hdisj : Disjoint (Metric.ball (c j) ρ) (Metric.ball (c kK) (b kK)) := by
+              rw [Set.disjoint_left]
+              intro x hxj hxK
+              rw [Metric.mem_ball] at hxj hxK
+              have htri := dist_triangle (c j) x (c kK)
+              rw [dist_comm (c j) x] at htri
+              linarith
+            rw [attnMeasureFlow_append,
+              hpfixF (Metric.ball (c j) ρ) hdisj (attnMeasureFlow θ ν) hν's hballsup]
+            exact hballsup
+        · -- the fresh cell: literally fixed so far, then collapsed by cap K's own step
+          have hkeq : k = kK := Fin.ext (by rw [hkK, hkKval])
+          refine ⟨kK, by rw [hkKval]; exact Nat.lt_succ_self K, by rw [hkeq], ?_⟩
+          intro ν _hprob hνs hνE
+          have hgates : ∀ j : Fin L, (j : ℕ) < K → ν (Metric.ball (c j) (b j)) = 0 := by
+            intro j hj
+            have hjk : j < k := by
+              rw [Fin.lt_def, hkK]
+              exact hj
+            exact measure_mono_null
+              (fun x hx => Set.disjoint_right.mp (hEavoid j k hjk) hx) hνE
+          have hfixed : attnMeasureFlow θ ν = ν := hP2 ν hνs hgates
+          have hclosed : supportedIn ν (Metric.closedBall (c kK) (a kK)) := by
+            rw [← hkeq]
+            exact supportedIn_mono (hE k) hνE
+          rw [attnMeasureFlow_append, hfixed]
+          exact hpcol ν hνs hclosed
+      · -- gate fixing, one more gate absorbed
+        intro ν _hprob hνs hνgates
+        rw [attnMeasureFlow_append, hP2 ν hνs (fun j hj => hνgates j (Nat.lt_succ_of_lt hj))]
+        exact hpfix ν hνs (hνgates kK (by rw [hkKval]; exact Nat.lt_succ_self K))
+  obtain ⟨θ, hθdur, hP1, hP2⟩ := key L le_rfl
+  refine ⟨θ, hθdur, ?_, fun ν _hprob hνs hg => hP2 ν hνs fun j _ => hg j⟩
+  intro k ν _hprob hνs hνE
+  obtain ⟨j, _hjL, hjlab, hjcol⟩ := hP1 k k.isLt
+  refine supportedIn_mono ?_ (hjcol ν hνs hνE)
+  exact Set.subset_biUnion_of_mem (u := fun j => Metric.ball (c j) ρ) hjlab
 
 end MeasureToMeasure.Leaves
