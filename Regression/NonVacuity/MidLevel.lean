@@ -17,8 +17,10 @@ and `[(4/5,3/5), (5/13,12/13)]` interleave in circular order, so they cross; sol
 rational system puts the common barycenter at `(11/16, 11/16)` with weights `35/48, 13/48` on
 both chords. For part 2, the diagonal-symmetric pairs have barycenters `(17/26, 17/26)` and
 `(7/10, 7/10)` on the diagonal ray, colinear with ratio `γ = 85/91 ∈ (0, 1)`. The
-`exists_parked_schedule` witness is the singleton family already at its target under the empty
-schedule (horizon `0`).
+`exists_parked_schedule` witness is the singleton family already at its target under a unit-pause
+schedule: one `V = 0` block with zero perceptron and duration `1` (the repaired axiom requires a
+positive horizon, finding F33), whose flow is the identity via the linear bridge
+(`attnMeasureFlow_singleton_eq_map_blockFlow`) against a zero-field `Block`.
 -/
 
 set_option autoImplicit false
@@ -578,8 +580,46 @@ example : True := by
 
 /-! ### exists_parked_schedule -/
 
-/-- Non-vacuity of `exists_parked_schedule`: the singleton family `δ_{e₀}` on `𝕊² ⊂ ℝ³`, already
-at its own target under the empty schedule (horizon `0`, zero switches). -/
+/-- The zero velocity block: every point is parked (`field ≡ 0`), with unit duration. Feeds the
+linear bridge to realize a positive-horizon identity schedule for the witness below. -/
+noncomputable def zeroBlock (d : ℕ) : MeasureToMeasure.Block d where
+  field := fun _ => 0
+  lipConst := 0
+  lipschitz := LipschitzWith.const 0
+  bound := 0
+  field_le := fun _ => by simp
+  gate := fun _ => 0
+  gateBound := 0
+  gate_le := fun _ => by simp
+  radial := fun _ => by simp
+  dur := 1
+  dur_nonneg := zero_le_one
+
+/-- The unit pause: an attention block with all matrices and the bias zero, duration `1`. Its
+mean-field flow is the identity (via the `V = 0` linear bridge against `zeroBlock`). -/
+noncomputable def unitPause (d : ℕ) : Foundations.AttnParams d :=
+  ⟨0, 0, 0, 0, 0, 1, zero_le_one⟩
+
+/-- The unit pause leaves a sphere-supported Dirac in place: bridge to `zeroBlock`'s flow, whose
+field vanishes everywhere, so the flow map is the identity. -/
+theorem attnMeasureFlow_unitPause_dirac {d : ℕ} {x : Eucl d}
+    (hx : x ∈ MeasureToMeasure.sphere d) :
+    Foundations.attnMeasureFlow [unitPause d] (Measure.dirac x) = Measure.dirac x := by
+  have hagree : ∀ y ∈ MeasureToMeasure.sphere d, (zeroBlock d).field y =
+      tangentialProjector y ((unitPause d).W
+        (Foundations.reluVec ((unitPause d).U y + (unitPause d).b))) := by
+    intro y _
+    simp [zeroBlock, unitPause, Foundations.reluVec]
+  rw [Foundations.attnMeasureFlow_singleton_eq_map_blockFlow (unitPause d) rfl (zeroBlock d)
+    hagree (Measure.dirac x) (dirac_supportedIn_sphere hx)]
+  have hid : (zeroBlock d).blockFlow (unitPause d).duration = id := by
+    funext y
+    exact (zeroBlock d).blockFlow_fixed rfl _
+  rw [hid, Measure.map_id]
+
+/-- Non-vacuity of `exists_parked_schedule` (repaired form, positive horizon): the singleton
+family `δ_{e₀}` on `𝕊² ⊂ ℝ³`, held at its own target over horizon `T = 1` by the unit-pause
+schedule (one switch). FULL application with the conclusion type ascribed (T1 rule, F22). -/
 example : True := by
   have hdisj : DisjointSupports (fun _ : Fin 1 => Measure.dirac (unitE 3 0)) := by
     refine ⟨fun _ => {unitE 3 0}, fun i => ?_,
@@ -588,19 +628,26 @@ example : True := by
     rw [Measure.dirac_apply' _ (measurableSet_singleton _).compl,
       Set.indicator_of_notMem (Set.notMem_compl_iff.mpr (Set.mem_singleton (unitE 3 0)))]
   have hper : ∀ i : Fin 1, ∃ θ : Foundations.AttnSchedule 3,
-      Foundations.AttnSchedule.durationSum θ = 0 ∧
-      Foundations.AttnSchedule.switches θ ≤ (fun _ : Fin 1 => 0) i ∧
+      Foundations.AttnSchedule.durationSum θ = 1 ∧
+      Foundations.AttnSchedule.switches θ ≤ (fun _ : Fin 1 => 1) i ∧
       Axioms.W2 (Foundations.attnMeasureFlow θ (Measure.dirac (unitE 3 0)))
         (Measure.dirac (unitE 3 0)) ≤ 1 := by
     intro i
-    refine ⟨[], rfl, le_refl 0, ?_⟩
-    rw [Foundations.attnMeasureFlow_nil]
+    refine ⟨[unitPause 3], by simp [Foundations.AttnSchedule.durationSum, unitPause],
+      le_refl 1, ?_⟩
+    rw [attnMeasureFlow_unitPause_dirac (unitE_mem_sphere 3 0)]
     show (MeasureToMeasure.W2 (Measure.dirac (unitE 3 0)) (Measure.dirac (unitE 3 0))).toReal ≤ 1
     rw [MeasureToMeasure.W2_self_eq_zero]
     norm_num
-  have _h := exists_parked_schedule (le_refl 3)
-    (fun _ : Fin 1 => Measure.dirac (unitE 3 0)) (fun _ => Measure.dirac (unitE 3 0))
-    0 1 (fun _ => 0) hdisj hper
+  have _h : ∃ Θ : Foundations.AttnSchedule 3,
+      Foundations.AttnSchedule.durationSum Θ = 1 ∧
+      Foundations.AttnSchedule.switches Θ ≤ ∑ i : Fin 1, (fun _ : Fin 1 => 1) i ∧
+      ∀ i : Fin 1, Axioms.W2
+        (Foundations.attnMeasureFlow Θ ((fun _ : Fin 1 => Measure.dirac (unitE 3 0)) i))
+        ((fun _ : Fin 1 => Measure.dirac (unitE 3 0)) i) ≤ 1 :=
+    exists_parked_schedule (le_refl 3)
+      (fun _ : Fin 1 => Measure.dirac (unitE 3 0)) (fun _ => Measure.dirac (unitE 3 0))
+      1 1 one_pos (fun _ => 1) hdisj hper
   trivial
 
 /-! ### `lemma_3_4_part2` (non-vacuous re-statement, finding F26): FULL-application witness

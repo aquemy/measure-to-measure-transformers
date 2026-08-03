@@ -394,16 +394,16 @@ created   = "2026-06-30"
 
 [claims.axiom-parking]
 kind      = "conjecture"
-statement = "Parking / simultaneous action (Appendix B): if a family of measures has pairwise disjoint supports and each member can be steered to within eps of its target by some schedule of at most s_i pieces, a single schedule of at most sum s_i pieces steers all of them simultaneously (each gated to its region, parking on the others). SOUNDNESS FIX (2026-07-03, F12): d >= 3 added -- at d = 1 flow maps are monotone homeomorphisms of the line and at d = 2 they preserve the circle's cyclic order, so two Dirac targets cannot be swapped; the switch budget (sum of per-member budgets) matches the gate-and-concatenate construction. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with horizon clause durationSum = T; the parked family members are SEPARATE mean-field systems sharing one schedule (the paper's family setting). Note the family form does NOT apply to pieces of a single mixture (see prop-2-2's layer fix)."
+statement = "Parking / simultaneous action (Appendix B): if a family of measures has pairwise disjoint supports and each member can be steered to within eps of its target by some schedule of at most s_i pieces, a single schedule of at most sum s_i pieces steers all of them simultaneously (each gated to its region, parking on the others). SOUNDNESS FIX (2026-07-03, F12): d >= 3 added -- at d = 1 flow maps are monotone homeomorphisms of the line and at d = 2 they preserve the circle's cyclic order, so two Dirac targets cannot be swapped; the switch budget (sum of per-member budgets) matches the gate-and-concatenate construction. MEAN-FIELD RESTATEMENT (2026-07-03, F14 fix): stated over AttnSchedule/attnMeasureFlow with horizon clause durationSum = T; the parked family members are SEPARATE mean-field systems sharing one schedule (the paper's family setting). Note the family form does NOT apply to pieces of a single mixture (see prop-2-2's layer fix). SOUNDNESS FIX (2026-08-03, F33): hT : 0 < T added, the paper's own quantifier (Prop 2.2, 'for any T > 0', pp.11-12) previously dropped in error -- without it the axiom was INCONSISTENT: at N = 0 every per-member hypothesis is vacuous, so T = -1 forced a schedule of negative total duration, contradicting durationSum_nonneg (kernel-checked disproof Regression/Refuted/F33_ParkedScheduleNegativeT.lean). Blast radius of the repair: exactly three call sites, each with a positivity proof already in scope (hT2 in theorem_1_1/theorem_1_2; the non-vacuity witness moves from the empty schedule at horizon 0 to a unit-pause V = 0 block at horizon 1)."
 status    = "math.axiomatised"
 lean      = "MeasureToMeasure.Statements.exists_parked_schedule"
 paper     = "App. B parking, p.31-39"
 created   = "2026-06-30"
 
 [claims.axiom-parking.fidelity]
-reviewed = "2026-07-03"
-paper    = "App. B parking, p.31-39, arXiv:2411.04551v3"
-evidence = "F12 (false at d<=2, monotone/cyclic order obstructions); hd + budget threading restored; witness WITNESS-TODO"
+reviewed = "2026-08-03"
+paper    = "App. B parking, p.31-39 (horizon quantifier: Prop 2.2, pp.11-12), arXiv:2411.04551v3"
+evidence = "F12 (false at d<=2, monotone/cyclic order obstructions); hd + budget threading restored; F33 (negative-horizon exploit at N = 0 kernel-refuted the hT-free form; hT : 0 < T restored per the paper's 'for any T > 0'); witness (d = 3, full application, unit-pause schedule at T = 1) Regression/NonVacuity/MidLevel.lean"
 
 [claims.cluster-to-point]
 kind      = "conjecture"

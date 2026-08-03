@@ -180,7 +180,7 @@ theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)
   -- Park the per-member schedules into a single schedule acting on the disjoint family.
   obtain ⟨Θ, hdurΘ, _hΘsw, hΘ⟩ :=
     exists_parked_schedule hd (fun i => attnMeasureFlow θ₁ (μ₀ i))
-      (fun i => Measure.dirac (x i)) (T / 2) ε (fun _ => 7) hdisj hper
+      (fun i => Measure.dirac (x i)) (T / 2) ε hT2 (fun _ => 7) hdisj hper
   refine ⟨θ₁ ++ Θ, ?_, fun i => ?_⟩
   · rw [AttnSchedule.durationSum_append, hdur₁, hdurΘ]; ring
   · rw [Foundations.attnMeasureFlow_append]
@@ -265,7 +265,7 @@ theorem theorem_1_2 (hd : 3 ≤ d) {N : ℕ} (μ₀ μ₁ : Fin N → Measure (E
   -- (Lemma 5.4 states no bound, so each member's budget is its own schedule's count).
   choose θs hθs using hper
   obtain ⟨Θ, hdurΘ, _hΘsw, hΘ⟩ :=
-    exists_parked_schedule hd (fun i => attnMeasureFlow θ₁ (μ₀ i)) μ₁ (T / 2) ε
+    exists_parked_schedule hd (fun i => attnMeasureFlow θ₁ (μ₀ i)) μ₁ (T / 2) ε hT2
       (fun i => AttnSchedule.switches (θs i)) hdisj
       (fun i => ⟨θs i, (hθs i).1, le_rfl, (hθs i).2⟩)
   refine ⟨θ₁ ++ Θ, ?_, fun i => ?_⟩
