@@ -67,7 +67,10 @@ theorem exists_staging_collapse_step {c : Eucl d} (hc : c ∈ sphere d)
         ν (Metric.ball c b) = 0 → attnMeasureFlow [p] ν = ν) ∧
       (∀ F : Set (Eucl d), Disjoint F (Metric.ball c b) →
         ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        supportedIn ν F → attnMeasureFlow [p] ν = ν) := by
+        supportedIn ν F → attnMeasureFlow [p] ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow [p] ν = ν.map f := by
   have hcn : ‖c‖ = 1 := by
     rw [sphere, Metric.mem_sphere, dist_zero_right] at hc
     exact hc
@@ -76,7 +79,7 @@ theorem exists_staging_collapse_step {c : Eucl d} (hc : c ∈ sphere d)
   have hcosR : (-1 : ℝ) ≤ cosR := by rw [hcosRdef]; nlinarith
   have hm : cosR < m := by rw [hcosRdef, hmdef]; nlinarith
   have hm1 : m < 1 := by rw [hmdef]; nlinarith
-  obtain ⟨p, hpdur, hpcol, hpfix, _hpS⟩ :=
+  obtain ⟨p, hpdur, hpcol, hpfix, _hpS, hpmap⟩ :=
     exists_collapse_block_support_close (z := c) hcn hcosR hm hm1 hτ hρ
   -- on-sphere ball/cap dictionary, both directions
   have hcap_of_ball : ∀ x : Eucl d, x ∈ sphere d → x ∈ Metric.closedBall c a →
@@ -120,7 +123,7 @@ theorem exists_staging_collapse_step {c : Eucl d} (hc : c ∈ sphere d)
         · exact Set.mem_union_left _ hxs
       exact measure_mono_null hsub (measure_union_null hνs hνb)
     exact hpfix ν hνs hcapnull
-  refine ⟨p, hpdur, ?_, fun ν hprob => hfix' ν hprob, ?_⟩
+  refine ⟨p, hpdur, ?_, fun ν hprob => hfix' ν hprob, ?_, hpmap⟩
   · -- collapse: closed-ball support is closed-sub-cap support
     intro ν _hprob hνs hνa
     have hsub : supportedIn ν {x : Eucl d | m ≤ (⟪c, x⟫ : ℝ)} := by
@@ -168,7 +171,10 @@ theorem staged_prefix_of_separated_caps {ι : Type*} {L : ℕ}
         supportedIn (attnMeasureFlow θ ν)
           (⋃ j ∈ {j : Fin L | lab j = lab k}, Metric.ball (c j) ρ)) ∧
       (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        (∀ j : Fin L, ν (Metric.ball (c j) (b j)) = 0) → attnMeasureFlow θ ν = ν) := by
+        (∀ j : Fin L, ν (Metric.ball (c j) (b j)) = 0) → attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
   have key : ∀ K : ℕ, K ≤ L → ∃ θ : AttnSchedule d,
       AttnSchedule.durationSum θ = (K : ℝ) * τ ∧
       (∀ k : Fin L, (k : ℕ) < K → ∃ j : Fin L, (j : ℕ) < K ∧ lab j = lab k ∧
@@ -177,25 +183,30 @@ theorem staged_prefix_of_separated_caps {ι : Type*} {L : ℕ}
           supportedIn (attnMeasureFlow θ ν) (Metric.ball (c j) ρ)) ∧
       (∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
         (∀ j : Fin L, (j : ℕ) < K → ν (Metric.ball (c j) (b j)) = 0) →
-        attnMeasureFlow θ ν = ν) := by
+        attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
     intro K
     induction K with
     | zero =>
       intro _
-      refine ⟨[], by simp, ?_, ?_⟩
+      refine ⟨[], by simp, ?_, ?_, id, measurable_id, Set.mapsTo_id _, ?_⟩
       · intro k hk
         exact absurd hk (Nat.not_lt_zero _)
       · intro ν _ _ _
         rfl
+      · intro ν _ _
+        exact (Measure.map_id).symm
     | succ K ih =>
       intro hK1
       have hKL : K < L := hK1
-      obtain ⟨θ, hθdur, hP1, hP2⟩ := ih (Nat.le_of_lt hKL)
+      obtain ⟨θ, hθdur, hP1, hP2, f₀, hf₀m, hf₀to, hf₀map⟩ := ih (Nat.le_of_lt hKL)
       set kK : Fin L := ⟨K, hKL⟩ with hkKdef
       have hkKval : (kK : ℕ) = K := rfl
-      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF⟩ :=
+      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF, fp, hfpm, hfpto, hfpmap⟩ :=
         exists_staging_collapse_step (hc kK) (ha kK) (hab kK) (hb2 kK) hτ hρ
-      refine ⟨θ ++ [p], ?_, ?_, ?_⟩
+      refine ⟨θ ++ [p], ?_, ?_, ?_, fp ∘ f₀, hfpm.comp hf₀m, hfpto.comp hf₀to, ?_⟩
       · rw [AttnSchedule.durationSum_append, hθdur]
         have hsing : AttnSchedule.durationSum [p] = p.duration := by
           simp [AttnSchedule.durationSum]
@@ -270,8 +281,17 @@ theorem staged_prefix_of_separated_caps {ι : Type*} {L : ℕ}
         intro ν _hprob hνs hνgates
         rw [attnMeasureFlow_append, hP2 ν hνs (fun j hj => hνgates j (Nat.lt_succ_of_lt hj))]
         exact hpfix ν hνs (hνgates kK (by rw [hkKval]; exact Nat.lt_succ_self K))
-  obtain ⟨θ, hθdur, hP1, hP2⟩ := key L le_rfl
-  refine ⟨θ, hθdur, ?_, fun ν _hprob hνs hg => hP2 ν hνs fun j _ => hg j⟩
+      · -- the universal transport map composes through the appended block
+        intro ν _hprob hνs
+        haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+          isProbabilityMeasure_attnMeasureFlow θ ν hνs
+        have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+          attnMeasureFlow_supportedIn_sphere θ ν hνs
+        rw [attnMeasureFlow_append, hfpmap (attnMeasureFlow θ ν) hν's, hf₀map ν hνs,
+          Measure.map_map hfpm hf₀m]
+  obtain ⟨θ, hθdur, hP1, hP2, f, hfm, hfto, hfmap⟩ := key L le_rfl
+  refine ⟨θ, hθdur, ?_, fun ν _hprob hνs hg => hP2 ν hνs fun j _ => hg j,
+    f, hfm, hfto, hfmap⟩
   intro k ν _hprob hνs hνE
   obtain ⟨j, _hjL, hjlab, hjcol⟩ := hP1 k k.isLt
   refine supportedIn_mono ?_ (hjcol ν hνs hνE)

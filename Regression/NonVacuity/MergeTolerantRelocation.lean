@@ -97,7 +97,11 @@ example : ∃ θ : AttnSchedule 2, AttnSchedule.durationSum θ = (∑ i, (relocM
       (∀ i, ∀ t : Fin (relocMc i), Disjoint F (Metric.ball (relocW i t.succ) (relocB i t))) →
       ∀ ν : Measure (Eucl 2), [IsProbabilityMeasure ν] →
       supportedIn ν (MeasureToMeasure.sphere 2) →
-      supportedIn ν F → attnMeasureFlow θ ν = ν) :=
+      supportedIn ν F → attnMeasureFlow θ ν = ν) ∧
+    (∃ f : Eucl 2 → Eucl 2, Measurable f ∧
+      Set.MapsTo f (MeasureToMeasure.sphere 2) (MeasureToMeasure.sphere 2) ∧
+      ∀ ν : Measure (Eucl 2), [IsProbabilityMeasure ν] →
+        supportedIn ν (MeasureToMeasure.sphere 2) → attnMeasureFlow θ ν = ν.map f) :=
   exists_merge_tolerant_relocation relocMc relocW (fun i _ => relocC_sphere i)
     (by norm_num : (0:ℝ) < 1/8) relocA relocB
     (fun i t => by

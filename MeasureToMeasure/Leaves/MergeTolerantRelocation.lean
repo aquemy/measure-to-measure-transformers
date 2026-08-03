@@ -238,7 +238,10 @@ theorem exists_relocation_hop_chain {M : ℕ} (w : Fin (M + 1) → Eucl d)
         supportedIn (attnMeasureFlow θ ν) (Metric.ball (w (Fin.last M)) ρ)) ∧
       (∀ F : Set (Eucl d), (∀ t : Fin M, Disjoint F (Metric.ball (w t.succ) (b t))) →
         ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+        supportedIn ν F → attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
   have key : ∀ K : ℕ, K ≤ M → ∃ θ : AttnSchedule d,
       AttnSchedule.durationSum θ = (K : ℝ) * τ ∧
       (∀ hK : K < M + 1, ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] →
@@ -246,29 +249,34 @@ theorem exists_relocation_hop_chain {M : ℕ} (w : Fin (M + 1) → Eucl d)
         supportedIn (attnMeasureFlow θ ν) (Metric.ball (w ⟨K, hK⟩) ρ)) ∧
       (∀ F : Set (Eucl d), (∀ t : Fin M, (t : ℕ) < K → Disjoint F (Metric.ball (w t.succ) (b t))) →
         ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+        supportedIn ν F → attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
     intro K
     induction K with
     | zero =>
       intro _
-      refine ⟨[], by simp, ?_, ?_⟩
+      refine ⟨[], by simp, ?_, ?_, id, measurable_id, Set.mapsTo_id _, ?_⟩
       · intro hK ν _ _ hν0
         have h0 : (⟨0, hK⟩ : Fin (M + 1)) = 0 := rfl
         rw [h0]
         exact hν0
       · intro F _ ν _ _ _
         rfl
+      · intro ν _ _
+        exact (Measure.map_id).symm
     | succ K ih =>
       intro hK1
       have hKM : K < M := hK1
-      obtain ⟨θ, hθdur, hmove, hfix⟩ := ih (Nat.le_of_lt hKM)
+      obtain ⟨θ, hθdur, hmove, hfix, f₀, hf₀m, hf₀to, hf₀map⟩ := ih (Nat.le_of_lt hKM)
       set t : Fin M := ⟨K, hKM⟩ with htdef
       have ha0 : 0 < a t := lt_of_lt_of_le (by positivity) (le_trans (by
         have := dist_nonneg (x := w t.succ) (y := w t.castSucc)
         linarith) (hcap t))
-      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF⟩ :=
+      obtain ⟨p, hpdur, hpcol, hpfix, hpfixF, fp, hfpm, hfpto, hfpmap⟩ :=
         exists_staging_collapse_step (hw t.succ) ha0 (hab t) (hb2 t) hτ hρ
-      refine ⟨θ ++ [p], ?_, ?_, ?_⟩
+      refine ⟨θ ++ [p], ?_, ?_, ?_, fp ∘ f₀, hfpm.comp hf₀m, hfpto.comp hf₀to, ?_⟩
       · rw [AttnSchedule.durationSum_append, hθdur]
         have hsing : AttnSchedule.durationSum [p] = p.duration := by
           simp [AttnSchedule.durationSum]
@@ -304,8 +312,16 @@ theorem exists_relocation_hop_chain {M : ℕ} (w : Fin (M + 1) → Eucl d)
           hfix F (fun s hs => hF s (Nat.lt_succ_of_lt hs)) ν hνs hνF
         rw [attnMeasureFlow_append, hfixed]
         exact hpfixF F (hF t (Nat.lt_succ_self K)) ν hνs hνF
-  obtain ⟨θ, hθdur, hmove, hfix⟩ := key M le_rfl
-  refine ⟨θ, hθdur, ?_, ?_⟩
+      · -- the universal transport map composes through the appended block
+        intro ν _hprob hνs
+        haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+          isProbabilityMeasure_attnMeasureFlow θ ν hνs
+        have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+          attnMeasureFlow_supportedIn_sphere θ ν hνs
+        rw [attnMeasureFlow_append, hfpmap (attnMeasureFlow θ ν) hν's, hf₀map ν hνs,
+          Measure.map_map hfpm hf₀m]
+  obtain ⟨θ, hθdur, hmove, hfix, f, hfm, hfto, hfmap⟩ := key M le_rfl
+  refine ⟨θ, hθdur, ?_, ?_, f, hfm, hfto, hfmap⟩
   · intro ν _hprob hνs hν0
     have hlast : (Fin.last M) = (⟨M, by omega⟩ : Fin (M + 1)) := rfl
     rw [hlast]
@@ -348,7 +364,10 @@ theorem exists_merge_tolerant_relocation {N : ℕ}
       (∀ F : Set (Eucl d),
         (∀ i, ∀ t : Fin (Mc i), Disjoint F (Metric.ball (w i t.succ) (b i t))) →
         ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+        supportedIn ν F → attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
   set g : ℕ → ℝ := fun m => if h : m < N then (Mc ⟨m, h⟩ : ℝ) * τ else 0 with hgdef
   have key : ∀ K : ℕ, K ≤ N → ∃ θ : AttnSchedule d,
       AttnSchedule.durationSum θ = ∑ m ∈ Finset.range K, g m ∧
@@ -359,24 +378,31 @@ theorem exists_merge_tolerant_relocation {N : ℕ}
         (∀ i : Fin N, (i : ℕ) < K → ∀ t : Fin (Mc i),
           Disjoint F (Metric.ball (w i t.succ) (b i t))) →
         ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
-        supportedIn ν F → attnMeasureFlow θ ν = ν) := by
+        supportedIn ν F → attnMeasureFlow θ ν = ν) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow θ ν = ν.map f := by
     intro K
     induction K with
     | zero =>
       intro _
-      refine ⟨[], by simp [AttnSchedule.durationSum], ?_, ?_⟩
+      refine ⟨[], by simp [AttnSchedule.durationSum], ?_, ?_, id, measurable_id,
+        Set.mapsTo_id _, ?_⟩
       · intro j hj
         exact absurd hj (Nat.not_lt_zero _)
       · intro F _ ν _ _ _
         rfl
+      · intro ν _ _
+        exact (Measure.map_id).symm
     | succ K ih =>
       intro hK1
       have hKN : K < N := hK1
-      obtain ⟨θ, hθdur, hmove, hfix⟩ := ih (Nat.le_of_lt hKN)
+      obtain ⟨θ, hθdur, hmove, hfix, f₀, hf₀m, hf₀to, hf₀map⟩ := ih (Nat.le_of_lt hKN)
       set iK : Fin N := ⟨K, hKN⟩ with hiKdef
-      obtain ⟨θK, hθKdur, hKmove, hKfix⟩ := exists_relocation_hop_chain (w iK) (hw iK)
+      obtain ⟨θK, hθKdur, hKmove, hKfix, fK, hfKm, hfKto, hfKmap⟩ :=
+        exists_relocation_hop_chain (w iK) (hw iK)
         hρ (a iK) (b iK) (hcap iK) (hab iK) (hb2 iK) hτ
-      refine ⟨θ ++ θK, ?_, ?_, ?_⟩
+      refine ⟨θ ++ θK, ?_, ?_, ?_, fK ∘ f₀, hfKm.comp hf₀m, hfKto.comp hf₀to, ?_⟩
       · rw [AttnSchedule.durationSum_append, hθdur, hθKdur, Finset.sum_range_succ]
         have hgK : g K = (Mc iK : ℝ) * τ := dif_pos hKN
         rw [hgK]
@@ -407,8 +433,16 @@ theorem exists_merge_tolerant_relocation {N : ℕ}
           hfix F (fun i hi t => hF i (Nat.lt_succ_of_lt hi) t) ν hνs hνF
         rw [attnMeasureFlow_append, hfixed]
         exact hKfix F (fun s => hF iK (Nat.lt_succ_self K) s) ν hνs hνF
-  obtain ⟨θ, hθdur, hmove, hfix⟩ := key N le_rfl
-  refine ⟨θ, ?_, ?_, ?_⟩
+      · -- the universal transport map composes through the appended chain
+        intro ν _hprob hνs
+        haveI : IsProbabilityMeasure (attnMeasureFlow θ ν) :=
+          isProbabilityMeasure_attnMeasureFlow θ ν hνs
+        have hν's : supportedIn (attnMeasureFlow θ ν) (sphere d) :=
+          attnMeasureFlow_supportedIn_sphere θ ν hνs
+        rw [attnMeasureFlow_append, hfKmap (attnMeasureFlow θ ν) hν's, hf₀map ν hνs,
+          Measure.map_map hfKm hf₀m]
+  obtain ⟨θ, hθdur, hmove, hfix, f, hfm, hfto, hfmap⟩ := key N le_rfl
+  refine ⟨θ, ?_, ?_, ?_, f, hfm, hfto, hfmap⟩
   · rw [hθdur, ← Fin.sum_univ_eq_sum_range g N, Finset.sum_mul]
     refine Finset.sum_congr rfl fun i _ => ?_
     rw [hgdef]

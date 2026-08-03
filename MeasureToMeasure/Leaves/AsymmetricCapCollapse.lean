@@ -265,10 +265,13 @@ theorem exists_collapse_block_support_close {z : Eucl d} (hz : ‖z‖ = 1)
         supportedIn (attnMeasureFlow [p] μ) (Metric.ball z ε)) ∧
       (∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
         ρ {x : Eucl d | cosR < (⟪z, x⟫ : ℝ)} = 0 → attnMeasureFlow [p] ρ = ρ) ∧
-      ∀ S : Set (Eucl d), MeasurableSet S →
+      (∀ S : Set (Eucl d), MeasurableSet S →
         (∀ x ∈ sphere d, cosR < (⟪z, x⟫ : ℝ) → x ∈ S) →
         ∀ ρ : Measure (Eucl d), [IsProbabilityMeasure ρ] → supportedIn ρ (sphere d) →
-          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S := by
+          supportedIn ρ S → supportedIn (attnMeasureFlow [p] ρ) S) ∧
+      ∃ f : Eucl d → Eucl d, Measurable f ∧ Set.MapsTo f (sphere d) (sphere d) ∧
+        ∀ ν : Measure (Eucl d), [IsProbabilityMeasure ν] → supportedIn ν (sphere d) →
+          attnMeasureFlow [p] ν = ν.map f := by
   -- cap level `b`: inside `Ioo (-1) 1` and above the polarization threshold `1 - ε²/2`
   set b : ℝ := max (1 - ε ^ 2 / 4) 0 with hbdef
   have hb : b ∈ Set.Ioo (-1 : ℝ) 1 := by
@@ -300,7 +303,7 @@ theorem exists_collapse_block_support_close {z : Eucl d} (hz : ‖z‖ = 1)
     rw [hpfindef, AttnParams.rescale_duration]
     show (n : ℝ) * T / (n : ℝ) = T
     field_simp
-  refine ⟨pfin, hdur, ?_, ?_, ?_⟩
+  refine ⟨pfin, hdur, ?_, ?_, ?_, ?_⟩
   · -- support collapse into the ball, uniformly over all cap-carried sphere measures
     intro μ _ hμs hμcap
     rw [supportedIn] at hμs
@@ -339,6 +342,19 @@ theorem exists_collapse_block_support_close {z : Eucl d} (hz : ‖z‖ = 1)
     rw [supportedIn, hflowEq]
     exact attnMeasureFlow_pPark_supportedIn_of_cap_subset z z cosR ((n : ℝ) * T) hnT0 hS hcapS
       ρ hρs hρS
+  · -- the `V = 0` universal transport map: the gated block's flow map, shared by every measure
+    refine ⟨flowMap [gatedBlock hz hz hcosR hnT0] ((n : ℝ) * T),
+      MeasureToMeasure.measurable_flowMap _ hnT0,
+      fun x hx => MeasureToMeasure.flowMap_mem_sphere _ hnT0 hx, ?_⟩
+    intro ν _ hνs
+    rw [supportedIn] at hνs
+    have hflowEq : attnMeasureFlow [pfin] ν
+        = attnMeasureFlow [pPark z z cosR ((n : ℝ) * T) hnT0] ν := by
+      rw [hpfindef]
+      exact Leaves.attnMeasureFlow_singleton_rescale_eq (pPark z z cosR ((n : ℝ) * T) hnT0)
+        hnpos ν hνs
+    rw [hflowEq, attnMeasureFlow_pPark_eq_measureFlow_gatedBlock hz hz hcosR hnT0 hνs]
+    rfl
 
 /-- **The asymmetric-cap collapse schedule: one block defeats every `γ₂`.** Given the axiom's
 asymmetric cap (`μ'`-positive, `ν'`-null mass) on the sphere, some single attention block `p` of
