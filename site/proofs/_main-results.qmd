@@ -157,6 +157,29 @@ theorem theorem_1_1 (hd : 3 ≤ d) {N : ℕ} (μ₀ : Fin N → Measure (Eucl d)
 [`Statements/MainResults.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResults.lean){.lean-src}
 :::
 
+## Exclusive-supports companions of the main theorems {#node-main-results-exclusive}
+
+::: {.our-work}
+**Our contribution** (no counterpart in the paper). [axiomatised]{.badge .axiom}
+
+Both headline theorems have gated companions, `theorem_1_1_of_exclusive_supports` and
+`theorem_1_2_of_exclusive_supports` (with the shared `prop_3_1_of_exclusive_supports`), whose
+statements are byte-identical to the originals plus one added hypothesis: the
+`ExclusiveSupportFamily` gate, requiring each input measure's support to own a point outside the
+union of the others' supports. Under that gate the disentanglement stage runs through the
+machine-checked induction `exists_disentangling_balls_of_exclusive_supports` (finding F27) instead
+of the axiom, so the kernel closure of all three companions is exactly
+`{propext, Classical.choice, Quot.sound, lemma_3_3}` — the paper's two main theorems,
+machine-checked modulo the single analytic Lemma 3.3 (finding F34, 2026-08-03). This is an honest
+narrowing: the paper's theorems carry no such gate, and the gate is not derivable from the other
+hypotheses (two distinct mixtures on the same two-point support satisfy everything else), so the
+general shared-supports case remains on the `exists_disentangling_balls` axiom pending the
+equal-supports route. Full-application witnesses at $N = 2$ exercise all three companions end to
+end.
+
+[`Statements/MainResultsExclusive.lean`](https://github.com/aquemy/measure-to-measure-transformers/blob/main/MeasureToMeasure/Statements/MainResultsExclusive.lean){.lean-src}
+:::
+
 ## Proposition 6.2 — generic O(1) disentanglement {#node-prop-6-2}
 
 ::: {.from-paper}

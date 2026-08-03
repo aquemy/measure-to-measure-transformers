@@ -1104,6 +1104,35 @@ companion route; the `MeanFieldPark` parking primitives are consumed via
 Both headline closures now equal `{exists_disentangling_balls}`, the single remaining axiom
 between the paper's main theorems and the kernel.
 
+### F34 (companions, recorded 2026-08-03) The main theorems gain exclusive-supports companions machine-checked modulo `lemma_3_3` alone
+
+`theorem_1_1_of_exclusive_supports`, `theorem_1_2_of_exclusive_supports`, and the shared
+`prop_3_1_of_exclusive_supports` (`Statements/MainResultsExclusive.lean`, PRs #362-#364) restate
+the headline theorems byte-identically plus one added hypothesis, the `ExclusiveSupportFamily`
+gate (each input's support owns a point outside the union of the others'). Under the gate the
+disentanglement stage runs through the F27 machine-checked induction instead of the
+`exists_disentangling_balls` axiom, so all three companions' kernel closures are exactly
+`[propext, Classical.choice, Quot.sound, lemma_3_3]` (verified per FQN with `#print axioms`):
+the paper's two main theorems, machine-checked modulo the single analytic Lemma 3.3.
+
+Honesty notes, on the record:
+
+- This is a NARROWING, not a discharge. The paper's Theorems 1.1/1.2 carry no exclusivity gate,
+  and the gate is not derivable from the other hypotheses: `mu0 0 = (1/2)(delta_a + delta_b)` and
+  `mu0 1 = (1/3)delta_a + (2/3)delta_b` (distinct sphere points off the missing cap) satisfy every
+  other main-theorem hypothesis yet share supports. The general case stays on the untouched axiom
+  pending the equal-supports route (F17(b)/F22/F24/F25).
+- The investigation's original scope hint over-claimed "fully machine-checked"; corrected during
+  scoping: `lemma_3_3` sits inside the F27 companion's own dependency cone at 5 call sites, its
+  general discharge is blocked (the paper's V != 0 parking phase is unbuilt and the V = 0 route is
+  kernel-refuted, F28), so `lemma_3_3` is the honest residual trust base.
+- Full-application N = 2 witnesses (`Regression/NonVacuity/MainResultsExclusive.lean`) exercise
+  all three companions end to end, per the F22 full-application rule.
+
+Consequence for the whole project: the trust base of the paper's headline results is now, in the
+general form, ONE composite dynamical axiom (`exists_disentangling_balls`), and under one honest
+narrowing, ONE analytic lemma (`lemma_3_3`) whose remaining obstacle is precisely characterized.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the

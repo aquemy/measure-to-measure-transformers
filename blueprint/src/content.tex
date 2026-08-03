@@ -314,6 +314,21 @@ pushforward of the disentangled member and runs the same machine-checked map-tar
 the kernel closure is exactly \texttt{exists\_disentangling\_balls}.
 \end{theorem}
 
+\begin{theorem}[Theorem 1.1, exclusive-supports companion]\label{thm:11x}\lean{MeasureToMeasure.Statements.theorem_1_1_of_exclusive_supports}\uses{thm:11,lem:33}
+Theorem 1.1's exact statement plus the exclusive-supports gate on the input family (each member's
+support owns a point outside the union of the others'); conclusion byte-identical. Machine-checked
+modulo \texttt{lemma\_3\_3} alone: the kernel closure is exactly
+$\{\texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}, \texttt{lemma\_3\_3}\}$.
+Honest narrowing (F34): the paper's theorem carries no such gate, and the gate is not derivable
+from the other hypotheses; the general shared-supports case stays on the axiom. [axiomatised]
+\end{theorem}
+
+\begin{theorem}[Theorem 1.2, exclusive-supports companion]\label{thm:12x}\lean{MeasureToMeasure.Statements.theorem_1_2_of_exclusive_supports}\uses{thm:12,lem:33}
+Theorem 1.2's exact statement plus the exclusive-supports gate; conclusion byte-identical.
+Machine-checked modulo \texttt{lemma\_3\_3} alone, same closure as the Theorem 1.1 companion.
+Honest narrowing (F34). [axiomatised]
+\end{theorem}
+
 \begin{proposition}[Generic O(1) switches, 6.2]\label{prop:62}\uses{prop:21}
 For generic i.i.d. discrete inputs a single constant parameter disentangles almost surely. [informal]
 \end{proposition}
