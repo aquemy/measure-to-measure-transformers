@@ -158,6 +158,7 @@ import MeasureToMeasure.Leaves.UniversalFlowPointwise
 import MeasureToMeasure.Leaves.ArcHopCorridor
 import MeasureToMeasure.Leaves.TunedCapSystem
 import MeasureToMeasure.Leaves.LandingPoleFamily
+import MeasureToMeasure.Leaves.MixtureAverage
 import MeasureToMeasure.Statements.SupportedIn
 import MeasureToMeasure.Statements.Lemma34Part1
 import MeasureToMeasure.Statements.Lemma54
