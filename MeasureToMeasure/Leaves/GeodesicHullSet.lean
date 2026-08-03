@@ -1,5 +1,7 @@
 import MeasureToMeasure.Leaves.GeodesicHullConvex
 import MeasureToMeasure.Statements.SupportedIn
+import Mathlib.Analysis.Convex.Combination
+import Mathlib.Topology.MetricSpace.Thickening
 
 /-!
 # Set-based geodesic hull (`geodesicHullSet`)
@@ -29,12 +31,28 @@ Basic vocabulary, all kernel-checked:
   generators lie in the open orthant (resp. an open hemisphere `0 < ⟪e, ·⟫`). Within that
   hemisphere normalized chords are exactly the geodesic arcs, so this is the "corridors can thread
   inside the hull" fact the corridor construction consumes.
+
+Clearance and target membership (leaf `geodesicHullSet_clearance_and_target`):
+
+* `isCompact_closure_geodesicHullSet` / `geodesicHullSet_clearance` — the closure of the hull is
+  compact (closed subset of the sphere), so a closed set disjoint from that closure keeps a uniform
+  positive margin `ε` from every hull point, and every `ε`-ball centered in the hull misses it: the
+  radius margin all later cap/hop gates stay under.
+* `mem_geodesicHullSet_normalize` (finitely-supported exact case),
+  `exists_inConicalSpan_of_mem_convexHull` (convex-hull points are finite conical combinations),
+  and `normalize_barycenter_mem_closure_geodesicHullSet` — the normalized barycenter of a
+  probability measure supported in `S` lies in the **closure** of `geodesicHullSet S`. For a
+  general (not finitely supported) measure the barycenter is a limit of conical combinations
+  without necessarily being one, so closure membership is the honest general conclusion; the
+  gate can consume it, or use the exact-membership fallback
+  `mem_geodesicHullSet_union_singleton` (the target direction is in the hull once listed among
+  the generators, faithful to the paper's `conv_g` of the acted pair in (3.3)).
 -/
 
 namespace MeasureToMeasure.Leaves
 
 open scoped RealInnerProductSpace
-open MeasureToMeasure MeasureToMeasure.Statements
+open MeasureTheory MeasureToMeasure MeasureToMeasure.Statements
 
 variable {d : ℕ}
 
@@ -153,5 +171,114 @@ theorem geodesicConvex_geodesicHullSet_of_hemisphere {s : Set (Eucl d)} {e : Euc
   have hne : a • x + b • y ≠ 0 := fun h => by simp [h] at hev
   exact normalize_smul_add_smul_mem_geodesicHullSet ⟨hx1, t₁, ht₁, hc₁⟩ ⟨hy1, t₂, ht₂, hc₂⟩
     ha.le hb.le hne
+
+/-!
+## Clearance and target membership
+
+The confined-bystanders gate needs two more facts about the `Set`-based hull. **Clearance**: a
+closed set disjoint from the (compact) closure of the hull keeps a uniform positive margin from
+every hull point, the radius budget all later cap/hop constructions stay under. **Target
+membership**: the normalized barycenter of a probability measure supported in `S` lies in the
+closure of `geodesicHullSet S`; for measures that are not finitely supported the barycenter is a
+limit of conical combinations without necessarily being one, so closure membership is the honest
+general statement (the finitely-supported exact case is `mem_geodesicHullSet_normalize`, and
+`mem_geodesicHullSet_union_singleton` provides the exact-membership fallback for a gate stated
+over generators that include the target direction).
+-/
+
+/-- Finitely-supported exact target membership: the normalization of a nonzero conical
+combination of points of `s` lies in the `Set`-based hull of `s`. -/
+theorem mem_geodesicHullSet_normalize {s : Set (Eucl d)} {u : Finset (Eucl d)} {x : Eucl d}
+    (hu : ↑u ⊆ s) (hx : inConicalSpan u x) (hx0 : x ≠ 0) :
+    ‖x‖⁻¹ • x ∈ geodesicHullSet s :=
+  geodesicHull_subset_geodesicHullSet hu (mem_geodesicHull_normalize hx hx0)
+
+/-- Every point of the convex hull of `S` is a finite conical combination of points of `S`:
+unpack `convexHull_eq`'s finite convex combination and collapse repeated points fiberwise onto
+the image finset. -/
+theorem exists_inConicalSpan_of_mem_convexHull {S : Set (Eucl d)} {x : Eucl d}
+    (hx : x ∈ convexHull ℝ S) : ∃ u : Finset (Eucl d), ↑u ⊆ S ∧ inConicalSpan u x := by
+  rw [convexHull_eq] at hx
+  obtain ⟨ι, u, w, z, hw0, hw1, hz, hcm⟩ := hx
+  refine ⟨u.image z, ?_, ?_⟩
+  · intro p hp
+    simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe] at hp
+    obtain ⟨i, hi, rfl⟩ := hp
+    exact hz i hi
+  · refine ⟨fun p => ∑ i ∈ u.filter (fun i => z i = p), w i,
+      fun p _ => Finset.sum_nonneg fun i hi => hw0 i (Finset.mem_filter.mp hi).1, ?_⟩
+    have hxsum : x = ∑ i ∈ u, w i • z i := by
+      rw [← hcm, Finset.centerMass_eq_of_sum_1 _ _ hw1]
+    rw [hxsum,
+      ← Finset.sum_fiberwise_of_maps_to (fun i hi => Finset.mem_image_of_mem z hi)
+        (fun i => w i • z i)]
+    refine Finset.sum_congr rfl fun p _ => ?_
+    rw [Finset.sum_smul]
+    exact Finset.sum_congr rfl fun i hi => by rw [(Finset.mem_filter.mp hi).2]
+
+/-- Normalization passes from the closed convex hull to the closed geodesic hull: a nonzero
+limit of conical combinations normalizes into the closure of the `Set`-based hull (the
+normalization map is continuous away from `0`). -/
+theorem normalize_mem_closure_geodesicHullSet {S : Set (Eucl d)} {b : Eucl d}
+    (hb : b ∈ closure (convexHull ℝ S)) (hb0 : b ≠ 0) :
+    ‖b‖⁻¹ • b ∈ closure (geodesicHullSet S) := by
+  have hb' : b ∈ closure {x : Eucl d | ∃ u : Finset (Eucl d), ↑u ⊆ S ∧ inConicalSpan u x} :=
+    closure_mono (fun x hx => exists_inConicalSpan_of_mem_convexHull hx) hb
+  obtain ⟨x, hxA, hxlim⟩ := mem_closure_iff_seq_limit.mp hb'
+  have hnb : (0 : ℝ) < ‖b‖ := norm_pos_iff.mpr hb0
+  have hnorm : Filter.Tendsto (fun n => ‖x n‖) Filter.atTop (nhds ‖b‖) :=
+    (continuous_norm.tendsto b).comp hxlim
+  have hlim : Filter.Tendsto (fun n => ‖x n‖⁻¹ • x n) Filter.atTop (nhds (‖b‖⁻¹ • b)) :=
+    (hnorm.inv₀ (ne_of_gt hnb)).smul hxlim
+  refine mem_closure_of_tendsto hlim ?_
+  filter_upwards [hxlim.eventually_ne hb0] with n hn
+  obtain ⟨u, hus, hcu⟩ := hxA n
+  exact mem_geodesicHullSet_normalize hus hcu hn
+
+/-- **Target membership.** The normalized barycenter of a probability measure supported in `S`
+lies in the closure of `geodesicHullSet S`: the barycenter lies in the closed convex hull of `S`
+(`Convex.integral_mem` via `barycenter_mem_of_supportedIn`), and normalization passes to the
+limit. -/
+theorem normalize_barycenter_mem_closure_geodesicHullSet {S : Set (Eucl d)}
+    {μ : Measure (Eucl d)} [IsProbabilityMeasure μ]
+    (hint : Integrable (fun x : Eucl d => x) μ) (hμS : supportedIn μ S)
+    (hb0 : barycenter μ ≠ 0) :
+    ‖barycenter μ‖⁻¹ • barycenter μ ∈ closure (geodesicHullSet S) := by
+  refine normalize_mem_closure_geodesicHullSet ?_ hb0
+  refine barycenter_mem_of_supportedIn hint ((convex_convexHull ℝ S).closure)
+    isClosed_closure ?_
+  exact measure_mono_null
+    (Set.compl_subset_compl.mpr ((subset_convexHull ℝ S).trans subset_closure)) hμS
+
+/-- Exact-membership fallback for the gate: a unit target direction belongs to the hull once it
+is listed among the generators. Faithful to the paper's `conv_g` of the acted pair in (3.3). -/
+theorem mem_geodesicHullSet_union_singleton {S : Set (Eucl d)} {ω : Eucl d} (hω : ‖ω‖ = 1) :
+    ω ∈ geodesicHullSet (S ∪ {ω}) :=
+  mem_geodesicHullSet_self (Set.mem_union_right S rfl) hω
+
+/-- The closure of the `Set`-based hull is compact: it is a closed subset of the (compact)
+unit sphere of `Eucl d`. -/
+theorem isCompact_closure_geodesicHullSet (S : Set (Eucl d)) :
+    IsCompact (closure (geodesicHullSet S)) :=
+  IsCompact.of_isClosed_subset (isCompact_sphere (0 : Eucl d) 1) isClosed_closure
+    (closure_minimal geodesicHullSet_subset_sphere Metric.isClosed_sphere)
+
+/-- **Clearance.** A closed set `F` disjoint from the closure of the hull keeps a uniform
+positive margin `ε` from every hull point, and every `ε`-ball centered in the hull misses `F`:
+the radius budget all later cap/hop gates stay under (via `Disjoint.exists_thickenings` on the
+compact closed hull). -/
+theorem geodesicHullSet_clearance {S F : Set (Eucl d)} (hF : IsClosed F)
+    (hdisj : Disjoint (closure (geodesicHullSet S)) F) :
+    ∃ ε > 0, (∀ x ∈ geodesicHullSet S, ∀ y ∈ F, ε ≤ dist x y) ∧
+      ∀ x ∈ geodesicHullSet S, Disjoint (Metric.ball x ε) F := by
+  obtain ⟨δ, hδ, hthick⟩ := hdisj.exists_thickenings (isCompact_closure_geodesicHullSet S) hF
+  have hdist : ∀ x ∈ geodesicHullSet S, ∀ y ∈ F, δ ≤ dist x y := by
+    intro x hx y hy
+    refine not_lt.mp fun hlt => ?_
+    exact Set.disjoint_left.mp hthick
+      (Metric.mem_thickening_iff.mpr ⟨x, subset_closure hx, by rwa [dist_comm]⟩)
+      (Metric.self_subset_thickening hδ F hy)
+  refine ⟨δ, hδ, hdist, fun x hx => Set.disjoint_left.mpr fun z hz hzF => ?_⟩
+  exact absurd (Metric.mem_ball.mp hz) (not_lt.mpr (by rw [dist_comm]; exact hdist x hx z hzF))
 
 end MeasureToMeasure.Leaves
