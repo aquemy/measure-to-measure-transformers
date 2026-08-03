@@ -1133,6 +1133,50 @@ Consequence for the whole project: the trust base of the paper's headline result
 general form, ONE composite dynamical axiom (`exists_disentangling_balls`), and under one honest
 narrowing, ONE analytic lemma (`lemma_3_3`) whose remaining obstacle is precisely characterized.
 
+### F35 (route obstruction + resolution, recorded 2026-08-03) Gate-separated staging cells cannot exhaust a connected spread-out support; the single-label sweep drops `hEavoid`, leaving only thin-annulus avoidance
+
+The Phase-1 staging engine `staged_prefix_of_separated_caps` (`Leaves/CellStagingInduction.lean`,
+banked in the `lemma_5_4` campaign) carries `hEavoid`: every later cell must be set-disjoint
+from every EARLIER open gate ball. That was affordable there because `lemma_5_4` only needs the
+cells to cover the cores up to an arbitrary mass budget `eta` (the `TunedCapSystem` annuli
+argument). For the shape `lemma_3_3` needs (ALL acted mass, exact `supportedIn` conclusion, one
+common target) it is an obstruction, not a bookkeeping choice:
+
+1. A cell forced outside all earlier gates cannot pick up the part of the support inside them,
+   so the union of `hEavoid`-cells misses the earlier gates' trace on the support. For a
+   connected spread-out support (every cap boundary shell around every centre carries support
+   points) no ordering of same-scale caps makes those traces empty.
+2. The null-annulus workaround, pinching each gate radius toward its collapse radius so the
+   lost shell is measure-null for the acted measures, fails for strictly spread radial mass:
+   the shell's measure tends to `0` as the gate pinches but is POSITIVE for every positive
+   width, and an exact `supportedIn` conclusion needs literally zero. (This is measure-tuning's
+   hard limit: `TunedCapSystem` gets `<= eta / (L+1)` per shell, never `0`.)
+
+Resolution (this group, `Leaves/OverlapStagingInduction.lean`, PRs #368/#369): in the
+SINGLE-LABEL case, where every staged ball serves the same eventual target, the separation is
+unnecessary. `staged_prefix_overlapping_caps` re-runs the staging induction with `hEavoid`
+deleted and replaced by the strictly weaker `hEann`: a later cell may overlap earlier gates
+freely INSIDE their collapse balls, and must only avoid the earlier thin gate annuli
+`ball (c j) (b j) \ closedBall (c j) (a j)`. Mass a later cap finds already staged is SWEPT
+into that cap's own staging ball (the capture branch of the `hsep` dichotomy); mass an earlier
+collapse ball reaches ahead of the point's own cap is simply staged early, harmless because of
+the single label. The mechanism that closes the induction is pointwise tracking through the
+schedule's universal `V = 0` transport map (Dirac upgrades, `Leaves/UniversalFlowPointwise.lean`):
+per point, no cell straddling an earlier collapse ball and the earlier gate's exterior ever
+needs a mixed-support measure decomposition, which is exactly where `hEavoid` had been
+load-bearing. Kernel closure of both leaves: `[propext, Classical.choice, Quot.sound]`.
+
+Scope note, on the record: the thin annuli themselves remain genuine per-block dead zones. The
+gated pull's level-progress rate vanishes toward the gate boundary, so no finite-duration block
+collapses its full open gate; a point of FRESH (never yet staged) support mass sitting in the
+annulus of the first cap that reaches it is moved but not tracked, and is confined only to that
+gate ball, whose whole-ball recapture forces strictly growing gate radii. Exact full-mass
+staging of a support that is radially spread around every candidate centre therefore still
+requires the support to fit inside a single cap-with-margin whose gate the bystanders clear;
+`hEann` plus the cell-cover hypothesis is the honest expression of that requirement, and the
+confined-bystanders gate of the campaign's target companion is expected to supply it. The
+paper's ungated Lemma 3.3 remains out of reach of this block family on its own.
+
 ### Verdict
 
 - **Ready to formalize as stated** (cores already kernel-checked): L1-L7, L9, L10 capture the
