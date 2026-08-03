@@ -91,6 +91,7 @@ import MeasureToMeasure.Leaves.PoleGeometry
 import MeasureToMeasure.Leaves.BarycenterCollapseGap
 import MeasureToMeasure.Leaves.AnnulusMass
 import MeasureToMeasure.Leaves.GeodesicHullConvex
+import MeasureToMeasure.Leaves.GeodesicHullSet
 import MeasureToMeasure.Leaves.UnitSphereIntrinsicInterior
 import MeasureToMeasure.Leaves.BarycenterBoundaryGap
 import MeasureToMeasure.Leaves.TaylorRemainderBound
