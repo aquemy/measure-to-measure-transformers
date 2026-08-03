@@ -699,11 +699,23 @@ simultaneously to within `ε`: each member's schedule is gated to its (disjoint)
 parks on the others (`flowMap_id_on_parked`). Mathlib has no continuity-equation theory to derive
 this, so it is a labeled structural axiom.
 
+**Source** (Proposition 2.2, pp. 11-12, arXiv:2411.04551v3, whose simultaneous-schedule
+conclusion this parking step realizes): "Then for any 𝑇 > 0 and 𝜀 > 0 there exist piecewise
+constant (W, U, 𝑏) : [0, 𝑇] → M_{d×d}(ℝ)² × ℝ^d such that for any 𝑖, the corresponding solution
+𝜇^𝑖 to (1.3)-(1.2) with data 𝜇₀^𝑖, V ≡ 0 and the above parameters, satisfies
+W₂(𝜇^𝑖(𝑇), 𝜇₁^𝑖) ⩽ 𝜀".
+
 **Fidelity (soundness):** the dimension hypothesis is load-bearing (review finding F12): at `d = 1`
 every flow map is an increasing homeomorphism of the line, so two Dirac targets cannot be swapped,
 and at `d = 2` the cyclic order of the circle gives the same obstruction; the paper's gating
 construction needs room to route around parked regions, available from `d ≥ 3`. The switch budget
-is the sum of the per-member budgets, matching the gate-and-concatenate construction.
+is the sum of the per-member budgets, matching the gate-and-concatenate construction. The horizon
+positivity `hT : 0 < T` is the paper's own quantifier ("for any 𝑇 > 0", above); it was DROPPED in
+an earlier form of this axiom, which made the statement inconsistent (finding F33): at `N = 0`
+every per-member hypothesis is vacuous, so `T = -1` would produce a schedule of negative total
+duration, contradicting `AttnSchedule.durationSum_nonneg`
+(`Regression/Refuted/F33_ParkedScheduleNegativeT.lean`). With `hT` the exploit is blocked and the
+`N = 0, T > 0` corner is satisfiable (any single block of duration `T` works).
 
 Layer (F14): mean-field -- the parked family members are SEPARATE mean-field systems sharing one
 schedule (each `ν i` evolves under its own self-attention field), which is exactly the paper's
@@ -711,7 +723,7 @@ family setting. Note this family form does NOT apply to pieces of a single mixtu
 evolves as one system and its flow is not the mixture of its pieces' flows (that distinction is
 why `prop_2_2` lives on the linear layer, where its paper construction is). -/
 axiom exists_parked_schedule {N : ℕ} (hd : 3 ≤ d) (ν target : Fin N → Measure (Eucl d)) (T ε : ℝ)
-    (s : Fin N → ℕ)
+    (hT : 0 < T) (s : Fin N → ℕ)
     (hdisj : DisjointSupports ν)
     (hper : ∀ i, ∃ θ : AttnSchedule d, AttnSchedule.durationSum θ = T ∧
       AttnSchedule.switches θ ≤ s i ∧
