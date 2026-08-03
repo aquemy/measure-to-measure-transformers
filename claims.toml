@@ -43,6 +43,45 @@ reviewed = "2026-07-03"
 paper    = "Thm 1.2, p.5, arXiv:2411.04551v3"
 evidence = "F12+F14 fidelity matrix; re-assembled via per-member flow maps (paper B.4 composition); _hmiss1 retained for fidelity"
 
+[claims.prop-3-1-exclusive]
+kind      = "conjecture"
+statement = "Gated companion of Proposition 3.1 (F34, 2026-08-03): prop_3_1's exact statement plus the ExclusiveSupportFamily gate on the input family (each member's support owns a point outside the union of the others'). Proof is prop_3_1's body with exists_disentangling_balls swapped for the F27 gated companion. HONEST NARROWING: the paper's Prop 3.1 carries no such gate, and the gate is not derivable from the other hypotheses (two distinct mixtures on the same two-point support satisfy every other hypothesis); the general shared-supports case stays on the untouched axiom. Kernel closure exactly [propext, Classical.choice, Quot.sound, lemma_3_3]."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.prop_3_1_of_exclusive_supports"
+paper     = "Prop 3.1, p.15 (narrowed)"
+created   = "2026-08-03"
+
+[claims.prop-3-1-exclusive.fidelity]
+reviewed = "2026-08-03"
+paper    = "Prop 3.1, p.15, arXiv:2411.04551v3"
+evidence = "Statement byte-identical to prop_3_1 plus hgate; MainResultsExclusive.lean; full-application N=2 witness Regression/NonVacuity/MainResultsExclusive.lean; closure verified [propext, Classical.choice, Quot.sound, lemma_3_3]"
+
+[claims.thm-1-1-exclusive]
+kind      = "conjecture"
+statement = "Gated companion of Theorem 1.1 (F34, 2026-08-03): theorem_1_1's exact statement plus the ExclusiveSupportFamily gate on the input family. Conclusion byte-identical (one schedule of duration T steers every member within eps of its Dirac target in W2). Proof = theorem_1_1's body with prop_3_1 swapped for prop_3_1_of_exclusive_supports; the second half (map-targets companion) unchanged. The paper's headline Dirac-matching theorem, machine-checked MODULO lemma_3_3 alone under one honest satisfiable narrowing. Kernel closure exactly [propext, Classical.choice, Quot.sound, lemma_3_3]."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.theorem_1_1_of_exclusive_supports"
+paper     = "Thm 1.1, p.5 (narrowed)"
+created   = "2026-08-03"
+
+[claims.thm-1-1-exclusive.fidelity]
+reviewed = "2026-08-03"
+paper    = "Thm 1.1, p.5, arXiv:2411.04551v3"
+evidence = "Statement byte-identical to theorem_1_1 plus hgate; MainResultsExclusive.lean; full-application N=2 Dirac-family witness Regression/NonVacuity/MainResultsExclusive.lean; closure verified [propext, Classical.choice, Quot.sound, lemma_3_3]"
+
+[claims.thm-1-2-exclusive]
+kind      = "conjecture"
+statement = "Gated companion of Theorem 1.2 (F34, 2026-08-03): theorem_1_2's exact statement (including the fidelity-retained _hmiss1) plus the ExclusiveSupportFamily gate on the input family. Conclusion byte-identical (one schedule of duration T matches every member within eps of its transport-matchable target in W2). Proof = theorem_1_2's body with the exists_disentangling_balls call swapped for the F27 gated companion. The paper's headline matching theorem, machine-checked MODULO lemma_3_3 alone under one honest satisfiable narrowing. Kernel closure exactly [propext, Classical.choice, Quot.sound, lemma_3_3]."
+status    = "math.axiomatised"
+lean      = "MeasureToMeasure.Statements.theorem_1_2_of_exclusive_supports"
+paper     = "Thm 1.2, p.5 (narrowed)"
+created   = "2026-08-03"
+
+[claims.thm-1-2-exclusive.fidelity]
+reviewed = "2026-08-03"
+paper    = "Thm 1.2, p.5, arXiv:2411.04551v3"
+evidence = "Statement byte-identical to theorem_1_2 plus hgate; MainResultsExclusive.lean; full-application N=2 identity-Matchable witness Regression/NonVacuity/MainResultsExclusive.lean; closure verified [propext, Classical.choice, Quot.sound, lemma_3_3]"
+
 # ===========================================================================
 # Backbone propositions and lemmas
 # ===========================================================================
@@ -97,7 +136,7 @@ created   = "2026-06-30"
 [claims.axiom-disentangle-balls.fidelity]
 reviewed = "2026-07-03"
 paper    = "Prop 3.1 / Sec 3.3, p.15-17, arXiv:2411.04551v3"
-evidence = "F14 (eq. 1.7 refutes any linear form; kernel disproof); Regression/Refuted/F14_IdenticalInputs.lean; adapter Refutations/F14_exists_disentangling_balls_identical_inputs.lean; witness Regression/NonVacuity/MainResults.lean; F27 gated companion exists_disentangling_balls_of_exclusive_supports (closure modulo lemma_3_3 only), full-bundle witness Regression/NonVacuity/DisentangleAssembly.lean"
+evidence = "F14 (eq. 1.7 refutes any linear form; kernel disproof); Regression/Refuted/F14_IdenticalInputs.lean; adapter Refutations/F14_exists_disentangling_balls_identical_inputs.lean; witness Regression/NonVacuity/MainResults.lean; F27 gated companion exists_disentangling_balls_of_exclusive_supports (closure modulo lemma_3_3 only), full-bundle witness Regression/NonVacuity/DisentangleAssembly.lean; F34 exclusive-supports companions of the main theorems (MainResultsExclusive.lean) consume the gated companion"
 
 [claims.lem-3-2]
 kind      = "conjecture"
