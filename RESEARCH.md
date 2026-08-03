@@ -64,8 +64,9 @@ The `Axioms/` layer (`W2`, `W1`, `measureFlow`, `flowMap`) is now concrete defin
 properties, and many former mid-level axioms have been discharged. As of the `exists_meanFieldFlow`
 discharge (PR #173, 2026-07-09, 10 → **9**), the axiom inventory is fully mean-field-free: every
 remaining axiom lives in `Statements/` (plus the one (B.16) leaf bridge, F24). The 2026-07-28
-discharges of `prop_2_1` (F29, 9 → 8) and `cluster_to_point` (F30, 8 → **7**) bring the live
-inventory to seven: five in `MidLevel.lean`, `exists_disentangling_balls` in `MainResults.lean`,
+discharges of `prop_2_1` (F29, 9 → 8) and `cluster_to_point` (F30, 8 → 7), and the 2026-08-03
+discharge of `lemma_5_4` (F32, 7 → **6**), bring the live inventory to six: four in
+`MidLevel.lean`, `exists_disentangling_balls` in `MainResults.lean`,
 and the (B.16) bridge in `Leaves/`. No node is `sorryAx` (zero `sorry` repo-wide). Regenerate the
 exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`). Representative:
 
@@ -73,10 +74,10 @@ exact split with `scripts/audit.sh` (writes `.cache/axiom-report.txt`). Represen
 | --- | --- | --- |
 | `MeasureToMeasure.Leaves.*` (L1-L11′) | clean | the self-contained leaf cores; L7 `lemma_5_2` and L8 `markov_bound` machine-checked since the `W₂`/`W₁` discharge |
 | `MeasureToMeasure.Axioms.{W2,measureFlow,flowMap}` | clean | now concrete **definitions**; their properties (map-coupling bound, KR duality, flow algebra) are proved theorems |
-| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1,cluster_to_point}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → **8**; `cluster_to_point` via the F30 three-pull chain, 2026-07-28, 8 → **7**) |
+| `MeasureToMeasure.Statements.{lemma_3_2,lemma_3_4_part1,lemma_5_1,lemma_B_1,lemma_B_2,prop_2_1,cluster_to_point,lemma_5_4}` | clean | discharged to theorems (F18/F19, M4; the §3.4 Part-1 mass-collapse; `prop_2_1` via the F29 hemisphere-collapse block, 2026-07-28, 9 → 8; `cluster_to_point` via the F30 three-pull chain, 2026-07-28, 8 → 7; `lemma_5_4` via the F32 value-rounding + staging/relocation pipeline, 2026-08-03, 7 → **6**) |
 | `MeasureToMeasure.Foundations.{meanFieldFlow_unique,exists_meanFieldFlow}` | clean | McKean-Vlasov uniqueness (F20, PR #98) then existence itself (PR #173) both discharged; the mean-field layer carries zero axioms |
-| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,lemma_5_4,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining six statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30) |
-| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the seventh live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
+| `MeasureToMeasure.Statements.{lemma_3_3,prop_4_2,exists_parked_schedule,prop_2_2}` + `exists_disentangling_balls` | **axiom** | the remaining five statement-layer axioms (`prop_2_1` discharged 2026-07-28, F29; `cluster_to_point` discharged 2026-07-28, F30; `lemma_5_4` discharged 2026-08-03, F32) |
+| `MeasureToMeasure.Leaves.exists_cap_nu_mass_zero_at_shared_boundary` | **axiom** | leaf-layer bridge axiom (eq. (B.16), PR #281, F24) -- the sixth live axiom, staged for the `lem-3-4-part2` re-discharge; not yet a blueprint node, so absent from `axiom-report` until content.tex tracks it |
 | `MeasureToMeasure.Statements.lemma_3_4_part2` | clean (**VACUOUS**, F22 + F25) | a theorem since PR #260, but its `hgenRest` hypothesis is kernel-refuted as unsatisfiable (`Regression/Refuted/HgenRestUnconditionallyFalse.lean`), and F25 shows the `_hu` hypothesis is independently unsatisfiable too (`Regression/Refuted/HuUnitBarycenterStrictConvexity.lean`), so even the pre-F22 bundle had no instances: the discharge carries no content and the statement is effectively OPEN |
 | `MeasureToMeasure.Statements.{theorem_1_1,theorem_1_2,prop_3_1,prop_4_1}` | axiom | **proved** by assembly; effective status = min over the axiom closure |
 
@@ -1001,6 +1002,41 @@ load-bearing for the planned discharge, whose steering core (the F30 three-pull 
 conclusion type ascribed, per the F22 witness rule. Whether `2 ≤ d` would suffice for the
 statement's truth is a paper-side question (the disproof mechanism needs `d = 1`); we take the
 paper's own `d ⩾ 3` rather than invent a sharper scope.
+
+### F32 (discharge, recorded 2026-08-03) `lemma_5_4` discharged: value rounding + a `V = 0` staging/relocation pipeline with one universal transport map realizes any finite-range target exactly, and the `L²` triangle closes the general case
+
+`lemma_5_4` (L² approximation of a measurable a.e. sphere-valued transport map by a mean-field
+flow map, at exact total duration `T`) is now a machine-checked theorem
+(`#print axioms lemma_5_4` = `propext, Classical.choice, Quot.sound`), completing the campaign
+F31 opened. The discharge has three layers:
+
+1. **Value rounding** (`exists_finite_range_sphere_approx`): round `ψ`'s VALUES through a finite
+   small-diameter partition of the target sphere, giving a finite-range measurable approximant at
+   a.e. sup error `ε/2`. No Lusin machinery.
+2. **The finite-range core** (`lemma_5_4_of_finite_range`, `Statements/Lemma54.lean`): preimage
+   cells are trimmed to compact cores (inner regularity), covered by a distance-tuned cap system
+   (`exists_tuned_cap_system`: collapse radii picked OFF the finite centre-distance set with a
+   positive margin, gate radii pinched by the margin and by measure continuity so the thin
+   annuli carry arbitrarily little mass -- this is what makes the staging dichotomy `hsep`
+   satisfiable for arbitrary disjoint compact cores), collapsed cap-by-cap into staging balls
+   (`staged_prefix_of_separated_caps`), and relocated along waypoint two-arc corridors
+   (`exists_arc_hop_corridor`: the waypoint is a sphere point off finitely many 2-planes, which
+   exist because a finite union of proper subspaces cannot cover the space; obstacles reduce to
+   the two antipode cases, killed by arc length `< π` and by the tangent sign) into
+   pairwise-disjoint landing poles near the targets (`exists_landing_pole_family`), with a
+   parked pad block making the total duration exactly `T`.
+3. **The mean-field bridge**: the engines' conclusions are measure-level and per-piece, and the
+   flow is McKean-Vlasov, so per-piece facts do NOT determine the flow of a mixture. The
+   load-bearing observation is that every engine block is `pPark`-built (`V = 0`), so ONE
+   transport map serves every sphere-supported probability measure at once; the engine chain now
+   exposes that map (`attnMeasureFlow θ ν = ν.map f` universally, PR #351), and instantiating
+   the universal conclusions at DIRAC measures (`flow_map_mem_of_universal`) upgrades them to
+   pointwise facts about `f` itself. The good/bad `L²` ledger (`sqrtIntegral_le_of_good_bad`,
+   diameter cost `2` on bad mass `≤ ε²/8`) then closes the core, and the raw sqrt-integral
+   triangle (`sqrtIntegral_sub_le_add`) combines it with the rounding leg.
+
+`theorem_1_2`'s axiom closure consequently drops to
+`{exists_disentangling_balls, exists_parked_schedule}`. Statement-layer axiom inventory 7 → **6**.
 
 ### Verdict
 
